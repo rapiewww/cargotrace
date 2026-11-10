@@ -154,3 +154,7 @@ This project has domain-specific skills available in `**/skills/**`. You MUST ac
 - Run `vendor/bin/pest` to call the test runner directly. It accepts the same file path and `--filter=testName` arguments.
 
 </laravel-boost-guidelines>
+
+
+## Anti-Slop Design Guidelines
+Always refer to and strictly follow the design principles in `.claude/skills/anti-slop/antislop.md` for all UI, layout, typography, and styling tasks.

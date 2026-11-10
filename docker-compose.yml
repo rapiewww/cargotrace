@@ -1,0 +1,54 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: cargotrace_app
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      APP_NAME: "CargoTrace"
+      APP_ENV: "local"
+      APP_KEY: "base64:cGFzc3dvcmRmb3Jkb2NrZXJsb2NhbHRlc3RpbmdrZXkxMjM="
+      APP_DEBUG: "true"
+      APP_URL: "http://localhost:8000"
+      DB_CONNECTION: "mysql"
+      DB_HOST: "db"
+      DB_PORT: "3306"
+      DB_DATABASE: "cargotrace"
+      DB_USERNAME: "cargotrace"
+      DB_PASSWORD: "secret_password"
+      CARGOTRACE_EXTERNAL_CACHE_TTL: "900"
+      CARGOTRACE_DELAY_LOW_HOURS: "6"
+      CARGOTRACE_DELAY_MEDIUM_HOURS: "24"
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - ./storage:/var/www/html/storage
+
+  db:
+    image: mysql:8.4
+    container_name: cargotrace_db
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: "cargotrace"
+      MYSQL_USER: "cargotrace"
+      MYSQL_PASSWORD: "secret_password"
+      MYSQL_ROOT_PASSWORD: "root_secret_password"
+    ports:
+      - "3306:3306"
+    volumes:
+      - cargotrace_mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-proot_secret_password"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
+volumes:
+  cargotrace_mysql_data:
+    driver: local
+

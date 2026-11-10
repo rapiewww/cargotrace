@@ -29,7 +29,7 @@ test('admin can create and update carrier', function () {
 
     $carrier = Carrier::where('code', 'TESTC')->first();
 
-    $updateResp = $this->actingAs($admin)->put('/carriers/' . $carrier->id, [
+    $updateResp = $this->actingAs($admin)->put('/carriers/'.$carrier->id, [
         'code' => 'TESTC',
         'name' => 'Test Maritime Freight Lines Global',
         'mode' => 'MULTIMODAL',
@@ -48,7 +48,7 @@ test('admin cannot delete carrier assigned to existing shipments', function () {
     $admin = User::where('role', 'admin')->first();
     $carrierWithShipments = Carrier::has('shipments')->first();
 
-    $response = $this->actingAs($admin)->delete('/carriers/' . $carrierWithShipments->id);
+    $response = $this->actingAs($admin)->delete('/carriers/'.$carrierWithShipments->id);
 
     $response->assertSessionHasErrors('carrier');
     $this->assertDatabaseHas('carriers', ['id' => $carrierWithShipments->id]);
@@ -63,7 +63,7 @@ test('admin can delete unreferenced carrier', function () {
         'is_active' => true,
     ]);
 
-    $response = $this->actingAs($admin)->delete('/carriers/' . $unusedCarrier->id);
+    $response = $this->actingAs($admin)->delete('/carriers/'.$unusedCarrier->id);
 
     $response->assertSessionHasNoErrors();
     $this->assertDatabaseMissing('carriers', ['id' => $unusedCarrier->id]);
@@ -73,7 +73,7 @@ test('admin cannot delete location referenced in shipment routes', function () {
     $admin = User::where('role', 'admin')->first();
     $activeLocation = Location::has('originShipments')->first();
 
-    $response = $this->actingAs($admin)->delete('/locations/' . $activeLocation->id);
+    $response = $this->actingAs($admin)->delete('/locations/'.$activeLocation->id);
 
     $response->assertSessionHasErrors('location');
     $this->assertDatabaseHas('locations', ['id' => $activeLocation->id]);
@@ -84,6 +84,6 @@ test('operator cannot delete carrier or location', function () {
     $carrier = Carrier::first();
     $location = Location::first();
 
-    $this->actingAs($operator)->delete('/carriers/' . $carrier->id)->assertStatus(403);
-    $this->actingAs($operator)->delete('/locations/' . $location->id)->assertStatus(403);
+    $this->actingAs($operator)->delete('/carriers/'.$carrier->id)->assertStatus(403);
+    $this->actingAs($operator)->delete('/locations/'.$location->id)->assertStatus(403);
 });

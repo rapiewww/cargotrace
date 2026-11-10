@@ -1,6 +1,24 @@
 import L from 'leaflet';
 
 /**
+ * Registry of all active Leaflet map instances for synchronized theme updates
+ */
+const activeMaps = new Set();
+
+/**
+ * Get OpenStreetMap tile layer configuration with theme adaptability
+ */
+export function getTileLayerConfig(theme = 'dark') {
+    return {
+        url: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+        options: {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> contributors',
+            maxZoom: 18,
+        }
+    };
+}
+
+/**
  * Calculate a quadratic Bezier curve between two coordinates.
  * Generates an array of [lat, lng] points creating an elegant great-circle style arc.
  */
@@ -33,209 +51,234 @@ export function getBezierCurve(start, end, numPoints = 50) {
 }
 
 /**
- * Initialize Dark World Map on Dashboard or Landing Page
+ * Shared map factory using CartoDB Positron / Dark Matter tiles matching active theme.
  */
-export function initWorldMap(containerId, options = {}) {
-    const el = document.getElementById(containerId);
+export function createMap(elementId, options = {}) {
+    const el = document.getElementById(elementId);
     if (!el) return null;
 
-    const locations = options.locations || [];
-    const shipments = options.shipments || [];
-    const interactive = options.interactive !== false;
+    // Remove existing Leaflet instance if attached
+    if (el._leaflet_id && el._leaflet_map) {
+        try {
+            el._leaflet_map.remove();
+            activeMaps.delete(el._leaflet_map);
+        } catch (e) {
+            // ignore
+        }
+    }
 
-    const map = L.map(containerId, {
+    const map = L.map(elementId, {
         center: options.center || [22, 18],
         zoom: options.zoom || 2,
-        minZoom: 2,
-        maxZoom: 7,
-        zoomControl: interactive,
-        attributionControl: false,
-        scrollWheelZoom: interactive ? 'center' : false,
+        minZoom: options.minZoom || 2,
+        maxZoom: options.maxZoom || 18,
+        zoomControl: options.zoomControl !== false,
+        attributionControl: options.attributionControl !== false,
+        scrollWheelZoom: options.scrollWheelZoom !== undefined ? options.scrollWheelZoom : false,
+        ...options,
     });
 
-    // Dark Matter tile layer
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-        subdomains: 'abcd',
-        maxZoom: 19
-    }).addTo(map);
+    el._leaflet_map = map;
 
-    const layerAll = L.layerGroup().addTo(map);
-    const layerDelayed = L.layerGroup();
-    const layerExceptions = L.layerGroup();
+    // Detect current theme
+    const currentTheme = document.documentElement.getAttribute('data-theme')
+        || (document.documentElement.classList.contains('light') ? 'light' : 'dark');
 
-    // Plot locations with glowing teal pulse markers
-    locations.forEach(loc => {
-        if (!loc.latitude || !loc.longitude) return;
+    const tileConfig = getTileLayerConfig(currentTheme);
+    const tileLayer = L.tileLayer(tileConfig.url, tileConfig.options).addTo(map);
 
-        const marker = L.circleMarker([loc.latitude, loc.longitude], {
-            radius: 5,
-            fillColor: '#2DD4BF',
-            color: '#14B8A6',
-            weight: 2,
-            opacity: 1,
-            fillOpacity: 0.9
-        }).addTo(map);
-
-        marker.bindPopup(`
-            <div style="font-family: 'Plus Jakarta Sans', sans-serif; padding: 4px; font-size: 11px; color: #0F172A;">
-                <div style="font-weight: 800; color: #0F766E; font-size: 13px;">${loc.name}</div>
-                <div style="font-family: monospace; color: #64748B; margin-top: 2px;">
-                    UN/LOCODE: <b>${loc.unlocode}</b> &bull; ${loc.country}
-                </div>
-                <div style="margin-top: 4px; display: flex; justify-content: space-between; gap: 8px;">
-                    <span>Type: <b>${loc.type}</b></span>
-                    <span>Currency: <b>${loc.currency_code}</b></span>
-                </div>
-            </div>
-        `);
-    });
-
-    // Plot shipment routes with Bezier arcs
-    shipments.forEach(s => {
-        const orig = s.origin_location || s.originLocation;
-        const dest = s.destination_location || s.destinationLocation;
-
-        if (orig && dest && orig.latitude && dest.latitude) {
-            const start = [parseFloat(orig.latitude), parseFloat(orig.longitude)];
-            const end = [parseFloat(dest.latitude), parseFloat(dest.longitude)];
-            const curvePoints = getBezierCurve(start, end);
-
-            const isDelayed = Boolean(s.is_delayed);
-            const hasException = Boolean(s.has_open_exceptions || (s.exceptions && s.exceptions.length > 0));
-
-            const strokeColor = hasException ? '#F43F5E' : (isDelayed ? '#F59E0B' : '#38BDF8');
-            const dashArray = isDelayed ? '6, 6' : '4, 8';
-
-            const polyline = L.polyline(curvePoints, {
-                color: strokeColor,
-                weight: 2.5,
-                dashArray: dashArray,
-                opacity: 0.85
-            });
-
-            // Hover and Click handler
-            polyline.on('mouseover', function () {
-                this.setStyle({ weight: 4, opacity: 1 });
-            });
-            polyline.on('mouseout', function () {
-                this.setStyle({ weight: 2.5, opacity: 0.85 });
-            });
-
-            polyline.on('click', function () {
-                if (options.onRouteClick) {
-                    options.onRouteClick(s);
-                } else {
-                    const popupContent = `
-                        <div style="font-family: 'Plus Jakarta Sans', sans-serif; font-size: 11px; color: #0F172A; min-width: 180px;">
-                            <div style="font-family: monospace; font-weight: 800; color: #0284C7; font-size: 12px;">${s.tracking_number}</div>
-                            <div style="margin-top: 2px; color: #475569;">
-                                ${orig.unlocode} &rarr; ${dest.unlocode} &bull; <b>${s.status}</b>
-                            </div>
-                            ${isDelayed ? `<div style="color: #D97706; font-weight: 700; margin-top: 4px;">Delayed: +${s.delay_hours || 0}h</div>` : ''}
-                            <div style="margin-top: 6px;">
-                                <a href="/shipments/${s.id}" style="color: #0F766E; font-weight: 700; text-decoration: underline;">View Full Manifest &rarr;</a>
-                            </div>
-                        </div>
-                    `;
-                    polyline.bindPopup(popupContent).openPopup();
-                }
-            });
-
-            layerAll.addLayer(polyline);
-            if (isDelayed) layerDelayed.addLayer(polyline);
-            if (hasException) layerExceptions.addLayer(polyline);
-        }
-    });
-
-    // Layer toggle helper
-    window.__CARGOTRACE_MAP_TOGGLE__ = function(layerName) {
-        map.removeLayer(layerAll);
-        map.removeLayer(layerDelayed);
-        map.removeLayer(layerExceptions);
-
-        if (layerName === 'delayed') {
-            map.addLayer(layerDelayed);
-        } else if (layerName === 'exceptions') {
-            map.addLayer(layerExceptions);
-        } else {
-            map.addLayer(layerAll);
-        }
-    };
+    map._activeTileLayer = tileLayer;
+    activeMaps.add(map);
 
     return map;
 }
 
 /**
- * Initialize single shipment route map (on Shipment Show view)
+ * Update all active Leaflet maps to match the newly switched theme
+ */
+export function updateAllMapsTheme(theme) {
+    const tileConfig = getTileLayerConfig(theme);
+
+    activeMaps.forEach(map => {
+        try {
+            if (map && map._activeTileLayer) {
+                map.removeLayer(map._activeTileLayer);
+                const newLayer = L.tileLayer(tileConfig.url, tileConfig.options).addTo(map);
+                map._activeTileLayer = newLayer;
+            }
+        } catch (e) {
+            // In case map was unmounted
+            activeMaps.delete(map);
+        }
+    });
+}
+
+/**
+ * Initialize Multi-Route World Map on Dashboard or Landing Page
+ */
+export function initWorldMap(containerId, options = {}) {
+    const locations = options.locations || [];
+    const shipments = options.shipments || [];
+    const interactive = options.interactive !== false;
+
+    const map = createMap(containerId, {
+        center: options.center || [22, 18],
+        zoom: options.zoom || 2,
+        minZoom: 2,
+        maxZoom: 18,
+        zoomControl: interactive,
+        attributionControl: true,
+        scrollWheelZoom: interactive ? 'center' : false,
+    });
+
+    if (!map) return null;
+
+    const layerAll = L.layerGroup().addTo(map);
+    const layerDelayed = L.layerGroup();
+    const layerExceptions = L.layerGroup();
+
+    // Plot locations with clean markers
+    locations.forEach(loc => {
+        if (!loc.latitude || !loc.longitude) return;
+
+        const marker = L.circleMarker([parseFloat(loc.latitude), parseFloat(loc.longitude)], {
+            radius: 4.5,
+            fillColor: '#2DD4BF',
+            color: '#0D9488',
+            weight: 1.5,
+            opacity: 1,
+            fillOpacity: 0.9,
+        }).addTo(map);
+
+        marker.bindPopup(`
+            <div style="font-family: 'Inter', sans-serif; font-size: 11px;">
+                <div style="font-weight: 700; color: #0D9488;">${loc.name}</div>
+                <div style="color: #64748B; margin-top: 2px;">UN/LOCODE: <b>${loc.unlocode}</b> &bull; ${loc.country}</div>
+            </div>
+        `);
+    });
+
+    // Plot routes
+    shipments.forEach(s => {
+        const orig = s.origin_location || s.originLocation || s.origin;
+        const dest = s.destination_location || s.destinationLocation || s.destination;
+
+        const origLat = orig?.latitude || orig?.lat;
+        const origLng = orig?.longitude || orig?.lng;
+        const destLat = dest?.latitude || dest?.lat;
+        const destLng = dest?.longitude || dest?.lng;
+
+        if (origLat && destLat) {
+            const start = [parseFloat(origLat), parseFloat(origLng)];
+            const end = [parseFloat(destLat), parseFloat(destLng)];
+            const curvePoints = getBezierCurve(start, end);
+
+            const isDelayed = Boolean(s.is_delayed);
+            const hasException = Boolean(s.exceptions && s.exceptions.length > 0);
+
+            const strokeColor = hasException ? '#F43F5E' : (isDelayed ? '#F59E0B' : '#0284C7');
+            const polyline = L.polyline(curvePoints, {
+                color: strokeColor,
+                weight: 2.2,
+                dashArray: isDelayed ? '6, 6' : '2, 6',
+                opacity: 0.85,
+            });
+
+            polyline.bindPopup(`
+                <div style="font-family: 'Inter', sans-serif; font-size: 11px;">
+                    <div style="font-weight: 700; color: #0284C7;">${s.tracking_number}</div>
+                    <div style="color: #64748B; margin-top: 2px;">${orig.name} &rarr; ${dest.name}</div>
+                    <div style="margin-top: 4px; font-weight: 600; color: ${strokeColor};">
+                        Status: ${s.status} ${isDelayed ? '(DELAYED)' : ''}
+                    </div>
+                </div>
+            `);
+
+            polyline.addTo(layerAll);
+            if (isDelayed) polyline.addTo(layerDelayed);
+            if (hasException) polyline.addTo(layerExceptions);
+        }
+    });
+
+    return map;
+}
+
+/**
+ * Initialize Single Shipment Route Map on Detail View
  */
 export function initShipmentRouteMap(containerId, shipment) {
-    const el = document.getElementById(containerId);
-    if (!el || !shipment) return null;
+    if (!shipment) return null;
 
     const orig = shipment.origin_location || shipment.originLocation;
     const dest = shipment.destination_location || shipment.destinationLocation;
     const curr = shipment.current_location || shipment.currentLocation;
 
-    const map = L.map(containerId, {
-        center: [20, 20],
+    const origLat = parseFloat(orig?.latitude || 0);
+    const origLng = parseFloat(orig?.longitude || 0);
+    const destLat = parseFloat(dest?.latitude || 0);
+    const destLng = parseFloat(dest?.longitude || 0);
+
+    if (!origLat || !destLat) return null;
+
+    const midLat = (origLat + destLat) / 2;
+    const midLng = (origLng + destLng) / 2;
+
+    const map = createMap(containerId, {
+        center: [midLat, midLng],
         zoom: 3,
+        minZoom: 2,
+        maxZoom: 18,
         zoomControl: true,
-        attributionControl: false
+        attributionControl: true,
+        scrollWheelZoom: false,
     });
 
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-        subdomains: 'abcd',
-        maxZoom: 19
+    if (!map) return null;
+
+    // Origin marker (Green)
+    L.circleMarker([origLat, origLng], {
+        radius: 6,
+        fillColor: '#10B981',
+        color: '#059669',
+        weight: 2,
+        fillOpacity: 1,
+    }).addTo(map).bindPopup(`<b>Origin:</b> ${orig.name} (${orig.unlocode})`);
+
+    // Destination marker (Blue)
+    L.circleMarker([destLat, destLng], {
+        radius: 6,
+        fillColor: '#3B82F6',
+        color: '#1D4ED8',
+        weight: 2,
+        fillOpacity: 1,
+    }).addTo(map).bindPopup(`<b>Destination:</b> ${dest.name} (${dest.unlocode})`);
+
+    // Current position marker if available (Amber pulse)
+    if (curr?.latitude && curr?.longitude) {
+        L.circleMarker([parseFloat(curr.latitude), parseFloat(curr.longitude)], {
+            radius: 7,
+            fillColor: '#F59E0B',
+            color: '#B45309',
+            weight: 2,
+            fillOpacity: 1,
+        }).addTo(map).bindPopup(`<b>Current Location:</b> ${curr.name} (${curr.unlocode})`).openPopup();
+    }
+
+    // Great circle bezier arc
+    const curvePoints = getBezierCurve([origLat, origLng], [destLat, destLng]);
+    const isDelayed = Boolean(shipment.is_delayed);
+    const hasException = Boolean(shipment.exceptions && shipment.exceptions.length > 0);
+    const strokeColor = hasException ? '#F43F5E' : (isDelayed ? '#F59E0B' : '#0284C7');
+
+    L.polyline(curvePoints, {
+        color: strokeColor,
+        weight: 3,
+        dashArray: isDelayed ? '8, 6' : null,
+        opacity: 0.9,
     }).addTo(map);
 
-    const points = [];
-
-    if (orig && orig.latitude && orig.longitude) {
-        const oCoords = [parseFloat(orig.latitude), parseFloat(orig.longitude)];
-        L.circleMarker(oCoords, {
-            radius: 8,
-            fillColor: '#2DD4BF',
-            color: '#FFFFFF',
-            weight: 2,
-            fillOpacity: 1
-        }).addTo(map).bindPopup(`<b>Origin: ${orig.name} (${orig.unlocode})</b>`);
-        points.push(oCoords);
-    }
-
-    if (curr && curr.latitude && curr.longitude && curr.id !== orig?.id && curr.id !== dest?.id) {
-        const cCoords = [parseFloat(curr.latitude), parseFloat(curr.longitude)];
-        L.circleMarker(cCoords, {
-            radius: 9,
-            fillColor: '#F59E0B',
-            color: '#FFFFFF',
-            weight: 2,
-            fillOpacity: 1
-        }).addTo(map).bindPopup(`<b>Current Checkpoint: ${curr.name}</b>`);
-        points.push(cCoords);
-    }
-
-    if (dest && dest.latitude && dest.longitude) {
-        const dCoords = [parseFloat(dest.latitude), parseFloat(dest.longitude)];
-        L.circleMarker(dCoords, {
-            radius: 8,
-            fillColor: '#10B981',
-            color: '#FFFFFF',
-            weight: 2,
-            fillOpacity: 1
-        }).addTo(map).bindPopup(`<b>Destination: ${dest.name} (${dest.unlocode})</b>`);
-        points.push(dCoords);
-    }
-
-    if (points.length >= 2) {
-        const polyline = L.polyline(points, {
-            color: shipment.is_delayed ? '#F59E0B' : '#38BDF8',
-            weight: 3.5,
-            dashArray: '6, 8',
-            opacity: 0.95
-        }).addTo(map);
-
-        map.fitBounds(polyline.getBounds(), { padding: [40, 40] });
-    }
+    // Fit map bounds to show full route
+    map.fitBounds([[origLat, origLng], [destLat, destLng]], { padding: [50, 50] });
 
     return map;
 }

@@ -2,7 +2,6 @@
 
 namespace Tests\Feature;
 
-use App\Models\AuditLog;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
@@ -61,7 +60,7 @@ test('admin can create a new user with audit log', function () {
 test('admin cannot demote their own account role', function () {
     $admin = User::where('role', 'admin')->first();
 
-    $response = $this->actingAs($admin)->put('/admin/users/' . $admin->id, [
+    $response = $this->actingAs($admin)->put('/admin/users/'.$admin->id, [
         'name' => $admin->name,
         'email' => $admin->email,
         'role' => 'customer',
@@ -78,7 +77,7 @@ test('admin cannot demote their own account role', function () {
 test('admin cannot deactivate their own account', function () {
     $admin = User::where('role', 'admin')->first();
 
-    $response = $this->actingAs($admin)->put('/admin/users/' . $admin->id, [
+    $response = $this->actingAs($admin)->put('/admin/users/'.$admin->id, [
         'name' => $admin->name,
         'email' => $admin->email,
         'role' => 'admin',

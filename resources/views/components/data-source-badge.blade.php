@@ -18,3 +18,4 @@
         <span class="text-slate-400 font-sans font-normal">&bull; {{ $type }}</span>
     @endif
 </span>
+

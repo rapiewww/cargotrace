@@ -32,6 +32,15 @@ class WelcomeController extends Controller
             ->with(['carrier', 'originLocation', 'destinationLocation', 'currentLocation', 'trackingEvents.location'])
             ->first();
 
+        if (request()->filled('tracking')) {
+            $searched = Shipment::where('tracking_number', request('tracking'))
+                ->with(['carrier', 'originLocation', 'destinationLocation', 'currentLocation', 'trackingEvents.location'])
+                ->first();
+            if ($searched) {
+                $featuredShipment = $searched;
+            }
+        }
+
         $news = $this->externalService->getLogisticsNews();
         $currencyData = $this->externalService->convertCurrency(1, 'USD', 'EUR');
         $rates = $currencyData['rates_snapshot'] ?? [];
@@ -64,7 +73,7 @@ class WelcomeController extends Controller
                     'lng' => (float) $s->currentLocation->longitude,
                 ] : null,
                 'exceptions' => [],
-                'url' => url('/track/' . $s->tracking_number),
+                'url' => url('/track/'.$s->tracking_number),
             ];
         })->toArray();
 

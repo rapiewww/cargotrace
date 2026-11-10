@@ -32,4 +32,3 @@ class LocationResource extends JsonResource
         ];
     }
 }
-

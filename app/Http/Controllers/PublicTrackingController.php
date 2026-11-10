@@ -19,7 +19,7 @@ class PublicTrackingController extends Controller
                 'originLocation',
                 'destinationLocation',
                 'currentLocation',
-                'trackingEvents' => fn ($q) => $q->orderBy('event_time', 'desc')->with('location'),
+                'trackingEvents' => fn ($q) => $q->orderBy('occurred_at', 'desc')->with('location'),
             ])
             ->firstOrFail();
 

@@ -23,3 +23,4 @@
     </div>
     <button type="button" onclick="this.closest('.p-4').remove()" class="text-slate-400 hover:text-white text-base leading-none pl-4">&times;</button>
 </div>
+

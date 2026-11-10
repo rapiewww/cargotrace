@@ -308,4 +308,3 @@ class ShipmentService
         return $number;
     }
 }
-

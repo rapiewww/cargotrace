@@ -62,9 +62,9 @@ test('dashboard loads for authenticated admin and operator', function () {
     $response = $this->actingAs($admin)->get('/dashboard');
 
     $response->assertStatus(200);
-    $response->assertSee('Shipments Overview');
-    $response->assertSee('Fleet Analytics');
-    $response->assertSee('Quick Currency Converter');
+    $response->assertSee('Overview');
+    $response->assertSee('Active shipments');
+    $response->assertSee('Global route map');
 });
 
 test('shipments list displays shipments and respects role visibility', function () {

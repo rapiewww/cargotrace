@@ -54,4 +54,3 @@ class TrackingApiController extends Controller
         ], Response::HTTP_CREATED);
     }
 }
-

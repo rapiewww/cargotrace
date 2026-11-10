@@ -48,9 +48,9 @@ test('six global carriers are seeded properly', function () {
         ->and($maersk->mode)->toBe('SEA')
         ->and($maersk->is_active)->toBeTrue();
 
-    $siaCargo = Carrier::where('code', 'SQC')->first();
-    expect($siaCargo)->not->toBeNull()
-        ->and($siaCargo->mode)->toBe('AIR');
+    $cmaCgm = Carrier::where('code', 'CMDU')->first();
+    expect($cmaCgm)->not->toBeNull()
+        ->and($cmaCgm->mode)->toBe('SEA');
 });
 
 test('eight global locations are seeded with coordinates and external integration snapshots', function () {

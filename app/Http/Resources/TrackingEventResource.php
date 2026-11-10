@@ -37,4 +37,3 @@ class TrackingEventResource extends JsonResource
         ];
     }
 }
-

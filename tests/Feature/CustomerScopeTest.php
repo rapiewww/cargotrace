@@ -29,7 +29,7 @@ test('customer only sees their own shipments and scoped exceptions in dashboard'
 
     // Customer 1 open exceptions count should only be from their own shipments
     $customer1OpenExceptions = ShipmentException::whereIn('status', ['OPEN', 'INVESTIGATING'])
-        ->whereHas('shipment', fn($q) => $q->where('customer_id', $customer1->id))
+        ->whereHas('shipment', fn ($q) => $q->where('customer_id', $customer1->id))
         ->count();
 
     $response->assertViewHas('totalShipments', $customer1ShipmentsCount);
@@ -39,7 +39,7 @@ test('customer only sees their own shipments and scoped exceptions in dashboard'
 test('public tracking route is accessible without login and masks sensitive customer info', function () {
     $shipment = Shipment::with('customer')->first();
 
-    $response = $this->get('/track/' . $shipment->tracking_number);
+    $response = $this->get('/track/'.$shipment->tracking_number);
 
     $response->assertStatus(200);
     $response->assertSee($shipment->tracking_number);

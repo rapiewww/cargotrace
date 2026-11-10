@@ -40,7 +40,7 @@ test('user can mark notification as read', function () {
         'read_at' => null,
     ]);
 
-    $response = $this->actingAs($user)->post('/notifications/' . $notification->id . '/read');
+    $response = $this->actingAs($user)->post('/notifications/'.$notification->id.'/read');
 
     $response->assertSessionHas('success');
     expect($notification->fresh()->read_at)->not->toBeNull();

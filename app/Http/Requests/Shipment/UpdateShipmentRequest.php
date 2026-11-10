@@ -26,4 +26,3 @@ class UpdateShipmentRequest extends FormRequest
         ];
     }
 }
-

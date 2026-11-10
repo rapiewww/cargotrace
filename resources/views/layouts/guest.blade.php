@@ -7,12 +7,27 @@
 
     <title>{{ $title ?? 'CargoTrace — Global Logistics Intelligence' }}</title>
 
+    <!-- Theme Initialization Script (Zero-Flicker) -->
+    <script>
+        (function() {
+            const theme = localStorage.getItem('cargotrace_theme') || 'dark';
+            document.documentElement.setAttribute('data-theme', theme);
+            if (theme === 'light') {
+                document.documentElement.classList.add('light');
+                document.documentElement.classList.remove('dark');
+            } else {
+                document.documentElement.classList.add('dark');
+                document.documentElement.classList.remove('light');
+            }
+        })();
+    </script>
+
     <!-- Scripts & Styles via Vite (Plus Jakarta Sans, JetBrains Mono, Leaflet bundled) -->
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 
     @stack('styles')
 </head>
-<body class="bg-[#050B14] text-slate-100 font-sans antialiased min-h-full flex flex-col selection:bg-amber-500 selection:text-slate-950">
+<body class="theme-page font-sans antialiased min-h-full flex flex-col selection:bg-blue-600 selection:text-white transition-colors duration-200">
     @yield('content')
 
     @stack('scripts')

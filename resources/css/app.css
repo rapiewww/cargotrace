@@ -4,62 +4,250 @@
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
 @source '../../storage/framework/views/*.php';
 
+/* Custom variants for Tailwind v4 so both light: and dark: work with [data-theme] and .light/.dark */
+@custom-variant light (&:where([data-theme="light"], [data-theme="light"] *, .light, .light *));
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *, .dark, .dark *));
+
 @theme {
-    --font-sans: 'Plus Jakarta Sans', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    --font-sans: 'Inter', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    --font-mono: 'JetBrains Mono', ui-monospace, monospace;
 
-    --color-surface-abyss: #050B14;
-    --color-surface-card: #0B1728;
-    --color-surface-elevated: #11233B;
-    --color-surface-subtle: #081220;
+    --color-surface-abyss: #050811;
+    --color-surface-card: #0B1222;
+    --color-surface-elevated: #111A2E;
+    --color-surface-subtle: #080D1A;
 
+    --color-accent-blue: #2563EB;
+    --color-accent-cyan: #38BDF8;
     --color-accent-amber: #F5A524;
-    --color-accent-amber-glow: rgba(245, 165, 36, 0.25);
-    --color-accent-teal: #2DD4BF;
-    --color-accent-teal-glow: rgba(45, 212, 191, 0.25);
 }
 
-/* Custom Maritime Scrollbars */
+/* Dark / Light Mode Palette Tokens */
+:root,
+html[data-theme="dark"],
+html.dark {
+    --bg-page: #050811;
+    --bg-surface: #0B1222;
+    --bg-surface-elevated: #111A2E;
+    --bg-sidebar: #080D1A;
+    --bg-header: rgba(5, 8, 17, 0.92);
+    --border-color: #1E293B;
+    --border-subtle: rgba(255, 255, 255, 0.08);
+    --border-card: rgba(255, 255, 255, 0.08);
+    --text-primary: #F8FAFC;
+    --text-secondary: #94A3B8;
+    --text-muted: #64748B;
+    --text-heading: #FFFFFF;
+    --input-bg: rgba(2, 6, 23, 0.8);
+    --input-border: #1E293B;
+    --table-header-bg: #0B1222;
+    --table-row-hover: rgba(30, 41, 59, 0.4);
+    --card-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 8px 10px -6px rgba(0, 0, 0, 0.5);
+    --accent-blue: #2563EB;
+    --accent-cyan: #38BDF8;
+}
+
+html[data-theme="light"],
+html.light {
+    --bg-page: #F1F5F9;
+    --bg-surface: #FFFFFF;
+    --bg-surface-elevated: #F8FAFC;
+    --bg-sidebar: #FFFFFF;
+    --bg-header: rgba(255, 255, 255, 0.96);
+    --border-color: #E2E8F0;
+    --border-subtle: #E2E8F0;
+    --border-card: #E2E8F0;
+    --text-primary: #0F172A;
+    --text-secondary: #475569;
+    --text-muted: #64748B;
+    --text-heading: #0F172A;
+    --input-bg: #FFFFFF;
+    --input-border: #CBD5E1;
+    --table-header-bg: #F8FAFC;
+    --table-row-hover: #F1F5F9;
+    --card-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
+    --accent-blue: #1D4ED8;
+    --accent-cyan: #0284C7;
+}
+
+html, body {
+    font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: 'tnum', 'cv02', 'cv03', 'cv04', 'cv11';
+    background-color: var(--bg-page);
+    color: var(--text-primary);
+    transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+/* Adaptive Theme Utility Classes */
+.theme-page {
+    background-color: var(--bg-page);
+    color: var(--text-primary);
+}
+
+.theme-card {
+    background-color: var(--bg-surface) !important;
+    border-color: var(--border-card) !important;
+    color: var(--text-primary) !important;
+    box-shadow: var(--card-shadow) !important;
+}
+
+.theme-card-elevated {
+    background-color: var(--bg-surface-elevated) !important;
+    border-color: var(--border-color) !important;
+    color: var(--text-primary) !important;
+}
+
+.theme-sidebar {
+    background-color: var(--bg-sidebar) !important;
+    border-color: var(--border-color) !important;
+}
+
+.theme-header {
+    background-color: var(--bg-header) !important;
+    border-color: var(--border-color) !important;
+}
+
+.theme-heading {
+    color: var(--text-heading) !important;
+}
+
+.theme-text-primary {
+    color: var(--text-primary) !important;
+}
+
+.theme-text-secondary {
+    color: var(--text-secondary) !important;
+}
+
+.theme-text-muted {
+    color: var(--text-muted) !important;
+}
+
+.theme-border {
+    border-color: var(--border-color) !important;
+}
+
+.theme-input {
+    background-color: var(--input-bg) !important;
+    border-color: var(--input-border) !important;
+    color: var(--text-primary) !important;
+}
+
+.theme-input::placeholder {
+    color: var(--text-muted) !important;
+}
+
+.theme-table {
+    width: 100%;
+}
+
+.theme-table thead {
+    background-color: var(--table-header-bg) !important;
+    color: var(--text-secondary) !important;
+    border-bottom: 1px solid var(--border-color) !important;
+}
+
+.theme-table tbody tr {
+    border-bottom: 1px solid var(--border-subtle);
+    color: var(--text-primary);
+    transition: background-color 0.15s ease;
+}
+
+.theme-table tbody tr:hover {
+    background-color: var(--table-row-hover);
+}
+
+/* Custom Scrollbars */
 ::-webkit-scrollbar {
     width: 6px;
     height: 6px;
 }
 ::-webkit-scrollbar-track {
-    background: #050B14;
+    background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-    background: #11233B;
+    background: #1E293B;
     border-radius: 9999px;
     border: 1px solid rgba(255, 255, 255, 0.05);
 }
 ::-webkit-scrollbar-thumb:hover {
-    background: #1D3658;
+    background: #334155;
 }
 
-/* Leaflet Dark Tile Filter */
-.leaflet-dark-tile {
-    filter: brightness(0.7) invert(1) contrast(3) hue-rotate(200deg) saturate(0.35) brightness(0.8);
+html[data-theme="light"] ::-webkit-scrollbar-thumb,
+html.light ::-webkit-scrollbar-thumb {
+    background: #CBD5E1;
+    border: 1px solid rgba(0, 0, 0, 0.05);
 }
 
-/* Glassmorphism helpers */
-.glass-card {
-    background-color: rgba(11, 23, 40, 0.85);
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
-    border: 1px solid rgba(255, 255, 255, 0.08);
+/* OpenStreetMap Dark Mode Tile Pane Filter (Invert + Hue-Rotate for Dark Maritime Basemap) */
+html[data-theme="dark"] .leaflet-tile-pane,
+html.dark .leaflet-tile-pane,
+:root:not(.light):not([data-theme="light"]) .leaflet-tile-pane {
+    filter: invert(100%) hue-rotate(180deg) brightness(85%) contrast(90%);
 }
 
-.glass-dropdown {
-    background-color: rgba(11, 23, 40, 0.95);
-    backdrop-filter: blur(24px);
-    -webkit-backdrop-filter: blur(24px);
-    border: 1px solid rgba(255, 255, 255, 0.12);
+html[data-theme="light"] .leaflet-tile-pane,
+html.light .leaflet-tile-pane {
+    filter: none;
 }
 
-/* Focus and motion */
+/* Leaflet Attribution Bar Theme Styling */
+.leaflet-control-attribution {
+    font-size: 10px !important;
+    padding: 2px 6px !important;
+    border-top-left-radius: 4px;
+    transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+html[data-theme="dark"] .leaflet-control-attribution,
+html.dark .leaflet-control-attribution,
+:root:not(.light):not([data-theme="light"]) .leaflet-control-attribution {
+    background: rgba(11, 18, 34, 0.88) !important;
+    color: #94A3B8 !important;
+}
+
+html[data-theme="dark"] .leaflet-control-attribution a,
+html.dark .leaflet-control-attribution a,
+:root:not(.light):not([data-theme="light"]) .leaflet-control-attribution a {
+    color: #38BDF8 !important;
+    text-decoration: underline;
+}
+
+html[data-theme="light"] .leaflet-control-attribution,
+html.light .leaflet-control-attribution {
+    background: rgba(255, 255, 255, 0.92) !important;
+    color: #475569 !important;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+html[data-theme="light"] .leaflet-control-attribution a,
+html.light .leaflet-control-attribution a {
+    color: #0284C7 !important;
+    text-decoration: underline;
+}
+
+/* Leaflet Popups */
+.leaflet-popup-content-wrapper {
+    background-color: var(--bg-surface) !important;
+    color: var(--text-primary) !important;
+    border: 1px solid var(--border-color) !important;
+    border-radius: 12px !important;
+    box-shadow: var(--card-shadow) !important;
+}
+.leaflet-popup-tip {
+    background-color: var(--bg-surface) !important;
+}
+
+/* Focus and accessibility (R-32, R-39) */
 :focus-visible {
-    outline: 2px solid #F5A524;
+    outline: 2px solid var(--accent-cyan);
     outline-offset: 2px;
+}
+
+button, a, input, select, textarea {
+    touch-action: manipulation;
 }
 
 @media (prefers-reduced-motion: reduce) {

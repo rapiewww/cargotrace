@@ -185,4 +185,3 @@ class ShipmentApiController extends Controller
         ], Response::HTTP_OK);
     }
 }
-

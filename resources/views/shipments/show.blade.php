@@ -3,24 +3,24 @@
 @section('content')
 <div class="px-4 sm:px-6 lg:px-8 py-8 space-y-8 max-w-[1600px] mx-auto">
     <!-- Header with Tracking Number and Status Badge -->
-    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-white/10">
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b theme-border">
         <div>
-            <div class="flex items-center space-x-2 text-xs text-slate-400 mb-1.5 font-mono">
-                <a href="{{ route('shipments.index') }}" class="hover:text-teal-300 transition-colors">Shipments</a>
+            <div class="flex items-center space-x-2 text-xs theme-text-secondary mb-1.5 font-mono">
+                <a href="{{ route('shipments.index') }}" class="hover:text-cyan-500 transition-colors">Shipments</a>
                 <span>&rarr;</span>
-                <span class="text-teal-300">{{ $shipment->tracking_number }}</span>
+                <span class="text-cyan-500 font-bold">{{ $shipment->tracking_number }}</span>
             </div>
             <div class="flex items-center space-x-3.5">
-                <h1 class="text-2xl sm:text-3xl font-extrabold font-mono text-white tracking-tight">{{ $shipment->tracking_number }}</h1>
+                <h1 class="text-2xl sm:text-3xl font-extrabold font-mono theme-heading tracking-tight">{{ $shipment->tracking_number }}</h1>
                 @php
                     $statusConfigs = [
-                        'CREATED' => ['class' => 'bg-slate-500/15 text-slate-300 border-slate-500/30', 'dot' => 'bg-slate-400'],
-                        'BOOKED' => ['class' => 'bg-blue-500/15 text-blue-300 border-blue-500/30', 'dot' => 'bg-blue-400'],
-                        'PICKED_UP' => ['class' => 'bg-indigo-500/15 text-indigo-300 border-indigo-500/30', 'dot' => 'bg-indigo-400'],
-                        'IN_TRANSIT' => ['class' => 'bg-amber-500/15 text-amber-300 border-amber-500/30', 'dot' => 'bg-amber-400'],
-                        'DELIVERED' => ['class' => 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30', 'dot' => 'bg-emerald-400'],
+                        'CREATED' => ['class' => 'bg-slate-500/15 text-slate-600 dark:text-slate-300 border-slate-500/30', 'dot' => 'bg-slate-400'],
+                        'BOOKED' => ['class' => 'bg-blue-500/15 text-blue-600 dark:text-blue-300 border-blue-500/30', 'dot' => 'bg-blue-400'],
+                        'PICKED_UP' => ['class' => 'bg-indigo-500/15 text-indigo-600 dark:text-indigo-300 border-indigo-500/30', 'dot' => 'bg-indigo-400'],
+                        'IN_TRANSIT' => ['class' => 'bg-amber-500/15 text-amber-600 dark:text-amber-300 border-amber-500/30', 'dot' => 'bg-amber-400'],
+                        'DELIVERED' => ['class' => 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-300 border-emerald-500/30', 'dot' => 'bg-emerald-400'],
                     ];
-                    $cfg = $statusConfigs[$shipment->status] ?? ['class' => 'bg-slate-500/15 text-slate-300 border-slate-500/30', 'dot' => 'bg-slate-400'];
+                    $cfg = $statusConfigs[$shipment->status] ?? ['class' => 'bg-slate-500/15 text-slate-600 dark:text-slate-300 border-slate-500/30', 'dot' => 'bg-slate-400'];
                 @endphp
                 <span class="px-3 py-1 rounded-full text-xs font-bold border uppercase tracking-wider inline-flex items-center gap-1.5 font-mono {{ $cfg['class'] }}">
                     <span class="w-1.5 h-1.5 rounded-full {{ $cfg['dot'] }} animate-pulse"></span>
@@ -32,19 +32,19 @@
         <!-- Delay / Schedule Pill & Actions -->
         <div class="flex items-center space-x-3">
             @if($shipment->is_delayed)
-                <div class="px-3.5 py-1.5 rounded-xl bg-amber-500/15 border border-amber-500/30 text-amber-300 text-xs flex items-center gap-2 font-mono">
+                <div class="px-3.5 py-1.5 rounded-xl bg-amber-500/15 border border-amber-500/30 text-amber-600 dark:text-amber-300 text-xs flex items-center gap-2 font-mono">
                     <span class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
-                    <span>Delay: <strong>+{{ $shipment->delay_hours }}h</strong> ({{ $shipment->delay_severity }})</span>
+                    <span>Delay: <strong>+{{ (int)$shipment->delay_hours }}h</strong> ({{ $shipment->delay_severity }})</span>
                 </div>
             @else
-                <div class="px-3.5 py-1.5 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 text-xs flex items-center gap-2 font-mono">
+                <div class="px-3.5 py-1.5 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-600 dark:text-emerald-300 text-xs flex items-center gap-2 font-mono">
                     <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
                     <span>On Schedule &bull; Zero Delay</span>
                 </div>
             @endif
 
             @if(in_array(auth()->user()->role, ['admin', 'operator']))
-                <a href="{{ route('shipments.edit', $shipment) }}" class="px-3.5 py-1.5 rounded-xl bg-teal-500/15 hover:bg-teal-500/25 border border-teal-500/30 text-teal-300 text-xs font-semibold flex items-center gap-1.5 transition">
+                <a href="{{ route('shipments.edit', $shipment) }}" class="px-3.5 py-1.5 rounded-xl bg-blue-500/15 hover:bg-blue-500/25 border border-blue-500/30 text-blue-600 dark:text-cyan-400 text-xs font-semibold flex items-center gap-1.5 transition">
                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
                     Edit Waybill
                 </a>
@@ -54,7 +54,7 @@
                 <form action="{{ route('shipments.destroy', $shipment) }}" method="POST" onsubmit="return confirm('Are you sure you want to delete this shipment?');">
                     @csrf
                     @method('DELETE')
-                    <button type="submit" class="p-2 rounded-xl text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 border border-white/5 transition" title="Delete Shipment">
+                    <button type="submit" class="p-2 rounded-xl theme-text-muted hover:text-rose-500 hover:bg-rose-500/10 border theme-border transition" title="Delete Shipment">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
                     </button>
                 </form>
@@ -65,8 +65,8 @@
     <!-- Full Visual Lifecycle Stepper -->
     <x-card class="space-y-3">
         <div class="flex items-center justify-between pb-2">
-            <span class="uppercase text-[10px] tracking-wider text-slate-500 font-semibold block">Transit Progression</span>
-            <span class="text-xs font-mono text-slate-400">Current Phase: <strong class="text-white">{{ $shipment->status }}</strong></span>
+            <span class="uppercase text-[10px] tracking-wider theme-text-muted font-semibold block">Transit Progression</span>
+            <span class="text-xs font-mono theme-text-secondary">Current Phase: <strong class="theme-heading">{{ $shipment->status }}</strong></span>
         </div>
         <x-status-stepper :status="$shipment->status" :compact="false" />
     </x-card>
@@ -77,33 +77,33 @@
         <div class="lg:col-span-7 space-y-6">
             <!-- Interactive Leaflet Route Map -->
             <x-card :padded="false" class="overflow-hidden relative">
-                <div id="shipment-route-map" class="w-full h-80 sm:h-96 z-10 bg-[#050B14]"></div>
-                <div class="absolute top-3 left-3 z-20 px-3 py-1.5 rounded-xl bg-[#0B1728]/90 backdrop-blur-md border border-white/10 text-xs text-slate-200 font-mono shadow-md">
+                <div id="shipment-route-map" class="w-full h-80 sm:h-96 z-10 theme-page"></div>
+                <div class="absolute top-3 left-3 z-20 px-3 py-1.5 rounded-xl theme-card-elevated border theme-border text-xs theme-heading font-mono shadow-md">
                     {{ $shipment->originLocation->unlocode ?? 'ORIG' }} &rarr; {{ $shipment->destinationLocation->unlocode ?? 'DEST' }} &bull; {{ $shipment->cargo_type }}
                 </div>
             </x-card>
 
             <!-- Route Summary & Delay Analysis Panel -->
             <x-card class="space-y-4">
-                <span class="uppercase text-[10px] tracking-wider text-slate-500 font-semibold block">Schedule & Delay Analysis</span>
+                <span class="uppercase text-[10px] tracking-wider theme-text-muted font-semibold block">Schedule & Delay Analysis</span>
                 <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs font-mono">
-                    <div class="p-3 rounded-xl bg-slate-950/50 border border-slate-800">
-                        <span class="uppercase text-[10px] tracking-wider text-slate-500 font-semibold block">Departure</span>
-                        <span class="font-bold text-white">{{ $shipment->expected_departure_at?->format('M d, H:i') ?? 'N/A' }}</span>
+                    <div class="p-3 rounded-xl theme-card-elevated border theme-border">
+                        <span class="uppercase text-[10px] tracking-wider theme-text-muted font-semibold block">Departure</span>
+                        <span class="font-bold theme-heading">{{ $shipment->expected_departure_at?->format('M d, H:i') ?? 'N/A' }}</span>
                     </div>
-                    <div class="p-3 rounded-xl bg-slate-950/50 border border-slate-800">
-                        <span class="uppercase text-[10px] tracking-wider text-slate-500 font-semibold block">Expected ETA</span>
-                        <span class="font-bold text-white">{{ $shipment->expected_arrival_at?->format('M d, H:i') ?? 'N/A' }}</span>
+                    <div class="p-3 rounded-xl theme-card-elevated border theme-border">
+                        <span class="uppercase text-[10px] tracking-wider theme-text-muted font-semibold block">Expected ETA</span>
+                        <span class="font-bold theme-heading">{{ $shipment->expected_arrival_at?->format('M d, H:i') ?? 'N/A' }}</span>
                     </div>
-                    <div class="p-3 rounded-xl bg-slate-950/50 border border-slate-800">
-                        <span class="uppercase text-[10px] tracking-wider text-slate-500 font-semibold block">Estimated Arrival</span>
-                        <span class="font-bold {{ $shipment->is_delayed ? 'text-amber-400' : 'text-emerald-400' }}">
+                    <div class="p-3 rounded-xl theme-card-elevated border theme-border">
+                        <span class="uppercase text-[10px] tracking-wider theme-text-muted font-semibold block">Estimated Arrival</span>
+                        <span class="font-bold {{ $shipment->is_delayed ? 'text-amber-500' : 'text-emerald-500' }}">
                             {{ $shipment->estimated_arrival_at?->format('M d, H:i') ?? 'On Track' }}
                         </span>
                     </div>
-                    <div class="p-3 rounded-xl bg-slate-950/50 border border-slate-800">
-                        <span class="uppercase text-[10px] tracking-wider text-slate-500 font-semibold block">Actual Arrival</span>
-                        <span class="font-bold text-white">{{ $shipment->actual_arrival_at?->format('M d, H:i') ?? 'In Transit' }}</span>
+                    <div class="p-3 rounded-xl theme-card-elevated border theme-border">
+                        <span class="uppercase text-[10px] tracking-wider theme-text-muted font-semibold block">Actual Arrival</span>
+                        <span class="font-bold theme-heading">{{ $shipment->actual_arrival_at?->format('M d, H:i') ?? 'In Transit' }}</span>
                     </div>
                 </div>
 

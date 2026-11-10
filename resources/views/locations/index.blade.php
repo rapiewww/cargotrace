@@ -5,15 +5,15 @@
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
             <div class="flex items-center gap-3">
-                <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight text-white font-sans">
+                <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight theme-heading font-sans">
                     Global Ports & Checkpoints
                 </h1>
-                <span class="text-xs px-2.5 py-0.5 rounded-full bg-teal-400/10 text-teal-300 border border-teal-400/20 font-mono">
+                <span class="text-xs px-2.5 py-0.5 rounded-full bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 border border-cyan-500/20 font-mono">
                     UN/LOCODE Network ({{ count($locations) }})
                 </span>
             </div>
-            <p class="text-xs sm:text-sm text-slate-400 mt-1">
-                Primary container terminals, air cargo cities, and bonded free-trade hubs with live telematics.
+            <p class="text-xs sm:text-sm theme-text-secondary mt-1">
+                Primary container terminals and deepwater port calls with live telematics and local weather.
             </p>
         </div>
 
@@ -28,39 +28,35 @@
     <!-- Locations Grid Cards -->
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         @foreach($locations as $loc)
-            <x-card class="flex flex-col justify-between space-y-4 hover:border-teal-400/30 transition-all duration-200 hover:scale-[1.01]">
+            <x-card class="flex flex-col justify-between space-y-4 hover:border-cyan-500/40 transition-all duration-200 hover:scale-[1.01]">
                 <div class="space-y-3">
                     <div class="flex items-start justify-between">
                         <div>
-                            <span class="text-xs font-mono font-bold text-amber-400 block">{{ $loc->unlocode }}</span>
-                            <h3 class="text-base font-bold text-white leading-tight mt-0.5 tracking-tight">{{ $loc->name }}</h3>
-                            <span class="text-xs text-slate-400">{{ $loc->city }}, {{ $loc->country }}</span>
+                            <span class="text-xs font-mono font-bold text-amber-500 dark:text-amber-400 block">{{ $loc->unlocode }}</span>
+                            <h3 class="text-base font-bold theme-heading leading-tight mt-0.5 tracking-tight">{{ $loc->name }}</h3>
+                            <span class="text-xs theme-text-secondary">{{ $loc->city }}, {{ $loc->country }}</span>
                         </div>
-                        <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase font-mono {{ $loc->type === 'PORT' ? 'bg-blue-500/15 text-blue-300 border border-blue-500/30' : ($loc->type === 'AIRPORT' ? 'bg-teal-500/15 text-teal-300 border border-teal-500/30' : 'bg-amber-500/15 text-amber-300 border border-amber-500/30') }}">
+                        <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase font-mono bg-blue-500/15 text-blue-600 dark:text-blue-300 border border-blue-500/30">
                             {{ $loc->type }}
                         </span>
                     </div>
 
                     <!-- Telemetry & Currency Snapshot -->
-                    <div class="p-3 rounded-xl bg-slate-950/60 border border-slate-800 space-y-2 text-xs">
-                        <div class="flex items-center justify-between text-slate-400 text-[11px] font-mono">
-                            <span>Currency: <strong class="text-white">{{ $loc->currency_code }}</strong></span>
-                            <span>TZ: <strong class="text-slate-300">{{ $loc->timezone }}</strong></span>
+                    <div class="p-3 rounded-xl theme-card-elevated border theme-border space-y-2 text-xs">
+                        <div class="flex items-center justify-between theme-text-secondary text-[11px] font-mono">
+                            <span>Currency: <strong class="theme-heading">{{ $loc->currency_code }}</strong></span>
+                            <span>TZ: <strong class="theme-text-primary">{{ $loc->timezone }}</strong></span>
                         </div>
-                        <div class="flex items-center justify-between text-[11px] pt-1.5 border-t border-white/5">
-                            <span class="text-teal-300 font-bold font-mono">
-                                🌡️ {{ $loc->weather_snapshot['temperature_c'] ?? '24' }}°C
-                            </span>
-                            <span class="text-slate-400 truncate max-w-[110px] text-[10px]">
-                                {{ $loc->weather_snapshot['condition'] ?? 'Clear' }}
-                            </span>
+                        <div class="flex items-center justify-between text-[11px] pt-1.5 border-t theme-border font-mono">
+                            <span class="theme-text-muted">GPS: {{ number_format($loc->latitude, 2) }}, {{ number_format($loc->longitude, 2) }}</span>
+                            <a href="{{ route('welcome') }}#network" class="text-cyan-600 dark:text-cyan-400 hover:underline">View Map</a>
                         </div>
                     </div>
                 </div>
 
-                <div class="pt-2.5 border-t border-white/10 flex items-center justify-between text-[11px] font-mono text-slate-400">
-                    <span class="uppercase text-[10px] tracking-wider text-slate-500 font-semibold">Active Bookings:</span>
-                    <span class="font-bold text-teal-300">{{ ($loc->origin_shipments_count ?? 0) + ($loc->destination_shipments_count ?? 0) }}</span>
+                <div class="pt-3 border-t theme-border flex items-center justify-between text-xs font-mono">
+                    <span class="uppercase text-[10px] tracking-wider theme-text-muted font-semibold">Origin Manifests</span>
+                    <span class="font-bold theme-heading text-sm">{{ $loc->origin_shipments_count ?? 0 }}</span>
                 </div>
             </x-card>
         @endforeach
@@ -69,66 +65,74 @@
 
 <!-- Add Location Modal -->
 <div id="add-location-modal" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
-    <div class="bg-[#0B1728] border border-white/10 rounded-2xl max-w-md w-full p-6 text-slate-100 shadow-2xl relative space-y-4">
-        <div class="flex items-center justify-between border-b border-white/10 pb-3">
-            <h3 class="text-base font-bold text-white tracking-tight">Register Port or Distribution Hub</h3>
-            <button onclick="document.getElementById('add-location-modal').classList.add('hidden')" class="text-slate-400 hover:text-white text-xl leading-none">&times;</button>
+    <div class="theme-card border theme-border rounded-2xl max-w-md w-full p-6 shadow-2xl relative space-y-4">
+        <div class="flex items-center justify-between border-b theme-border pb-3">
+            <h3 class="text-base font-bold theme-heading tracking-tight">Register Seaport / Terminal</h3>
+            <button onclick="document.getElementById('add-location-modal').classList.add('hidden')" class="theme-text-muted hover:theme-heading text-xl leading-none">&times;</button>
         </div>
 
         <form action="{{ route('operations.locations.store') }}" method="POST" class="space-y-4 text-xs">
             @csrf
-            <div class="space-y-1.5">
-                <label class="uppercase text-[10px] tracking-wider text-slate-400 font-semibold block">UN/LOCODE (e.g. IDJKT, NLRTM) *</label>
-                <input type="text" name="unlocode" required placeholder="IDJKT" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-white font-mono uppercase focus:ring-1 focus:ring-amber-500">
-            </div>
-
-            <div class="space-y-1.5">
-                <label class="uppercase text-[10px] tracking-wider text-slate-400 font-semibold block">Facility / Port Name *</label>
-                <input type="text" name="name" required placeholder="Tanjung Priok Port" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-white focus:ring-1 focus:ring-amber-500">
-            </div>
-
             <div class="grid grid-cols-2 gap-3">
                 <div class="space-y-1.5">
-                    <label class="uppercase text-[10px] tracking-wider text-slate-400 font-semibold block">City *</label>
-                    <input type="text" name="city" required placeholder="Jakarta" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-white focus:ring-1 focus:ring-amber-500">
+                    <label class="uppercase text-[10px] tracking-wider theme-text-muted font-semibold block">UN/LOCODE *</label>
+                    <input type="text" name="unlocode" required placeholder="IDJKT" class="w-full px-3.5 py-2.5 rounded-xl theme-input border font-mono uppercase focus:ring-1 focus:ring-cyan-500">
                 </div>
                 <div class="space-y-1.5">
-                    <label class="uppercase text-[10px] tracking-wider text-slate-400 font-semibold block">Country *</label>
-                    <input type="text" name="country" required placeholder="Indonesia" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-white focus:ring-1 focus:ring-amber-500">
-                </div>
-            </div>
-
-            <div class="grid grid-cols-2 gap-3">
-                <div class="space-y-1.5">
-                    <label class="uppercase text-[10px] tracking-wider text-slate-400 font-semibold block">Country Code (2 letters) *</label>
-                    <input type="text" name="country_code" required maxlength="2" placeholder="ID" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-white font-mono uppercase focus:ring-1 focus:ring-amber-500">
-                </div>
-                <div class="space-y-1.5">
-                    <label class="uppercase text-[10px] tracking-wider text-slate-400 font-semibold block">Currency Code (3 letters) *</label>
-                    <input type="text" name="currency_code" required maxlength="3" placeholder="IDR" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-white font-mono uppercase focus:ring-1 focus:ring-amber-500">
-                </div>
-            </div>
-
-            <div class="grid grid-cols-2 gap-3">
-                <div class="space-y-1.5">
-                    <label class="uppercase text-[10px] tracking-wider text-slate-400 font-semibold block">Facility Type *</label>
-                    <select name="type" required class="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-white font-mono focus:ring-1 focus:ring-amber-500">
-                        <option value="PORT">PORT</option>
+                    <label class="uppercase text-[10px] tracking-wider theme-text-muted font-semibold block">Location Type *</label>
+                    <select name="type" required class="w-full px-3.5 py-2.5 rounded-xl theme-input border focus:ring-1 focus:ring-cyan-500 font-mono">
+                        <option value="PORT" selected>PORT (Seaport)</option>
                         <option value="AIRPORT">AIRPORT</option>
-                        <option value="HUB">HUB</option>
-                        <option value="WAREHOUSE">WAREHOUSE</option>
+                        <option value="HUB">HUB (Distribution)</option>
+                        <option value="CUSTOMS">CUSTOMS</option>
                     </select>
                 </div>
+            </div>
+
+            <div class="space-y-1.5">
+                <label class="uppercase text-[10px] tracking-wider theme-text-muted font-semibold block">Location Name *</label>
+                <input type="text" name="name" required placeholder="Tanjung Priok Container Terminal" class="w-full px-3.5 py-2.5 rounded-xl theme-input border focus:ring-1 focus:ring-cyan-500">
+            </div>
+
+            <div class="grid grid-cols-2 gap-3">
                 <div class="space-y-1.5">
-                    <label class="uppercase text-[10px] tracking-wider text-slate-400 font-semibold block">Timezone (e.g. Asia/Jakarta) *</label>
-                    <input type="text" name="timezone" required value="UTC" placeholder="Asia/Jakarta" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-white font-mono focus:ring-1 focus:ring-amber-500">
+                    <label class="uppercase text-[10px] tracking-wider theme-text-muted font-semibold block">City *</label>
+                    <input type="text" name="city" required placeholder="Jakarta" class="w-full px-3.5 py-2.5 rounded-xl theme-input border focus:ring-1 focus:ring-cyan-500">
+                </div>
+                <div class="space-y-1.5">
+                    <label class="uppercase text-[10px] tracking-wider theme-text-muted font-semibold block">Country (2 letters) *</label>
+                    <input type="text" name="country" required maxlength="2" placeholder="ID" class="w-full px-3.5 py-2.5 rounded-xl theme-input border font-mono uppercase focus:ring-1 focus:ring-cyan-500">
                 </div>
             </div>
 
-            <div class="pt-2 flex justify-end space-x-2">
-                <button type="button" onclick="document.getElementById('add-location-modal').classList.add('hidden')" class="px-4 py-2 rounded-xl text-slate-400 hover:text-white transition">Cancel</button>
-                <button type="submit" class="px-5 py-2 rounded-xl bg-gradient-to-r from-teal-400 to-teal-500 hover:from-teal-300 hover:to-teal-400 text-slate-950 font-bold transition">
-                    Save Port / Hub
+            <div class="grid grid-cols-2 gap-3">
+                <div class="space-y-1.5">
+                    <label class="uppercase text-[10px] tracking-wider theme-text-muted font-semibold block">Latitude *</label>
+                    <input type="number" step="0.000001" name="latitude" required placeholder="-6.1018" class="w-full px-3.5 py-2.5 rounded-xl theme-input border font-mono focus:ring-1 focus:ring-cyan-500">
+                </div>
+                <div class="space-y-1.5">
+                    <label class="uppercase text-[10px] tracking-wider theme-text-muted font-semibold block">Longitude *</label>
+                    <input type="number" step="0.000001" name="longitude" required placeholder="106.8833" class="w-full px-3.5 py-2.5 rounded-xl theme-input border font-mono focus:ring-1 focus:ring-cyan-500">
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3">
+                <div class="space-y-1.5">
+                    <label class="uppercase text-[10px] tracking-wider theme-text-muted font-semibold block">Timezone</label>
+                    <input type="text" name="timezone" placeholder="Asia/Jakarta" class="w-full px-3.5 py-2.5 rounded-xl theme-input border font-mono focus:ring-1 focus:ring-cyan-500">
+                </div>
+                <div class="space-y-1.5">
+                    <label class="uppercase text-[10px] tracking-wider theme-text-muted font-semibold block">Currency Code</label>
+                    <input type="text" name="currency_code" maxlength="3" placeholder="IDR" class="w-full px-3.5 py-2.5 rounded-xl theme-input border font-mono uppercase focus:ring-1 focus:ring-cyan-500">
+                </div>
+            </div>
+
+            <div class="pt-2 flex justify-end space-x-3">
+                <button type="button" onclick="document.getElementById('add-location-modal').classList.add('hidden')" class="px-4 py-2 rounded-xl theme-text-muted hover:theme-heading border theme-border font-semibold">
+                    Cancel
+                </button>
+                <button type="submit" class="px-5 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold transition">
+                    Save Location
                 </button>
             </div>
         </form>

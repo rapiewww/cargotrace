@@ -29,3 +29,4 @@
     @endif
     <span>{{ $slot }}</span>
 </span>
+

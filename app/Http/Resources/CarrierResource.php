@@ -27,4 +27,3 @@ class CarrierResource extends JsonResource
         ];
     }
 }
-

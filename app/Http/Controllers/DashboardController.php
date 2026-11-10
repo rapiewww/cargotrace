@@ -42,12 +42,12 @@ class DashboardController extends Controller
         // Scoped open exceptions count and distribution
         $openExceptions = ShipmentException::whereIn('status', ['OPEN', 'INVESTIGATING'])
             ->when($user->role === 'customer', function ($q) use ($user) {
-                $q->whereHas('shipment', fn($sq) => $sq->where('customer_id', $user->id));
+                $q->whereHas('shipment', fn ($sq) => $sq->where('customer_id', $user->id));
             })->count();
 
         $exceptionCounts = ShipmentException::whereIn('status', ['OPEN', 'INVESTIGATING'])
             ->when($user->role === 'customer', function ($q) use ($user) {
-                $q->whereHas('shipment', fn($sq) => $sq->where('customer_id', $user->id));
+                $q->whereHas('shipment', fn ($sq) => $sq->where('customer_id', $user->id));
             })
             ->select('exception_code', DB::raw('count(*) as count'))
             ->groupBy('exception_code')
@@ -69,9 +69,9 @@ class DashboardController extends Controller
                 }
             }])
             ->get()
-            ->filter(fn($c) => $c->shipments_count > 0)
+            ->filter(fn ($c) => $c->shipments_count > 0)
             ->values()
-            ->map(fn($c) => [
+            ->map(fn ($c) => [
                 'name' => $c->name,
                 'code' => $c->code,
                 'count' => $c->shipments_count,
@@ -134,7 +134,7 @@ class DashboardController extends Controller
 
         $latestException = ShipmentException::whereIn('status', ['OPEN', 'INVESTIGATING'])
             ->when($user->role === 'customer', function ($q) use ($user) {
-                $q->whereHas('shipment', fn($sq) => $sq->where('customer_id', $user->id));
+                $q->whereHas('shipment', fn ($sq) => $sq->where('customer_id', $user->id));
             })
             ->with('shipment')
             ->latest()
@@ -200,7 +200,7 @@ class DashboardController extends Controller
                     'lat' => (float) $s->currentLocation->latitude,
                     'lng' => (float) $s->currentLocation->longitude,
                 ] : null,
-                'exceptions' => $s->exceptions->map(fn($e) => [
+                'exceptions' => $s->exceptions->map(fn ($e) => [
                     'code' => $e->exception_code,
                     'severity' => $e->severity,
                     'description' => $e->description,

@@ -100,7 +100,7 @@ class ShipmentWebController extends Controller
         }
 
         $shipments = $query->orderByDesc('created_at')->get();
-        $filename = 'cargotrace-shipments-' . date('Y-m-d_His') . '.csv';
+        $filename = 'cargotrace-shipments-'.date('Y-m-d_His').'.csv';
 
         $headers = [
             'Content-Type' => 'text/csv',

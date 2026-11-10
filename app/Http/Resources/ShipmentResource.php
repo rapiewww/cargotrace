@@ -63,4 +63,3 @@ class ShipmentResource extends JsonResource
         ];
     }
 }
-

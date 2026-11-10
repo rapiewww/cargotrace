@@ -22,4 +22,3 @@ class UpdateExceptionStatusRequest extends FormRequest
         ];
     }
 }
-

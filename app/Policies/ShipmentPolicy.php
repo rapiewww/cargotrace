@@ -91,4 +91,3 @@ class ShipmentPolicy
         return $user->role === 'operator';
     }
 }
-

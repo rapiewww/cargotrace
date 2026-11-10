@@ -21,3 +21,4 @@ export function initTrackingModule() {
         window.location.href = `/track/${encodeURIComponent(query)}`;
     };
 }
+

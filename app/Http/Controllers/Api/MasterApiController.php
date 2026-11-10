@@ -160,4 +160,3 @@ class MasterApiController extends Controller
         ], Response::HTTP_OK);
     }
 }
-

@@ -33,3 +33,4 @@
         <span>{{ $destination }}</span>
     </div>
 </div>
+

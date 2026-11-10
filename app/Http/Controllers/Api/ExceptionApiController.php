@@ -75,4 +75,3 @@ class ExceptionApiController extends Controller
         ], Response::HTTP_OK);
     }
 }
-

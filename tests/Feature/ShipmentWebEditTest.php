@@ -2,7 +2,6 @@
 
 namespace Tests\Feature;
 
-use App\Models\Carrier;
 use App\Models\Location;
 use App\Models\Shipment;
 use App\Models\User;
@@ -18,7 +17,7 @@ test('operator can view edit page for shipment', function () {
     $operator = User::where('role', 'operator')->first();
     $shipment = Shipment::first();
 
-    $response = $this->actingAs($operator)->get('/shipments/' . $shipment->id . '/edit');
+    $response = $this->actingAs($operator)->get('/shipments/'.$shipment->id.'/edit');
 
     $response->assertStatus(200);
     $response->assertSee('Edit Cargo Manifest');
@@ -29,7 +28,7 @@ test('customer cannot access shipment edit page', function () {
     $customer = User::where('role', 'customer')->first();
     $shipment = Shipment::first();
 
-    $this->actingAs($customer)->get('/shipments/' . $shipment->id . '/edit')->assertStatus(403);
+    $this->actingAs($customer)->get('/shipments/'.$shipment->id.'/edit')->assertStatus(403);
 });
 
 test('operator can update shipment and audit log is recorded', function () {
@@ -37,7 +36,7 @@ test('operator can update shipment and audit log is recorded', function () {
     $shipment = Shipment::where('status', '!=', 'DELIVERED')->first();
     $dest = Location::where('id', '!=', $shipment->origin_location_id)->first();
 
-    $response = $this->actingAs($operator)->put('/shipments/' . $shipment->id, [
+    $response = $this->actingAs($operator)->put('/shipments/'.$shipment->id, [
         'carrier_id' => $shipment->carrier_id,
         'origin_location_id' => $shipment->origin_location_id,
         'destination_location_id' => $dest->id,
@@ -51,7 +50,7 @@ test('operator can update shipment and audit log is recorded', function () {
         'notes' => 'Updated via Web Interface test',
     ]);
 
-    $response->assertRedirect('/shipments/' . $shipment->id);
+    $response->assertRedirect('/shipments/'.$shipment->id);
     $this->assertDatabaseHas('shipments', [
         'id' => $shipment->id,
         'reference_number' => 'REF-EDITED-999',

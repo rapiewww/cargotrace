@@ -1,0 +1,887 @@
+{
+	"info": {
+		"_postman_id": "c7a84092-261e-4ee2-bb20-cargotrace2026",
+		"name": "CargoTrace REST API Collection",
+		"description": "Comprehensive Postman API Collection for CargoTrace: Global Maritime Container Visibility & Tracking Platform.\n\nFeatures:\n- Laravel Sanctum Bearer Token Authentication\n- Role-Based Access Control (Admin, Operator, Customer)\n- Waybill & Container Lifecycle (CREATED -> BOOKED -> PICKED_UP -> IN_TRANSIT -> DELIVERED)\n- Milestones & Tracking Checkpoints with Weather Telemetry\n- Operational Exceptions & Escalations\n- Port Locations (UN/LOCODE) & Ocean Shipping Carriers\n- External Integrations (OpenWeatherMap, Open Exchange Rates, NewsData.io)",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"auth": {
+		"type": "bearer",
+		"bearer": [
+			{
+				"key": "token",
+				"value": "{{sanctum_token}}",
+				"type": "string"
+			}
+		]
+	},
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://cargotrace.test",
+			"type": "string"
+		},
+		{
+			"key": "sanctum_token",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "shipment_id",
+			"value": "1",
+			"type": "string"
+		},
+		{
+			"key": "exception_id",
+			"value": "1",
+			"type": "string"
+		}
+	],
+	"item": [
+		{
+			"name": "1. Authentication",
+			"item": [
+				{
+					"name": "Register Customer Account",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"Global Forwarding Corp\",\n    \"email\": \"forwarding@trade.com\",\n    \"password\": \"password\",\n    \"password_confirmation\": \"password\",\n    \"company_name\": \"Global Maritime Traders Ltd\",\n    \"phone\": \"+65-6890-1234\",\n    \"preferred_currency\": \"USD\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/register",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"register"
+							]
+						},
+						"description": "Registers a new customer account and automatically generates a Sanctum personal access token."
+					},
+					"response": []
+				},
+				{
+					"name": "Login (Admin)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    var data = pm.response.json();",
+									"    if (data.token) {",
+									"        pm.collectionVariables.set(\"sanctum_token\", data.token);",
+									"        console.log(\"Saved sanctum_token: \" + data.token);",
+									"    }",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"admin@cargotrace.test\",\n    \"password\": \"password\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/login",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"login"
+							]
+						},
+						"description": "Authenticates as System Administrator. The test script saves the issued Sanctum token to `{{sanctum_token}}`."
+					},
+					"response": []
+				},
+				{
+					"name": "Login (Operator)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    var data = pm.response.json();",
+									"    if (data.token) {",
+									"        pm.collectionVariables.set(\"sanctum_token\", data.token);",
+									"        console.log(\"Saved operator token: \" + data.token);",
+									"    }",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"operator@cargotrace.test\",\n    \"password\": \"password\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/login",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"login"
+							]
+						},
+						"description": "Authenticates as Port Operator. Can create waybills, record milestones, and report exceptions."
+					},
+					"response": []
+				},
+				{
+					"name": "Login (Customer)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    var data = pm.response.json();",
+									"    if (data.token) {",
+									"        pm.collectionVariables.set(\"sanctum_token\", data.token);",
+									"        console.log(\"Saved customer token: \" + data.token);",
+									"    }",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"customer@cargotrace.test\",\n    \"password\": \"password\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/login",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"login"
+							]
+						},
+						"description": "Authenticates as Consignee / Customer. Scoped strictly to assigned shipments."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Current User Profile",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/user",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"user"
+							]
+						},
+						"description": "Retrieves the authenticated user profile, assigned role, and preferred currency."
+					},
+					"response": []
+				},
+				{
+					"name": "Logout",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/logout",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"logout"
+							]
+						},
+						"description": "Revokes the active Sanctum bearer token."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "2. Shipments",
+			"item": [
+				{
+					"name": "List Shipments (Filtered)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/shipments?status=IN_TRANSIT&is_delayed=true&per_page=10",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"shipments"
+							],
+							"query": [
+								{
+									"key": "status",
+									"value": "IN_TRANSIT",
+									"description": "Filter by status: CREATED, BOOKED, PICKED_UP, IN_TRANSIT, DELIVERED"
+								},
+								{
+									"key": "is_delayed",
+									"value": "true",
+									"description": "Filter by delay flag (true / false)"
+								},
+								{
+									"key": "carrier_id",
+									"value": "1",
+									"disabled": true,
+									"description": "Filter by Ocean Carrier ID"
+								},
+								{
+									"key": "search",
+									"value": "CTG-SEA",
+									"disabled": true,
+									"description": "Search in tracking or reference numbers"
+								},
+								{
+									"key": "per_page",
+									"value": "10",
+									"description": "Pagination limit"
+								}
+							]
+						},
+						"description": "Returns a paginated list of shipments. Customers receive only shipments consigned to their account."
+					},
+					"response": []
+				},
+				{
+					"name": "Create Shipment (Admin / Operator)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 201) {",
+									"    var data = pm.response.json();",
+									"    if (data.data && data.data.id) {",
+									"        pm.collectionVariables.set(\"shipment_id\", data.data.id);",
+									"        console.log(\"Created shipment_id: \" + data.data.id);",
+									"    }",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"carrier_id\": 1,\n    \"origin_location_id\": 1,\n    \"destination_location_id\": 3,\n    \"cargo_type\": \"FCL\",\n    \"currency_code\": \"EUR\",\n    \"declared_value\": 145000.00,\n    \"shipping_cost\": 6200.00,\n    \"expected_departure_at\": \"2026-11-15 08:00:00\",\n    \"expected_arrival_at\": \"2026-11-28 16:00:00\",\n    \"estimated_arrival_at\": \"2026-11-28 16:00:00\",\n    \"reference_number\": \"REF-MARITIME-9901\",\n    \"notes\": \"Temperature-controlled reefer containers holding pharmaceutical goods.\",\n    \"items\": [\n        {\n            \"sku\": \"MED-CONT-01\",\n            \"description\": \"Vaccines & Bio-Pharmaceuticals (Cold Chain)\",\n            \"quantity\": 2,\n            \"unit_value\": 72500.00,\n            \"weight_kg\": 12400.00,\n            \"volume_cbm\": 67.50,\n            \"is_hazardous\": false\n        }\n    ]\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/shipments",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"shipments"
+							]
+						},
+						"description": "Registers a new ocean container shipment with line items. Automatically calculates converted USD valuation using foreign exchange rates and evaluates delay status."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Shipment Details",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/shipments/{{shipment_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"shipments",
+								"{{shipment_id}}"
+							]
+						},
+						"description": "Retrieves comprehensive shipment details including carrier, ports, items, milestone history, and active exceptions."
+					},
+					"response": []
+				},
+				{
+					"name": "Update Shipment Status & ETA (Admin / Operator)",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"status\": \"IN_TRANSIT\",\n    \"location_id\": 2,\n    \"estimated_arrival_at\": \"2026-11-30 18:00:00\",\n    \"delay_reason\": \"Dense fog and marine traffic congestion near Malacca Strait\",\n    \"description\": \"Vessel cleared transshipment hub and underway on open sea lane.\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/shipments/{{shipment_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"shipments",
+								"{{shipment_id}}"
+							]
+						},
+						"description": "Updates the operational status and ETA. Triggering ETA revision automatically recalculates delay severity (LOW, MEDIUM, HIGH) and dispatches customer notifications if delay increases."
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Shipment (Admin Only)",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/shipments/{{shipment_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"shipments",
+								"{{shipment_id}}"
+							]
+						},
+						"description": "Strictly deletes a shipment record. Restricted to the System Administrator role by policy."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "3. Tracking Events",
+			"item": [
+				{
+					"name": "Get Tracking Timeline",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/shipments/{{shipment_id}}/tracking",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"shipments",
+								"{{shipment_id}}",
+								"tracking"
+							]
+						},
+						"description": "Retrieves the chronological milestone audit trail for the shipment."
+					},
+					"response": []
+				},
+				{
+					"name": "Log Tracking Checkpoint (Admin / Operator)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"title\": \"Container Loaded Onboard Vessel\",\n    \"status\": \"IN_TRANSIT\",\n    \"event_type\": \"NORMAL\",\n    \"location_id\": 1,\n    \"description\": \"Container securely stowed on deck bay 14. Customs manifest stamped and cleared.\",\n    \"latitude\": 1.290270,\n    \"longitude\": 103.851959,\n    \"occurred_at\": \"2026-11-15 10:30:00\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/shipments/{{shipment_id}}/tracking",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"shipments",
+								"{{shipment_id}}",
+								"tracking"
+							]
+						},
+						"description": "Logs an operator-verified milestone event and attaches automated port weather telemetry."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "4. Operational Exceptions",
+			"item": [
+				{
+					"name": "List Shipment Exceptions",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/shipments/{{shipment_id}}/exceptions",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"shipments",
+								"{{shipment_id}}",
+								"exceptions"
+							]
+						},
+						"description": "Lists all operational anomalies and incidents filed for the shipment."
+					},
+					"response": []
+				},
+				{
+					"name": "Report Shipment Exception (Admin / Operator)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 201) {",
+									"    var data = pm.response.json();",
+									"    if (data.data && data.data.id) {",
+									"        pm.collectionVariables.set(\"exception_id\", data.data.id);",
+									"        console.log(\"Created exception_id: \" + data.data.id);",
+									"    }",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"exception_code\": \"PORT_CONGESTION\",\n    \"severity\": \"MEDIUM\",\n    \"title\": \"Berth Availability Delay at Destination Port\",\n    \"description\": \"Vessel instructed to anchor in roadstead due to crane maintenance at container terminal.\",\n    \"related_news_url\": \"https://news.portadvisory.org/traffic/update-2026\",\n    \"detected_at\": \"2026-11-18 14:00:00\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/shipments/{{shipment_id}}/exceptions",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"shipments",
+								"{{shipment_id}}",
+								"exceptions"
+							]
+						},
+						"description": "Files an operational exception (CUSTOMS_HOLD, WEATHER_DELAY, PORT_CONGESTION, DAMAGED, MISROUTED, DOCUMENTATION_ISSUE)."
+					},
+					"response": []
+				},
+				{
+					"name": "Update Exception Status (Admin / Operator)",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"status\": \"RESOLVED\",\n    \"resolution_notes\": \"Berth assigned at Terminal 4. Gantry cranes commenced unlashing operations.\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/exceptions/{{exception_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"exceptions",
+								"{{exception_id}}"
+							]
+						},
+						"description": "Transitions an exception state to INVESTIGATING or RESOLVED."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "5. Master Data",
+			"item": [
+				{
+					"name": "List Ocean Carriers",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/carriers",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"carriers"
+							]
+						},
+						"description": "Lists all active shipping lines (Maersk, MSC, CMA CGM, COSCO, Hapag-Lloyd, ONE)."
+					},
+					"response": []
+				},
+				{
+					"name": "Create Ocean Carrier (Admin Only)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"code\": \"EMCU\",\n    \"name\": \"Evergreen Marine Corporation\",\n    \"mode\": \"SEA\",\n    \"headquarters_country\": \"Taiwan\",\n    \"contact_email\": \"operations@evergreen-marine.com\",\n    \"website\": \"https://www.evergreen-marine.com\",\n    \"is_active\": true\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/carriers",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"carriers"
+							]
+						},
+						"description": "Registers a new carrier. Restricted to System Administrator."
+					},
+					"response": []
+				},
+				{
+					"name": "List Port Locations",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/locations",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"locations"
+							]
+						},
+						"description": "Lists port terminals with UN/LOCODE, coordinates, and local weather."
+					},
+					"response": []
+				},
+				{
+					"name": "Create Port Location (Admin Only)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"unlocode\": \"DEHAM\",\n    \"name\": \"Port of Hamburg Container Terminal\",\n    \"city\": \"Hamburg\",\n    \"country\": \"Germany\",\n    \"country_code\": \"DE\",\n    \"currency_code\": \"EUR\",\n    \"type\": \"PORT\",\n    \"latitude\": 53.532300,\n    \"longitude\": 9.967600,\n    \"timezone\": \"Europe/Berlin\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/locations",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"locations"
+							]
+						},
+						"description": "Creates a port location. Automatically geocodes coordinates if omitted and snapshots live weather & news."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "6. External Integrations",
+			"item": [
+				{
+					"name": "Get Weather Telemetry",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/integrations/weather?lat=1.290270&lon=103.851959&location_name=Port+of+Singapore",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"integrations",
+								"weather"
+							],
+							"query": [
+								{
+									"key": "lat",
+									"value": "1.290270"
+								},
+								{
+									"key": "lon",
+									"value": "103.851959"
+								},
+								{
+									"key": "location_name",
+									"value": "Port+of+Singapore"
+								}
+							]
+						},
+						"description": "Fetches verified weather condition, temperature, wind speed, and sea state. Includes `data_source` provenance badge (LIVE, CACHED, or SIMULATED)."
+					},
+					"response": []
+				},
+				{
+					"name": "Convert Currency FX",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/integrations/currency?amount=50000&from=EUR&to=USD",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"integrations",
+								"currency"
+							],
+							"query": [
+								{
+									"key": "amount",
+									"value": "50000"
+								},
+								{
+									"key": "from",
+									"value": "EUR"
+								},
+								{
+									"key": "to",
+									"value": "USD"
+								}
+							]
+						},
+						"description": "Converts declared cargo valuations between international currencies using Open Exchange Rates."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Maritime Logistics News",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/integrations/news?query=maritime+shipping+port+congestion",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"integrations",
+								"news"
+							],
+							"query": [
+								{
+									"key": "query",
+									"value": "maritime+shipping+port+congestion"
+								}
+							]
+						},
+						"description": "Fetches current maritime transport advisories and port traffic articles via NewsData.io."
+					},
+					"response": []
+				}
+			]
+		}
+	]
+}

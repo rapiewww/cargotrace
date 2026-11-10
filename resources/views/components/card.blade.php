@@ -6,14 +6,14 @@
     'class' => '',
 ])
 
-<div {{ $attributes->merge(['class' => "rounded-2xl bg-[#0B1728]/85 backdrop-blur-xl border border-white/10 shadow-2xl {$padding} {$class}"]) }}>
+<div {{ $attributes->merge(['class' => "rounded-2xl theme-card border {$padding} {$class} transition-colors duration-200"]) }}>
     @if($title || $action)
-        <div class="flex items-center justify-between pb-4 mb-4 border-b border-white/5">
+        <div class="flex items-center justify-between pb-4 mb-4 border-b theme-border">
             <div>
                 @if($subtitle)
-                    <span class="text-[10px] uppercase tracking-wider text-slate-500 font-semibold block">{{ $subtitle }}</span>
+                    <span class="text-[10px] uppercase tracking-wider theme-text-muted font-semibold block">{{ $subtitle }}</span>
                 @endif
-                <h3 class="text-base font-bold text-white tracking-tight">{{ $title }}</h3>
+                <h3 class="text-base font-bold theme-heading tracking-tight">{{ $title }}</h3>
             </div>
             @if($action)
                 <div class="flex items-center space-x-2">

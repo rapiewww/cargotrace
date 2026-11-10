@@ -176,4 +176,3 @@ class ExceptionService
         return $exception;
     }
 }
-
