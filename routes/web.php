@@ -5,6 +5,7 @@ use App\Http\Controllers\CarrierLocationWebController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ExceptionWebController;
 use App\Http\Controllers\NotificationWebController;
+use App\Http\Controllers\PublicTrackingController;
 use App\Http\Controllers\ShipmentWebController;
 use App\Http\Controllers\WebAuthController;
 use App\Http\Controllers\WelcomeController;
@@ -18,6 +19,9 @@ use Illuminate\Support\Facades\Route;
 
 // Public Landing & Live Tracking
 Route::get('/', [WelcomeController::class, 'index'])->name('welcome');
+Route::get('/track/{tracking_number}', [PublicTrackingController::class, 'show'])
+    ->name('public.track')
+    ->middleware('throttle:30,1');
 
 // Guest Authentication
 Route::middleware('guest')->group(function () {
