@@ -1,13 +1,25 @@
 @import 'tailwindcss';
+@import 'leaflet/dist/leaflet.css';
 
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
 @source '../../storage/framework/views/*.php';
 
 @theme {
-    --font-sans: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    --font-sans: 'Plus Jakarta Sans', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+
+    --color-surface-abyss: #050B14;
+    --color-surface-card: #0B1728;
+    --color-surface-elevated: #11233B;
+    --color-surface-subtle: #081220;
+
+    --color-accent-amber: #F5A524;
+    --color-accent-amber-glow: rgba(245, 165, 36, 0.25);
+    --color-accent-teal: #2DD4BF;
+    --color-accent-teal-glow: rgba(45, 212, 191, 0.25);
 }
 
-/* Custom Maritime Scrollbar */
+/* Custom Maritime Scrollbars */
 ::-webkit-scrollbar {
     width: 6px;
     height: 6px;
@@ -16,23 +28,45 @@
     background: #050B14;
 }
 ::-webkit-scrollbar-thumb {
-    background: #162B45;
+    background: #11233B;
     border-radius: 9999px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
 }
 ::-webkit-scrollbar-thumb:hover {
-    background: #25466F;
+    background: #1D3658;
 }
 
-/* Leaflet Dark Tile Styling */
+/* Leaflet Dark Tile Filter */
 .leaflet-dark-tile {
-    filter: brightness(0.65) invert(1) contrast(3.2) hue-rotate(205deg) saturate(0.3) brightness(0.75);
+    filter: brightness(0.7) invert(1) contrast(3) hue-rotate(200deg) saturate(0.35) brightness(0.8);
 }
 
-/* Pulse animation utility */
-@keyframes subtle-pulse {
-    0%, 100% { opacity: 1; transform: scale(1); }
-    50% { opacity: 0.6; transform: scale(0.96); }
+/* Glassmorphism helpers */
+.glass-card {
+    background-color: rgba(11, 23, 40, 0.85);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
 }
-.animate-subtle-pulse {
-    animation: subtle-pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+
+.glass-dropdown {
+    background-color: rgba(11, 23, 40, 0.95);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+/* Focus and motion */
+:focus-visible {
+    outline: 2px solid #F5A524;
+    outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    * {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
 }
