@@ -39,33 +39,82 @@ class DashboardController extends Controller
         $deliveredOnTime = (clone $shipmentQuery)->where('status', 'DELIVERED')->where('is_delayed', false)->count();
         $onTimeRate = $totalDelivered > 0 ? round(($deliveredOnTime / $totalDelivered) * 100, 1) : 100.0;
 
-        $openExceptions = ShipmentException::whereIn('status', ['OPEN', 'INVESTIGATING'])->count();
+        // Scoped open exceptions count and distribution
+        $openExceptions = ShipmentException::whereIn('status', ['OPEN', 'INVESTIGATING'])
+            ->when($user->role === 'customer', function ($q) use ($user) {
+                $q->whereHas('shipment', fn($sq) => $sq->where('customer_id', $user->id));
+            })->count();
 
-        // Shipments by status for chart
+        $exceptionCounts = ShipmentException::whereIn('status', ['OPEN', 'INVESTIGATING'])
+            ->when($user->role === 'customer', function ($q) use ($user) {
+                $q->whereHas('shipment', fn($sq) => $sq->where('customer_id', $user->id));
+            })
+            ->select('exception_code', DB::raw('count(*) as count'))
+            ->groupBy('exception_code')
+            ->pluck('count', 'exception_code')
+            ->toArray();
+
+        // Shipments by status for doughnut chart
         $statusCounts = (clone $shipmentQuery)
             ->select('status', DB::raw('count(*) as count'))
             ->groupBy('status')
             ->pluck('count', 'status')
             ->toArray();
 
-        // Shipments by carrier for chart
-        $carrierCounts = (clone $shipmentQuery)
-            ->join('carriers', 'shipments.carrier_id', '=', 'carriers.id')
-            ->select('carriers.code', DB::raw('count(*) as count'))
-            ->groupBy('carriers.code')
-            ->pluck('count', 'carriers.code')
+        // Carrier distribution for horizontal bar chart
+        $carrierStats = Carrier::where('is_active', true)
+            ->withCount(['shipments' => function ($q) use ($user) {
+                if ($user->role === 'customer') {
+                    $q->where('customer_id', $user->id);
+                }
+            }])
+            ->get()
+            ->filter(fn($c) => $c->shipments_count > 0)
+            ->values()
+            ->map(fn($c) => [
+                'name' => $c->name,
+                'code' => $c->code,
+                'count' => $c->shipments_count,
+            ])
             ->toArray();
 
-        // Featured shipment
+        // 8-week trend data (On-Time vs Delayed)
+        $trendData = [];
+        for ($i = 7; $i >= 0; $i--) {
+            $startOfWeek = now()->subWeeks($i)->startOfWeek();
+            $endOfWeek = now()->subWeeks($i)->endOfWeek();
+            $weekLabel = $startOfWeek->format('d M');
+
+            $wQuery = (clone $shipmentQuery)->whereBetween('created_at', [$startOfWeek, $endOfWeek]);
+            $onTimeCount = (clone $wQuery)->where('is_delayed', false)->count();
+            $delayedCount = (clone $wQuery)->where('is_delayed', true)->count();
+
+            $trendData[] = [
+                'week' => $weekLabel,
+                'on_time' => $onTimeCount,
+                'delayed' => $delayedCount,
+            ];
+        }
+
+        // Featured shipment (prefer active in-transit with exceptions or delay)
         $featuredShipment = (clone $shipmentQuery)
-            ->where('status', 'IN_TRANSIT')
+            ->whereIn('status', ['IN_TRANSIT', 'PICKED_UP'])
             ->with(['carrier', 'originLocation', 'destinationLocation', 'currentLocation', 'trackingEvents.location', 'exceptions'])
+            ->orderByDesc('is_delayed')
+            ->latest()
             ->first();
 
-        // Active shipments for map
+        if (! $featuredShipment) {
+            $featuredShipment = (clone $shipmentQuery)
+                ->with(['carrier', 'originLocation', 'destinationLocation', 'currentLocation', 'trackingEvents.location', 'exceptions'])
+                ->latest()
+                ->first();
+        }
+
+        // Active shipments for world map
         $activeShipments = (clone $shipmentQuery)
             ->whereIn('status', ['IN_TRANSIT', 'PICKED_UP', 'BOOKED'])
-            ->with(['originLocation', 'destinationLocation', 'currentLocation', 'carrier'])
+            ->with(['originLocation', 'destinationLocation', 'currentLocation', 'carrier', 'exceptions'])
             ->get();
 
         // Active routes for schedule panel
@@ -75,6 +124,21 @@ class DashboardController extends Controller
             ->latest()
             ->take(5)
             ->get();
+
+        // Real hero floating chips data (from actual DB records)
+        $latestDelayed = (clone $shipmentQuery)
+            ->where('is_delayed', true)
+            ->with('currentLocation')
+            ->latest('updated_at')
+            ->first();
+
+        $latestException = ShipmentException::whereIn('status', ['OPEN', 'INVESTIGATING'])
+            ->when($user->role === 'customer', function ($q) use ($user) {
+                $q->whereHas('shipment', fn($sq) => $sq->where('customer_id', $user->id));
+            })
+            ->with('shipment')
+            ->latest()
+            ->first();
 
         $locations = Location::all();
         $carriers = Carrier::where('is_active', true)->get();
@@ -86,7 +150,7 @@ class DashboardController extends Controller
             ->get();
         $unreadCount = Notification::where('user_id', $user->id)->whereNull('read_at')->count();
 
-        // External data
+        // External data (cached with data_source indicator)
         $news = $this->externalService->getLogisticsNews();
         $currencyData = $this->externalService->convertCurrency(1, 'USD', 'EUR');
         $rates = $currencyData['rates_snapshot'] ?? [];
@@ -94,16 +158,56 @@ class DashboardController extends Controller
         // Weather for key ports
         $weatherPorts = [];
         foreach ($locations->take(4) as $loc) {
+            $weather = $loc->weather_snapshot ?? $this->externalService->getWeatherByCoordinates(
+                (float) $loc->latitude,
+                (float) $loc->longitude,
+                $loc->name
+            );
+
             $weatherPorts[] = [
                 'name' => $loc->name,
                 'city' => $loc->city,
-                'weather' => $loc->weather_snapshot ?? $this->externalService->getWeatherByCoordinates(
-                    (float) $loc->latitude,
-                    (float) $loc->longitude,
-                    $loc->name
-                ),
+                'unlocode' => $loc->unlocode,
+                'weather' => $weather,
+                'data_source' => $weather['data_source'] ?? 'simulated',
             ];
         }
+
+        // Map payload formatting for client-side Leaflet
+        $mapShipments = $activeShipments->map(function ($s) {
+            return [
+                'id' => $s->id,
+                'tracking_number' => $s->tracking_number,
+                'status' => $s->status,
+                'is_delayed' => (bool) $s->is_delayed,
+                'delay_hours' => (int) $s->delay_hours,
+                'carrier' => $s->carrier?->name ?? 'Carrier',
+                'carrier_mode' => $s->carrier?->mode ?? 'SEA',
+                'origin' => [
+                    'name' => $s->originLocation?->name ?? 'Origin',
+                    'city' => $s->originLocation?->city ?? '',
+                    'lat' => (float) ($s->originLocation?->latitude ?? 0),
+                    'lng' => (float) ($s->originLocation?->longitude ?? 0),
+                ],
+                'destination' => [
+                    'name' => $s->destinationLocation?->name ?? 'Destination',
+                    'city' => $s->destinationLocation?->city ?? '',
+                    'lat' => (float) ($s->destinationLocation?->latitude ?? 0),
+                    'lng' => (float) ($s->destinationLocation?->longitude ?? 0),
+                ],
+                'current' => $s->currentLocation ? [
+                    'name' => $s->currentLocation->name,
+                    'lat' => (float) $s->currentLocation->latitude,
+                    'lng' => (float) $s->currentLocation->longitude,
+                ] : null,
+                'exceptions' => $s->exceptions->map(fn($e) => [
+                    'code' => $e->exception_code,
+                    'severity' => $e->severity,
+                    'description' => $e->description,
+                ])->toArray(),
+                'url' => route('shipments.show', $s),
+            ];
+        })->toArray();
 
         return view('dashboard', compact(
             'user',
@@ -114,18 +218,24 @@ class DashboardController extends Controller
             'totalValueUsd',
             'onTimeRate',
             'openExceptions',
+            'exceptionCounts',
             'statusCounts',
-            'carrierCounts',
+            'carrierStats',
+            'trendData',
             'featuredShipment',
             'activeShipments',
             'activeRoutes',
+            'latestDelayed',
+            'latestException',
             'locations',
             'carriers',
             'notifications',
             'unreadCount',
             'news',
+            'currencyData',
             'rates',
-            'weatherPorts'
+            'weatherPorts',
+            'mapShipments'
         ));
     }
 }

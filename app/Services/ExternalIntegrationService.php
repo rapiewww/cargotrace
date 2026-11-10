@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Throwable;
@@ -28,11 +29,23 @@ class ExternalIntegrationService
 
     /**
      * Fetch weather data for given coordinates or return realistic fallback.
+     * Wrapped with Cache::remember (TTL 15 min).
      *
      * @return array<string, mixed>
      */
     public function getWeatherByCoordinates(float $lat, float $lon, ?string $locationName = null): array
     {
+        $roundLat = round($lat, 3);
+        $roundLon = round($lon, 3);
+        $cacheKey = "weather_{$roundLat}_{$roundLon}";
+
+        if (Cache::has($cacheKey)) {
+            $cached = Cache::get($cacheKey);
+            $cached['data_source'] = 'cached';
+
+            return $cached;
+        }
+
         $apiKey = config('cargotrace.openweather.key');
         $baseUrl = config('cargotrace.openweather.base_url', 'https://api.openweathermap.org/data/2.5');
 
@@ -49,7 +62,7 @@ class ExternalIntegrationService
                     $data = $response->json();
                     $deg = $data['wind']['deg'] ?? 0;
 
-                    return [
+                    $result = [
                         'temperature_c' => (float) ($data['main']['temp'] ?? 24.0),
                         'feels_like_c' => (float) ($data['main']['feels_like'] ?? 25.0),
                         'condition' => ucwords($data['weather'][0]['description'] ?? 'Partly Cloudy'),
@@ -59,7 +72,12 @@ class ExternalIntegrationService
                         'pressure_mb' => (int) ($data['main']['pressure'] ?? 1013),
                         'recorded_at' => Carbon::now()->toIso8601String(),
                         'source' => 'OpenWeatherMap Live API',
+                        'data_source' => 'live',
                     ];
+
+                    Cache::put($cacheKey, $result, now()->addMinutes(15));
+
+                    return $result;
                 }
             } catch (Throwable $e) {
                 Log::warning('External Weather API failure: '.$e->getMessage(), [
@@ -69,11 +87,17 @@ class ExternalIntegrationService
             }
         }
 
-        return $this->getFallbackWeather($lat, $lon, $locationName);
+        $fallback = $this->getFallbackWeather($lat, $lon, $locationName);
+        $fallback['data_source'] = 'simulated';
+
+        Cache::put($cacheKey, $fallback, now()->addMinutes(15));
+
+        return $fallback;
     }
 
     /**
      * Convert currency from one currency to another using exchange rates API with fallback.
+     * Wrapped with Cache::remember (TTL 15 min).
      *
      * @return array<string, mixed>
      */
@@ -93,7 +117,19 @@ class ExternalIntegrationService
                 'rate_to_usd' => $this->getRateToUsd($from),
                 'rates_snapshot' => $this->benchmarkRatesAgainstUsd,
                 'source' => 'Direct 1:1 Identity',
+                'data_source' => 'live',
             ];
+        }
+
+        $cacheKey = "currency_rate_{$from}_{$to}";
+
+        if (Cache::has($cacheKey)) {
+            $cached = Cache::get($cacheKey);
+            $cached['amount'] = $amount;
+            $cached['converted_amount'] = round($amount * $cached['exchange_rate'], 2);
+            $cached['data_source'] = 'cached';
+
+            return $cached;
         }
 
         try {
@@ -106,7 +142,7 @@ class ExternalIntegrationService
                     $usdRate = (float) ($data['rates']['USD'] ?? 1.0);
                     $converted = round($amount * $rate, 2);
 
-                    return [
+                    $result = [
                         'amount' => $amount,
                         'from_currency' => $from,
                         'to_currency' => $to,
@@ -115,7 +151,12 @@ class ExternalIntegrationService
                         'rate_to_usd' => $usdRate,
                         'rates_snapshot' => $data['rates'] ?? $this->benchmarkRatesAgainstUsd,
                         'source' => 'Open Exchange Rates (open.er-api.com)',
+                        'data_source' => 'live',
                     ];
+
+                    Cache::put($cacheKey, $result, now()->addMinutes(15));
+
+                    return $result;
                 }
             }
         } catch (Throwable $e) {
@@ -129,14 +170,11 @@ class ExternalIntegrationService
         $fromUsdRate = $this->benchmarkRatesAgainstUsd[$from] ?? 1.0;
         $toUsdRate = $this->benchmarkRatesAgainstUsd[$to] ?? 1.0;
 
-        // Rate from $from to $to = ($amount in USD) * toUsdRate
-        // 1 unit of $from = (1 / $fromUsdRate) USD
-        // in $to = (1 / $fromUsdRate) * $toUsdRate
         $crossRate = $fromUsdRate > 0 ? ($toUsdRate / $fromUsdRate) : 1.0;
         $rateToUsd = $fromUsdRate > 0 ? (1.0 / $fromUsdRate) : 1.0;
         $converted = round($amount * $crossRate, 2);
 
-        return [
+        $fallback = [
             'amount' => $amount,
             'from_currency' => $from,
             'to_currency' => $to,
@@ -145,16 +183,33 @@ class ExternalIntegrationService
             'rate_to_usd' => round($rateToUsd, 6),
             'rates_snapshot' => $this->benchmarkRatesAgainstUsd,
             'source' => 'CargoTrace Benchmark Exchange Matrix (Fallback)',
+            'data_source' => 'simulated',
         ];
+
+        Cache::put($cacheKey, $fallback, now()->addMinutes(15));
+
+        return $fallback;
     }
 
     /**
      * Retrieve logistics and maritime supply chain news or return realistic fallback.
+     * Wrapped with Cache::remember (TTL 30 min).
      *
      * @return array<int, array<string, mixed>>
      */
     public function getLogisticsNews(string $query = 'global shipping port logistics'): array
     {
+        $cacheKey = 'logistics_news_'.md5($query);
+
+        if (Cache::has($cacheKey)) {
+            $cached = Cache::get($cacheKey);
+            foreach ($cached as &$item) {
+                $item['data_source'] = 'cached';
+            }
+
+            return $cached;
+        }
+
         $apiKey = config('cargotrace.news.key');
         $baseUrl = config('cargotrace.news.base_url', 'https://newsapi.org/v2');
 
@@ -170,14 +225,19 @@ class ExternalIntegrationService
                 if ($response->successful()) {
                     $articles = $response->json('articles') ?? [];
                     if (! empty($articles)) {
-                        return array_map(fn ($item) => [
+                        $news = array_map(fn ($item) => [
                             'headline' => $item['title'] ?? 'Global Shipping Advisory',
                             'summary' => $item['description'] ?? '',
                             'source' => $item['source']['name'] ?? 'Maritime Industry News',
                             'url' => $item['url'] ?? null,
                             'published_at' => $item['publishedAt'] ?? Carbon::now()->toIso8601String(),
                             'impact_level' => 'MEDIUM',
+                            'data_source' => 'live',
                         ], $articles);
+
+                        Cache::put($cacheKey, $news, now()->addMinutes(30));
+
+                        return $news;
                     }
                 }
             } catch (Throwable $e) {
@@ -185,7 +245,14 @@ class ExternalIntegrationService
             }
         }
 
-        return $this->getFallbackLogisticsNews();
+        $fallbacks = $this->getFallbackLogisticsNews();
+        foreach ($fallbacks as &$item) {
+            $item['data_source'] = 'simulated';
+        }
+
+        Cache::put($cacheKey, $fallbacks, now()->addMinutes(30));
+
+        return $fallbacks;
     }
 
     /**
@@ -195,6 +262,17 @@ class ExternalIntegrationService
      */
     public function geocodeLocation(string $query): ?array
     {
+        $cacheKey = 'geocode_'.md5(strtolower(trim($query)));
+
+        if (Cache::has($cacheKey)) {
+            $cached = Cache::get($cacheKey);
+            if ($cached) {
+                $cached['data_source'] = 'cached';
+            }
+
+            return $cached;
+        }
+
         $baseUrl = config('cargotrace.nominatim.base_url', 'https://nominatim.openstreetmap.org');
 
         try {
@@ -209,19 +287,30 @@ class ExternalIntegrationService
             if ($response->successful()) {
                 $results = $response->json();
                 if (! empty($results[0])) {
-                    return [
+                    $result = [
                         'latitude' => (float) $results[0]['lat'],
                         'longitude' => (float) $results[0]['lon'],
                         'display_name' => $results[0]['display_name'] ?? $query,
                         'source' => 'OpenStreetMap Nominatim',
+                        'data_source' => 'live',
                     ];
+
+                    Cache::put($cacheKey, $result, now()->addHours(24));
+
+                    return $result;
                 }
             }
         } catch (Throwable $e) {
             Log::warning('External Geocoding API failure: '.$e->getMessage(), ['query' => $query]);
         }
 
-        return $this->getFallbackGeocode($query);
+        $fallback = $this->getFallbackGeocode($query);
+        if ($fallback) {
+            $fallback['data_source'] = 'simulated';
+            Cache::put($cacheKey, $fallback, now()->addHours(24));
+        }
+
+        return $fallback;
     }
 
     /**
@@ -245,19 +334,16 @@ class ExternalIntegrationService
         $absLat = abs($lat);
 
         if ($absLat < 20) {
-            // Tropical region (e.g. Jakarta, Singapore)
             $temp = 30.5;
             $condition = 'Tropical Humidity & Scattered Clouds';
             $humidity = 82;
             $wind = 12.5;
         } elseif ($absLat < 40) {
-            // Subtropical / Warm Temperate (e.g. Shanghai, Los Angeles, Dubai, Sydney)
             $temp = 22.0;
             $condition = 'Clear Sky & Coastal Wind';
             $humidity = 60;
             $wind = 16.0;
         } else {
-            // Temperate / Cold (e.g. Rotterdam, Frankfurt)
             $temp = 12.0;
             $condition = 'Overcast & Moderate Breeze';
             $humidity = 78;
@@ -274,6 +360,7 @@ class ExternalIntegrationService
             'pressure_mb' => 1014,
             'recorded_at' => Carbon::now()->toIso8601String(),
             'source' => 'CargoTrace Weather Simulation / Cache',
+            'data_source' => 'simulated',
         ];
     }
 
@@ -359,4 +446,3 @@ class ExternalIntegrationService
         return $rateAgainstUsd > 0 ? (1.0 / $rateAgainstUsd) : 1.0;
     }
 }
-
