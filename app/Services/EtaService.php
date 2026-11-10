@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\Notification;
+use App\Models\Setting;
 use App\Models\Shipment;
 
 class EtaService
@@ -12,8 +13,8 @@ class EtaService
      */
     public function evaluateDelay(Shipment $shipment): Shipment
     {
-        $lowThreshold = (float) config('cargotrace.delay.low_hours', 6);
-        $mediumThreshold = (float) config('cargotrace.delay.medium_hours', 24);
+        $lowThreshold = (float) (Setting::get('delay_low_hours') ?? config('cargotrace.delay.low_hours', 6));
+        $mediumThreshold = (float) (Setting::get('delay_medium_hours') ?? config('cargotrace.delay.medium_hours', 24));
 
         $wasDelayed = (bool) $shipment->is_delayed;
         $previousSeverity = $shipment->delay_severity;

@@ -185,6 +185,44 @@ class ShipmentService
     }
 
     /**
+     * Update shipment manifest data and re-evaluate delay.
+     */
+    public function updateShipment(Shipment $shipment, array $data): Shipment
+    {
+        return DB::transaction(function () use ($shipment, $data) {
+            $oldValues = $shipment->only([
+                'carrier_id', 'origin_location_id', 'destination_location_id', 'current_location_id',
+                'expected_departure_at', 'expected_arrival_at', 'estimated_arrival_at',
+                'declared_value', 'currency_code', 'cargo_type', 'reference_number', 'notes',
+            ]);
+
+            // Handle status change through strict transition validation
+            if (isset($data['status']) && $data['status'] !== $shipment->status) {
+                $this->updateStatus($shipment, $data['status'], $data['current_location_id'] ?? null, $data['notes'] ?? null);
+            }
+
+            // Update currency conversion if declared_value or currency_code changed
+            if (isset($data['declared_value']) || isset($data['currency_code'])) {
+                $declaredValue = (float) ($data['declared_value'] ?? $shipment->declared_value);
+                $currencyCode = strtoupper($data['currency_code'] ?? $shipment->currency_code);
+                $conversion = $this->externalService->convertCurrency($declaredValue, $currencyCode, 'USD');
+                $data['converted_value_usd'] = (float) ($conversion['converted_amount'] ?? $declaredValue);
+                $data['exchange_rate_to_usd'] = (float) ($conversion['rate_to_usd'] ?? 1.0);
+            }
+
+            $shipment->fill(collect($data)->except(['status'])->toArray());
+            $shipment->save();
+
+            // Re-evaluate delay after date changes
+            $this->etaService->evaluateDelay($shipment);
+
+            $this->auditService->log('SHIPMENT_UPDATED', $shipment, $oldValues, $shipment->only(array_keys($oldValues)));
+
+            return $shipment;
+        });
+    }
+
+    /**
      * Strictly update status of a shipment, ensuring terminal and transition constraints.
      */
     public function updateStatus(Shipment $shipment, string $newStatus, ?int $locationId = null, ?string $description = null): Shipment

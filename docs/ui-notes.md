@@ -58,5 +58,17 @@ This document provides a concise overview of the UI redesign, component hierarch
 ---
 
 ## 5. Honesty & Fallback Policy
-- **No False Claims**: All references to real-time satellite AIS or AI/ML predictions are replaced with truthful terminology: "Rule-based ETA & delay evaluation" and "Operator-recorded checkpoint events".
-- **Telemetry Provenance**: Any external integration (OpenWeatherMap, ExchangeRate API, Logistics News) that returns fallback or cached data is explicitly badged as `SIMULATED` or `CACHED`.
+- No false claims of real-time AIS/satellite tracking or artificial intelligence.
+- All external API calls (weather, currency rates, news) are backed by `Cache::remember` (15-30m TTL) with graceful fallbacks.
+- Every telemetry card renders an `<x-data-source-badge>` displaying whether the metric was retrieved `LIVE`, served from `CACHED` storage, or generated as a `SIMULATED` benchmark.
+
+---
+
+## 6. Features A..G Summary
+- **A. User & Role Management (`/admin/users`)**: Full CRUD for administrators with self-demotion and self-deactivation guards.
+- **B. Web Shipment Edit (`/shipments/{id}/edit`)**: Route, date, value, and status modifications validated through `ShipmentService`.
+- **C. Carriers & Locations Management**: Edit and safe deletion with foreign-key constraint protection and timezone support.
+- **D. Dynamic Delay Settings (`/admin/settings`)**: Runtime configurable delay boundaries (LOW, MEDIUM, HIGH) and bulk re-evaluation.
+- **E. In-App Notifications Center (`/notifications`)**: Dedicated notifications page with unread filters and bulk read actions.
+- **F. Manifest CSV Export (`/shipments/export/csv`)**: Filter-aware streamed CSV export with role-based scoping.
+- **G. English Documentation**: Comprehensive `README.md` with system architecture diagrams, ERD, and deployment guides.

@@ -6,7 +6,9 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ExceptionWebController;
 use App\Http\Controllers\NotificationWebController;
 use App\Http\Controllers\PublicTrackingController;
+use App\Http\Controllers\SettingsWebController;
 use App\Http\Controllers\ShipmentWebController;
+use App\Http\Controllers\UserManagementWebController;
 use App\Http\Controllers\WebAuthController;
 use App\Http\Controllers\WelcomeController;
 use Illuminate\Support\Facades\Route;
@@ -44,7 +46,12 @@ Route::middleware('auth')->group(function () {
         ->middleware('role:admin,operator');
     Route::post('/shipments', [ShipmentWebController::class, 'store'])->name('shipments.store')
         ->middleware('role:admin,operator');
+    Route::get('/shipments/export/csv', [ShipmentWebController::class, 'exportCsv'])->name('shipments.export.csv');
     Route::get('/shipments/{shipment}', [ShipmentWebController::class, 'show'])->name('shipments.show');
+    Route::get('/shipments/{shipment}/edit', [ShipmentWebController::class, 'edit'])->name('shipments.edit')
+        ->middleware('role:admin,operator');
+    Route::put('/shipments/{shipment}', [ShipmentWebController::class, 'update'])->name('shipments.update')
+        ->middleware('role:admin,operator');
     Route::patch('/shipments/{shipment}/status', [ShipmentWebController::class, 'updateStatus'])->name('shipments.update-status')
         ->middleware('role:admin,operator');
     Route::post('/shipments/{shipment}/tracking', [ShipmentWebController::class, 'addTrackingEvent'])->name('shipments.add-tracking')
@@ -63,10 +70,35 @@ Route::middleware('auth')->group(function () {
         Route::get('/carriers', [CarrierLocationWebController::class, 'carriers'])->name('operations.carriers');
         Route::post('/carriers', [CarrierLocationWebController::class, 'storeCarrier'])->name('operations.carriers.store')
             ->middleware('role:admin');
+        Route::put('/carriers/{carrier}', [CarrierLocationWebController::class, 'updateCarrier'])->name('operations.carriers.update')
+            ->middleware('role:admin');
+        Route::delete('/carriers/{carrier}', [CarrierLocationWebController::class, 'destroyCarrier'])->name('operations.carriers.destroy')
+            ->middleware('role:admin');
 
         Route::get('/locations', [CarrierLocationWebController::class, 'locations'])->name('operations.locations');
         Route::post('/locations', [CarrierLocationWebController::class, 'storeLocation'])->name('operations.locations.store')
             ->middleware('role:admin');
+        Route::put('/locations/{location}', [CarrierLocationWebController::class, 'updateLocation'])->name('operations.locations.update')
+            ->middleware('role:admin');
+        Route::delete('/locations/{location}', [CarrierLocationWebController::class, 'destroyLocation'])->name('operations.locations.destroy')
+            ->middleware('role:admin');
+    });
+
+    // User Management (Admin only)
+    Route::middleware('role:admin')->prefix('admin/users')->name('admin.users.')->group(function () {
+        Route::get('/', [UserManagementWebController::class, 'index'])->name('index');
+        Route::get('/create', [UserManagementWebController::class, 'create'])->name('create');
+        Route::post('/', [UserManagementWebController::class, 'store'])->name('store');
+        Route::get('/{user}/edit', [UserManagementWebController::class, 'edit'])->name('edit');
+        Route::put('/{user}', [UserManagementWebController::class, 'update'])->name('update');
+        Route::delete('/{user}', [UserManagementWebController::class, 'destroy'])->name('destroy');
+    });
+
+    // Settings (Admin only)
+    Route::middleware('role:admin')->group(function () {
+        Route::get('/admin/settings', [SettingsWebController::class, 'index'])->name('admin.settings');
+        Route::post('/admin/settings', [SettingsWebController::class, 'update'])->name('admin.settings.update');
+        Route::post('/admin/settings/reevaluate', [SettingsWebController::class, 'reevaluate'])->name('admin.settings.reevaluate');
     });
 
     // Audit Logs (Admin only)
@@ -74,6 +106,7 @@ Route::middleware('auth')->group(function () {
         ->middleware('role:admin');
 
     // Notifications
+    Route::get('/notifications', [NotificationWebController::class, 'index'])->name('notifications.index');
     Route::post('/notifications/{notification}/read', [NotificationWebController::class, 'markAsRead'])->name('notifications.read');
     Route::post('/notifications/read-all', [NotificationWebController::class, 'markAllAsRead'])->name('notifications.read-all');
 });

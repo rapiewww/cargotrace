@@ -16,6 +16,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class ShipmentWebController extends Controller
 {
@@ -69,6 +70,100 @@ class ShipmentWebController extends Controller
         return view('shipments.index', compact('shipments', 'carriers', 'locations', 'user'));
     }
 
+    public function exportCsv(Request $request): StreamedResponse
+    {
+        $user = Auth::user();
+        $query = Shipment::with(['carrier', 'originLocation', 'destinationLocation', 'customer']);
+
+        if ($user->role === 'customer') {
+            $query->where('customer_id', $user->id);
+        }
+
+        if ($request->filled('search')) {
+            $s = $request->query('search');
+            $query->where(fn ($q) => $q->where('tracking_number', 'like', "%{$s}%")->orWhere('reference_number', 'like', "%{$s}%"));
+        }
+        if ($request->filled('status')) {
+            $query->where('status', strtoupper($request->query('status')));
+        }
+        if ($request->filled('carrier_id')) {
+            $query->where('carrier_id', $request->query('carrier_id'));
+        }
+        if ($request->filled('origin_location_id')) {
+            $query->where('origin_location_id', $request->query('origin_location_id'));
+        }
+        if ($request->filled('destination_location_id')) {
+            $query->where('destination_location_id', $request->query('destination_location_id'));
+        }
+        if ($request->has('is_delayed') && $request->query('is_delayed') !== '') {
+            $query->where('is_delayed', filter_var($request->query('is_delayed'), FILTER_VALIDATE_BOOLEAN));
+        }
+
+        $shipments = $query->orderByDesc('created_at')->get();
+        $filename = 'cargotrace-shipments-' . date('Y-m-d_His') . '.csv';
+
+        $headers = [
+            'Content-Type' => 'text/csv',
+            'Content-Disposition' => "attachment; filename=\"{$filename}\"",
+            'Pragma' => 'no-cache',
+            'Cache-Control' => 'must-revalidate, post-check=0, pre-check=0',
+            'Expires' => '0',
+        ];
+
+        return response()->stream(function () use ($shipments) {
+            $handle = fopen('php://output', 'w');
+            fputcsv($handle, [
+                'Tracking Number',
+                'Reference Number',
+                'Carrier',
+                'Carrier Code',
+                'Mode',
+                'Origin UNLOCODE',
+                'Origin Port',
+                'Destination UNLOCODE',
+                'Destination Port',
+                'Status',
+                'Is Delayed',
+                'Delay Hours',
+                'Delay Severity',
+                'Declared Value',
+                'Currency',
+                'Converted Value USD',
+                'Expected Departure',
+                'Expected Arrival',
+                'Estimated Arrival',
+                'Created At',
+            ]);
+
+            foreach ($shipments as $s) {
+                fputcsv($handle, [
+                    $s->tracking_number,
+                    $s->reference_number ?? '',
+                    $s->carrier?->name ?? '',
+                    $s->carrier?->code ?? '',
+                    $s->carrier?->mode ?? '',
+                    $s->originLocation?->unlocode ?? '',
+                    $s->originLocation?->name ?? '',
+                    $s->destinationLocation?->unlocode ?? '',
+                    $s->destinationLocation?->name ?? '',
+                    $s->status,
+                    $s->is_delayed ? 'YES' : 'NO',
+                    $s->delay_hours,
+                    $s->delay_severity,
+                    $s->declared_value,
+                    $s->currency_code,
+                    $s->converted_value_usd,
+                    $s->expected_departure_at?->toDateTimeString() ?? '',
+                    $s->expected_arrival_at?->toDateTimeString() ?? '',
+                    $s->estimated_arrival_at?->toDateTimeString() ?? '',
+                    $s->created_at?->toDateTimeString() ?? '',
+                ]);
+            }
+
+            fclose($handle);
+        }, 200, $headers);
+    }
+
     public function show(Shipment $shipment): View
     {
         $this->authorize('view', $shipment);
@@ -102,6 +197,44 @@ class ShipmentWebController extends Controller
         $customers = User::where('role', 'customer')->orderBy('name')->get();
 
         return view('shipments.create', compact('carriers', 'locations', 'customers'));
+    }
+
+    public function edit(Shipment $shipment): View
+    {
+        $this->authorize('update', $shipment);
+
+        $carriers = Carrier::where('is_active', true)->orderBy('name')->get();
+        $locations = Location::orderBy('name')->get();
+        $customers = User::where('role', 'customer')->orderBy('name')->get();
+
+        return view('shipments.edit', compact('shipment', 'carriers', 'locations', 'customers'));
+    }
+
+    public function update(Request $request, Shipment $shipment): RedirectResponse
+    {
+        $this->authorize('update', $shipment);
+
+        $validated = $request->validate([
+            'carrier_id' => 'required|exists:carriers,id',
+            'origin_location_id' => 'required|exists:locations,id',
+            'destination_location_id' => 'required|exists:locations,id|different:origin_location_id',
+            'current_location_id' => 'nullable|exists:locations,id',
+            'status' => 'nullable|string|in:CREATED,BOOKED,PICKED_UP,IN_TRANSIT,DELIVERED',
+            'cargo_type' => 'required|string',
+            'currency_code' => 'nullable|string|size:3',
+            'declared_value' => 'nullable|numeric|min:0',
+            'shipping_cost' => 'nullable|numeric|min:0',
+            'expected_departure_at' => 'required|date',
+            'expected_arrival_at' => 'required|date|after_or_equal:expected_departure_at',
+            'estimated_arrival_at' => 'nullable|date',
+            'reference_number' => 'nullable|string|max:100',
+            'customer_id' => 'nullable|exists:users,id',
+            'notes' => 'nullable|string',
+        ]);
+
+        $this->shipmentService->updateShipment($shipment, $validated);
+
+        return redirect()->route('shipments.show', $shipment)->with('success', 'Shipment updated successfully.');
     }
 
     public function store(Request $request): RedirectResponse
