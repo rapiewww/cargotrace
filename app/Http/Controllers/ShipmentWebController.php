@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Carrier;
 use App\Models\Location;
 use App\Models\Shipment;
+use App\Models\User;
 use App\Services\EtaService;
 use App\Services\ExceptionService;
 use App\Services\ExternalIntegrationService;
@@ -98,8 +99,9 @@ class ShipmentWebController extends Controller
 
         $carriers = Carrier::where('is_active', true)->orderBy('name')->get();
         $locations = Location::orderBy('name')->get();
+        $customers = User::where('role', 'customer')->orderBy('name')->get();
 
-        return view('shipments.create', compact('carriers', 'locations'));
+        return view('shipments.create', compact('carriers', 'locations', 'customers'));
     }
 
     public function store(Request $request): RedirectResponse
