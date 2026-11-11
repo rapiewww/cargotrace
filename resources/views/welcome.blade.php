@@ -87,8 +87,8 @@
                 <!-- Left Hero Copy & Clean CTAs -->
                 <div class="lg:col-span-7 xl:col-span-7 space-y-6">
                     <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-blue-600/25 border border-blue-400/30 text-cyan-300 text-[11px] font-semibold tracking-wider uppercase font-mono backdrop-blur-md">
-                        <span class="w-2 h-2 rounded-full bg-cyan-400 animate-pulse shadow-sm shadow-cyan-400"></span>
-                        GLOBAL OCEAN CONTAINER LOGISTICS & AIS VISIBILITY
+                        <span class="w-2 h-2 rounded-full bg-cyan-400 shadow-sm shadow-cyan-400"></span>
+                        GLOBAL OCEAN CONTAINER LOGISTICS & MILESTONE TRACKING
                     </div>
 
                     <h1 class="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-white leading-[1.08]">
@@ -99,7 +99,7 @@
                     </h1>
 
                     <p class="text-base sm:text-lg text-slate-200 max-w-xl leading-relaxed">
-                        Move ocean container consignments across markets with real-time intelligence, precise tracking, and dependable delivery. Verified UN/LOCODE seaport milestones, liner fleets, and deterministic ETA tracking.
+                        Move ocean container consignments across markets with operator-recorded checkpoints, verified UN/LOCODE seaport milestones, container shipping lines, and rule-based ETA tracking.
                     </p>
 
                     <!-- Dual Clean CTAs (Unified Blue & Glass) -->
@@ -131,13 +131,27 @@
                             <div>
                                 <div class="flex items-center gap-2">
                                     <span class="font-mono text-sm font-bold text-white tracking-wide block">{{ $feat->tracking_number }}</span>
-                                    <span class="text-[9px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full bg-blue-500/20 text-cyan-300 font-mono">AIS Live</span>
+                                    <span class="text-[9px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full bg-blue-500/20 text-cyan-300 font-mono">Recorded Milestone</span>
                                 </div>
                                 <span class="text-[11px] text-slate-300 font-mono block mt-1">{{ $feat->carrier->name ?? 'Mediterranean Shipping Company (MSC)' }}</span>
                             </div>
-                            <span class="px-2.5 py-1 rounded-full text-[10px] font-bold tracking-wider uppercase font-mono {{ $feat->is_delayed ? 'bg-amber-400/20 text-amber-400 border border-amber-400/40' : 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40' }}">
-                                &bull; {{ $feat->is_delayed ? 'Delayed (+'.$feat->delay_hours.'h)' : 'In Transit' }}
-                            </span>
+                            @if($feat->is_delayed && $feat->status === 'DELIVERED')
+                                <span class="px-2.5 py-1 rounded-full text-[10px] font-bold tracking-wider uppercase font-mono bg-amber-400/20 text-amber-400 border border-amber-400/40">
+                                    &bull; Delivered late (+{{ (int)$feat->delay_hours }}h)
+                                </span>
+                            @elseif($feat->is_delayed)
+                                <span class="px-2.5 py-1 rounded-full text-[10px] font-bold tracking-wider uppercase font-mono bg-amber-400/20 text-amber-400 border border-amber-400/40">
+                                    &bull; Delayed (+{{ (int)$feat->delay_hours }}h)
+                                </span>
+                            @elseif($feat->status === 'DELIVERED')
+                                <span class="px-2.5 py-1 rounded-full text-[10px] font-bold tracking-wider uppercase font-mono bg-emerald-500/20 text-emerald-400 border border-emerald-500/40">
+                                    &bull; Delivered
+                                </span>
+                            @else
+                                <span class="px-2.5 py-1 rounded-full text-[10px] font-bold tracking-wider uppercase font-mono bg-blue-500/20 text-cyan-300 border border-blue-400/30">
+                                    &bull; In Transit
+                                </span>
+                            @endif
                         </div>
 
                         <!-- Vertical Milestone Timeline (Dashboard Palette: Blue & Emerald) -->
@@ -211,20 +225,20 @@
         <div class="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8">
             <div class="grid grid-cols-2 md:grid-cols-4 gap-8 text-center divide-y md:divide-y-0 md:divide-x theme-border">
                 <div class="px-4">
-                    <div class="text-3xl sm:text-4xl lg:text-5xl font-extrabold theme-heading tracking-tight font-mono">180+</div>
-                    <div class="text-xs theme-text-muted mt-1.5 uppercase tracking-wider font-semibold">Markets Served</div>
+                    <div class="text-3xl sm:text-4xl lg:text-5xl font-extrabold theme-heading tracking-tight font-mono">{{ $locations->count() }}</div>
+                    <div class="text-xs theme-text-muted mt-1.5 uppercase tracking-wider font-semibold">Container Seaports</div>
                 </div>
                 <div class="px-4 pt-6 md:pt-0">
                     <div class="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-blue-600 dark:text-cyan-400 tracking-tight font-mono">{{ $onTimePercentage }}%</div>
                     <div class="text-xs theme-text-muted mt-1.5 uppercase tracking-wider font-semibold">On-Time Performance</div>
                 </div>
                 <div class="px-4 pt-6 md:pt-0">
-                    <div class="text-3xl sm:text-4xl lg:text-5xl font-extrabold theme-heading tracking-tight font-mono">24/7</div>
-                    <div class="text-xs theme-text-muted mt-1.5 uppercase tracking-wider font-semibold">Checkpoint Monitoring</div>
+                    <div class="text-3xl sm:text-4xl lg:text-5xl font-extrabold theme-heading tracking-tight font-mono">{{ $carriers->count() }}</div>
+                    <div class="text-xs theme-text-muted mt-1.5 uppercase tracking-wider font-semibold">Shipping Lines</div>
                 </div>
                 <div class="px-4 pt-6 md:pt-0">
-                    <div class="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-blue-600 dark:text-cyan-400 tracking-tight font-mono">12M+</div>
-                    <div class="text-xs theme-text-muted mt-1.5 uppercase tracking-wider font-semibold">Annual Shipments</div>
+                    <div class="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-blue-600 dark:text-cyan-400 tracking-tight font-mono">{{ number_format($totalShipments) }}</div>
+                    <div class="text-xs theme-text-muted mt-1.5 uppercase tracking-wider font-semibold">Tracked Consignments</div>
                 </div>
             </div>
         </div>
@@ -242,7 +256,7 @@
                         Every shipment. One clear picture.
                     </h2>
                     <p class="text-sm theme-text-secondary max-w-xl">
-                        Real-time tracking, intelligent routing, and complete visibility &mdash; all consolidated into one high-performance dashboard.
+                        Milestone tracking, operator-verified checkpoints, and container visibility consolidated into one operations dashboard.
                     </p>
                 </div>
                 <a href="{{ route('login') }}" class="px-5 py-2.5 rounded-xl font-bold text-xs uppercase tracking-wider text-white bg-blue-600 hover:bg-blue-500 shadow-lg shadow-blue-500/20 transition-all duration-200 hover:scale-[1.02] self-start">
@@ -265,7 +279,7 @@
                                 <span class="px-3 py-1.5 rounded-lg theme-card-elevated theme-text-secondary">Reports</span>
                                 <span class="px-3 py-1.5 rounded-lg theme-card-elevated theme-text-secondary">Settings</span>
                             </div>
-                            <span class="text-[10px] font-mono text-cyan-600 dark:text-cyan-400 hidden sm:inline-block">LIVE TELEMETRY</span>
+                            <span class="text-[10px] font-mono text-cyan-600 dark:text-cyan-400 hidden sm:inline-block">OPERATOR CHECKPOINTS</span>
                         </div>
 
                         <!-- Current Waybill Snapshot -->
@@ -312,7 +326,7 @@
                     </div>
 
                     <div class="pt-4 border-t theme-border flex items-center justify-between text-xs theme-text-muted">
-                        <span>Updated live every 15 minutes</span>
+                        <span>Milestones updated upon operator submission</span>
                         <a href="{{ route('login') }}" class="text-blue-600 dark:text-blue-400 font-semibold hover:underline">Access full operations console &rarr;</a>
                     </div>
                 </div>
@@ -329,7 +343,7 @@
                         <div class="relative z-10 space-y-1">
                             <span class="text-[10px] uppercase font-bold text-cyan-400 tracking-wider font-mono">OCEAN FREIGHT</span>
                             <h3 class="text-base font-bold text-white tracking-tight">Time-Critical Container Shipping</h3>
-                            <p class="text-xs text-slate-300">Global container sailings with Maersk, MSC, CMA CGM, COSCO, and automated vessel telemetry.</p>
+                            <p class="text-xs text-slate-300">Global container sailings with Maersk, MSC, CMA CGM, COSCO, and recorded port milestones.</p>
                         </div>
                         <div class="relative z-10 pt-2 flex items-center justify-between text-xs text-slate-300 font-semibold">
                             <span>Maersk &bull; MSC &bull; CMA CGM</span>
@@ -391,33 +405,30 @@
                 <!-- 4 Trust Pillars -->
                 <div class="lg:col-span-7 grid grid-cols-2 sm:grid-cols-4 gap-4 text-xs font-mono">
                     <div class="p-3.5 rounded-xl theme-card border theme-border">
-                        <span class="text-lg font-bold text-emerald-500 block">99.2%</span>
+                        <span class="text-lg font-bold text-emerald-500 block">{{ $onTimePercentage }}%</span>
                         <span class="theme-text-muted text-[11px]">On-time delivery</span>
                     </div>
                     <div class="p-3.5 rounded-xl theme-card border theme-border">
-                        <span class="text-lg font-bold text-blue-600 dark:text-cyan-400 block">24/7</span>
-                        <span class="theme-text-muted text-[11px]">Active monitoring</span>
+                        <span class="text-lg font-bold text-blue-600 dark:text-cyan-400 block">{{ count($activeShipments) }}</span>
+                        <span class="theme-text-muted text-[11px]">Active consignments</span>
                     </div>
                     <div class="p-3.5 rounded-xl theme-card border theme-border">
-                        <span class="text-lg font-bold text-cyan-500 block">End-to-End</span>
-                        <span class="theme-text-muted text-[11px]">Ocean visibility</span>
+                        <span class="text-lg font-bold text-cyan-500 block">{{ count($locations) }}</span>
+                        <span class="theme-text-muted text-[11px]">Container seaports</span>
                     </div>
                     <div class="p-3.5 rounded-xl theme-card border theme-border">
-                        <span class="text-lg font-bold theme-heading block">Secure</span>
-                        <span class="theme-text-muted text-[11px]">Manifest handling</span>
+                        <span class="text-lg font-bold theme-heading block">{{ count($carriers) }}</span>
+                        <span class="theme-text-muted text-[11px]">Registered carriers</span>
                     </div>
                 </div>
             </div>
 
-            <!-- Soft Opacity Brand Partners -->
+            <!-- Registered Shipping Lines -->
             <div class="pt-6 border-t theme-border">
                 <div class="flex flex-wrap items-center justify-between gap-6 opacity-60 hover:opacity-100 transition-opacity text-xs font-bold tracking-widest uppercase font-mono theme-text-muted">
-                    <span class="hover:theme-heading transition cursor-default">SAMSUNG</span>
-                    <span class="hover:theme-heading transition cursor-default">NIKE GLOBAL</span>
-                    <span class="hover:theme-heading transition cursor-default">UNILEVER</span>
-                    <span class="hover:theme-heading transition cursor-default">AMAZON FREIGHT</span>
-                    <span class="hover:theme-heading transition cursor-default">MICROSOFT</span>
-                    <span class="hover:theme-heading transition cursor-default">L'OR&Eacute;AL</span>
+                    @foreach($carriers->take(6) as $c)
+                        <span class="hover:theme-heading transition cursor-default">{{ $c->name }}</span>
+                    @endforeach
                 </div>
             </div>
         </div>
@@ -456,7 +467,7 @@
         </div>
     </section>
 
-    <!-- 6. LIVE TELEMETRY: CURRENCY FX & NEWS WIRE -->
+    <!-- 6. MARITIME INTELLIGENCE: CURRENCY FX & NEWS WIRE -->
     <section id="news" class="py-16 border-b theme-border theme-card-elevated transition-colors duration-200">
         <div class="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8">
             <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
@@ -465,7 +476,7 @@
                 <div id="rates" class="lg:col-span-5 rounded-2xl theme-card border theme-border p-6 shadow-2xl space-y-4">
                     <div class="flex items-center justify-between pb-3 border-b theme-border">
                         <div>
-                            <span class="text-[10px] uppercase font-bold text-blue-600 dark:text-cyan-400 tracking-wider font-mono">LIVE TELEMETRY</span>
+                            <span class="text-[10px] uppercase font-bold text-blue-600 dark:text-cyan-400 tracking-wider font-mono">EXCHANGE RATES</span>
                             <h3 class="text-base font-bold theme-heading tracking-tight">Global Currency FX Matrix</h3>
                         </div>
                         <x-data-source-badge :source="$currencyData['data_source'] ?? 'simulated'" />

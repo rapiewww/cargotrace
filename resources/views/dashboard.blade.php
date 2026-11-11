@@ -31,16 +31,14 @@
                                 Overview
                             </span>
                         </div>
-                        <p class="text-xs theme-text-secondary mt-1">Global route map &bull; Real-time AIS vessel telemetry</p>
+                        <p class="text-xs theme-text-secondary mt-1">Global route map &bull; Operator-recorded checkpoints</p>
                         <div class="flex items-center gap-2 mt-2">
-                            <span class="relative flex h-2.5 w-2.5">
-                                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                                <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+                            <span class="relative flex h-2 w-2">
+                                <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
                             </span>
-                            <span class="text-xs font-semibold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">
-                                LIVE AIS TRACKING
+                            <span class="text-xs font-semibold uppercase tracking-wider text-emerald-600 dark:text-emerald-400 font-mono">
+                                Verified Milestones
                             </span>
-                            <span class="text-xs theme-text-muted font-mono">142 ms</span>
                         </div>
                     </div>
 
@@ -85,7 +83,7 @@
                         </div>
                     </div>
 
-                    <!-- Real-Time Telemetry Coordinates Display -->
+                    <!-- Checkpoint Coordinates Display -->
                     <div class="text-[11px] font-mono theme-text-muted space-y-0.5">
                         <div>X: <span id="telemetry-coord-x" class="text-cyan-500 dark:text-cyan-400 font-bold">18.000000</span></div>
                         <div>Y: <span id="telemetry-coord-y" class="text-cyan-500 dark:text-cyan-400 font-bold">110.000000</span></div>
@@ -150,7 +148,7 @@
         <div class="xl:col-span-3 flex flex-col justify-between gap-4">
             <h2 class="text-sm font-bold theme-heading uppercase tracking-wider flex items-center justify-between">
                 <span>Main Statistics</span>
-                <span class="text-[11px] text-cyan-600 dark:text-cyan-400 font-mono">Real-Time</span>
+                <span class="text-[11px] theme-text-muted font-mono">Database Aggregates</span>
             </h2>
 
             <!-- Card 1: Active Shipments & On-Time Rate -->
@@ -162,10 +160,10 @@
                     </span>
                 </div>
                 <div class="text-3xl font-extrabold theme-heading tracking-tight my-2 tabular-nums">
-                    {{ count($activeShipments) }} <span class="text-xs font-normal theme-text-muted">liners</span>
+                    {{ count($activeShipments) }} <span class="text-xs font-normal theme-text-muted">active</span>
                 </div>
-                <!-- Mini Sparkline SVG (Smooth Curve) -->
-                <div class="h-10 w-full mt-2">
+                <!-- Mini Sparkline SVG: 14-Day Shipment Creation (Real Database Data) -->
+                <div class="h-10 w-full mt-2" title="Shipments created per day (last 14 days)">
                     <svg class="w-full h-full overflow-visible" viewBox="0 0 200 40">
                         <defs>
                             <linearGradient id="spark1" x1="0" y1="0" x2="0" y2="1">
@@ -173,8 +171,8 @@
                                 <stop offset="100%" stop-color="#38BDF8" stop-opacity="0"/>
                             </linearGradient>
                         </defs>
-                        <path d="M0,32 Q30,12 60,26 T120,10 T160,18 T200,6 L200,40 L0,40 Z" fill="url(#spark1)"/>
-                        <path d="M0,32 Q30,12 60,26 T120,10 T160,18 T200,6" fill="none" stroke="#0284C7" stroke-width="2.5" stroke-linecap="round"/>
+                        <path d="{{ $sparkline1Area }}" fill="url(#spark1)"/>
+                        <path d="{{ $sparkline1Path }}" fill="none" stroke="#0284C7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                     </svg>
                 </div>
             </div>
@@ -183,15 +181,15 @@
             <div class="p-5 rounded-3xl theme-card border flex flex-col justify-between flex-1 transition-colors duration-200">
                 <div class="flex items-center justify-between text-xs theme-text-secondary font-medium">
                     <span>Total Cargo Valuation</span>
-                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-cyan-500/15 text-cyan-600 dark:text-cyan-400 border border-cyan-500/25">
-                        &uarr; 28,450 TEU
+                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-cyan-500/15 text-cyan-600 dark:text-cyan-400 border border-cyan-500/25 font-mono">
+                        {{ number_format($totalVolumeCbm, 0) }} CBM
                     </span>
                 </div>
                 <div class="text-3xl font-extrabold theme-heading tracking-tight my-2 tabular-nums">
                     ${{ number_format($totalValueUsd / 1000, 0) }}k <span class="text-xs font-normal theme-text-muted">USD</span>
                 </div>
-                <!-- Mini Sparkline SVG -->
-                <div class="h-10 w-full mt-2">
+                <!-- Mini Sparkline SVG: 8-Week On-Time Rate (Real Database Data) -->
+                <div class="h-10 w-full mt-2" title="Weekly on-time performance (last 8 weeks)">
                     <svg class="w-full h-full overflow-visible" viewBox="0 0 200 40">
                         <defs>
                             <linearGradient id="spark2" x1="0" y1="0" x2="0" y2="1">
@@ -199,31 +197,36 @@
                                 <stop offset="100%" stop-color="#2563EB" stop-opacity="0"/>
                             </linearGradient>
                         </defs>
-                        <path d="M0,28 Q40,36 80,18 T140,24 T200,8 L200,40 L0,40 Z" fill="url(#spark2)"/>
-                        <path d="M0,28 Q40,36 80,18 T140,24 T200,8" fill="none" stroke="#2563EB" stroke-width="2.5" stroke-linecap="round"/>
+                        <path d="{{ $sparkline2Area }}" fill="url(#spark2)"/>
+                        <path d="{{ $sparkline2Path }}" fill="none" stroke="#2563EB" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                     </svg>
                 </div>
             </div>
 
-            <!-- Card 3: Maritime Exception Risk (Semi-Circle Gauge) -->
+            <!-- Card 3: Exception Rate (Real Database Metric) -->
             <div class="p-5 rounded-3xl theme-card border flex items-center justify-between flex-1 transition-colors duration-200">
                 <div class="space-y-1">
-                    <span class="text-xs theme-text-secondary font-medium block">Risk of Cargo Loss</span>
-                    <div class="text-3xl font-extrabold theme-heading tabular-nums">
-                        {{ $openExceptions > 0 ? '10%' : '2%' }}
+                    <span class="text-xs theme-text-secondary font-medium block">Exception Rate</span>
+                    <div class="text-3xl font-extrabold theme-heading tabular-nums font-mono">
+                        {{ $exceptionRate }}%
                     </div>
-                    <span class="text-[10px] theme-text-muted block">Minimal risk due to favorable weather</span>
+                    <span class="text-[10px] theme-text-muted block font-mono">
+                        {{ $openExceptions }} open / {{ $activeShipmentsCount }} active
+                    </span>
                 </div>
 
-                <!-- Semi-Circle Gauge SVG -->
+                <!-- Semi-Circle Gauge SVG with real exceptionRate -->
                 <div class="relative w-24 h-16 flex items-center justify-center">
                     <svg class="w-24 h-24 -rotate-90" viewBox="0 0 100 100">
                         <!-- Background track -->
                         <circle cx="50" cy="50" r="38" fill="none" stroke="currentColor" class="text-slate-200 dark:text-slate-800" stroke-width="8" stroke-dasharray="120 240" stroke-linecap="round"/>
                         <!-- Filled track -->
-                        <circle cx="50" cy="50" r="38" fill="none" stroke="#0284C7" stroke-width="8" stroke-dasharray="{{ $openExceptions > 0 ? '25' : '8' }} 240" stroke-linecap="round"/>
+                        @php
+                            $gaugeDash = round(($exceptionRate / 100) * 120);
+                        @endphp
+                        <circle cx="50" cy="50" r="38" fill="none" stroke="{{ $exceptionRate > 0 ? '#F43F5E' : '#10B981' }}" stroke-width="8" stroke-dasharray="{{ max(3, min(120, $gaugeDash)) }} 240" stroke-linecap="round"/>
                     </svg>
-                    <span class="absolute text-xs font-bold text-cyan-600 dark:text-cyan-400 font-mono">{{ $openExceptions > 0 ? '10%' : '2%' }}</span>
+                    <span class="absolute text-xs font-bold font-mono {{ $exceptionRate > 0 ? 'text-rose-500' : 'text-emerald-500' }}">{{ $exceptionRate }}%</span>
                 </div>
             </div>
         </div>
@@ -304,8 +307,8 @@
                                     <div class="space-y-1 max-w-xs">
                                         <div class="flex items-center justify-between text-[11px] font-mono">
                                             <span class="font-bold theme-text-primary">{{ $orig->unlocode ?? 'ORI' }}</span>
-                                            <span class="text-[10px] theme-text-muted">
-                                                {{ $s->status === 'DELIVERED' ? 'Arrived' : '5,840 nm' }}
+                                            <span class="text-[10px] theme-text-muted font-mono" title="Great-circle distance between seaports">
+                                                {{ $s->status === 'DELIVERED' ? 'Arrived' : ($s->great_circle_distance_nm ? number_format($s->great_circle_distance_nm) . ' nm (great-circle)' : 'Direct Leg') }}
                                             </span>
                                             <span class="font-bold theme-text-primary">{{ $dest->unlocode ?? 'DST' }}</span>
                                         </div>
@@ -331,9 +334,15 @@
                                             Alert
                                         </span>
                                     @elseif($s->is_delayed)
-                                        <span class="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase font-mono bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30">
-                                            Delayed (+{{ (int)$s->delay_hours }}h)
-                                        </span>
+                                        @if($s->status === 'DELIVERED')
+                                            <span class="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase font-mono bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30">
+                                                Delivered late (+{{ (int)$s->delay_hours }}h)
+                                            </span>
+                                        @else
+                                            <span class="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase font-mono bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30">
+                                                Delayed (+{{ (int)$s->delay_hours }}h)
+                                            </span>
+                                        @endif
                                     @elseif($s->status === 'DELIVERED')
                                         <span class="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase font-mono bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30">
                                             Delivered

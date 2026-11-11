@@ -100,43 +100,34 @@
                 <!-- 4. Seaport Weather -->
                 <a
                     href="{{ route('weather.index') }}"
-                    class="flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-semibold transition-all duration-200 {{ request()->routeIs('weather.*') ? 'bg-blue-600/10 text-blue-600 dark:text-cyan-400 border-r-2 border-blue-500 dark:border-cyan-400 font-bold' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800/60' }}"
+                    class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold transition-all duration-200 {{ request()->routeIs('weather.*') ? 'bg-blue-600/10 text-blue-600 dark:text-cyan-400 border-r-2 border-blue-500 dark:border-cyan-400 font-bold' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800/60' }}"
                 >
-                    <div class="flex items-center gap-3">
-                        <svg class="w-4 h-4 flex-shrink-0 {{ request()->routeIs('weather.*') ? 'text-blue-600 dark:text-cyan-400' : 'text-slate-400 dark:text-slate-500' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 00-9.78 2.096A4.001 4.001 0 003 15z"/>
-                        </svg>
-                        <span>Seaport Weather</span>
-                    </div>
-                    <span class="text-[9px] font-mono font-bold px-1.5 py-0.5 rounded bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border border-emerald-500/20">LIVE</span>
+                    <svg class="w-4 h-4 flex-shrink-0 {{ request()->routeIs('weather.*') ? 'text-blue-600 dark:text-cyan-400' : 'text-slate-400 dark:text-slate-500' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 00-9.78 2.096A4.001 4.001 0 003 15z"/>
+                    </svg>
+                    <span>Seaport Weather</span>
                 </a>
 
                 <!-- 5. Currency FX -->
                 <a
                     href="{{ route('currency.index') }}"
-                    class="flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-semibold transition-all duration-200 {{ request()->routeIs('currency.*') ? 'bg-blue-600/10 text-blue-600 dark:text-cyan-400 border-r-2 border-blue-500 dark:border-cyan-400 font-bold' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800/60' }}"
+                    class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold transition-all duration-200 {{ request()->routeIs('currency.*') ? 'bg-blue-600/10 text-blue-600 dark:text-cyan-400 border-r-2 border-blue-500 dark:border-cyan-400 font-bold' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800/60' }}"
                 >
-                    <div class="flex items-center gap-3">
-                        <svg class="w-4 h-4 flex-shrink-0 {{ request()->routeIs('currency.*') ? 'text-blue-600 dark:text-cyan-400' : 'text-slate-400 dark:text-slate-500' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/>
-                        </svg>
-                        <span>Currency FX</span>
-                    </div>
-                    <span class="text-[9px] font-mono font-bold px-1.5 py-0.5 rounded bg-cyan-500/15 text-cyan-700 dark:text-cyan-400 border border-cyan-500/20">FX</span>
+                    <svg class="w-4 h-4 flex-shrink-0 {{ request()->routeIs('currency.*') ? 'text-blue-600 dark:text-cyan-400' : 'text-slate-400 dark:text-slate-500' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/>
+                    </svg>
+                    <span>Currency FX</span>
                 </a>
 
                 <!-- 6. Maritime News -->
                 <a
                     href="{{ route('news.index') }}"
-                    class="flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-semibold transition-all duration-200 {{ request()->routeIs('news.*') ? 'bg-blue-600/10 text-blue-600 dark:text-cyan-400 border-r-2 border-blue-500 dark:border-cyan-400 font-bold' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800/60' }}"
+                    class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold transition-all duration-200 {{ request()->routeIs('news.*') ? 'bg-blue-600/10 text-blue-600 dark:text-cyan-400 border-r-2 border-blue-500 dark:border-cyan-400 font-bold' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800/60' }}"
                 >
-                    <div class="flex items-center gap-3">
-                        <svg class="w-4 h-4 flex-shrink-0 {{ request()->routeIs('news.*') ? 'text-blue-600 dark:text-cyan-400' : 'text-slate-400 dark:text-slate-500' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z"/>
-                        </svg>
-                        <span>Maritime News</span>
-                    </div>
-                    <span class="text-[9px] font-mono font-bold px-1.5 py-0.5 rounded bg-amber-500/15 text-amber-700 dark:text-amber-400 border border-amber-500/20">WIRE</span>
+                    <svg class="w-4 h-4 flex-shrink-0 {{ request()->routeIs('news.*') ? 'text-blue-600 dark:text-cyan-400' : 'text-slate-400 dark:text-slate-500' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z"/>
+                    </svg>
+                    <span>Maritime News</span>
                 </a>
             </div>
 

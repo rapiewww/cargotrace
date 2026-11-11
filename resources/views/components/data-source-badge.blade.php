@@ -7,7 +7,7 @@
     $style = match(strtoupper((string) $source)) {
         'LIVE' => ['class' => 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border-emerald-500/30', 'dot' => 'bg-emerald-500', 'label' => 'LIVE'],
         'CACHED' => ['class' => 'bg-teal-500/15 text-teal-700 dark:text-teal-300 border-teal-500/30', 'dot' => 'bg-teal-500', 'label' => 'CACHED'],
-        default => ['class' => 'bg-amber-500/15 text-amber-800 dark:text-amber-300 border-amber-500/30', 'dot' => 'bg-amber-500', 'label' => 'SIMULATED'],
+        default => ['class' => 'bg-amber-500/20 text-amber-900 dark:text-amber-200 border-dashed border-amber-500/70 shadow-sm', 'dot' => 'bg-amber-500', 'label' => 'SIMULATED'],
     };
 @endphp
 

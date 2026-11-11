@@ -151,4 +151,34 @@ class Shipment extends Model
     {
         return $this->hasMany(Notification::class);
     }
+
+    /**
+     * Great-circle (haversine) nautical miles between origin and destination seaports.
+     */
+    public function getGreatCircleDistanceNmAttribute(): ?int
+    {
+        $orig = $this->originLocation;
+        $dest = $this->destinationLocation;
+
+        if (! $orig || ! $dest || is_null($orig->latitude) || is_null($orig->longitude) || is_null($dest->latitude) || is_null($dest->longitude)) {
+            return null;
+        }
+
+        $lat1 = (float) $orig->latitude;
+        $lon1 = (float) $orig->longitude;
+        $lat2 = (float) $dest->latitude;
+        $lon2 = (float) $dest->longitude;
+
+        $earthRadiusKm = 6371.0;
+        $dLat = deg2rad($lat2 - $lat1);
+        $dLon = deg2rad($lon2 - $lon1);
+
+        $a = sin($dLat / 2) * sin($dLat / 2) +
+             cos(deg2rad($lat1)) * cos(deg2rad($lat2)) *
+             sin($dLon / 2) * sin($dLon / 2);
+        $c = 2 * atan2(sqrt($a), sqrt(1 - $a));
+        $distanceKm = $earthRadiusKm * $c;
+
+        return (int) round($distanceKm * 0.539957);
+    }
 }

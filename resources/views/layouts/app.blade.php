@@ -165,12 +165,12 @@
             <footer class="border-t theme-border py-6 text-xs theme-text-muted mt-auto theme-sidebar transition-colors duration-200">
                 <div class="max-w-[1600px] mx-auto px-6 sm:px-8 flex flex-col sm:flex-row items-center justify-between gap-4">
                     <div class="flex items-center space-x-2">
-                        <span class="font-bold theme-text-primary">CargoTrace &bull; Ocean Container Visibility & AIS Platform</span>
+                        <span class="font-bold theme-text-primary">CargoTrace &bull; Ocean Container Visibility Platform</span>
                         <span class="text-slate-500">&bull;</span>
                         <span class="text-[11px] text-cyan-500 dark:text-cyan-400 font-mono">Pure Maritime Container Tracking</span>
                     </div>
                     <div class="flex items-center space-x-4 theme-text-muted text-[11px]">
-                        <span>Interactive 3D Earth Globe &bull; Live Seaport Telemetry</span>
+                        <span>Interactive 3D Earth Globe &bull; Operator Checkpoints</span>
                         <a href="{{ route('welcome') }}" class="hover:text-cyan-400 transition">Public Portal</a>
                     </div>
                 </div>
