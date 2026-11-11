@@ -5,7 +5,7 @@
 [![Tailwind CSS v4](https://img.shields.io/badge/TailwindCSS-v4.0-38B2AC?style=flat&logo=tailwind-css&logoColor=white)](https://tailwindcss.com)
 [![Leaflet.js](https://img.shields.io/badge/Leaflet-1.9.4-199900?style=flat&logo=leaflet&logoColor=white)](https://leafletjs.com)
 [![Chart.js](https://img.shields.io/badge/Chart.js-4.4-FF6384?style=flat&logo=chartdotjs&logoColor=white)](https://www.chartjs.org)
-[![Pest Tests](https://img.shields.io/badge/Tests-67%20Passed%20(382%20assertions)-10B981?style=flat)](https://pestphp.com)
+[![Pest Tests](https://img.shields.io/badge/Tests-77%20Passed%20(428%20assertions)-10B981?style=flat)](https://pestphp.com)
 
 > **Academic Capstone Project**  
 > Course: Web Programming / Final Individual Project  
@@ -31,7 +31,7 @@ International ocean container shipping powers global commerce, yet container vis
 **CargoTrace** solves these problems with an enterprise-grade maritime visibility platform featuring:
 - **Pure Maritime Domain:** 100% focused on ocean container carriers (Maersk, MSC, CMA CGM, COSCO, Hapag-Lloyd, ONE) and verified UN/LOCODE container seaports.
 - **Deterministic Delay & ETA Engine:** Rigorous, reproducible schedule variance calculation ($LOW \le 6\text{h}$, $MEDIUM \le 24\text{h}$, $HIGH > 24\text{h}$) with automated customer alerts.
-- **Dual-Theme Enterprise UI (Light & Dark Mode):** Zero-flicker CSS custom property engine with dynamic CartoDB Positron & Dark Matter tile synchronization.
+- **Dual-Theme Enterprise UI (Light & Dark Mode):** Zero-flicker CSS custom property engine with dynamic OpenStreetMap tile filter synchronization.
 - **Multi-Tenant Role-Based Access Control (RBAC):** Distinct permission boundaries and automated query scoping for `admin`, `operator`, and `customer` personas.
 - **Truthful Telemetry Provenance:** Explicit provenance badges (`LIVE`, `CACHED`, or `SIMULATED`) ensuring academic integrity and operational transparency.
 

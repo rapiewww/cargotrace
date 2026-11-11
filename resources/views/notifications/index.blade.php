@@ -16,7 +16,7 @@
                 @endif
             </div>
             <p class="text-xs sm:text-sm text-slate-400 mt-1">
-                Real-time dispatch alerts, ETA delay adjustments, and shipment exception reports.
+                Event dispatch alerts, ETA delay adjustments, and shipment exception reports.
             </p>
         </div>
 
