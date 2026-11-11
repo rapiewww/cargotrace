@@ -1,74 +1,74 @@
 # CargoTrace — UI Architecture & Design System Notes
 
-This document provides a concise overview of the UI redesign, component hierarchy, client-side modules, and architectural decisions for CargoTrace.
+This document provides a comprehensive overview of the design system, component hierarchy, client-side modules, and responsive navigation architecture for CargoTrace.
 
 ---
 
-## 1. Visual Language & Design Tokens
+## 1. Visual Language & Dual-Theme System
 
-### Color Palette (Deep Ocean / Maritime Abyssal)
-- **Base Surface**: `#050B14` (Deep Maritime Abyssal Canvas)
-- **Primary Card Surface**: `#0B1728` (`bg-[#0B1728]/85 backdrop-blur-xl border border-white/10 shadow-2xl`)
-- **Secondary Card Surface**: `#11233B` (Elevated headers, active tabs, modal interiors)
-- **Primary Interactive Accent**: `#F5A524` to `#FB923C` (Amber / Gold CTA gradient)
-- **Secondary Telemetry Accent**: `#2DD4BF` (Teal / Cyan for maritime paths, coordinates, UN/LOCODE)
-- **Status Semantics**:
-  - `ON_TIME` / `DELIVERED` / `RESOLVED`: Emerald (`#10B981`)
-  - `WARNING` / `DELAYED` / `IN_TRANSIT`: Amber (`#F59E0B`)
-  - `EXCEPTION` / `DANGER` / `CRITICAL`: Rose (`#F43F5E`)
-  - `BOOKED` / `PICKED_UP`: Sky / Blue (`#38BDF8`)
-  - `CREATED`: Slate (`#94A3B8`)
+CargoTrace implements a fully synchronized, zero-flicker dual-theme system driven by CSS custom properties and `data-theme="dark"` / `data-theme="light"` attributes on `<html>`.
+
+### Color Palette Tokens
+| Token | Dark Mode (`[data-theme="dark"]`) | Light Mode (`[data-theme="light"]`) | Usage |
+|---|---|---|---|
+| `--bg-page` | `#050811` (Abyssal Navy) | `#F1F5F9` (Slate 100) | Main background canvas |
+| `--bg-surface` | `#0B1222` | `#FFFFFF` | Standard card surface |
+| `--bg-surface-elevated` | `#111A2E` | `#F8FAFC` | Modals, active states, sub-cards |
+| `--bg-sidebar` | `#080D1A` | `#FFFFFF` | Global navigation sidebar |
+| `--border-color` | `#1E293B` | `#E2E8F0` | Structural dividers & borders |
+| `--text-heading` | `#FFFFFF` | `#0F172A` | Primary titles and high-contrast labels |
+| `--text-primary` | `#F8FAFC` | `#1E293B` | High-contrast body text |
+| `--text-secondary` | `#94A3B8` | `#475569` | Secondary descriptive captions |
+| `--accent-blue` | `#2563EB` | `#2563EB` | Interactive links and primary actions |
+| `--accent-cyan` | `#38BDF8` | `#0284C7` | Telemetry badges and nautical highlights |
 
 ### Typography
-- **UI Body & Headings**: `Plus Jakarta Sans` (400, 500, 600, 700, 800) bundled locally via Vite plugin.
-- **Monospace Identifiers**: `JetBrains Mono` (400, 500, 600, 700) for tracking numbers, UN/LOCODE, timestamps, currency rates.
+- **Primary Body & Headings**: `Inter` (weights 400, 500, 600, 700, 800) bundled via Vite.
+- **Monospace Identifiers**: `JetBrains Mono` for tracking numbers (`CTG-SEA-2026-...`), UN/LOCODEs, coordinates, and ISO currency codes.
 
 ---
 
-## 2. Navigation Architecture
-- **Single Unified Top Navigation**: Replaced the cramped dual-navigation (top nav + icon bar) with a spacious, sticky top bar across full container width (`max-w-[1600px]`).
-- Includes clear section links (`Dashboard`, `Shipments`, `Exceptions`, `Carriers`, `Global Ports`, `Audit Logs`, `Users`, `Settings`), user badge, live notification popover, and clean mobile drawer.
+## 2. Navigation Architecture & Responsive Sidebar
+
+CargoTrace features an enterprise maritime navigation hierarchy grouped strictly into four domain areas:
+
+### Navigation Groups & Role Scoping
+1. **Operations**:
+   - `Global View` (`/dashboard`): 3D Earth Globe / 2D Leaflet interactive overview and KPIs.
+   - `Shipments` (`/shipments`): Ocean waybill directory, lifecycle progression, and filters.
+   - `Exceptions` (`/exceptions`): Incident logging and resolution (scoped to `admin` and `operator`). Displays live badge of open exception count.
+2. **Intelligence**:
+   - `Seaport Weather` (`/weather`): Live Open-Meteo atmospheric & marine wave telemetry, rule-based STS crane advisory, and comparison matrix.
+   - `Currency FX` (`/currency`): Global reference rates via ExchangeRate-API, 30-day ECB historical trend chart, combobox, and portfolio value breakdown.
+   - `Maritime News` (`/news`): Multi-feed RSS parser (gCaptain & Maritime Executive) with OpenGraph thumbnails, search, and shipment corridor match tags.
+3. **Master Data** (`admin` & `operator` only):
+   - `Carriers` (`/carriers`): Pure maritime shipping lines (Maersk, MSC, CMA CGM, COSCO, Hapag-Lloyd, ONE).
+   - `Locations` (`/locations`): Seaport container terminals with UN/LOCODEs and coordinates.
+4. **Administration** (`admin` only):
+   - `Audit Logs` (`/audit-logs`): Immutable operational ledger of all updates.
+   - `Users` (`/admin/users`): Multi-tenant role management (`admin`, `operator`, `customer`).
+   - `Delay Thresholds` (`/admin/settings`): Runtime configurable hours for LOW and MEDIUM delay severity.
+
+### Responsive Behaviors
+- **Desktop Expanded**: Fixed `w-64` sidebar with full section headings, brand title, and icon labels.
+- **Desktop Collapsed (Icon Rail)**: Collapses to `w-20` icon rail with centered icons, tooltips, and compact badges. State is preserved in `localStorage('cargotrace_sidebar_collapsed')` and applied before DOM paint to prevent layout shifts.
+- **Mobile Drawer**: Slide-out drawer with backdrop overlay triggered by the header hamburger button.
+- **Header Bar**: Minimalist sticky header with theme switch pill, desktop sidebar rail toggle, user profile badge, and unread notification popover.
 
 ---
 
-## 3. Reusable Blade Components (`resources/views/components/`)
-1. `<x-card>`: Enterprise frosted glass container (`bg-[#0B1728]/85 backdrop-blur-xl border border-white/10 shadow-2xl rounded-2xl`).
-2. `<x-stat-card>`: Standardized KPI card with icon, label, metric, variance trend badge, and optional live pulse indicator.
-3. `<x-badge>`: Status pill with animated pulsing dot and deterministic severity/status styling.
-4. `<x-button>`: Interactive button with variants (`primary`, `secondary`, `ghost`, `danger`) and micro-interaction transitions (`hover:scale-[1.02] active:scale-[0.98]`).
-5. `<x-input>` & `<x-select>`: Form controls with `#0B1728` background, `border-slate-800`, and `focus:ring-2 focus:ring-amber-500/50`.
-6. `<x-table>`: Dark styled data table with rounded headers and hover rows.
-7. `<x-empty-state>`: Consistent zero-data state with icon, explanatory message, and optional action button.
-8. `<x-page-header>`: Clean title bar with breadcrumb trail, action buttons, and live environment tag.
-9. `<x-progress-bar>`: Route milestone progress bar with departure, current location, and destination checkpoint indicators.
-10. `<x-status-stepper>`: Visual horizontal/vertical milestone stepper (`CREATED -> BOOKED -> PICKED_UP -> IN_TRANSIT -> DELIVERED`).
-11. `<x-data-source-badge>`: Truthful provenance pill (`LIVE`, `CACHED`, `SIMULATED`) for weather, currency, and news telemetry.
-12. `<x-toast>`: Flash notification alert banner with auto-dismiss.
-13. `<x-modal>`: Accessible modal dialog with backdrop blur.
+## 3. Geospatial & Visual Modules (`resources/js/`)
+
+1. **`map.js`**: Leaflet.js map orchestration using OpenStreetMap tile infrastructure (`https://tile.openstreetmap.org/{z}/{x}/{y}.png`). Applies CSS inversion and hue-rotation filter to tile panes in dark mode without altering marker or geodesic arc rendering.
+2. **`globe.js`**: Interactive 3D WebGL Earth globe rendered with Three.js / Three-Globe. Textures are self-hosted locally under `/images/globe/` (`earth-blue-marble.jpg`, `earth-night.jpg`, `earth-topology.png`).
+3. **`charts.js`**: Responsive Chart.js visualizers for container status distribution, carrier volume breakdowns, and 30-day currency historical trends.
+4. **`app.js`**: Central application bootstrap providing `window.CargoTrace` namespace, theme synchronization, and sidebar state handlers.
 
 ---
 
-## 4. JavaScript Modules Architecture (`resources/js/`)
-- `resources/js/app.js`: Main entry point importing dependencies and initializing page modules.
-- `resources/js/map.js`: Leaflet map orchestration, dark CartoDB tiles, origin/destination pins, and quadratic Bezier route curves.
-- `resources/js/charts.js`: Chart.js initialization for Status Doughnut (with center total plugin), Carrier bar chart, 8-week delay trend line, and Exception distribution.
-- `resources/js/tracking.js`: Public & authenticated tracking lookups, timeline animation, and quick track modal handler.
-- `resources/js/ui.js`: Notification menu, modal toggles, currency converter calculator, and toast dismissals.
+## 4. Reusable Blade Components (`resources/views/components/`)
 
----
-
-## 5. Honesty & Fallback Policy
-- No false claims of real-time AIS/satellite tracking or artificial intelligence.
-- All external API calls (weather, currency rates, news) are backed by `Cache::remember` (15-30m TTL) with graceful fallbacks.
-- Every telemetry card renders an `<x-data-source-badge>` displaying whether the metric was retrieved `LIVE`, served from `CACHED` storage, or generated as a `SIMULATED` benchmark.
-
----
-
-## 6. Features A..G Summary
-- **A. User & Role Management (`/admin/users`)**: Full CRUD for administrators with self-demotion and self-deactivation guards.
-- **B. Web Shipment Edit (`/shipments/{id}/edit`)**: Route, date, value, and status modifications validated through `ShipmentService`.
-- **C. Carriers & Locations Management**: Edit and safe deletion with foreign-key constraint protection and timezone support.
-- **D. Dynamic Delay Settings (`/admin/settings`)**: Runtime configurable delay boundaries (LOW, MEDIUM, HIGH) and bulk re-evaluation.
-- **E. In-App Notifications Center (`/notifications`)**: Dedicated notifications page with unread filters and bulk read actions.
-- **F. Manifest CSV Export (`/shipments/export/csv`)**: Filter-aware streamed CSV export with role-based scoping.
-- **G. English Documentation**: Comprehensive `README.md` with system architecture diagrams, ERD, and deployment guides.
+- `<x-card>`: Surface card with dual-theme border and responsive elevation.
+- `<x-data-source-badge>`: Truthful provenance indicator (`LIVE`, `CACHED`, or `SIMULATED`).
+- `<x-status-stepper>`: Visual horizontal/vertical milestone stepper (`CREATED -> BOOKED -> PICKED_UP -> IN_TRANSIT -> DELIVERED`).
+- `<x-empty-state>`: Standardized empty state container with icon and call to action.

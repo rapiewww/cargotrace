@@ -13,7 +13,7 @@
 2. [Entity Relationship Diagram (ERD) & Schema Topography](#2-entity-relationship-diagram-erd--schema-topography)
 3. [Comprehensive Data Dictionary](#3-comprehensive-data-dictionary)
 4. [Deterministic Business Rules & Logic Engines](#4-deterministic-business-rules--logic-engines)
-5. [Group Scenario Testing & Evaluation Walkthrough](#5-group-scenario-testing--evaluation-walkthrough)
+5. [Scenario Walkthrough](#5-scenario-walkthrough)
 6. [API Specification & Authentication Lifecycle](#6-api-specification--authentication-lifecycle)
 7. [System Boundaries, Limitations & Anti-Slop Adherence](#7-system-boundaries-limitations--anti-slop-adherence)
 8. [Third-Party Services & Dependency Attributions](#8-third-party-services--dependency-attributions)
@@ -550,9 +550,9 @@ Shipments progress through five linear, irreversible operational milestones:
 
 ---
 
-## 5. Group Scenario Testing & Evaluation Walkthrough
+## 5. Scenario Walkthrough
 
-For academic evaluation and multi-role testing, the following five end-to-end scenarios can be executed:
+For academic evaluation and multi-role testing in this individual university project, the following five end-to-end scenarios can be executed:
 
 ### Scenario A: End-to-End Maritime Booking & Checkpoint Progression
 1. **Login as Operator:** Navigate to `/login`, click "Operator Demo".
