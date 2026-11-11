@@ -7,7 +7,7 @@
 
     <title>{{ $title ?? 'CargoTrace — Pure Maritime Container Tracking' }}</title>
 
-    <!-- Instant Theme Loader (Zero-Flicker) -->
+    <!-- Instant Theme & Sidebar Rail Loader (Zero-Flicker) -->
     <script>
         (function() {
             const savedTheme = localStorage.getItem('cargotrace_theme') || 'dark';
@@ -18,6 +18,11 @@
             } else {
                 document.documentElement.classList.add('dark');
                 document.documentElement.classList.remove('light');
+            }
+
+            const savedSidebar = localStorage.getItem('cargotrace_sidebar_collapsed');
+            if (savedSidebar === 'true') {
+                document.documentElement.classList.add('sidebar-is-collapsed');
             }
         })();
     </script>
@@ -32,11 +37,11 @@
         <!-- 1. RESPONSIVE ENTERPRISE MARITIME SIDEBAR (Fixed w-64 desktop, drawer mobile) -->
         @include('layouts.sidebar')
 
-        <!-- 2. MAIN VIEW CONTAINER (Shifted right by w-64 on desktop) -->
-        <div class="lg:pl-64 pb-20 lg:pb-0 flex-1 flex flex-col min-h-screen theme-page transition-colors duration-200">
+        <!-- 2. MAIN VIEW CONTAINER (Shifted right by w-64 or w-20 on desktop) -->
+        <div id="main-content" class="lg:pl-64 pb-20 lg:pb-0 flex-1 flex flex-col min-h-screen theme-page transition-all duration-300">
             <!-- 3. TOP MINIMALIST HEADER BAR -->
             <header class="h-16 px-4 sm:px-8 flex items-center justify-between border-b theme-border theme-header backdrop-blur-md sticky top-0 z-40 transition-colors duration-200">
-                <!-- Top-Left: Mobile Hamburger + Pill Toggle Switch Dark / Light Mode (Global View style) -->
+                <!-- Top-Left: Mobile Hamburger + Desktop Rail Toggle + Pill Theme Switch -->
                 <div class="flex items-center space-x-2 sm:space-x-3">
                     <!-- Mobile Hamburger Button -->
                     <button
@@ -48,6 +53,19 @@
                     >
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+                        </svg>
+                    </button>
+
+                    <!-- Desktop Sidebar Rail Toggle Button -->
+                    <button
+                        type="button"
+                        onclick="window.CargoTrace && window.CargoTrace.toggleSidebarCollapse ? window.CargoTrace.toggleSidebarCollapse() : null"
+                        class="hidden lg:flex p-2 rounded-xl theme-card-elevated border theme-border text-slate-400 hover:text-cyan-400 transition"
+                        aria-label="Toggle sidebar width"
+                        title="Toggle sidebar rail"
+                    >
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h7"/>
                         </svg>
                     </button>
 

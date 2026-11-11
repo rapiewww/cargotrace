@@ -60,3 +60,38 @@ test('public tracking route returns 404 for invalid tracking number', function (
 
     $response->assertStatus(404);
 });
+
+test('customer navigation only displays operations and intelligence groups without master data or administration', function () {
+    $customer = User::where('role', 'customer')->first();
+
+    $response = $this->actingAs($customer)->get('/dashboard');
+    $response->assertStatus(200);
+
+    // Operations and Intelligence should be visible
+    $response->assertSee('Operations');
+    $response->assertSee('Global View');
+    $response->assertSee('Shipments');
+    $response->assertSee('Intelligence');
+    $response->assertSee('Seaport Weather');
+    $response->assertSee('Currency FX');
+    $response->assertSee('Maritime News');
+
+    // Master Data and Administration items should NOT be visible to customer
+    $response->assertDontSee('Audit Logs');
+    $response->assertDontSee('Delay Thresholds');
+});
+
+test('admin navigation displays master data and administration groups', function () {
+    $admin = User::where('role', 'admin')->first();
+
+    $response = $this->actingAs($admin)->get('/dashboard');
+    $response->assertStatus(200);
+
+    $response->assertSee('Operations');
+    $response->assertSee('Intelligence');
+    $response->assertSee('Master Data');
+    $response->assertSee('Carriers');
+    $response->assertSee('Locations');
+    $response->assertSee('Administration');
+    $response->assertSee('Audit Logs');
+});

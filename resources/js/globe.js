@@ -17,16 +17,16 @@ let currentLocations = [];
 function getGlobeThemeConfig(theme) {
     if (theme === 'light') {
         return {
-            globeImage: 'https://unpkg.com/three-globe/example/img/earth-blue-marble.jpg',
-            bumpImage: 'https://unpkg.com/three-globe/example/img/earth-topology.png',
+            globeImage: '/images/globe/earth-blue-marble.jpg',
+            bumpImage: '/images/globe/earth-topology.png',
             atmosphereColor: '#38BDF8',
             atmosphereAltitude: 0.15,
             labelColor: 'rgba(15, 23, 42, 0.95)',
         };
     }
     return {
-        globeImage: 'https://unpkg.com/three-globe/example/img/earth-night.jpg',
-        bumpImage: 'https://unpkg.com/three-globe/example/img/earth-topology.png',
+        globeImage: '/images/globe/earth-night.jpg',
+        bumpImage: '/images/globe/earth-topology.png',
         atmosphereColor: '#2563EB',
         atmosphereAltitude: 0.18,
         labelColor: 'rgba(255, 255, 255, 0.85)',

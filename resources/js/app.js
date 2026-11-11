@@ -84,6 +84,15 @@ export function closeSidebar() {
     document.body.classList.remove('overflow-hidden', 'lg:overflow-auto');
 }
 
+/**
+ * Toggle desktop sidebar between expanded (w-64) and icon rail (w-20)
+ */
+export function toggleSidebarCollapse() {
+    const isCollapsed = document.documentElement.classList.toggle('sidebar-is-collapsed');
+    localStorage.setItem('cargotrace_sidebar_collapsed', isCollapsed ? 'true' : 'false');
+    window.dispatchEvent(new CustomEvent('cargotrace:sidebar-collapse', { detail: { isCollapsed } }));
+}
+
 // Export CargoTrace global namespace
 window.CargoTrace = {
     createMap,
@@ -98,6 +107,7 @@ window.CargoTrace = {
     applyTheme,
     toggleSidebar,
     closeSidebar,
+    toggleSidebarCollapse,
     initStatusDoughnut,
     initCarrierBarChart,
     initTrendLineChart,
