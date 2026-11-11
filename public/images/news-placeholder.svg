@@ -1,0 +1,87 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 400" width="600" height="400">
+  <defs>
+    <linearGradient id="oceanGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#0B1726" />
+      <stop offset="60%" stop-color="#0E2338" />
+      <stop offset="100%" stop-color="#08101A" />
+    </linearGradient>
+    <linearGradient id="skyGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#050B14" />
+      <stop offset="70%" stop-color="#122538" />
+      <stop offset="100%" stop-color="#1D3E5B" />
+    </linearGradient>
+    <linearGradient id="hullGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#1E293B" />
+      <stop offset="50%" stop-color="#334155" />
+      <stop offset="100%" stop-color="#0F172A" />
+    </linearGradient>
+    <linearGradient id="craneGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#F59E0B" />
+      <stop offset="100%" stop-color="#D97706" />
+    </linearGradient>
+  </defs>
+
+  <!-- Sky -->
+  <rect width="600" height="260" fill="url(#skyGrad)" />
+
+  <!-- Distant Port Silhouette / Cranes -->
+  <path d="M40 260 L40 120 L80 90 L180 90 L160 120 L100 120 L100 260 Z" fill="#1E293B" opacity="0.4" />
+  <path d="M120 260 L120 140 L160 110 L250 110 L230 140 L170 140 L170 260 Z" fill="#0F172A" opacity="0.5" />
+  <line x1="80" y1="90" x2="130" y2="180" stroke="#F59E0B" stroke-width="2" opacity="0.3" />
+  <line x1="160" y1="110" x2="200" y2="190" stroke="#F59E0B" stroke-width="2" opacity="0.3" />
+
+  <!-- Stars / Maritime Beacons -->
+  <circle cx="80" cy="50" r="1.5" fill="#38BDF8" opacity="0.8" />
+  <circle cx="210" cy="40" r="1.5" fill="#38BDF8" opacity="0.6" />
+  <circle cx="450" cy="65" r="2" fill="#F59E0B" opacity="0.7" />
+  <circle cx="520" cy="35" r="1.5" fill="#FFFFFF" opacity="0.8" />
+
+  <!-- Water / Ocean -->
+  <rect y="260" width="600" height="140" fill="url(#oceanGrad)" />
+  <path d="M0 265 Q 150 260 300 265 T 600 265 L 600 275 Q 450 270 300 275 T 0 275 Z" fill="#38BDF8" opacity="0.15" />
+  <path d="M0 290 Q 200 285 400 290 T 600 290 L 600 296 Q 400 292 200 296 T 0 296 Z" fill="#0284C7" opacity="0.12" />
+
+  <!-- Container Ship Hull -->
+  <path d="M 120 240 L 480 240 L 440 295 L 180 295 Z" fill="url(#hullGrad)" stroke="#475569" stroke-width="1.5" />
+  <!-- Hull Red Boot-topping waterline -->
+  <path d="M 175 285 L 445 285 L 440 295 L 180 295 Z" fill="#BE123C" opacity="0.85" />
+
+  <!-- Ship Superstructure & Bridge (Aft) -->
+  <rect x="150" y="160" width="60" height="80" fill="#E2E8F0" rx="3" />
+  <rect x="155" y="170" width="50" height="8" fill="#0284C7" opacity="0.8" /> <!-- Bridge windows -->
+  <rect x="155" y="185" width="50" height="6" fill="#334155" opacity="0.3" />
+  <rect x="175" y="130" width="12" height="30" fill="#334155" /> <!-- Funnel -->
+  <rect x="175" y="130" width="12" height="8" fill="#0284C7" /> <!-- Funnel band -->
+
+  <!-- Container Stacks (Varied Colors) -->
+  <!-- Bay 1 -->
+  <rect x="220" y="215" width="45" height="25" fill="#0284C7" stroke="#0C4A6E" stroke-width="1" rx="2" />
+  <rect x="220" y="190" width="45" height="25" fill="#D97706" stroke="#78350F" stroke-width="1" rx="2" />
+  <rect x="220" y="165" width="45" height="25" fill="#047857" stroke="#064E3B" stroke-width="1" rx="2" />
+
+  <!-- Bay 2 -->
+  <rect x="270" y="215" width="45" height="25" fill="#DC2626" stroke="#7F1D1D" stroke-width="1" rx="2" />
+  <rect x="270" y="190" width="45" height="25" fill="#0284C7" stroke="#0C4A6E" stroke-width="1" rx="2" />
+  <rect x="270" y="165" width="45" height="25" fill="#4338CA" stroke="#312E81" stroke-width="1" rx="2" />
+  <rect x="270" y="140" width="45" height="25" fill="#D97706" stroke="#78350F" stroke-width="1" rx="2" />
+
+  <!-- Bay 3 -->
+  <rect x="320" y="215" width="45" height="25" fill="#059669" stroke="#065F46" stroke-width="1" rx="2" />
+  <rect x="320" y="190" width="45" height="25" fill="#E11D48" stroke="#881337" stroke-width="1" rx="2" />
+  <rect x="320" y="165" width="45" height="25" fill="#0284C7" stroke="#0C4A6E" stroke-width="1" rx="2" />
+
+  <!-- Bay 4 (Bow stack) -->
+  <rect x="370" y="215" width="45" height="25" fill="#D97706" stroke="#78350F" stroke-width="1" rx="2" />
+  <rect x="370" y="190" width="45" height="25" fill="#047857" stroke="#064E3B" stroke-width="1" rx="2" />
+
+  <!-- Water Reflection Lines -->
+  <ellipse cx="300" cy="315" rx="140" ry="6" fill="#38BDF8" opacity="0.1" />
+  <ellipse cx="320" cy="330" rx="100" ry="4" fill="#F59E0B" opacity="0.08" />
+
+  <!-- CargoTrace Maritime Intelligence Monogram / Watermark -->
+  <g transform="translate(480, 25)" opacity="0.85">
+    <rect x="-10" y="-8" width="105" height="28" rx="6" fill="#0F172A" opacity="0.85" stroke="#38BDF8" stroke-width="1" stroke-opacity="0.3" />
+    <circle cx="2" cy="6" r="3" fill="#10B981" />
+    <text x="12" y="10" font-family="system-ui, sans-serif" font-size="10" font-weight="700" fill="#E2E8F0" letter-spacing="0.5">MARITIME</text>
+  </g>
+</svg>

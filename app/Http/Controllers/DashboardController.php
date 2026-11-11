@@ -7,7 +7,10 @@ use App\Models\Location;
 use App\Models\Notification;
 use App\Models\Shipment;
 use App\Models\ShipmentException;
+use App\Services\CurrencyService;
 use App\Services\ExternalIntegrationService;
+use App\Services\MaritimeNewsService;
+use App\Services\WeatherService;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
@@ -15,7 +18,10 @@ use Illuminate\View\View;
 class DashboardController extends Controller
 {
     public function __construct(
-        protected ExternalIntegrationService $externalService
+        protected ExternalIntegrationService $externalService,
+        protected WeatherService $weatherService,
+        protected CurrencyService $currencyService,
+        protected MaritimeNewsService $newsService
     ) {}
 
     public function index(): View
@@ -150,15 +156,17 @@ class DashboardController extends Controller
             ->get();
         $unreadCount = Notification::where('user_id', $user->id)->whereNull('read_at')->count();
 
-        // External data (cached with data_source indicator)
-        $news = $this->externalService->getLogisticsNews();
-        $currencyData = $this->externalService->convertCurrency(1, 'USD', 'EUR');
+        // 1. Live Maritime News Feed (RSS with 1-hr Cache)
+        $news = $this->newsService->getMaritimeNews(6);
+
+        // 2. Live Maritime FX Currency Conversion (Frankfurter / Open ER with 1-hr Cache)
+        $currencyData = $this->currencyService->convert(1000, 'USD', 'IDR');
         $rates = $currencyData['rates_snapshot'] ?? [];
 
-        // Weather for key ports
+        // 3. Live Seaport Atmospheric Weather (Open-Meteo with 30-min Cache)
         $weatherPorts = [];
         foreach ($locations->take(4) as $loc) {
-            $weather = $loc->weather_snapshot ?? $this->externalService->getWeatherByCoordinates(
+            $weather = $this->weatherService->getPortWeather(
                 (float) $loc->latitude,
                 (float) $loc->longitude,
                 $loc->name
@@ -169,9 +177,18 @@ class DashboardController extends Controller
                 'city' => $loc->city,
                 'unlocode' => $loc->unlocode,
                 'weather' => $weather,
-                'data_source' => $weather['data_source'] ?? 'simulated',
+                'data_source' => $weather['data_source'] ?? 'live',
             ];
         }
+
+        // Dedicated selected port for Seaport Live Weather Widget
+        $selectedPort = $weatherPorts[0] ?? [
+            'name' => 'Port of Tanjung Priok',
+            'city' => 'Jakarta',
+            'unlocode' => 'IDJKT',
+            'weather' => $this->weatherService->getPortWeather(WeatherService::DEFAULT_LATITUDE, WeatherService::DEFAULT_LONGITUDE, WeatherService::DEFAULT_PORT_NAME),
+            'data_source' => 'live',
+        ];
 
         // Map payload formatting for client-side Leaflet
         $mapShipments = $activeShipments->map(function ($s) {
@@ -235,6 +252,7 @@ class DashboardController extends Controller
             'currencyData',
             'rates',
             'weatherPorts',
+            'selectedPort',
             'mapShipments'
         ));
     }

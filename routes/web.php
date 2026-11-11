@@ -2,13 +2,16 @@
 
 use App\Http\Controllers\AuditLogWebController;
 use App\Http\Controllers\CarrierLocationWebController;
+use App\Http\Controllers\CurrencyWebController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ExceptionWebController;
+use App\Http\Controllers\NewsWebController;
 use App\Http\Controllers\NotificationWebController;
 use App\Http\Controllers\PublicTrackingController;
 use App\Http\Controllers\SettingsWebController;
 use App\Http\Controllers\ShipmentWebController;
 use App\Http\Controllers\UserManagementWebController;
+use App\Http\Controllers\WeatherWebController;
 use App\Http\Controllers\WebAuthController;
 use App\Http\Controllers\WelcomeController;
 use Illuminate\Support\Facades\Route;
@@ -39,6 +42,11 @@ Route::middleware('auth')->group(function () {
 
     // Dashboard
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+
+    // Dedicated Maritime Intelligence Hubs
+    Route::get('/weather', [WeatherWebController::class, 'index'])->name('weather.index');
+    Route::get('/currency', [CurrencyWebController::class, 'index'])->name('currency.index');
+    Route::get('/news', [NewsWebController::class, 'index'])->name('news.index');
 
     // Shipments
     Route::get('/shipments', [ShipmentWebController::class, 'index'])->name('shipments.index');

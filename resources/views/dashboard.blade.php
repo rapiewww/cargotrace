@@ -380,7 +380,13 @@
             <div class="p-6 rounded-3xl bg-[#FDF6E2] dark:bg-[#FDF6E2] text-slate-950 border border-amber-200/80 shadow-xl space-y-4">
                 <div class="flex items-center justify-between pb-2 border-b border-amber-900/10">
                     <span class="text-xs font-bold uppercase tracking-wider text-amber-950">Seaport Live Weather</span>
-                    <span class="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-amber-900/10 text-amber-950 font-mono">Details</span>
+                    <div class="flex items-center gap-1.5">
+                        <x-data-source-badge :source="$selectedPort['data_source'] ?? 'live'" />
+                        <a href="{{ route('weather.index') }}" class="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-amber-900/15 hover:bg-amber-900/25 text-amber-950 font-mono transition inline-flex items-center gap-1" title="Open full Weather Hub">
+                            <span>Hub</span>
+                            <span>&rarr;</span>
+                        </a>
+                    </div>
                 </div>
 
                 <div class="space-y-3">
@@ -421,7 +427,12 @@
             <div class="p-5 rounded-3xl theme-card border space-y-3 transition-colors duration-200">
                 <div class="flex items-center justify-between pb-2 border-b theme-border">
                     <span class="text-xs font-bold uppercase tracking-wider theme-heading">Currency Calculator</span>
-                    <span class="text-[10px] text-cyan-600 dark:text-cyan-400 font-mono">Live Rates</span>
+                    <div class="flex items-center gap-1.5">
+                        <x-data-source-badge :source="$currencyData['data_source'] ?? 'live'" />
+                        <a href="{{ route('currency.index') }}" class="text-[10px] text-cyan-600 dark:text-cyan-400 hover:underline font-mono" title="Open full Currency FX Hub">
+                            Full FX &rarr;
+                        </a>
+                    </div>
                 </div>
 
                 <div class="grid grid-cols-5 gap-2 items-center">
@@ -480,15 +491,36 @@
             <div class="p-5 rounded-3xl theme-card border space-y-3 transition-colors duration-200">
                 <div class="flex items-center justify-between pb-2 border-b theme-border">
                     <span class="text-xs font-bold uppercase tracking-wider theme-heading">Maritime News Wire</span>
-                    <x-data-source-badge :source="$news[0]['data_source'] ?? 'simulated'" />
+                    <div class="flex items-center gap-1.5">
+                        <x-data-source-badge :source="$news[0]['data_source'] ?? 'live'" />
+                        <a href="{{ route('news.index') }}" class="text-[10px] text-cyan-600 dark:text-cyan-400 hover:underline font-mono" title="Open all Maritime News">
+                            All News &rarr;
+                        </a>
+                    </div>
                 </div>
-                <div class="space-y-2 max-h-48 overflow-y-auto pr-1">
-                    @forelse(array_slice($news, 0, 3) as $n)
-                        <div class="p-2.5 rounded-xl theme-card-elevated border theme-border space-y-1">
-                            <span class="text-[9px] font-bold uppercase text-cyan-600 dark:text-cyan-400 font-mono">{{ $n['source'] ?? 'Maritime Wire' }}</span>
-                            <a href="{{ $n['url'] ?? '#' }}" target="_blank" class="text-xs font-medium theme-heading hover:text-cyan-500 transition block line-clamp-1">
-                                {{ $n['headline'] }}
-                            </a>
+                <div class="space-y-2.5 max-h-56 overflow-y-auto pr-1">
+                    @forelse(array_slice($news, 0, 4) as $n)
+                        <div class="p-2.5 rounded-xl theme-card-elevated border theme-border flex items-center gap-3 group">
+                            <img
+                                src="{{ $n['thumbnail'] ?? asset('images/news-placeholder.svg') }}"
+                                alt=""
+                                class="w-16 h-14 sm:w-20 sm:h-16 rounded-lg object-cover flex-shrink-0 bg-slate-800 border border-white/5 group-hover:opacity-90 transition"
+                                loading="lazy"
+                                onerror="this.onerror=null;this.src='{{ asset('images/news-placeholder.svg') }}';"
+                            >
+                            <div class="min-w-0 flex-1 space-y-1">
+                                <div class="flex items-center justify-between gap-1">
+                                    <span class="text-[9px] font-bold uppercase text-cyan-600 dark:text-cyan-400 font-mono truncate max-w-[120px]">
+                                        {{ $n['source'] ?? 'Maritime Wire' }}
+                                    </span>
+                                    <span class="text-[10px] theme-text-muted flex-shrink-0 font-mono">
+                                        {{ \Carbon\Carbon::parse($n['published_at'])->diffForHumans(null, true) }}
+                                    </span>
+                                </div>
+                                <a href="{{ $n['url'] ?? '#' }}" target="_blank" rel="noopener noreferrer" class="text-xs font-semibold theme-heading hover:text-cyan-500 transition line-clamp-2 block leading-snug">
+                                    {{ $n['headline'] }}
+                                </a>
+                            </div>
                         </div>
                     @empty
                         <div class="text-center py-4 text-xs theme-text-muted">No news feeds available</div>
@@ -519,8 +551,8 @@
         }
     };
 
-    // Client-side Two-Way Currency Calculator
-    const currencyRates = {
+    // Client-side Two-Way Currency Calculator with Live API Fallback
+    const currencyRates = Object.assign({
         'USD': 1.0,
         'EUR': 0.92,
         'IDR': 15873.0,
@@ -528,7 +560,9 @@
         'CNY': 7.23,
         'AUD': 1.52,
         'AED': 3.67
-    };
+    }, @json($rates ?? []));
+
+    let currencyFetchDebounce = null;
 
     function calculateTwoWayCurrency() {
         const amount = parseFloat(document.getElementById('two-way-amount').value) || 0;
@@ -538,15 +572,32 @@
         const rateFrom = currencyRates[from] || 1.0;
         const rateTo = currencyRates[to] || 1.0;
 
-        // amount in USD = amount / rateFrom; then * rateTo
-        const result = (amount / rateFrom) * rateTo;
-
-        const formatted = result.toLocaleString(undefined, {
+        // Instant optimistic preview client-side:
+        const instantResult = (amount / rateFrom) * rateTo;
+        const formatted = instantResult.toLocaleString(undefined, {
             minimumFractionDigits: to === 'IDR' ? 0 : 2,
             maximumFractionDigits: to === 'IDR' ? 0 : 2
         });
+        document.getElementById('two-way-result').textContent = `${to === 'IDR' ? 'Rp ' : ''}${formatted} ${to}`;
 
-        document.getElementById('two-way-result').textContent = `${formatted} ${to}`;
+        // Debounced live conversion query to /api/currency/convert
+        clearTimeout(currencyFetchDebounce);
+        currencyFetchDebounce = setTimeout(() => {
+            fetch(`/api/currency/convert?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}&amount=${encodeURIComponent(amount)}`)
+                .then(res => res.ok ? res.json() : null)
+                .then(json => {
+                    const data = json && json.data ? json.data : json;
+                    if (data && (data.formatted_result || data.formatted_converted)) {
+                        document.getElementById('two-way-result').textContent = data.formatted_result || data.formatted_converted;
+                        if (data.rates_snapshot) {
+                            Object.assign(currencyRates, data.rates_snapshot);
+                        }
+                    }
+                })
+                .catch(() => {
+                    // Fail silently, preserving optimistic client-side value
+                });
+        }, 300);
     }
 
     function swapCurrencies() {

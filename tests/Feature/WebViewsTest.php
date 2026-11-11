@@ -187,3 +187,47 @@ test('audit logs page accessible only to admin', function () {
     $this->actingAs($operator)->get('/audit-logs')->assertStatus(403);
     $this->actingAs($customer)->get('/audit-logs')->assertStatus(403);
 });
+
+test('dedicated maritime weather hub loads with telemetry and forecast', function () {
+    $user = User::first();
+
+    $response = $this->actingAs($user)->get('/weather');
+    $response->assertStatus(200);
+    $response->assertSee('Seaport Weather');
+    $response->assertSee('Open-Meteo Integration');
+    $response->assertSee('Beaufort');
+    $response->assertSee('7-Day Seaport Forecast');
+});
+
+test('dedicated currency fx hub loads with calculator and freight benchmarks', function () {
+    $user = User::first();
+
+    $response = $this->actingAs($user)->get('/currency');
+    $response->assertStatus(200);
+    $response->assertSee('Maritime Currency FX');
+    $response->assertSee('Ocean Freight Valuation Calculator');
+    $response->assertSee('Maritime FX Cross-Rate Matrix');
+    $response->assertSee('Vessel Bunker Fuel Index');
+});
+
+test('dedicated maritime news hub loads with thumbnails and category filters', function () {
+    $user = User::first();
+
+    $response = $this->actingAs($user)->get('/news');
+    $response->assertStatus(200);
+    $response->assertSee('Maritime News Wire');
+    $response->assertSee('All Categories');
+    $response->assertSee('news-placeholder.svg');
+});
+
+test('global sidebar displays improved text labels and links for maritime intelligence', function () {
+    $user = User::where('role', 'admin')->first();
+
+    $response = $this->actingAs($user)->get('/dashboard');
+    $response->assertStatus(200);
+    $response->assertSee('Global View');
+    $response->assertSee('Shipments');
+    $response->assertSee('Seaport Weather');
+    $response->assertSee('Currency FX');
+    $response->assertSee('Maritime News');
+});

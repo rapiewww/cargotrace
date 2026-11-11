@@ -100,3 +100,102 @@ test('news service falls back to simulated bulletins on api failure', function (
         ->and(count($news))->toBeGreaterThan(0)
         ->and($news[0]['data_source'])->toBe('simulated');
 });
+
+test('open meteo weather service fetches and caches port weather', function () {
+    Cache::flush();
+
+    Http::fake([
+        'api.open-meteo.com/*' => Http::response([
+            'current' => [
+                'temperature_2m' => 29.8,
+                'relative_humidity_2m' => 72,
+                'weather_code' => 1,
+                'wind_speed_10m' => 16.2,
+            ],
+        ], 200),
+    ]);
+
+    $service = app(\App\Services\WeatherService::class);
+    $data1 = $service->getPortWeather(-6.1, 106.88, 'Port of Tanjung Priok');
+
+    expect($data1['temperature_c'])->toBe(29.8)
+        ->and($data1['condition'])->toBe('Mainly Clear')
+        ->and($data1['data_source'])->toBe('live');
+
+    // Second call should be cached
+    Http::fake([
+        'api.open-meteo.com/*' => Http::response([], 500),
+    ]);
+
+    $data2 = $service->getPortWeather(-6.1, 106.88, 'Port of Tanjung Priok');
+    expect($data2['data_source'])->toBe('cached')
+        ->and($data2['temperature_c'])->toBe(29.8);
+});
+
+test('currency service converts currencies and exposes api route', function () {
+    Cache::flush();
+
+    Http::fake([
+        'api.frankfurter.app/*' => Http::response([
+            'base' => 'USD',
+            'rates' => [
+                'EUR' => 0.92,
+                'IDR' => 16000.0,
+                'SGD' => 1.35,
+                'CNY' => 7.24,
+                'AUD' => 1.53,
+            ],
+        ], 200),
+    ]);
+
+    $service = app(\App\Services\CurrencyService::class);
+    $conv = $service->convert(100, 'USD', 'EUR');
+
+    expect($conv['converted_amount'])->toBe(92.0)
+        ->and($conv['data_source'])->toBe('live');
+
+    // Test the API endpoint /api/currency/convert
+    $response = $this->getJson('/api/currency/convert?from=USD&to=EUR&amount=100');
+    $response->assertOk()
+        ->assertJson([
+            'status' => 'success',
+            'data' => [
+                'from' => 'USD',
+                'to' => 'EUR',
+                'amount' => 100,
+                'converted_amount' => 92.0,
+            ],
+        ]);
+});
+
+test('maritime news service parses rss feed or falls back gracefully', function () {
+    Cache::flush();
+
+    $rssXml = <<<XML
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0">
+  <channel>
+    <title>gCaptain Maritime News</title>
+    <item>
+      <title>Global Container Freight Rates Normalize Along Transpacific Routes</title>
+      <link>https://gcaptain.com/test-article</link>
+      <pubDate>Wed, 11 Nov 2026 12:00:00 +0000</pubDate>
+      <category>Container Shipping</category>
+      <description>Freight spot rates between Asia and the US West Coast continue stabilization.</description>
+    </item>
+  </channel>
+</rss>
+XML;
+
+    Http::fake([
+        'gcaptain.com/*' => Http::response($rssXml, 200, ['Content-Type' => 'application/rss+xml']),
+    ]);
+
+    $service = app(\App\Services\MaritimeNewsService::class);
+    $news = $service->getMaritimeNews(5);
+
+    expect($news)->toBeArray()
+        ->and(count($news))->toBeGreaterThan(0)
+        ->and($news[0]['headline'])->toContain('Container Freight Rates')
+        ->and($news[0]['data_source'])->toBe('live');
+});

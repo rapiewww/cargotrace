@@ -54,6 +54,36 @@ export function toggleTheme() {
     applyTheme(newTheme);
 }
 
+/**
+ * Toggle responsive mobile sidebar drawer
+ */
+export function toggleSidebar() {
+    const sidebar = document.getElementById('main-sidebar');
+    const backdrop = document.getElementById('sidebar-backdrop');
+    if (!sidebar) return;
+    const isClosed = sidebar.classList.contains('-translate-x-full');
+    if (isClosed) {
+        sidebar.classList.remove('-translate-x-full');
+        backdrop?.classList.remove('hidden');
+        document.body.classList.add('overflow-hidden', 'lg:overflow-auto');
+    } else {
+        sidebar.classList.add('-translate-x-full');
+        backdrop?.classList.add('hidden');
+        document.body.classList.remove('overflow-hidden', 'lg:overflow-auto');
+    }
+}
+
+/**
+ * Close responsive mobile sidebar drawer
+ */
+export function closeSidebar() {
+    const sidebar = document.getElementById('main-sidebar');
+    const backdrop = document.getElementById('sidebar-backdrop');
+    if (sidebar) sidebar.classList.add('-translate-x-full');
+    if (backdrop) backdrop.classList.add('hidden');
+    document.body.classList.remove('overflow-hidden', 'lg:overflow-auto');
+}
+
 // Export CargoTrace global namespace
 window.CargoTrace = {
     createMap,
@@ -66,6 +96,8 @@ window.CargoTrace = {
     focusMaritimeEntity,
     toggleTheme,
     applyTheme,
+    toggleSidebar,
+    closeSidebar,
     initStatusDoughnut,
     initCarrierBarChart,
     initTrendLineChart,

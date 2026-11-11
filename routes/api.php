@@ -13,9 +13,10 @@ use Illuminate\Support\Facades\Route;
 |--------------------------------------------------------------------------
 */
 
-// Public Authentication
+// Public Authentication & Utilities
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
+Route::match(['get', 'post'], '/currency/convert', [\App\Http\Controllers\Api\CurrencyApiController::class, 'convert']);
 
 // Authenticated Endpoints (Sanctum)
 Route::middleware('auth:sanctum')->group(function () {
