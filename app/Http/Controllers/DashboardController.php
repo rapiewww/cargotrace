@@ -191,8 +191,9 @@ class DashboardController extends Controller
             ->get();
         $unreadCount = Notification::where('user_id', $user->id)->whereNull('read_at')->count();
 
-        // 1. Live Maritime News Feed (RSS with 1-hr Cache)
-        $news = $this->newsService->getMaritimeNews(6);
+        // 1. Live Maritime News Feed (RSS with 1-hr Cache & Shipment Relevance)
+        $rawNews = $this->newsService->getMaritimeNews(6);
+        $news = $this->newsService->tagShipmentRelevance($rawNews, $activeShipments);
 
         // 2. Live Maritime FX Currency Conversion (Open ER with 1-hr Cache)
         try {

@@ -44,5 +44,9 @@ return [
     'news' => [
         'key' => env('NEWS_API_KEY'),
         'base_url' => env('NEWS_API_BASE_URL', 'https://newsapi.org/v2'),
+        'feeds' => [
+            'gCaptain' => 'https://gcaptain.com/feed/',
+            'Maritime Executive' => 'https://maritime-executive.com/rss',
+        ],
     ],
 ];

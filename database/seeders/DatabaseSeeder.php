@@ -12,6 +12,7 @@ use App\Models\ShipmentItem;
 use App\Models\TrackingEvent;
 use App\Models\User;
 use App\Services\CurrencyService;
+use App\Services\MaritimeNewsService;
 use Carbon\Carbon;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Cache;
@@ -37,6 +38,34 @@ class DatabaseSeeder extends Seeder
             'provider_url' => 'https://www.exchangerate-api.com',
             'attribution_text' => 'Rates By ExchangeRate-API',
             'data_source' => 'cached',
+        ]);
+
+        // Prime maritime news feed in stale cache
+        Cache::forever(MaritimeNewsService::STALE_CACHE_KEY_PREFIX.md5('gCaptain'), [
+            [
+                'headline' => 'Panama Canal Increases Daily Transit Booking Slots as Water Levels Recover',
+                'title' => 'Panama Canal Increases Daily Transit Booking Slots as Water Levels Recover',
+                'source' => 'gCaptain',
+                'url' => 'https://gcaptain.com/panama-canal-transit-slots-recovery',
+                'thumbnail' => '/images/news-placeholder.svg',
+                'category' => 'Waterways',
+                'summary' => 'Panama Canal Authority increases daily vessel reservation slots to 36 following sustained precipitation in Gatun Lake basin.',
+                'published_at' => Carbon::now()->subHours(4)->toIso8601String(),
+                'data_source' => 'cached',
+            ],
+        ]);
+        Cache::forever(MaritimeNewsService::STALE_CACHE_KEY_PREFIX.md5('Maritime Executive'), [
+            [
+                'headline' => 'Singapore Port Automated Terminal Expands Quay Crane Berths',
+                'title' => 'Singapore Port Automated Terminal Expands Quay Crane Berths',
+                'source' => 'Maritime Executive',
+                'url' => 'https://maritime-executive.com/singapore-automated-berth-expansion',
+                'thumbnail' => '/images/hero-port.webp',
+                'category' => 'Port Operations',
+                'summary' => 'PSA Singapore accelerates deepwater berth crane automation to improve container throughput and turnaround time.',
+                'published_at' => Carbon::now()->subHours(8)->toIso8601String(),
+                'data_source' => 'cached',
+            ],
         ]);
         // ---------------------------------------------------------------------
         // 1. DEMO USERS (Admin, Operator, Customers)

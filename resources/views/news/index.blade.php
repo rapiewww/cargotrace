@@ -58,7 +58,7 @@
             >
                 Filter
             </button>
-            @if(!empty($searchQuery) || $selectedSource !== 'all' || $selectedCategory !== 'all')
+            @if(!empty($searchQuery) || $selectedSource !== 'all' || $selectedCategory !== 'all' || $onlyRelevant)
                 <a
                     href="{{ route('news.index') }}"
                     class="px-2.5 py-2 rounded-xl theme-card-elevated border theme-border text-xs theme-text-secondary hover:text-white transition"
@@ -70,17 +70,28 @@
         </form>
     </div>
 
-    <!-- Category Filter Pills -->
+    <!-- Category Filter Pills & Relevant Switcher -->
     <div class="flex items-center gap-2 overflow-x-auto pb-1 focus:outline-none">
+        <!-- Relevant to your shipments pill -->
+        @if($relevantCount > 0)
+            <a
+                href="{{ route('news.index', array_merge(request()->except(['relevant', 'page']), $onlyRelevant ? [] : ['relevant' => 1])) }}"
+                class="px-3.5 py-1.5 rounded-full text-xs font-bold transition whitespace-nowrap border flex items-center gap-1.5 {{ $onlyRelevant ? 'bg-cyan-600 text-white border-cyan-600 shadow-md shadow-cyan-500/20' : 'bg-cyan-500/10 border-cyan-500/30 text-cyan-700 dark:text-cyan-300 hover:bg-cyan-500/20' }}"
+            >
+                <span>⭐ Relevant to Your Shipments</span>
+                <span class="text-[10px] font-mono px-1.5 py-0.2 rounded-full bg-cyan-700/30 text-cyan-200">{{ $relevantCount }}</span>
+            </a>
+        @endif
+
         <a
-            href="{{ route('news.index', array_merge(request()->except('category'), ['category' => 'all'])) }}"
-            class="px-3.5 py-1.5 rounded-full text-xs font-bold transition whitespace-nowrap border {{ $selectedCategory === 'all' ? 'bg-blue-600 text-white border-blue-600 shadow-md shadow-blue-500/20' : 'theme-card-elevated theme-border theme-text-secondary hover:text-white' }}"
+            href="{{ route('news.index', array_merge(request()->except(['category', 'page']), ['category' => 'all'])) }}"
+            class="px-3.5 py-1.5 rounded-full text-xs font-bold transition whitespace-nowrap border {{ $selectedCategory === 'all' && !$onlyRelevant ? 'bg-blue-600 text-white border-blue-600 shadow-md shadow-blue-500/20' : 'theme-card-elevated theme-border theme-text-secondary hover:text-white' }}"
         >
             All Categories
         </a>
         @foreach($categories as $cat)
             <a
-                href="{{ route('news.index', array_merge(request()->except('category'), ['category' => $cat])) }}"
+                href="{{ route('news.index', array_merge(request()->except(['category', 'page']), ['category' => $cat])) }}"
                 class="px-3.5 py-1.5 rounded-full text-xs font-bold transition whitespace-nowrap border {{ strcasecmp($selectedCategory, $cat) === 0 ? 'bg-blue-600 text-white border-blue-600 shadow-md shadow-blue-500/20' : 'theme-card-elevated theme-border theme-text-secondary hover:text-white' }}"
             >
                 {{ $cat }}
@@ -88,40 +99,51 @@
         @endforeach
     </div>
 
-    <!-- Grid of Maritime News Cards with Thumbnails -->
-    @if(empty($filteredNews))
-        <div class="p-12 text-center rounded-3xl theme-card border space-y-3">
+    <!-- Grid of Maritime News Cards with Fixed Aspect Ratio & Lazy Loaded Thumbnails -->
+    @if($paginatedNews->isEmpty())
+        <div class="p-12 text-center rounded-3xl theme-card border space-y-4">
             <div class="w-12 h-12 rounded-full bg-slate-800 flex items-center justify-center text-slate-400 mx-auto">
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z"/></svg>
             </div>
-            <h3 class="text-base font-bold theme-heading">No maritime news articles found</h3>
-            <p class="text-xs theme-text-secondary max-w-md mx-auto">
-                No bulletins match your current query or category filter. Try clearing your search parameters.
-            </p>
-            <div class="pt-2">
+            <div>
+                <h3 class="text-base font-bold theme-heading">No maritime news articles found</h3>
+                <p class="text-xs theme-text-secondary max-w-md mx-auto mt-1">
+                    No bulletins match your current query or filter parameters. If external feeds are unreachable, try retrying.
+                </p>
+            </div>
+            <div class="pt-2 flex items-center justify-center gap-3">
                 <a href="{{ route('news.index') }}" class="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold transition">
-                    View All Maritime News
+                    Reset All Filters
                 </a>
+                <button type="button" onclick="window.location.reload()" class="px-4 py-2 rounded-xl theme-card-elevated border theme-border text-xs font-bold theme-heading hover:bg-slate-800/40 transition">
+                    Retry Feed Connection
+                </button>
             </div>
         </div>
     @else
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            @foreach($filteredNews as $item)
+            @foreach($paginatedNews as $item)
                 <article class="rounded-3xl theme-card border overflow-hidden flex flex-col justify-between hover:border-cyan-500/40 transition group">
-                    <!-- Thumbnail with Category Badge Overlay -->
-                    <div class="relative h-48 w-full bg-slate-900 overflow-hidden">
+                    <!-- Thumbnail with Fixed Aspect Ratio (16/9) preventing layout shift -->
+                    <div class="relative aspect-video w-full bg-slate-900 overflow-hidden">
                         <img
                             src="{{ $item['thumbnail'] ?? asset('images/news-placeholder.svg') }}"
                             alt="{{ $item['headline'] }}"
                             class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                             loading="lazy"
+                            referrerpolicy="no-referrer"
                             onerror="this.onerror=null;this.src='{{ asset('images/news-placeholder.svg') }}';"
                         >
-                        <!-- Category Overlay -->
-                        <div class="absolute top-3 left-3">
+                        <!-- Category Overlay & Relevant Badge -->
+                        <div class="absolute top-3 left-3 right-3 flex items-center justify-between gap-2 pointer-events-none">
                             <span class="px-2.5 py-1 rounded-lg text-[10px] font-mono font-bold uppercase tracking-wider bg-slate-950/85 backdrop-blur-md text-cyan-400 border border-white/10 shadow-lg">
                                 {{ $item['category'] ?? 'Shipping & Trade' }}
                             </span>
+                            @if(!empty($item['is_relevant']))
+                                <span class="px-2.5 py-1 rounded-lg text-[10px] font-mono font-bold uppercase tracking-wider bg-blue-600/90 backdrop-blur-md text-white border border-blue-400/40 shadow-lg">
+                                    ⭐ Shipment Match
+                                </span>
+                            @endif
                         </div>
                     </div>
 
@@ -148,7 +170,7 @@
                             </p>
                         </div>
 
-                        <!-- Read Link -->
+                        <!-- Read Link (Source, Diff time, External Link) -->
                         <div class="pt-3 border-t theme-border flex items-center justify-between">
                             <span class="text-[10px] font-mono theme-text-muted">
                                 {{ \Carbon\Carbon::parse($item['published_at'])->diffForHumans() }}
@@ -169,7 +191,11 @@
                 </article>
             @endforeach
         </div>
+
+        <!-- Pagination Links -->
+        <div class="pt-6 border-t theme-border flex justify-center">
+            {{ $paginatedNews->links() }}
+        </div>
     @endif
 </div>
 @endsection
-

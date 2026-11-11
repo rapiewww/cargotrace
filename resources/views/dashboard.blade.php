@@ -519,9 +519,16 @@
                             >
                             <div class="min-w-0 flex-1 space-y-1">
                                 <div class="flex items-center justify-between gap-1">
-                                    <span class="text-[9px] font-bold uppercase text-cyan-600 dark:text-cyan-400 font-mono truncate max-w-[120px]">
-                                        {{ $n['source'] ?? 'Maritime Wire' }}
-                                    </span>
+                                    <div class="flex items-center gap-1.5 min-w-0">
+                                        <span class="text-[9px] font-bold uppercase text-cyan-600 dark:text-cyan-400 font-mono truncate max-w-[100px]">
+                                            {{ $n['source'] ?? 'Maritime Wire' }}
+                                        </span>
+                                        @if(!empty($n['is_relevant']))
+                                            <span class="px-1.5 py-0.2 rounded text-[8px] font-mono font-bold uppercase bg-blue-500/20 text-cyan-300 border border-blue-400/30">
+                                                Match
+                                            </span>
+                                        @endif
+                                    </div>
                                     <span class="text-[10px] theme-text-muted flex-shrink-0 font-mono">
                                         {{ \Carbon\Carbon::parse($n['published_at'])->diffForHumans(null, true) }}
                                     </span>

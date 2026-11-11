@@ -9,6 +9,7 @@ use App\Models\User;
 use App\Services\EtaService;
 use App\Services\ExceptionService;
 use App\Services\ExternalIntegrationService;
+use App\Services\MaritimeNewsService;
 use App\Services\ShipmentService;
 use App\Services\TrackingService;
 use Carbon\Carbon;
@@ -25,7 +26,8 @@ class ShipmentWebController extends Controller
         protected TrackingService $trackingService,
         protected ExceptionService $exceptionService,
         protected EtaService $etaService,
-        protected ExternalIntegrationService $externalService
+        protected ExternalIntegrationService $externalService,
+        protected MaritimeNewsService $newsService
     ) {}
 
     public function index(Request $request): View
@@ -185,7 +187,15 @@ class ShipmentWebController extends Controller
         $locations = Location::orderBy('name')->get();
         $user = Auth::user();
 
-        return view('shipments.show', compact('shipment', 'locations', 'user'));
+        // Relevant maritime news for this shipment corridor
+        $rawNews = $this->newsService->getMaritimeNews(12);
+        $taggedNews = $this->newsService->tagShipmentRelevance($rawNews, [$shipment]);
+        $relatedNews = collect($taggedNews)->filter(fn ($item) => ! empty($item['is_relevant']))->take(3)->values()->all();
+        if (empty($relatedNews)) {
+            $relatedNews = array_slice($rawNews, 0, 3);
+        }
+
+        return view('shipments.show', compact('shipment', 'locations', 'user', 'relatedNews'));
     }
 
     public function create(): View

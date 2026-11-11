@@ -190,6 +190,43 @@
                     </div>
                 </x-card>
             @endif
+
+            <!-- Related Maritime News Corridor Intelligence -->
+            @if(!empty($relatedNews))
+                <x-card class="space-y-4">
+                    <div class="flex items-center justify-between pb-3 border-b border-white/10">
+                        <div>
+                            <span class="uppercase text-[10px] tracking-wider text-cyan-400 font-semibold block font-mono">Corridor Intelligence</span>
+                            <h3 class="text-base font-bold text-white">Related Maritime News</h3>
+                        </div>
+                        <a href="{{ route('news.index') }}" class="text-xs font-mono text-cyan-400 hover:underline">All News &rarr;</a>
+                    </div>
+
+                    <div class="space-y-3">
+                        @foreach($relatedNews as $rn)
+                            <div class="p-3 rounded-xl bg-slate-900/60 border border-white/5 flex items-center gap-3 group">
+                                <img
+                                    src="{{ $rn['thumbnail'] ?? asset('images/news-placeholder.svg') }}"
+                                    alt=""
+                                    class="w-16 h-12 rounded-lg object-cover flex-shrink-0 bg-slate-800"
+                                    loading="lazy"
+                                    referrerpolicy="no-referrer"
+                                    onerror="this.onerror=null;this.src='{{ asset('images/news-placeholder.svg') }}';"
+                                >
+                                <div class="min-w-0 flex-1 space-y-1">
+                                    <div class="flex items-center justify-between text-[10px] font-mono">
+                                        <span class="text-cyan-400 font-bold uppercase truncate max-w-[120px]">{{ $rn['source'] ?? 'Maritime Wire' }}</span>
+                                        <span class="text-slate-400">{{ \Carbon\Carbon::parse($rn['published_at'])->diffForHumans(null, true) }}</span>
+                                    </div>
+                                    <a href="{{ $rn['url'] ?? '#' }}" target="_blank" rel="noopener noreferrer" class="text-xs font-semibold text-white group-hover:text-cyan-400 transition line-clamp-2 block leading-snug">
+                                        {{ $rn['headline'] }}
+                                    </a>
+                                </div>
+                            </div>
+                        @endforeach
+                    </div>
+                </x-card>
+            @endif
         </div>
 
         <!-- Right Column: Tracking Checkpoints Timeline & Operator Tools (5 cols) -->
