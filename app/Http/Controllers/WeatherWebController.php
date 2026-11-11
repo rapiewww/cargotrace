@@ -3,8 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Models\Location;
+use App\Models\Shipment;
 use App\Services\WeatherService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
 
 class WeatherWebController extends Controller
@@ -18,143 +20,137 @@ class WeatherWebController extends Controller
      */
     public function index(Request $request): View
     {
-        // 1. Fetch available maritime seaports from database or curated global ports
-        $dbPorts = Location::where('type', 'PORT')->orderBy('name')->get();
+        $user = Auth::user();
 
-        $curatedPorts = [
-            [
-                'id' => 'SGSIN',
-                'name' => 'Port of Singapore',
-                'city' => 'Singapore',
-                'country' => 'Singapore',
-                'unlocode' => 'SGSIN',
-                'latitude' => 1.264,
-                'longitude' => 103.840,
-            ],
-            [
-                'id' => 'IDJKT',
+        // 1. Fetch available seaport locations from database (no hardcoded hubs)
+        $allLocations = Location::where('type', 'PORT')->orderBy('name')->get();
+
+        if ($allLocations->isEmpty()) {
+            $allLocations = Location::orderBy('name')->get();
+        }
+
+        // 2. Identify ports on active routes for the current user
+        $shipmentsQuery = Shipment::whereNotIn('status', ['DELIVERED', 'CANCELLED']);
+        if ($user && $user->role === 'customer') {
+            $shipmentsQuery->where('customer_id', $user->id);
+        }
+        $activeShipments = $shipmentsQuery->get(['origin_location_id', 'destination_location_id']);
+
+        $activePortIds = $activeShipments->flatMap(fn ($s) => [
+            $s->origin_location_id,
+            $s->destination_location_id,
+        ])->filter()->unique()->values()->all();
+
+        // Split into active route ports and other global ports
+        $activeRoutePorts = $allLocations->whereIn('id', $activePortIds)->values();
+        $otherPorts = $allLocations->whereNotIn('id', $activePortIds)->values();
+
+        // 3. Resolve selected port
+        $selectedParam = $request->query('port');
+        $selectedLocation = null;
+
+        if ($selectedParam) {
+            $selectedLocation = $allLocations->first(function ($loc) use ($selectedParam) {
+                return (string) $loc->id === (string) $selectedParam
+                    || strtoupper($loc->unlocode ?? '') === strtoupper($selectedParam);
+            });
+        }
+
+        if (! $selectedLocation) {
+            $selectedLocation = $activeRoutePorts->first() ?? $allLocations->first();
+        }
+
+        if ($selectedLocation) {
+            $selectedPort = [
+                'id' => (string) $selectedLocation->id,
+                'name' => $selectedLocation->name,
+                'city' => $selectedLocation->city ?? '',
+                'country' => $selectedLocation->country ?? '',
+                'unlocode' => $selectedLocation->unlocode ?: 'PORT',
+                'latitude' => (float) $selectedLocation->latitude,
+                'longitude' => (float) $selectedLocation->longitude,
+                'is_active_route' => in_array($selectedLocation->id, $activePortIds),
+            ];
+        } else {
+            $selectedPort = [
+                'id' => '1',
                 'name' => 'Port of Tanjung Priok',
                 'city' => 'Jakarta',
                 'country' => 'Indonesia',
                 'unlocode' => 'IDJKT',
-                'latitude' => -6.1017,
-                'longitude' => 106.8833,
-            ],
-            [
-                'id' => 'CNSHA',
-                'name' => 'Port of Shanghai',
-                'city' => 'Shanghai',
-                'country' => 'China',
-                'unlocode' => 'CNSHA',
-                'latitude' => 31.2304,
-                'longitude' => 121.4737,
-            ],
-            [
-                'id' => 'NLRTM',
-                'name' => 'Port of Rotterdam',
-                'city' => 'Rotterdam',
-                'country' => 'Netherlands',
-                'unlocode' => 'NLRTM',
-                'latitude' => 51.9244,
-                'longitude' => 4.4777,
-            ],
-            [
-                'id' => 'USLAX',
-                'name' => 'Port of Los Angeles',
-                'city' => 'Los Angeles',
-                'country' => 'United States',
-                'unlocode' => 'USLAX',
-                'latitude' => 33.7432,
-                'longitude' => -118.2673,
-            ],
-            [
-                'id' => 'AEDXB',
-                'name' => 'Jebel Ali Port',
-                'city' => 'Dubai',
-                'country' => 'United Arab Emirates',
-                'unlocode' => 'AEJEA',
-                'latitude' => 24.9857,
-                'longitude' => 55.0273,
-            ],
-            [
-                'id' => 'DEHAM',
-                'name' => 'Port of Hamburg',
-                'city' => 'Hamburg',
-                'country' => 'Germany',
-                'unlocode' => 'DEHAM',
-                'latitude' => 53.5488,
-                'longitude' => 9.9872,
-            ],
-        ];
-
-        // Merge DB ports with curated list
-        $portsList = collect($curatedPorts);
-        foreach ($dbPorts as $loc) {
-            if (! $portsList->contains('unlocode', $loc->unlocode)) {
-                $portsList->push([
-                    'id' => $loc->unlocode ?: (string) $loc->id,
-                    'name' => $loc->name,
-                    'city' => $loc->city,
-                    'country' => $loc->country,
-                    'unlocode' => $loc->unlocode ?: 'SEAPORT',
-                    'latitude' => (float) $loc->latitude,
-                    'longitude' => (float) $loc->longitude,
-                ]);
-            }
+                'latitude' => -6.1038,
+                'longitude' => 106.8824,
+                'is_active_route' => false,
+            ];
         }
 
-        // 2. Resolve selected port
-        $selectedUnlocode = $request->query('port', 'IDJKT');
-        $selectedPort = $portsList->firstWhere('id', $selectedUnlocode)
-            ?? $portsList->firstWhere('unlocode', $selectedUnlocode)
-            ?? $portsList->first();
-
-        // 3. Fetch current live telemetry and multi-day forecast
+        // 4. Fetch current atmospheric weather and multi-day forecast
         $currentWeather = $this->weatherService->getPortWeather(
-            (float) $selectedPort['latitude'],
-            (float) $selectedPort['longitude'],
+            $selectedPort['latitude'],
+            $selectedPort['longitude'],
             $selectedPort['name']
+        );
+
+        $marineWeather = $this->weatherService->getMarineWeather(
+            $selectedPort['latitude'],
+            $selectedPort['longitude']
         );
 
         $forecast = $this->weatherService->getPortForecast(
-            (float) $selectedPort['latitude'],
-            (float) $selectedPort['longitude'],
+            $selectedPort['latitude'],
+            $selectedPort['longitude'],
             $selectedPort['name']
         );
 
-        // 4. Compute Maritime Specific Telemetry (Beaufort scale, swell, crane safety)
-        $windKph = (float) ($currentWeather['wind_kph'] ?? 14.0);
-        $beaufort = match (true) {
-            $windKph < 6 => ['force' => 1, 'desc' => 'Light Air', 'color' => 'emerald'],
-            $windKph < 20 => ['force' => 3, 'desc' => 'Gentle Breeze', 'color' => 'emerald'],
-            $windKph < 29 => ['force' => 4, 'desc' => 'Moderate Breeze', 'color' => 'cyan'],
-            $windKph < 39 => ['force' => 5, 'desc' => 'Fresh Breeze', 'color' => 'amber'],
-            $windKph < 50 => ['force' => 6, 'desc' => 'Strong Breeze', 'color' => 'orange'],
-            default => ['force' => 7, 'desc' => 'Near Gale / Heavy Seas', 'color' => 'rose'],
-        };
+        // 5. Compute Rule-based Advisory & Beaufort derived from wind
+        $windKph = (float) ($currentWeather['wind_kph'] ?? 12.0);
+        $beaufort = $this->weatherService->getBeaufortScale($windKph);
+        $craneStatus = $this->weatherService->getCraneAdvisory($windKph);
 
-        $craneStatus = match (true) {
-            $windKph < 28 => ['status' => 'Full Clearance', 'color' => 'emerald', 'note' => 'Standard STS container crane operations safe.'],
-            $windKph < 40 => ['status' => 'Cautionary Operations', 'color' => 'amber', 'note' => 'Speed throttled on high-tier container tier stacks.'],
-            default => ['status' => 'Quay Cranes Suspended', 'color' => 'rose', 'note' => 'Severe gust limits exceeded. Quay crane boom raised for safety.'],
-        };
+        // 6. Build Compare Table across selected / active ports
+        $compareIds = $request->query('compare');
+        if (is_array($compareIds) && ! empty($compareIds)) {
+            $compareLocations = $allLocations->whereIn('id', $compareIds)->take(6)->values();
+        } else {
+            // Default compare: active route ports + top ports (up to 4)
+            $compareLocations = $activeRoutePorts->merge($otherPorts)->take(4)->values();
+        }
 
-        $swellEstimate = match (true) {
-            $windKph < 15 => '0.4 m to 0.8 m (Calm Seaway)',
-            $windKph < 30 => '1.0 m to 1.6 m (Moderate Swell)',
-            $windKph < 45 => '1.8 m to 2.8 m (Rough Channel)',
-            default => '3.0 m+ (Heavy Sea Swell)',
-        };
+        $compareData = [];
+        foreach ($compareLocations as $loc) {
+            $cWeather = $this->weatherService->getPortWeather((float) $loc->latitude, (float) $loc->longitude, $loc->name);
+            $cMarine = $this->weatherService->getMarineWeather((float) $loc->latitude, (float) $loc->longitude);
+            $cCrane = $this->weatherService->getCraneAdvisory((float) ($cWeather['wind_kph'] ?? 0));
+            $cBeaufort = $this->weatherService->getBeaufortScale((float) ($cWeather['wind_kph'] ?? 0));
+
+            $compareData[] = [
+                'id' => $loc->id,
+                'name' => $loc->name,
+                'unlocode' => $loc->unlocode ?? 'PORT',
+                'city' => $loc->city ?? '',
+                'country' => $loc->country ?? '',
+                'temp_c' => $cWeather['temperature_c'] ?? null,
+                'condition' => $cWeather['condition'] ?? 'Clear',
+                'wind_kph' => $cWeather['wind_kph'] ?? null,
+                'beaufort_force' => $cBeaufort['force'] ?? 1,
+                'has_marine_data' => $cMarine['has_marine_data'] ?? false,
+                'wave_height' => $cMarine['wave_height'] ?? null,
+                'crane_status' => $cCrane['status'] ?? 'Full Clearance',
+                'crane_color' => $cCrane['color'] ?? 'emerald',
+            ];
+        }
 
         return view('weather.index', compact(
-            'portsList',
+            'allLocations',
+            'activeRoutePorts',
+            'otherPorts',
             'selectedPort',
             'currentWeather',
+            'marineWeather',
             'forecast',
             'beaufort',
             'craneStatus',
-            'swellEstimate'
+            'compareData'
         ));
     }
 }
-

@@ -12,6 +12,7 @@ use App\Services\ExternalIntegrationService;
 use App\Services\MaritimeNewsService;
 use App\Services\ShipmentService;
 use App\Services\TrackingService;
+use App\Services\WeatherService;
 use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -27,7 +28,8 @@ class ShipmentWebController extends Controller
         protected ExceptionService $exceptionService,
         protected EtaService $etaService,
         protected ExternalIntegrationService $externalService,
-        protected MaritimeNewsService $newsService
+        protected MaritimeNewsService $newsService,
+        protected WeatherService $weatherService
     ) {}
 
     public function index(Request $request): View
@@ -195,7 +197,42 @@ class ShipmentWebController extends Controller
             $relatedNews = array_slice($rawNews, 0, 3);
         }
 
-        return view('shipments.show', compact('shipment', 'locations', 'user', 'relatedNews'));
+        // Real weather at latest tracking location
+        $latestLocation = $shipment->currentLocation
+            ?? $shipment->trackingEvents->first(fn ($e) => $e->location !== null)?->location
+            ?? $shipment->originLocation;
+
+        $locationWeather = null;
+        $locationMarine = null;
+        $craneAdvisory = null;
+        $beaufortScale = null;
+
+        if ($latestLocation && $latestLocation->latitude && $latestLocation->longitude) {
+            $locationWeather = $this->weatherService->getPortWeather(
+                (float) $latestLocation->latitude,
+                (float) $latestLocation->longitude,
+                $latestLocation->name
+            );
+            $locationMarine = $this->weatherService->getMarineWeather(
+                (float) $latestLocation->latitude,
+                (float) $latestLocation->longitude
+            );
+            $windKph = (float) ($locationWeather['wind_kph'] ?? 0);
+            $craneAdvisory = $this->weatherService->getCraneAdvisory($windKph);
+            $beaufortScale = $this->weatherService->getBeaufortScale($windKph);
+        }
+
+        return view('shipments.show', compact(
+            'shipment',
+            'locations',
+            'user',
+            'relatedNews',
+            'latestLocation',
+            'locationWeather',
+            'locationMarine',
+            'craneAdvisory',
+            'beaufortScale'
+        ));
     }
 
     public function create(): View

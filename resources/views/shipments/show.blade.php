@@ -118,6 +118,55 @@
                 @endif
             </x-card>
 
+            <!-- Seaport Weather at Current/Latest Location -->
+            @if(isset($locationWeather) && $locationWeather && isset($latestLocation) && $latestLocation)
+                <x-card class="space-y-4">
+                    <div class="flex items-center justify-between pb-2 border-b theme-border">
+                        <div>
+                            <span class="uppercase text-[10px] tracking-wider theme-text-muted font-semibold block">
+                                Seaport Weather at Latest Location
+                            </span>
+                            <h3 class="text-sm font-bold theme-heading mt-0.5">
+                                {{ $latestLocation->name }} ({{ $latestLocation->unlocode }})
+                            </h3>
+                        </div>
+                        <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 border border-cyan-500/20">
+                            Open-Meteo Sync
+                        </span>
+                    </div>
+
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
+                        <div class="p-3 rounded-xl theme-card-elevated border theme-border">
+                            <span class="text-[10px] theme-text-muted uppercase block">Temperature</span>
+                            <span class="text-base font-bold font-mono theme-heading">{{ $locationWeather['temperature_c'] }}°C</span>
+                            <span class="text-[10px] text-cyan-600 dark:text-cyan-400 block truncate">{{ $locationWeather['condition'] }}</span>
+                        </div>
+                        <div class="p-3 rounded-xl theme-card-elevated border theme-border">
+                            <span class="text-[10px] theme-text-muted uppercase block">Wind Speed</span>
+                            <span class="text-base font-bold font-mono theme-heading">{{ $locationWeather['wind_kph'] }} km/h</span>
+                            <span class="text-[10px] theme-text-secondary block">Force {{ $beaufortScale['force'] ?? 1 }} &bull; {{ $beaufortScale['desc'] ?? 'Breeze' }}</span>
+                        </div>
+                        <div class="p-3 rounded-xl theme-card-elevated border theme-border">
+                            <span class="text-[10px] theme-text-muted uppercase block">Wave Height</span>
+                            @if(!empty($locationMarine['has_marine_data']) && $locationMarine['wave_height'] !== null)
+                                <span class="text-base font-bold font-mono theme-heading">{{ number_format($locationMarine['wave_height'], 2) }} m</span>
+                                <span class="text-[10px] theme-text-secondary block">Period: {{ $locationMarine['wave_period'] ?? 'N/A' }}s</span>
+                            @else
+                                <span class="text-xs font-semibold theme-text-secondary block pt-1">No marine data</span>
+                            @endif
+                        </div>
+                        <div class="p-3 rounded-xl theme-card-elevated border theme-border">
+                            <span class="text-[10px] theme-text-muted uppercase block">STS Crane Advisory</span>
+                            <span class="text-xs font-bold font-mono block pt-1
+                                {{ ($craneAdvisory['color'] ?? '') === 'emerald' ? 'text-emerald-500' : (($craneAdvisory['color'] ?? '') === 'amber' ? 'text-amber-500' : 'text-rose-500') }}">
+                                {{ $craneAdvisory['status'] ?? 'Full Clearance' }}
+                            </span>
+                            <span class="text-[9px] theme-text-muted block">Rule-based</span>
+                        </div>
+                    </div>
+                </x-card>
+            @endif
+
             <!-- Manifest Cargo Items -->
             <x-card class="space-y-4">
                 <div class="flex items-center justify-between pb-3 border-b border-white/10">

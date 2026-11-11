@@ -11,11 +11,13 @@ use Throwable;
 class WeatherService
 {
     /**
-     * Default seaport coordinates (Tanjung Priok, Jakarta / Singapore)
+     * Default seaport coordinates (Port of Tanjung Priok, Jakarta)
      */
-    public const DEFAULT_LATITUDE = -6.1017;
-    public const DEFAULT_LONGITUDE = 106.8833;
-    public const DEFAULT_PORT_NAME = 'Port of Tanjung Priok, Jakarta';
+    public const DEFAULT_LATITUDE = -6.1038;
+
+    public const DEFAULT_LONGITUDE = 106.8824;
+
+    public const DEFAULT_PORT_NAME = 'Port of Tanjung Priok';
 
     /**
      * Cache TTL in seconds (30 minutes)
@@ -25,9 +27,6 @@ class WeatherService
     /**
      * Fetch live seaport atmospheric telemetry with Open-Meteo API and 30-min cache.
      *
-     * @param float|null $latitude
-     * @param float|null $longitude
-     * @param string|null $locationName
      * @return array<string, mixed>
      */
     public function getPortWeather(?float $latitude = null, ?float $longitude = null, ?string $locationName = null): array
@@ -45,6 +44,7 @@ class WeatherService
             $cached = Cache::get($cacheKey);
             if (is_array($cached)) {
                 $cached['data_source'] = 'cached';
+
                 return $cached;
             }
         }
@@ -54,7 +54,7 @@ class WeatherService
             $response = Http::timeout(5)->get('https://api.open-meteo.com/v1/forecast', [
                 'latitude' => $lat,
                 'longitude' => $lon,
-                'current' => 'temperature_2m,relative_humidity_2m,weather_code,wind_speed_10m',
+                'current' => 'temperature_2m,relative_humidity_2m,weather_code,wind_speed_10m,visibility',
                 'timezone' => 'auto',
             ]);
 
@@ -67,6 +67,8 @@ class WeatherService
                 $temp = (float) ($current['temperature_2m'] ?? 28.5);
                 $humidity = (int) ($current['relative_humidity_2m'] ?? 75);
                 $windKph = round((float) ($current['wind_speed_10m'] ?? 12.0), 1);
+                $visibilityM = isset($current['visibility']) ? (float) $current['visibility'] : null;
+                $visibilityKm = $visibilityM !== null ? round($visibilityM / 1000, 1) : null;
 
                 $payload = [
                     'location_name' => $name,
@@ -78,8 +80,10 @@ class WeatherService
                     'weather_code' => $code,
                     'humidity' => $humidity,
                     'wind_kph' => $windKph,
+                    'visibility_km' => $visibilityKm,
+                    'visibility_m' => $visibilityM,
                     'recorded_at' => Carbon::now()->toIso8601String(),
-                    'source' => 'Open-Meteo Live API',
+                    'source' => 'Open-Meteo Weather API',
                     'data_source' => 'live',
                 ];
 
@@ -88,7 +92,7 @@ class WeatherService
                 return $payload;
             }
         } catch (Throwable $e) {
-            Log::warning("Open-Meteo weather fetch failure for {$name} ({$lat}, {$lon}): " . $e->getMessage());
+            Log::warning("Open-Meteo weather fetch failure for {$name} ({$lat}, {$lon}): ".$e->getMessage());
         }
 
         // Deterministic fallback if API fails or network unavailable
@@ -99,11 +103,164 @@ class WeatherService
     }
 
     /**
+     * Fetch real Open-Meteo Marine API telemetry (wave height, swell, current, period, direction).
+     *
+     * @return array<string, mixed>
+     */
+    public function getMarineWeather(?float $latitude = null, ?float $longitude = null): array
+    {
+        $lat = $latitude ?? self::DEFAULT_LATITUDE;
+        $lon = $longitude ?? self::DEFAULT_LONGITUDE;
+
+        $roundLat = round($lat, 3);
+        $roundLon = round($lon, 3);
+        $cacheKey = "port_marine_{$roundLat}_{$roundLon}";
+
+        if (Cache::has($cacheKey)) {
+            $cached = Cache::get($cacheKey);
+            if (is_array($cached)) {
+                $cached['data_source'] = 'cached';
+
+                return $cached;
+            }
+        }
+
+        try {
+            $response = Http::timeout(5)->get('https://marine-api.open-meteo.com/v1/marine', [
+                'latitude' => $lat,
+                'longitude' => $lon,
+                'current' => 'wave_height,wave_direction,wave_period,swell_wave_height,ocean_current_velocity,ocean_current_direction',
+                'daily' => 'wave_height_max',
+                'timezone' => 'auto',
+            ]);
+
+            if ($response->successful()) {
+                $json = $response->json();
+                $current = $json['current'] ?? [];
+
+                // Check if marine data actually exists (wave_height is null for inland points)
+                if (! isset($current['wave_height']) || $current['wave_height'] === null) {
+                    $noData = [
+                        'has_marine_data' => false,
+                        'message' => 'No marine data for this location',
+                        'data_source' => 'live',
+                        'source' => 'Open-Meteo Marine API',
+                    ];
+                    Cache::put($cacheKey, $noData, $this->cacheTtl);
+
+                    return $noData;
+                }
+
+                $daily = $json['daily'] ?? [];
+                $dailyMax = [];
+                if (! empty($daily['time']) && is_array($daily['time'])) {
+                    foreach ($daily['time'] as $idx => $dayStr) {
+                        $dailyMax[] = [
+                            'date' => $dayStr,
+                            'day_name' => Carbon::parse($dayStr)->format('D, M d'),
+                            'wave_height_max' => isset($daily['wave_height_max'][$idx]) ? (float) $daily['wave_height_max'][$idx] : null,
+                        ];
+                    }
+                }
+
+                $payload = [
+                    'has_marine_data' => true,
+                    'wave_height' => (float) $current['wave_height'],
+                    'wave_period' => isset($current['wave_period']) ? (float) $current['wave_period'] : null,
+                    'wave_direction' => isset($current['wave_direction']) ? (int) $current['wave_direction'] : null,
+                    'swell_wave_height' => isset($current['swell_wave_height']) ? (float) $current['swell_wave_height'] : null,
+                    'ocean_current_velocity' => isset($current['ocean_current_velocity']) ? (float) $current['ocean_current_velocity'] : null,
+                    'ocean_current_direction' => isset($current['ocean_current_direction']) ? (int) $current['ocean_current_direction'] : null,
+                    'daily_max' => $dailyMax,
+                    'source' => 'Open-Meteo Marine API',
+                    'data_source' => 'live',
+                    'recorded_at' => Carbon::now()->toIso8601String(),
+                ];
+
+                Cache::put($cacheKey, $payload, $this->cacheTtl);
+
+                return $payload;
+            }
+        } catch (Throwable $e) {
+            Log::warning("Open-Meteo Marine API fetch failure for ({$lat}, {$lon}): ".$e->getMessage());
+        }
+
+        // Return honest no marine data state when network/endpoint fails or is unavailable
+        return [
+            'has_marine_data' => false,
+            'message' => 'No marine data for this location',
+            'data_source' => 'simulated',
+            'source' => 'Open-Meteo Marine API',
+        ];
+    }
+
+    /**
+     * Compute Beaufort scale force and description derived from wind speed.
+     *
+     * @return array<string, mixed>
+     */
+    public function getBeaufortScale(float $windKph): array
+    {
+        $thresholds = config('cargotrace.weather.beaufort_thresholds', []);
+
+        foreach ($thresholds as $t) {
+            if ($windKph <= $t['max_kph']) {
+                return [
+                    'force' => $t['force'],
+                    'desc' => $t['desc'],
+                    'color' => $t['color'],
+                    'basis' => 'Derived from wind speed',
+                ];
+            }
+        }
+
+        return [
+            'force' => 7,
+            'desc' => 'Near Gale / Heavy Seas',
+            'color' => 'rose',
+            'basis' => 'Derived from wind speed',
+        ];
+    }
+
+    /**
+     * Compute rule-based Quay Crane advisory based on wind speed.
+     *
+     * @return array<string, mixed>
+     */
+    public function getCraneAdvisory(float $windKph): array
+    {
+        $caution = (float) config('cargotrace.weather.crane_thresholds.caution_kph', 28.0);
+        $suspended = (float) config('cargotrace.weather.crane_thresholds.suspended_kph', 40.0);
+
+        if ($windKph < $caution) {
+            return [
+                'status' => 'Full Clearance',
+                'color' => 'emerald',
+                'note' => 'Standard Ship-to-Shore (STS) container quay crane operations safe.',
+                'basis' => 'Rule-based advisory',
+            ];
+        }
+
+        if ($windKph < $suspended) {
+            return [
+                'status' => 'Cautionary Operations',
+                'color' => 'amber',
+                'note' => "Wind speed ({$windKph} km/h) approaches caution limit ({$caution} km/h). Speed throttled on high-tier container stacks.",
+                'basis' => 'Rule-based advisory',
+            ];
+        }
+
+        return [
+            'status' => 'Quay Cranes Suspended',
+            'color' => 'rose',
+            'note' => "Severe gust threshold ({$suspended} km/h) exceeded at {$windKph} km/h. Quay crane boom raised for safety.",
+            'basis' => 'Rule-based advisory',
+        ];
+    }
+
+    /**
      * Fetch 7-day seaport maritime weather forecast.
      *
-     * @param float|null $latitude
-     * @param float|null $longitude
-     * @param string|null $locationName
      * @return array<string, mixed>
      */
     public function getPortForecast(?float $latitude = null, ?float $longitude = null, ?string $locationName = null): array
@@ -120,6 +277,7 @@ class WeatherService
             $cached = Cache::get($cacheKey);
             if (is_array($cached)) {
                 $cached['data_source'] = 'cached';
+
                 return $cached;
             }
         }
@@ -156,7 +314,7 @@ class WeatherService
                 $payload = [
                     'location_name' => $name,
                     'days' => $days,
-                    'source' => 'Open-Meteo 7-Day Forecast',
+                    'source' => 'Open-Meteo Weather API',
                     'data_source' => 'live',
                 ];
 
@@ -165,7 +323,7 @@ class WeatherService
                 return $payload;
             }
         } catch (Throwable $e) {
-            Log::warning("Open-Meteo forecast fetch failure for {$name}: " . $e->getMessage());
+            Log::warning("Open-Meteo forecast fetch failure for {$name}: ".$e->getMessage());
         }
 
         return $this->getFallbackForecast($name);
@@ -194,7 +352,7 @@ class WeatherService
         return [
             'location_name' => $name,
             'days' => $days,
-            'source' => 'Deterministic Maritime Forecast',
+            'source' => 'Open-Meteo Weather API (Deterministic fallback)',
             'data_source' => 'simulated',
         ];
     }
@@ -229,14 +387,10 @@ class WeatherService
     /**
      * Deterministic maritime weather fallback generator.
      *
-     * @param float $lat
-     * @param float $lon
-     * @param string $name
      * @return array<string, mixed>
      */
     public function getFallbackWeather(float $lat, float $lon, string $name): array
     {
-        // Deterministic seeded pseudo-random based on day and coordinate
         $seed = abs((int) ($lat * 100 + $lon * 100 + now()->dayOfYear));
         $temp = 27.0 + ($seed % 6) + 0.5;
         $humidity = 65 + ($seed % 20);
@@ -252,10 +406,11 @@ class WeatherService
             'weather_code' => 2,
             'humidity' => $humidity,
             'wind_kph' => round($wind, 1),
+            'visibility_km' => null,
+            'visibility_m' => null,
             'recorded_at' => Carbon::now()->toIso8601String(),
-            'source' => 'Deterministic Seaport Fallback',
+            'source' => 'Open-Meteo Weather API (Deterministic fallback)',
             'data_source' => 'simulated',
         ];
     }
 }
-

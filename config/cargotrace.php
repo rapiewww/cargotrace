@@ -18,6 +18,22 @@ return [
         'medium_hours' => (float) env('CARGOTRACE_DELAY_MEDIUM_HOURS', 24),
     ],
 
+    'weather' => [
+        'crane_thresholds' => [
+            'caution_kph' => (float) env('CARGOTRACE_WEATHER_CRANE_CAUTION_KPH', 28.0),
+            'suspended_kph' => (float) env('CARGOTRACE_WEATHER_CRANE_SUSPENDED_KPH', 40.0),
+        ],
+        'beaufort_thresholds' => [
+            ['force' => 1, 'max_kph' => 5.9, 'desc' => 'Light Air', 'color' => 'emerald'],
+            ['force' => 2, 'max_kph' => 11.9, 'desc' => 'Light Breeze', 'color' => 'emerald'],
+            ['force' => 3, 'max_kph' => 19.9, 'desc' => 'Gentle Breeze', 'color' => 'emerald'],
+            ['force' => 4, 'max_kph' => 28.9, 'desc' => 'Moderate Breeze', 'color' => 'cyan'],
+            ['force' => 5, 'max_kph' => 38.9, 'desc' => 'Fresh Breeze', 'color' => 'amber'],
+            ['force' => 6, 'max_kph' => 49.9, 'desc' => 'Strong Breeze', 'color' => 'orange'],
+            ['force' => 7, 'max_kph' => PHP_FLOAT_MAX, 'desc' => 'Near Gale / Heavy Seas', 'color' => 'rose'],
+        ],
+    ],
+
     /*
     |--------------------------------------------------------------------------
     | External API Integrations
