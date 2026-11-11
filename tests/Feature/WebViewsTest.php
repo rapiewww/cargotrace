@@ -207,7 +207,7 @@ test('dedicated currency fx hub loads with calculator and freight benchmarks', f
     $response->assertSee('Maritime Currency FX');
     $response->assertSee('Ocean Freight Valuation Calculator');
     $response->assertSee('Maritime FX Cross-Rate Matrix');
-    $response->assertSee('Vessel Bunker Fuel Index');
+    $response->assertSee('Portfolio Value by Currency');
 });
 
 test('dedicated maritime news hub loads with thumbnails and category filters', function () {

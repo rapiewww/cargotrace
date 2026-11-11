@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Services\CurrencyService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use InvalidArgumentException;
+use RuntimeException;
 use Symfony\Component\HttpFoundation\Response;
 
 class CurrencyApiController extends Controller
@@ -15,7 +17,27 @@ class CurrencyApiController extends Controller
     ) {}
 
     /**
-     * Convert currency live using exchange rates service.
+     * Get all supported world currencies.
+     */
+    public function currencies(): JsonResponse
+    {
+        try {
+            $currencies = $this->currencyService->getCurrencies();
+
+            return response()->json([
+                'status' => 'success',
+                'data' => $currencies,
+            ], Response::HTTP_OK);
+        } catch (RuntimeException $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => $e->getMessage(),
+            ], Response::HTTP_SERVICE_UNAVAILABLE);
+        }
+    }
+
+    /**
+     * Convert currency using exchange rates service.
      */
     public function convert(Request $request): JsonResponse
     {
@@ -30,12 +52,40 @@ class CurrencyApiController extends Controller
             ], Response::HTTP_UNPROCESSABLE_ENTITY);
         }
 
-        $result = $this->currencyService->convert($amount, $from, $to);
+        try {
+            $result = $this->currencyService->convert($amount, $from, $to);
+
+            return response()->json([
+                'status' => 'success',
+                'data' => $result,
+            ], Response::HTTP_OK);
+        } catch (InvalidArgumentException $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => $e->getMessage(),
+            ], Response::HTTP_UNPROCESSABLE_ENTITY);
+        } catch (RuntimeException $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => $e->getMessage(),
+            ], Response::HTTP_SERVICE_UNAVAILABLE);
+        }
+    }
+
+    /**
+     * Get historical 30-day rates (Frankfurter API).
+     */
+    public function history(Request $request): JsonResponse
+    {
+        $from = (string) $request->query('from', 'USD');
+        $to = (string) $request->query('to', 'EUR');
+        $days = (int) $request->query('days', 30);
+
+        $history = $this->currencyService->getHistory($from, $to, $days);
 
         return response()->json([
             'status' => 'success',
-            'data' => $result,
+            'data' => $history,
         ], Response::HTTP_OK);
     }
 }
-

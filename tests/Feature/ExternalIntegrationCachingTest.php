@@ -2,7 +2,10 @@
 
 namespace Tests\Feature;
 
+use App\Services\CurrencyService;
 use App\Services\ExternalIntegrationService;
+use App\Services\MaritimeNewsService;
+use App\Services\WeatherService;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 
@@ -115,7 +118,7 @@ test('open meteo weather service fetches and caches port weather', function () {
         ], 200),
     ]);
 
-    $service = app(\App\Services\WeatherService::class);
+    $service = app(WeatherService::class);
     $data1 = $service->getPortWeather(-6.1, 106.88, 'Port of Tanjung Priok');
 
     expect($data1['temperature_c'])->toBe(29.8)
@@ -136,6 +139,18 @@ test('currency service converts currencies and exposes api route', function () {
     Cache::flush();
 
     Http::fake([
+        'open.er-api.com/*' => Http::response([
+            'result' => 'success',
+            'time_last_update_utc' => 'Wed, 11 Nov 2026 00:02:32 +0000',
+            'rates' => [
+                'USD' => 1.0,
+                'EUR' => 0.92,
+                'IDR' => 16000.0,
+                'SGD' => 1.35,
+                'CNY' => 7.24,
+                'AUD' => 1.53,
+            ],
+        ], 200),
         'api.frankfurter.app/*' => Http::response([
             'base' => 'USD',
             'rates' => [
@@ -148,7 +163,7 @@ test('currency service converts currencies and exposes api route', function () {
         ], 200),
     ]);
 
-    $service = app(\App\Services\CurrencyService::class);
+    $service = app(CurrencyService::class);
     $conv = $service->convert(100, 'USD', 'EUR');
 
     expect($conv['converted_amount'])->toBe(92.0)
@@ -171,7 +186,7 @@ test('currency service converts currencies and exposes api route', function () {
 test('maritime news service parses rss feed or falls back gracefully', function () {
     Cache::flush();
 
-    $rssXml = <<<XML
+    $rssXml = <<<'XML'
 <?xml version="1.0" encoding="UTF-8"?>
 <rss version="2.0">
   <channel>
@@ -191,7 +206,7 @@ XML;
         'gcaptain.com/*' => Http::response($rssXml, 200, ['Content-Type' => 'application/rss+xml']),
     ]);
 
-    $service = app(\App\Services\MaritimeNewsService::class);
+    $service = app(MaritimeNewsService::class);
     $news = $service->getMaritimeNews(5);
 
     expect($news)->toBeArray()

@@ -11,8 +11,10 @@ use App\Models\ShipmentException;
 use App\Models\ShipmentItem;
 use App\Models\TrackingEvent;
 use App\Models\User;
+use App\Services\CurrencyService;
 use Carbon\Carbon;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Hash;
 
 class DatabaseSeeder extends Seeder
@@ -22,6 +24,20 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
+        // Prime currency exchange rates in cache
+        Cache::forever(CurrencyService::STALE_CACHE_KEY, [
+            'base' => 'USD',
+            'rates' => [
+                'USD' => 1.0, 'EUR' => 0.92, 'CNY' => 7.23, 'IDR' => 15873.0, 'SGD' => 1.34, 'AUD' => 1.52, 'GBP' => 0.79, 'JPY' => 154.5, 'AED' => 3.67, 'CHF' => 0.88, 'CAD' => 1.39,
+            ],
+            'time_last_update_utc' => 'Wed, 11 Nov 2026 00:00:00 +0000',
+            'time_next_update_utc' => 'Thu, 12 Nov 2026 00:00:00 +0000',
+            'last_updated' => 'Wed, 11 Nov 2026 00:00:00 +0000',
+            'source' => 'ExchangeRate-API (open.er-api.com)',
+            'provider_url' => 'https://www.exchangerate-api.com',
+            'attribution_text' => 'Rates By ExchangeRate-API',
+            'data_source' => 'cached',
+        ]);
         // ---------------------------------------------------------------------
         // 1. DEMO USERS (Admin, Operator, Customers)
         // ---------------------------------------------------------------------

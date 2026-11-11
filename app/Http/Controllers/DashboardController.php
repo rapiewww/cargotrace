@@ -194,8 +194,23 @@ class DashboardController extends Controller
         // 1. Live Maritime News Feed (RSS with 1-hr Cache)
         $news = $this->newsService->getMaritimeNews(6);
 
-        // 2. Live Maritime FX Currency Conversion (Frankfurter / Open ER with 1-hr Cache)
-        $currencyData = $this->currencyService->convert(1000, 'USD', 'IDR');
+        // 2. Live Maritime FX Currency Conversion (Open ER with 1-hr Cache)
+        try {
+            $currencyData = $this->currencyService->convert(1000, 'USD', 'IDR');
+        } catch (\Throwable $e) {
+            $currencyData = [
+                'amount' => 1000,
+                'from' => 'USD',
+                'to' => 'IDR',
+                'rate' => 0.0,
+                'converted_amount' => 0.0,
+                'formatted_result' => 'Service Unavailable',
+                'rates_snapshot' => [],
+                'source' => 'ExchangeRate-API',
+                'data_source' => 'simulated',
+                'last_updated' => null,
+            ];
+        }
         $rates = $currencyData['rates_snapshot'] ?? [];
 
         // 3. Live Seaport Atmospheric Weather (Open-Meteo with 30-min Cache)
