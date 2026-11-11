@@ -43,7 +43,7 @@
                 <div class="flex items-center gap-2">
                     <span class="text-xs font-bold uppercase tracking-wider theme-heading">Ocean Freight Valuation Calculator</span>
                 </div>
-                <span class="text-[11px] text-cyan-600 dark:text-cyan-400 font-mono">Real-Time Conversion</span>
+                <span class="text-[11px] text-cyan-600 dark:text-cyan-400 font-mono">Exchange Rate Conversion</span>
             </div>
 
             <!-- Inputs & Swap Button -->
@@ -185,13 +185,13 @@
                 @endforeach
             </div>
 
-            <div class="p-3 rounded-xl bg-slate-900/40 dark:bg-slate-900/40 border border-slate-700/60 dark:border-slate-800 text-[11px] text-slate-400">
+            <div class="p-3 rounded-xl theme-card-elevated border theme-border text-[11px] theme-text-secondary">
                 Notice: Fuel surcharges (BAF) for container charters recalculate weekly based on VLSFO pricing indices.
             </div>
         </div>
     </div>
 
-    <!-- Live Exchange Cross-Rate Matrix Table -->
+    <!-- Exchange Cross-Rate Matrix Table -->
     <div class="p-6 sm:p-8 rounded-3xl theme-card border space-y-4 transition-colors duration-200">
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b theme-border">
             <div>

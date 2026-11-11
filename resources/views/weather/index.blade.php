@@ -12,7 +12,7 @@
                 <x-data-source-badge :source="$currentWeather['data_source'] ?? 'live'" />
             </div>
             <h1 class="text-2xl sm:text-3xl font-black theme-heading tracking-tight mt-1.5">
-                Seaport Weather & Marine Telemetry
+                Seaport Weather & Marine Observations
             </h1>
             <p class="text-xs sm:text-sm theme-text-secondary mt-1">
                 Atmospheric conditions, wind thresholds for quay crane operations, and marine forecast across container terminal hubs.
@@ -71,7 +71,7 @@
                 </div>
             </div>
 
-            <!-- Sun / Atmospheric Arc Visual & Live Telemetry -->
+            <!-- Sun / Atmospheric Arc Visual & Observations -->
             <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 items-center">
                 <div class="sm:col-span-2 relative h-32 flex items-center justify-center p-2 rounded-2xl theme-card-elevated border theme-border">
                     <svg class="w-full h-full max-h-28" viewBox="0 0 280 90">
@@ -97,23 +97,23 @@
             </div>
 
             <!-- Quay Crane & Marine Safety Guidance -->
-            <div class="p-4 rounded-2xl bg-slate-900/40 dark:bg-slate-900/40 border border-slate-700/60 dark:border-slate-800 space-y-2">
+            <div class="p-4 rounded-2xl theme-card-elevated border theme-border space-y-2">
                 <div class="flex items-center justify-between">
-                    <span class="text-xs font-bold uppercase tracking-wider text-slate-300">
+                    <span class="text-xs font-bold uppercase tracking-wider theme-heading">
                         Ship-to-Shore (STS) Crane Advisory
                     </span>
                     <span class="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold uppercase border
-                        {{ $craneStatus['color'] === 'emerald' ? 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30' : ($craneStatus['color'] === 'amber' ? 'bg-amber-500/15 text-amber-300 border-amber-500/30' : 'bg-rose-500/15 text-rose-300 border-rose-500/30') }}">
+                        {{ $craneStatus['color'] === 'emerald' ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/30' : ($craneStatus['color'] === 'amber' ? 'bg-amber-500/15 text-amber-700 dark:text-amber-300 border-amber-500/30' : 'bg-rose-500/15 text-rose-600 dark:text-rose-300 border-rose-500/30') }}">
                         {{ $craneStatus['status'] }}
                     </span>
                 </div>
-                <p class="text-xs text-slate-400 leading-relaxed">
+                <p class="text-xs theme-text-secondary leading-relaxed">
                     {{ $craneStatus['note'] }}
                 </p>
             </div>
         </div>
 
-        <!-- Right: Real-Time Operational Telemetry Cards -->
+        <!-- Right: Operational Observations Cards -->
         <div class="space-y-4">
             <!-- Card 1: Wind & Beaufort -->
             <div class="p-5 rounded-3xl theme-card border space-y-3 transition-colors duration-200">
@@ -143,7 +143,7 @@
                         <span>Gust Load</span>
                         <span>{{ $windPct }}% of 45 km/h limit</span>
                     </div>
-                    <div class="w-full h-2 rounded-full bg-slate-800 dark:bg-slate-800 overflow-hidden">
+                    <div class="w-full h-2 rounded-full bg-slate-200 dark:bg-slate-800 overflow-hidden">
                         <div class="h-full rounded-full transition-all duration-500 {{ $windPct < 60 ? 'bg-emerald-500' : ($windPct < 85 ? 'bg-amber-500' : 'bg-rose-500') }}" style="width: {{ $windPct }}%"></div>
                     </div>
                 </div>
@@ -228,7 +228,7 @@
     <div class="p-6 rounded-3xl theme-card border space-y-4 transition-colors duration-200">
         <div class="flex items-center justify-between pb-2 border-b theme-border">
             <span class="text-xs font-bold uppercase tracking-wider theme-heading">Global Container Hub Quick Switcher</span>
-            <span class="text-xs theme-text-secondary">Click any terminal to inspect live marine weather</span>
+            <span class="text-xs theme-text-secondary">Click any terminal to inspect seaport marine weather</span>
         </div>
 
         <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">

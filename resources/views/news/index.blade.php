@@ -15,7 +15,7 @@
                 Maritime News Wire & Shipping Intelligence
             </h1>
             <p class="text-xs sm:text-sm theme-text-secondary mt-1">
-                Real-time global bulletins covering container shipping, port terminal congestion, decarbonization, and waterway corridors.
+                Global industry bulletins covering container shipping, port terminal congestion, decarbonization, and waterway corridors.
             </p>
         </div>
 
