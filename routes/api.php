@@ -15,13 +15,13 @@ use Illuminate\Support\Facades\Route;
 */
 
 // Public Authentication & Utilities
-Route::post('/register', [AuthController::class, 'register']);
-Route::post('/login', [AuthController::class, 'login']);
-Route::get('/currency/currencies', [\App\Http\Controllers\Api\CurrencyApiController::class, 'currencies']);
+Route::post('/register', [AuthController::class, 'register'])->middleware('throttle:10,1');
+Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:10,1');
+Route::get('/currency/currencies', [CurrencyApiController::class, 'currencies']);
 Route::get('/currency/currencies', [CurrencyApiController::class, 'currencies']);
 Route::match(['get', 'post'], '/currency/convert', [CurrencyApiController::class, 'convert']);
 Route::get('/currency/history', [CurrencyApiController::class, 'history']);
-Route::get('/currency/history', [\App\Http\Controllers\Api\CurrencyApiController::class, 'history']);
+Route::get('/currency/history', [CurrencyApiController::class, 'history']);
 
 // Authenticated Endpoints (Sanctum)
 Route::middleware('auth:sanctum')->group(function () {

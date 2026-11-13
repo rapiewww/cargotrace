@@ -62,9 +62,14 @@ return [
     |--------------------------------------------------------------------------
     |
     | Configuration for OpenWeather, OpenStreetMap Nominatim,
-    | Open Exchange Rates, and NewsAPI.
+    | Open Exchange Rates, NewsAPI, and Map Tile Providers.
     |
     */
+    'map' => [
+        'tile_url' => env('CARGOTRACE_MAP_TILE_URL', 'https://tile.openstreetmap.org/{z}/{x}/{y}.png'),
+        'attribution' => env('CARGOTRACE_MAP_TILE_ATTRIBUTION', '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> contributors'),
+    ],
+
     'openweather' => [
         'key' => env('OPENWEATHER_API_KEY'),
         'base_url' => env('OPENWEATHER_BASE_URL', 'https://api.openweathermap.org/data/2.5'),

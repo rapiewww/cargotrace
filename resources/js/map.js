@@ -6,13 +6,16 @@ import L from 'leaflet';
 const activeMaps = new Set();
 
 /**
- * Get OpenStreetMap tile layer configuration with theme adaptability
+ * Get OpenStreetMap tile layer configuration with theme adaptability and configurable tile source
  */
 export function getTileLayerConfig(theme = 'dark') {
+    const metaUrl = typeof document !== 'undefined' ? document.querySelector('meta[name="map-tile-url"]')?.getAttribute('content') : null;
+    const metaAttribution = typeof document !== 'undefined' ? document.querySelector('meta[name="map-tile-attribution"]')?.getAttribute('content') : null;
+
     return {
-        url: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+        url: metaUrl || 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
         options: {
-            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> contributors',
+            attribution: metaAttribution || '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> contributors',
             maxZoom: 18,
         }
     };

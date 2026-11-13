@@ -33,9 +33,9 @@ Route::get('/track/{tracking_number}', [PublicTrackingController::class, 'show']
 // Guest Authentication
 Route::middleware('guest')->group(function () {
     Route::get('/login', [WebAuthController::class, 'showLogin'])->name('login');
-    Route::post('/login', [WebAuthController::class, 'login']);
+    Route::post('/login', [WebAuthController::class, 'login'])->middleware('throttle:10,1');
     Route::get('/register', [WebAuthController::class, 'showRegister'])->name('register');
-    Route::post('/register', [WebAuthController::class, 'register']);
+    Route::post('/register', [WebAuthController::class, 'register'])->middleware('throttle:10,1');
 });
 
 // Authenticated Session Routes
