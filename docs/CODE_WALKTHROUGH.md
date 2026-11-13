@@ -293,3 +293,4 @@ During your oral technical defense, examiners frequently ask you to make small l
 - [x] **Source Code & Skill Integrity:** Sensitive files (`.env*`, `.git`, `.claude`) return HTTP 404 in `SecurityHeadersMiddleware`.
 - [x] **Container Security:** Non-root execution (`USER www-data`) and automated `/up` healthcheck.
 - [x] **WCAG Contrast & Anti-Slop:** Tested across light mode (`#F4F7FB`) and dark mode (`#050B14`) at 1440px desktop and 390px mobile.
+

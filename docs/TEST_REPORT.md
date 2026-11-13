@@ -64,3 +64,4 @@
    - `Iso6346RuleTest` validates 17 distinct scenarios testing valid owner prefixes, equipment identifiers (U/J/Z), 6-digit serial numbers, and check-digit weighting according to ISO 6346.
 4. **Security Hardening**:
    - `DeploymentAndSecurityTest` validates defense-in-depth against configuration leaks, enforces rate limiting on login endpoints, verifies security headers (`X-Frame-Options`, `X-Content-Type-Options`, `Referrer-Policy`, `HSTS`), and confirms healthcheck operation.
+
