@@ -2,7 +2,7 @@
 
 @section('content')
 @php
-    $heroLightImage = config('cargotrace.hero_images.light') ?? (file_exists(public_path('images/backgrounds/hero-light.webp')) ? 'images/backgrounds/hero-light.webp' : null);
+    $heroLightImage = config('cargotrace.hero_images.light') ?? (file_exists(public_path('images/backgrounds/bg-light.webp')) ? 'images/backgrounds/bg-light.webp' : null);
 @endphp
 
 <div class="min-h-screen relative flex flex-col justify-between p-4 sm:p-6 lg:p-8 overflow-hidden select-none">

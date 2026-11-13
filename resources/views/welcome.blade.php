@@ -75,10 +75,10 @@
 
     @php
         $feat = $featuredShipment ?? $activeShipments->first();
-        $heroLightImage = config('cargotrace.hero_images.light') ?? (file_exists(public_path('images/backgrounds/hero-light.webp')) ? 'images/backgrounds/hero-light.webp' : null);
+        $heroLightImage = config('cargotrace.hero_images.light') ?? (file_exists(public_path('images/backgrounds/bg-light.webp')) ? 'images/backgrounds/bg-light.webp' : null);
     @endphp
 
-    <!-- 1. CINEMATIC MARITIME HERO SECTION (Dark: bg-dark.webp | Light: hero-light.webp) -->
+    <!-- 1. CINEMATIC MARITIME HERO SECTION (Dark: bg-dark.webp | Light: bg-light.webp) -->
     <section class="relative min-h-[580px] sm:min-h-[640px] lg:min-h-[700px] flex items-center overflow-hidden border-b theme-border">
         <!-- Background Imagery: Two <img> siblings toggled by [data-theme] in CSS -->
         <div class="absolute inset-0 z-0 overflow-hidden pointer-events-none">
