@@ -22,7 +22,7 @@ return new class extends Migration
             $table->enum('type', ['PORT', 'AIRPORT', 'HUB', 'WAREHOUSE'])->index();
             $table->decimal('latitude', 10, 7);
             $table->decimal('longitude', 10, 7);
-            $table->string('timezone');
+            $table->string('timezone')->nullable();
             $table->json('weather_snapshot')->nullable();
             $table->json('news_snapshot')->nullable();
             $table->timestamps();
