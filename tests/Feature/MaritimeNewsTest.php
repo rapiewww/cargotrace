@@ -5,6 +5,7 @@ use App\Models\User;
 use App\Services\MaritimeNewsService;
 use Database\Seeders\DatabaseSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 
@@ -50,7 +51,9 @@ XML;
 
     Http::fake([
         'https://gcaptain.com/feed/' => Http::response($gCaptainXml, 200),
+        'https://www.maritime-executive.com/articles.rss' => Http::response($maritimeExecXml, 200),
         'https://maritime-executive.com/rss' => Http::response($maritimeExecXml, 200),
+        '*' => Http::response('', 200),
     ]);
 
     $service = app(MaritimeNewsService::class);
@@ -84,10 +87,10 @@ test('maritime news service tolerates per-feed failure and falls back to stale c
 </rss>
 XML;
 
-    // gCaptain succeeds, Maritime Executive fails
+    // gCaptain succeeds, others return 500
     Http::fake([
         'https://gcaptain.com/feed/' => Http::response($gCaptainXml, 200),
-        'https://maritime-executive.com/rss' => Http::failedConnection(),
+        '*' => Http::response('', 500),
     ]);
 
     $service = app(MaritimeNewsService::class);
@@ -155,7 +158,7 @@ XML;
 
     Http::fake([
         'https://gcaptain.com/feed/' => Http::response($xml, 200),
-        'https://maritime-executive.com/rss' => Http::failedConnection(),
+        '*' => Http::response('', 500),
     ]);
 
     $admin = User::where('role', 'admin')->first();
@@ -193,10 +196,95 @@ XML;
 
     Http::fake([
         'https://gcaptain.com/feed/' => Http::response($xml, 200),
-        'https://maritime-executive.com/rss' => Http::failedConnection(),
+        '*' => Http::response('', 500),
     ]);
 
     $response = $this->actingAs($admin)->get(route('shipments.show', $shipment));
     $response->assertOk();
     $response->assertSee('Related Maritime News');
+});
+
+test('maritime news service handles empty RSS response without throwing', function () {
+    Http::fake([
+        '*' => Http::response('', 200),
+    ]);
+
+    $service = app(MaritimeNewsService::class);
+    $articles = $service->getMaritimeNews(10);
+
+    expect($articles)->toBeArray()
+        ->and($articles)->toBeEmpty();
+});
+
+test('maritime news service fetches GNews articles when key configured', function () {
+    config(['services.gnews.key' => 'TEST_GNEWS_KEY']);
+
+    Http::fake([
+        'https://gnews.io/api/v4/search*' => Http::response([
+            'totalArticles' => 1,
+            'articles' => [
+                [
+                    'title' => 'Global Container Port Throughput Rebounds',
+                    'description' => 'Major hubs in Asia and Europe report increased vessel calls.',
+                    'url' => 'https://example.com/gnews-port-rebound',
+                    'publishedAt' => '2026-11-12T14:30:00Z',
+                    'image' => 'https://example.com/port.jpg',
+                    'source' => [
+                        'name' => 'GNews Maritime',
+                        'url' => 'https://example.com',
+                    ],
+                ],
+            ],
+        ], 200),
+        '*' => Http::response('', 200),
+    ]);
+
+    $service = app(MaritimeNewsService::class);
+    $articles = $service->getMaritimeNews(10);
+
+    expect($articles)->not->toBeEmpty();
+    $gnewsArticle = collect($articles)->firstWhere('source', 'GNews Maritime');
+    expect($gnewsArticle)->not->toBeNull()
+        ->and($gnewsArticle['headline'])->toBe('Global Container Port Throughput Rebounds')
+        ->and($gnewsArticle['thumbnail'])->toBe('https://example.com/port.jpg');
+});
+
+test('maritime news service tolerates GNews timeout and empty response gracefully', function () {
+    config(['services.gnews.key' => 'TEST_GNEWS_KEY']);
+
+    // Timeout
+    Http::fake([
+        'https://gnews.io/api/v4/search*' => fn () => throw new ConnectionException('Connection timed out'),
+        '*' => Http::response('', 200),
+    ]);
+
+    $service = app(MaritimeNewsService::class);
+    $articles = $service->getMaritimeNews(10);
+    expect($articles)->toBeArray();
+
+    // Empty response
+    Cache::flush();
+    Http::fake([
+        'https://gnews.io/api/v4/search*' => Http::response(['articles' => []], 200),
+        '*' => Http::response('', 200),
+    ]);
+
+    $articlesEmpty = $service->getMaritimeNews(10);
+    expect($articlesEmpty)->toBeArray();
+});
+
+test('maritime news service skips GNews provider silently when key is missing', function () {
+    config(['services.gnews.key' => null]);
+
+    Http::fake([
+        '*' => Http::response('', 200),
+    ]);
+
+    $service = app(MaritimeNewsService::class);
+    $articles = $service->getMaritimeNews(10);
+
+    expect($articles)->toBeArray()
+        ->and($articles)->toBeEmpty();
+
+    Http::assertNotSent(fn ($request) => str_contains($request->url(), 'gnews.io'));
 });

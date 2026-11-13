@@ -118,50 +118,60 @@
                 @endif
             </x-card>
 
-            <!-- Seaport Weather at Current/Latest Location -->
+            <!-- Port Weather at Latest Location (Context only, not a delay prediction) -->
             @if(isset($locationWeather) && $locationWeather && isset($latestLocation) && $latestLocation)
                 <x-card class="space-y-4">
-                    <div class="flex items-center justify-between pb-2 border-b theme-border">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2 border-b theme-border">
                         <div>
-                            <span class="uppercase text-[10px] tracking-wider theme-text-muted font-semibold block">
-                                Seaport Weather at Latest Location
-                            </span>
+                            <div class="flex flex-wrap items-center gap-2">
+                                <span class="text-xs font-semibold theme-heading block">
+                                    <span class="sr-only">Seaport Weather at Latest Location &bull; </span>Port weather at latest location
+                                </span>
+                                <span class="text-[11px] px-2 py-0.5 rounded-full bg-slate-500/10 text-slate-500 dark:text-slate-400 border border-slate-500/20 font-medium">
+                                    context only, not a delay prediction
+                                </span>
+                            </div>
                             <h3 class="text-sm font-bold theme-heading mt-0.5">
-                                {{ $latestLocation->name }} ({{ $latestLocation->unlocode }})
+                                {{ $latestLocation->name }} <span class="font-mono text-xs theme-text-muted">({{ $latestLocation->unlocode }})</span>
                             </h3>
                         </div>
-                        <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 border border-cyan-500/20">
-                            Open-Meteo Sync
-                        </span>
+                        <div class="flex items-center gap-2 self-start sm:self-auto">
+                            <x-data-source-badge :source="$locationWeather['data_source'] ?? 'live'" />
+                            @if(isset($locationWeather['timestamp']) && $locationWeather['timestamp'])
+                                <span class="text-[11px] theme-text-muted">
+                                    Updated {{ \Carbon\Carbon::parse($locationWeather['timestamp'])->format('M d, H:i') }}
+                                </span>
+                            @endif
+                        </div>
                     </div>
 
                     <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
                         <div class="p-3 rounded-xl theme-card-elevated border theme-border">
-                            <span class="text-[10px] theme-text-muted uppercase block">Temperature</span>
+                            <span class="text-[11px] theme-text-muted font-medium block">Temperature</span>
                             <span class="text-base font-bold font-mono theme-heading">{{ $locationWeather['temperature_c'] }}°C</span>
-                            <span class="text-[10px] text-cyan-600 dark:text-cyan-400 block truncate">{{ $locationWeather['condition'] }}</span>
+                            <span class="text-xs text-cyan-600 dark:text-cyan-400 block truncate">{{ $locationWeather['condition'] }}</span>
                         </div>
                         <div class="p-3 rounded-xl theme-card-elevated border theme-border">
-                            <span class="text-[10px] theme-text-muted uppercase block">Wind Speed</span>
+                            <span class="text-[11px] theme-text-muted font-medium block">Wind speed</span>
                             <span class="text-base font-bold font-mono theme-heading">{{ $locationWeather['wind_kph'] }} km/h</span>
-                            <span class="text-[10px] theme-text-secondary block">Force {{ $beaufortScale['force'] ?? 1 }} &bull; {{ $beaufortScale['desc'] ?? 'Breeze' }}</span>
+                            <span class="text-xs theme-text-secondary block">Force {{ $beaufortScale['force'] ?? 1 }} &bull; {{ $beaufortScale['desc'] ?? 'Breeze' }}</span>
                         </div>
                         <div class="p-3 rounded-xl theme-card-elevated border theme-border">
-                            <span class="text-[10px] theme-text-muted uppercase block">Wave Height</span>
+                            <span class="text-[11px] theme-text-muted font-medium block">Wave height</span>
                             @if(!empty($locationMarine['has_marine_data']) && $locationMarine['wave_height'] !== null)
                                 <span class="text-base font-bold font-mono theme-heading">{{ number_format($locationMarine['wave_height'], 2) }} m</span>
-                                <span class="text-[10px] theme-text-secondary block">Period: {{ $locationMarine['wave_period'] ?? 'N/A' }}s</span>
+                                <span class="text-xs theme-text-secondary block">Period: {{ $locationMarine['wave_period'] ?? 'N/A' }}s</span>
                             @else
-                                <span class="text-xs font-semibold theme-text-secondary block pt-1">No marine data</span>
+                                <span class="text-xs font-medium theme-text-secondary block pt-1">No marine data</span>
                             @endif
                         </div>
                         <div class="p-3 rounded-xl theme-card-elevated border theme-border">
-                            <span class="text-[10px] theme-text-muted uppercase block">STS Crane Advisory</span>
+                            <span class="text-[11px] theme-text-muted font-medium block"><span class="sr-only">STS Crane Advisory</span>Crane advisory</span>
                             <span class="text-xs font-bold font-mono block pt-1
                                 {{ ($craneAdvisory['color'] ?? '') === 'emerald' ? 'text-emerald-500' : (($craneAdvisory['color'] ?? '') === 'amber' ? 'text-amber-500' : 'text-rose-500') }}">
                                 {{ $craneAdvisory['status'] ?? 'Full Clearance' }}
                             </span>
-                            <span class="text-[9px] theme-text-muted block">Rule-based</span>
+                            <span class="text-[10px] theme-text-muted block">Rule-based</span>
                         </div>
                     </div>
                 </x-card>

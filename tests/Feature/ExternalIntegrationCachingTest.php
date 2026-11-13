@@ -203,7 +203,8 @@ test('maritime news service parses rss feed or falls back gracefully', function 
 XML;
 
     Http::fake([
-        'gcaptain.com/*' => Http::response($rssXml, 200, ['Content-Type' => 'application/rss+xml']),
+        '*gcaptain.com*' => Http::response($rssXml, 200, ['Content-Type' => 'application/rss+xml']),
+        '*' => Http::response('', 500),
     ]);
 
     $service = app(MaritimeNewsService::class);

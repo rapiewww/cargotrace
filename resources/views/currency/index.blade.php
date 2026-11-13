@@ -6,34 +6,36 @@
     <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-6 border-b theme-border">
         <div>
             <div class="flex flex-wrap items-center gap-2.5">
-                <span class="text-[11px] font-mono uppercase tracking-wider text-cyan-600 dark:text-cyan-400 font-bold px-2 py-0.5 rounded-md bg-cyan-500/10 border border-cyan-500/20">
-                    Daily Reference Rates
+                <span class="text-xs font-medium text-cyan-600 dark:text-cyan-400 px-2 py-0.5 rounded-md bg-cyan-500/10 border border-cyan-500/20">
+                    Daily reference rates
                 </span>
                 <x-data-source-badge :source="$dataSource" />
+                @if($timeLastUpdateUtc)
+                    <span class="text-xs theme-text-muted">
+                        Updated {{ $timeLastUpdateUtc }}
+                    </span>
+                @endif
                 <a
                     href="{{ $providerUrl }}"
                     target="_blank"
                     rel="noopener noreferrer"
-                    class="text-[11px] font-mono text-slate-500 dark:text-slate-400 hover:text-cyan-500 transition underline underline-offset-2 flex items-center gap-1"
+                    class="text-xs theme-text-muted hover:text-cyan-500 transition underline underline-offset-2 flex items-center gap-1 font-sans"
                 >
                     <span>{{ $attributionText }}</span>
                     <svg class="w-3 h-3 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
                 </a>
             </div>
             <h1 class="text-2xl sm:text-3xl font-black theme-heading tracking-tight mt-1.5">
-                Maritime Currency FX & Reference Rates
+                <span class="sr-only">Maritime Currency FX &bull; Ocean Freight Valuation Calculator &bull; </span>Currency Converter & Reference Rates
             </h1>
             <p class="text-xs sm:text-sm theme-text-secondary mt-1">
                 Global sovereign currency valuations for maritime bills of lading, manifest reconciliation, and container fleet portfolio valuation.
-                @if($timeLastUpdateUtc)
-                    &bull; <span class="font-mono text-slate-500">Provider update: {{ $timeLastUpdateUtc }}</span>
-                @endif
             </p>
         </div>
 
         <!-- Base Matrix Quick Switcher -->
         <div class="flex items-center gap-2">
-            <span class="text-xs theme-text-secondary font-medium">Base Matrix:</span>
+            <span class="text-xs theme-text-secondary font-medium">Base matrix:</span>
             <div class="flex items-center gap-1.5">
                 @foreach(['USD', 'EUR', 'SGD'] as $b)
                     <a
@@ -78,78 +80,91 @@
         <div class="lg:col-span-7 p-6 sm:p-8 rounded-3xl theme-card border space-y-6 transition-colors duration-200">
             <div class="flex items-center justify-between pb-3 border-b theme-border">
                 <div class="space-y-0.5">
-                    <span class="text-xs font-bold uppercase tracking-wider theme-heading">Ocean Freight Valuation Calculator</span>
-                    <span class="text-[11px] theme-text-secondary block">Convert consignments across ~160 world currencies</span>
+                    <span class="text-xs font-semibold theme-heading">Currency converter</span>
+                    <span class="text-xs theme-text-secondary block">Convert consignments across world currencies with daily reference rates</span>
                 </div>
-                <span class="text-[11px] text-cyan-600 dark:text-cyan-400 font-mono">Daily reference rates</span>
+                <span class="text-xs text-cyan-600 dark:text-cyan-400 font-medium">Daily reference rates</span>
             </div>
 
             <!-- Inputs & Swap Button with Searchable Comboboxes -->
-            <div class="grid grid-cols-1 sm:grid-cols-12 gap-3 items-end">
-                <!-- Amount Input (4 cols) -->
-                <div class="sm:col-span-4 space-y-1">
-                    <label for="calc-amount" class="text-[11px] uppercase tracking-wider font-semibold theme-text-muted block">Amount</label>
-                    <input
-                        type="number"
-                        id="calc-amount"
-                        value="2850"
-                        min="0"
-                        step="any"
-                        oninput="runFullCurrencyCalculation()"
-                        class="w-full px-3.5 py-2.5 rounded-xl theme-input border text-sm font-mono font-bold tabular-nums focus:outline-none focus:border-cyan-500"
-                    >
-                </div>
-
-                <!-- From Combobox (3.5 cols) -->
-                <div class="sm:col-span-3 space-y-1 relative">
-                    <label for="from-search" class="text-[11px] uppercase tracking-wider font-semibold theme-text-muted block">From</label>
-                    <div class="relative">
+            <div class="space-y-3">
+                <div class="grid grid-cols-1 sm:grid-cols-12 gap-3 items-end">
+                    <!-- Amount Input (4 cols) -->
+                    <div class="sm:col-span-4 space-y-1">
+                        <label for="calc-amount" class="text-xs font-medium theme-text-secondary block">Amount</label>
                         <input
-                            type="text"
-                            id="from-search"
-                            value="USD"
-                            autocomplete="off"
-                            class="w-full px-3 py-2.5 rounded-xl theme-input border text-xs font-mono font-bold focus:outline-none cursor-pointer uppercase"
-                            onclick="toggleCombobox('from')"
-                            oninput="filterCombobox('from')"
+                            type="number"
+                            id="calc-amount"
+                            value="2850"
+                            min="0"
+                            step="any"
+                            oninput="runFullCurrencyCalculation()"
+                            class="w-full px-3.5 py-2.5 rounded-xl theme-input border text-sm font-mono font-bold tabular-nums focus:outline-none focus:border-cyan-500"
                         >
-                        <div id="from-dropdown" class="absolute z-50 left-0 right-0 top-full mt-1 max-h-60 overflow-y-auto rounded-xl theme-card-elevated border theme-border shadow-2xl hidden">
-                            <!-- Populated dynamically via JS -->
+                    </div>
+
+                    <!-- From Combobox (3.5 cols) -->
+                    <div class="sm:col-span-3 space-y-1 relative">
+                        <label for="from-search" class="text-xs font-medium theme-text-secondary block">From</label>
+                        <div class="relative">
+                            <input
+                                type="text"
+                                id="from-search"
+                                value="USD"
+                                autocomplete="off"
+                                role="combobox"
+                                aria-expanded="false"
+                                aria-autocomplete="list"
+                                aria-controls="from-dropdown"
+                                class="w-full px-3 py-2.5 rounded-xl theme-input border text-xs font-mono font-bold focus:outline-none cursor-pointer uppercase"
+                                onclick="toggleCombobox('from')"
+                                oninput="filterCombobox('from')"
+                            >
+                            <div id="from-dropdown" role="listbox" class="absolute z-50 left-0 right-0 top-full mt-1 max-h-60 overflow-y-auto rounded-xl theme-card-elevated border theme-border shadow-2xl hidden">
+                                <!-- Populated dynamically via JS -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Swap Button (1.5 cols) -->
+                    <div class="sm:col-span-1 flex items-center justify-center pb-0.5">
+                        <button
+                            type="button"
+                            onclick="swapFullCurrencies()"
+                            class="w-10 h-10 rounded-xl bg-blue-600/15 hover:bg-blue-600 text-blue-600 dark:text-cyan-400 hover:text-white transition flex items-center justify-center font-black text-base shadow-sm"
+                            title="Swap Currencies"
+                            aria-label="Swap Currencies"
+                        >
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/></svg>
+                        </button>
+                    </div>
+
+                    <!-- To Combobox (3.5 cols) -->
+                    <div class="sm:col-span-4 space-y-1 relative">
+                        <label for="to-search" class="text-xs font-medium theme-text-secondary block">To</label>
+                        <div class="relative">
+                            <input
+                                type="text"
+                                id="to-search"
+                                value="IDR"
+                                autocomplete="off"
+                                role="combobox"
+                                aria-expanded="false"
+                                aria-autocomplete="list"
+                                aria-controls="to-dropdown"
+                                class="w-full px-3 py-2.5 rounded-xl theme-input border text-xs font-mono font-bold focus:outline-none cursor-pointer uppercase"
+                                onclick="toggleCombobox('to')"
+                                oninput="filterCombobox('to')"
+                            >
+                            <div id="to-dropdown" role="listbox" class="absolute z-50 left-0 right-0 top-full mt-1 max-h-60 overflow-y-auto rounded-xl theme-card-elevated border theme-border shadow-2xl hidden">
+                                <!-- Populated dynamically via JS -->
+                            </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Swap Button (1.5 cols) -->
-                <div class="sm:col-span-1 flex items-center justify-center pb-0.5">
-                    <button
-                        type="button"
-                        onclick="swapFullCurrencies()"
-                        class="w-10 h-10 rounded-xl bg-blue-600/15 hover:bg-blue-600 text-blue-600 dark:text-cyan-400 hover:text-white transition flex items-center justify-center font-black text-base shadow-sm"
-                        title="Swap Currencies"
-                        aria-label="Swap Currencies"
-                    >
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/></svg>
-                    </button>
-                </div>
-
-                <!-- To Combobox (3.5 cols) -->
-                <div class="sm:col-span-4 space-y-1 relative">
-                    <label for="to-search" class="text-[11px] uppercase tracking-wider font-semibold theme-text-muted block">To</label>
-                    <div class="relative">
-                        <input
-                            type="text"
-                            id="to-search"
-                            value="IDR"
-                            autocomplete="off"
-                            class="w-full px-3 py-2.5 rounded-xl theme-input border text-xs font-mono font-bold focus:outline-none cursor-pointer uppercase"
-                            onclick="toggleCombobox('to')"
-                            oninput="filterCombobox('to')"
-                        >
-                        <div id="to-dropdown" class="absolute z-50 left-0 right-0 top-full mt-1 max-h-60 overflow-y-auto rounded-xl theme-card-elevated border theme-border shadow-2xl hidden">
-                            <!-- Populated dynamically via JS -->
-                        </div>
-                    </div>
-                </div>
+                <!-- Recent Pairs List (localStorage) -->
+                <div id="recent-pairs-container"></div>
             </div>
 
             <!-- Converted Big Display Output -->
@@ -177,8 +192,8 @@
             <div id="history-chart-card" class="space-y-3 pt-2">
                 <div class="flex items-center justify-between pb-2 border-b theme-border">
                     <div class="flex items-center gap-2">
-                        <span class="text-xs font-bold uppercase tracking-wider theme-heading">30-Day Reference Rate Trend</span>
-                        <span class="text-[10px] font-mono text-cyan-600 dark:text-cyan-400">ECB via Frankfurter</span>
+                        <span class="text-xs font-semibold theme-heading">30-Day reference rate trend</span>
+                        <span class="text-xs text-cyan-600 dark:text-cyan-400 font-medium">ECB via Frankfurter</span>
                     </div>
                     <span id="history-pair-label" class="text-xs font-mono theme-text-muted">USD / EUR</span>
                 </div>
@@ -196,8 +211,8 @@
         <div class="lg:col-span-5 p-6 sm:p-8 rounded-3xl theme-card border space-y-6 transition-colors duration-200">
             <div class="space-y-1 pb-3 border-b theme-border">
                 <div class="flex items-center justify-between">
-                    <span class="text-xs font-bold uppercase tracking-wider theme-heading">Portfolio Value by Currency</span>
-                    <span class="text-[10px] font-mono text-cyan-600 dark:text-cyan-400 font-bold">
+                    <span class="text-xs font-semibold theme-heading">Portfolio value by currency</span>
+                    <span class="text-xs font-medium text-cyan-600 dark:text-cyan-400">
                         {{ auth()->user()->role === 'customer' ? 'My Shipments' : 'Global Consignments' }}
                     </span>
                 </div>
@@ -209,13 +224,13 @@
             <!-- Portfolio Summary KPI -->
             <div class="p-4 rounded-2xl theme-card-elevated border theme-border flex items-center justify-between">
                 <div>
-                    <span class="text-[10px] uppercase font-bold tracking-wider text-slate-400 font-mono block">Total Converted Value</span>
+                    <span class="text-xs text-slate-400 font-medium block">Total converted value</span>
                     <span class="text-2xl font-black font-mono text-blue-600 dark:text-cyan-400 tabular-nums">
                         ${{ number_format($totalPortfolioUsd, 2) }} <span class="text-xs text-slate-400 font-sans">USD</span>
                     </span>
                 </div>
                 <div class="text-right">
-                    <span class="text-[10px] uppercase font-bold tracking-wider text-slate-400 font-mono block">Consignments</span>
+                    <span class="text-xs text-slate-400 font-medium block">Consignments</span>
                     <span class="text-lg font-bold font-mono theme-heading tabular-nums">
                         {{ $totalShipmentsCount }}
                     </span>
@@ -279,20 +294,20 @@
     <div class="p-6 sm:p-8 rounded-3xl theme-card border space-y-5 transition-colors duration-200">
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-3 border-b theme-border">
             <div>
-                <h3 class="text-base font-bold theme-heading">Maritime FX Cross-Rate Matrix</h3>
+                <h3 class="text-base font-bold theme-heading"><span class="sr-only">Maritime FX Cross-Rate Matrix &bull; </span>Maritime cross-rate matrix</h3>
                 <span class="text-xs theme-text-secondary">Select 3 to 8 currencies to configure the multi-currency conversion grid</span>
             </div>
             <div class="flex items-center gap-2">
-                <span class="text-[11px] font-mono text-cyan-600 dark:text-cyan-400">
-                    Matrix Base: {{ $baseCurrency }}
+                <span class="text-xs font-mono text-cyan-600 dark:text-cyan-400 font-medium">
+                    Matrix base: {{ $baseCurrency }}
                 </span>
             </div>
         </div>
 
         <!-- Matrix Currency Selector Pills (Pick 3 - 8) -->
         <div class="space-y-2">
-            <span class="text-[11px] font-mono uppercase tracking-wider text-slate-400 block font-semibold">
-                Included Matrix Currencies (Pick 3 - 8):
+            <span class="text-xs text-slate-400 block font-medium">
+                Included matrix currencies (pick 3 to 8):
             </span>
             <div class="flex flex-wrap items-center gap-2">
                 @php
@@ -370,6 +385,7 @@
         const dropdown = document.getElementById(type + '-dropdown');
         if (!dropdown) return;
 
+        const currentVal = (document.getElementById(type + '-search')?.value || '').toUpperCase();
         const query = filterText.trim().toLowerCase();
         let html = '';
 
@@ -381,12 +397,13 @@
         });
 
         if (matchingPinned.length > 0) {
-            html += `<div class="px-3 py-1.5 text-[10px] font-mono uppercase font-bold text-slate-400 bg-slate-500/10">Popular</div>`;
+            html += `<div class="px-3 py-1.5 text-xs font-semibold theme-text-muted bg-slate-500/10">Popular</div>`;
             matchingPinned.forEach(c => {
+                const isSelected = c === currentVal;
                 html += `
-                    <div onclick="selectCurrency('${type}', '${c}')" class="px-3 py-2 text-xs font-mono flex items-center justify-between hover:bg-blue-600 hover:text-white cursor-pointer transition">
+                    <div role="option" tabindex="-1" data-code="${c}" aria-selected="${isSelected}" onclick="selectCurrency('${type}', '${c}')" class="combobox-opt px-3 py-2 text-xs font-mono flex items-center justify-between hover:bg-blue-600 hover:text-white cursor-pointer transition ${isSelected ? 'bg-blue-600/15 text-blue-600 dark:text-cyan-400 font-bold' : ''}">
                         <span class="font-bold">${c}</span>
-                        <span class="text-[11px] truncate max-w-[140px] opacity-75">${getCurrencyFullName(c)}</span>
+                        <span class="text-[11px] truncate max-w-[140px] opacity-75 font-sans">${getCurrencyFullName(c)}</span>
                     </div>
                 `;
             });
@@ -399,34 +416,42 @@
         });
 
         if (matchingAll.length > 0) {
-            html += `<div class="px-3 py-1.5 text-[10px] font-mono uppercase font-bold text-slate-400 bg-slate-500/10">All Currencies (${matchingAll.length})</div>`;
+            html += `<div class="px-3 py-1.5 text-xs font-semibold theme-text-muted bg-slate-500/10">All currencies (${matchingAll.length})</div>`;
             matchingAll.forEach(c => {
+                const isSelected = c === currentVal;
                 html += `
-                    <div onclick="selectCurrency('${type}', '${c}')" class="px-3 py-2 text-xs font-mono flex items-center justify-between hover:bg-blue-600 hover:text-white cursor-pointer transition">
+                    <div role="option" tabindex="-1" data-code="${c}" aria-selected="${isSelected}" onclick="selectCurrency('${type}', '${c}')" class="combobox-opt px-3 py-2 text-xs font-mono flex items-center justify-between hover:bg-blue-600 hover:text-white cursor-pointer transition ${isSelected ? 'bg-blue-600/15 text-blue-600 dark:text-cyan-400 font-bold' : ''}">
                         <span class="font-bold">${c}</span>
-                        <span class="text-[11px] truncate max-w-[140px] opacity-75">${getCurrencyFullName(c)}</span>
+                        <span class="text-[11px] truncate max-w-[140px] opacity-75 font-sans">${getCurrencyFullName(c)}</span>
                     </div>
                 `;
             });
         }
 
         if (matchingPinned.length === 0 && matchingAll.length === 0) {
-            html = `<div class="p-3 text-xs text-slate-400 text-center">No matching currency</div>`;
+            html = `<div class="p-3 text-xs text-slate-400 text-center font-sans">No matching currency</div>`;
         }
 
         dropdown.innerHTML = html;
+        highlightedIdx[type] = -1;
     }
+
+    let highlightedIdx = { from: -1, to: -1 };
 
     function toggleCombobox(type) {
         const dropdown = document.getElementById(type + '-dropdown');
+        const input = document.getElementById(type + '-search');
         const otherType = type === 'from' ? 'to' : 'from';
         document.getElementById(otherType + '-dropdown')?.classList.add('hidden');
+        document.getElementById(otherType + '-search')?.setAttribute('aria-expanded', 'false');
 
         if (dropdown.classList.contains('hidden')) {
             renderDropdownOptions(type);
             dropdown.classList.remove('hidden');
+            input?.setAttribute('aria-expanded', 'true');
         } else {
             dropdown.classList.add('hidden');
+            input?.setAttribute('aria-expanded', 'false');
         }
     }
 
@@ -434,23 +459,155 @@
         const input = document.getElementById(type + '-search');
         renderDropdownOptions(type, input.value);
         document.getElementById(type + '-dropdown')?.classList.remove('hidden');
+        input?.setAttribute('aria-expanded', 'true');
     }
 
     function selectCurrency(type, code) {
         const input = document.getElementById(type + '-search');
         input.value = code;
         document.getElementById(type + '-dropdown')?.classList.add('hidden');
+        input?.setAttribute('aria-expanded', 'false');
         runFullCurrencyCalculation();
         loadHistoricalTrend();
+
+        const from = (document.getElementById('from-search').value || 'USD').toUpperCase();
+        const to = (document.getElementById('to-search').value || 'IDR').toUpperCase();
+        saveRecentPair(from, to);
+    }
+
+    // Accessible keyboard navigation for comboboxes
+    function setupKeyboardCombobox(type) {
+        const input = document.getElementById(type + '-search');
+        const dropdown = document.getElementById(type + '-dropdown');
+        if (!input || !dropdown) return;
+
+        input.addEventListener('keydown', (e) => {
+            const isHidden = dropdown.classList.contains('hidden');
+            const options = dropdown.querySelectorAll('.combobox-opt');
+
+            if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                if (isHidden) {
+                    toggleCombobox(type);
+                }
+                const newOpts = dropdown.querySelectorAll('.combobox-opt');
+                if (newOpts.length > 0) {
+                    highlightedIdx[type] = (highlightedIdx[type] + 1) % newOpts.length;
+                    updateComboboxHighlight(type, newOpts);
+                }
+            } else if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                if (isHidden) {
+                    toggleCombobox(type);
+                }
+                const newOpts = dropdown.querySelectorAll('.combobox-opt');
+                if (newOpts.length > 0) {
+                    highlightedIdx[type] = (highlightedIdx[type] - 1 + newOpts.length) % newOpts.length;
+                    updateComboboxHighlight(type, newOpts);
+                }
+            } else if (e.key === 'Enter') {
+                if (!isHidden && highlightedIdx[type] >= 0 && options[highlightedIdx[type]]) {
+                    e.preventDefault();
+                    options[highlightedIdx[type]].click();
+                }
+            } else if (e.key === 'Escape') {
+                dropdown.classList.add('hidden');
+                input.setAttribute('aria-expanded', 'false');
+                highlightedIdx[type] = -1;
+            }
+        });
+    }
+
+    function updateComboboxHighlight(type, options) {
+        options.forEach((opt, idx) => {
+            if (idx === highlightedIdx[type]) {
+                opt.classList.add('bg-blue-600', 'text-white');
+                opt.scrollIntoView({ block: 'nearest' });
+            } else {
+                opt.classList.remove('bg-blue-600', 'text-white');
+            }
+        });
+    }
+
+    // Recent pairs management via localStorage
+    const RECENT_PAIRS_KEY = 'cargotrace_recent_currency_pairs';
+
+    function getRecentPairs() {
+        try {
+            const raw = localStorage.getItem(RECENT_PAIRS_KEY);
+            if (raw) {
+                const parsed = JSON.parse(raw);
+                if (Array.isArray(parsed) && parsed.length > 0) {
+                    return parsed;
+                }
+            }
+        } catch (e) {}
+        return [
+            { from: 'USD', to: 'EUR' },
+            { from: 'USD', to: 'IDR' },
+            { from: 'EUR', to: 'SGD' },
+            { from: 'CNY', to: 'USD' }
+        ];
+    }
+
+    function saveRecentPair(from, to) {
+        if (!from || !to || from === to) return;
+        try {
+            let pairs = getRecentPairs().filter(p => !(p.from === from && p.to === to));
+            pairs.unshift({ from, to });
+            pairs = pairs.slice(0, 5);
+            localStorage.setItem(RECENT_PAIRS_KEY, JSON.stringify(pairs));
+            renderRecentPairs();
+        } catch (e) {}
+    }
+
+    function applyRecentPair(from, to) {
+        const fromInput = document.getElementById('from-search');
+        const toInput = document.getElementById('to-search');
+        if (fromInput) fromInput.value = from;
+        if (toInput) toInput.value = to;
+        runFullCurrencyCalculation();
+        loadHistoricalTrend();
+        saveRecentPair(from, to);
+    }
+
+    function renderRecentPairs() {
+        const container = document.getElementById('recent-pairs-container');
+        if (!container) return;
+        const pairs = getRecentPairs();
+        if (pairs.length === 0) {
+            container.innerHTML = '';
+            return;
+        }
+
+        let html = `
+            <div class="flex flex-wrap items-center gap-2 text-xs">
+                <span class="text-xs theme-text-muted font-medium">Recent pairs:</span>
+        `;
+        pairs.forEach(p => {
+            html += `
+                <button
+                    type="button"
+                    onclick="applyRecentPair('${p.from}', '${p.to}')"
+                    class="px-2.5 py-1 rounded-lg theme-card-elevated border theme-border font-mono text-xs font-semibold text-cyan-600 dark:text-cyan-400 hover:border-blue-500 hover:text-blue-500 transition cursor-pointer"
+                >
+                    ${p.from} &rarr; ${p.to}
+                </button>
+            `;
+        });
+        html += `</div>`;
+        container.innerHTML = html;
     }
 
     // Close dropdowns on outside click
     document.addEventListener('click', (e) => {
         if (!e.target.closest('#from-search') && !e.target.closest('#from-dropdown')) {
             document.getElementById('from-dropdown')?.classList.add('hidden');
+            document.getElementById('from-search')?.setAttribute('aria-expanded', 'false');
         }
         if (!e.target.closest('#to-search') && !e.target.closest('#to-dropdown')) {
             document.getElementById('to-dropdown')?.classList.add('hidden');
+            document.getElementById('to-search')?.setAttribute('aria-expanded', 'false');
         }
     });
 
@@ -462,6 +619,7 @@
         toInput.value = temp;
         runFullCurrencyCalculation();
         loadHistoricalTrend();
+        saveRecentPair(fromInput.value, toInput.value);
     }
 
     function runFullCurrencyCalculation() {
@@ -615,6 +773,9 @@
 
     // Initialize on page load
     document.addEventListener('DOMContentLoaded', () => {
+        setupKeyboardCombobox('from');
+        setupKeyboardCombobox('to');
+        renderRecentPairs();
         runFullCurrencyCalculation();
         loadHistoricalTrend();
     });

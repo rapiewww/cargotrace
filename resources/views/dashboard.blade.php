@@ -403,6 +403,11 @@
                     <span class="text-xs font-semibold theme-heading font-sans">Port weather</span>
                     <div class="flex items-center gap-1.5">
                         <x-data-source-badge :source="$selectedPort['data_source'] ?? 'live'" />
+                        @if(isset($selectedPort['weather']['timestamp']) && $selectedPort['weather']['timestamp'])
+                            <span class="text-[10px] theme-text-muted font-sans">
+                                Updated {{ \Carbon\Carbon::parse($selectedPort['weather']['timestamp'])->format('H:i') }}
+                            </span>
+                        @endif
                         <a href="{{ route('weather.index') }}" class="text-[10px] font-semibold px-2 py-0.5 rounded theme-card-elevated border theme-border hover:border-blue-500 theme-heading font-sans transition inline-flex items-center gap-1" title="Open full weather hub">
                             <span>Hub</span>
                             <span>&rarr;</span>
@@ -439,6 +444,11 @@
                     <span class="text-xs font-semibold theme-heading font-sans">Currency converter</span>
                     <div class="flex items-center gap-1.5">
                         <x-data-source-badge :source="$currencyData['data_source'] ?? 'live'" />
+                        @if(isset($currencyData['time_last_update_utc']) && $currencyData['time_last_update_utc'])
+                            <span class="text-[10px] theme-text-muted font-sans">
+                                Updated {{ \Carbon\Carbon::parse($currencyData['time_last_update_utc'])->format('H:i') }}
+                            </span>
+                        @endif
                         <a href="{{ route('currency.index') }}" class="text-[10px] text-cyan-600 dark:text-cyan-400 hover:underline font-sans" title="Open full currency converter">
                             Full rates &rarr;
                         </a>
@@ -503,6 +513,11 @@
                     <span class="text-xs font-semibold theme-heading font-sans">Maritime news wire</span>
                     <div class="flex items-center gap-1.5">
                         <x-data-source-badge :source="$news[0]['data_source'] ?? 'live'" />
+                        @if(isset($news[0]['published_at']) && $news[0]['published_at'])
+                            <span class="text-[10px] theme-text-muted font-sans">
+                                Updated {{ \Carbon\Carbon::parse($news[0]['published_at'])->format('H:i') }}
+                            </span>
+                        @endif
                         <a href="{{ route('news.index') }}" class="text-[10px] text-cyan-600 dark:text-cyan-400 hover:underline font-sans" title="Open all maritime news">
                             All news &rarr;
                         </a>

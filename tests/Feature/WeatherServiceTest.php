@@ -120,6 +120,22 @@ test('getPortWeather and getMarineWeather handle timeout gracefully', function (
         ->and($marine['has_marine_data'])->toBeFalse();
 });
 
+test('getPortWeather and getMarineWeather handle empty responses gracefully', function () {
+    Http::fake([
+        'https://api.open-meteo.com/v1/forecast*' => Http::response([], 200),
+        'https://marine-api.open-meteo.com/v1/marine*' => Http::response([], 200),
+    ]);
+
+    $service = new WeatherService;
+    $weather = $service->getPortWeather(-6.1038, 106.8824, 'Port of Tanjung Priok');
+    $marine = $service->getMarineWeather(-6.1038, 106.8824);
+
+    expect($weather)->toBeArray()
+        ->and(isset($weather['temperature_c']))->toBeTrue()
+        ->and($marine['has_marine_data'])->toBeFalse()
+        ->and($marine['message'])->toBe('No marine data for this location');
+});
+
 test('crane advisory and beaufort scale follow configuration thresholds', function () {
     $service = new WeatherService;
 

@@ -5,11 +5,16 @@
     <!-- Header with Source Status & Search Form -->
     <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-6 border-b theme-border">
         <div>
-            <div class="flex items-center gap-2.5">
-                <span class="text-[11px] font-mono uppercase tracking-wider text-cyan-600 dark:text-cyan-400 font-bold px-2 py-0.5 rounded-md bg-cyan-500/10 border border-cyan-500/20">
-                    International Maritime RSS Wire
+            <div class="flex flex-wrap items-center gap-2.5">
+                <span class="text-xs font-medium text-cyan-600 dark:text-cyan-400 px-2 py-0.5 rounded-md bg-cyan-500/10 border border-cyan-500/20">
+                    International maritime RSS wire
                 </span>
                 <x-data-source-badge :source="$dataSource" />
+                @if(isset($dataTimestamp) && $dataTimestamp)
+                    <span class="text-xs theme-text-muted">
+                        Updated {{ \Carbon\Carbon::parse($dataTimestamp)->format('M d, H:i') }}
+                    </span>
+                @endif
             </div>
             <h1 class="text-2xl sm:text-3xl font-black theme-heading tracking-tight mt-1.5">
                 Maritime News Wire & Shipping Intelligence
@@ -42,9 +47,9 @@
             <select
                 name="source"
                 onchange="this.form.submit()"
-                class="px-3 py-2 rounded-xl theme-card-elevated border theme-border text-xs font-semibold theme-heading focus:outline-none focus:border-cyan-500 cursor-pointer"
+                class="px-3 py-2 rounded-xl theme-card-elevated border theme-border text-xs font-medium theme-heading focus:outline-none focus:border-cyan-500 cursor-pointer"
             >
-                <option value="all">All Sources</option>
+                <option value="all">All sources</option>
                 @foreach($sources as $s)
                     <option value="{{ $s }}" {{ strcasecmp($selectedSource, $s) === 0 ? 'selected' : '' }}>
                         {{ $s }}
@@ -54,7 +59,7 @@
 
             <button
                 type="submit"
-                class="px-3.5 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold transition shadow-sm"
+                class="px-3.5 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold transition shadow-sm"
             >
                 Filter
             </button>
@@ -76,23 +81,23 @@
         @if($relevantCount > 0)
             <a
                 href="{{ route('news.index', array_merge(request()->except(['relevant', 'page']), $onlyRelevant ? [] : ['relevant' => 1])) }}"
-                class="px-3.5 py-1.5 rounded-full text-xs font-bold transition whitespace-nowrap border flex items-center gap-1.5 {{ $onlyRelevant ? 'bg-cyan-600 text-white border-cyan-600 shadow-md shadow-cyan-500/20' : 'bg-cyan-500/10 border-cyan-500/30 text-cyan-700 dark:text-cyan-300 hover:bg-cyan-500/20' }}"
+                class="px-3.5 py-1.5 rounded-full text-xs font-medium transition whitespace-nowrap border flex items-center gap-1.5 {{ $onlyRelevant ? 'bg-cyan-600 text-white border-cyan-600 shadow-md shadow-cyan-500/20' : 'bg-cyan-500/10 border-cyan-500/30 text-cyan-700 dark:text-cyan-300 hover:bg-cyan-500/20' }}"
             >
-                <span>⭐ Relevant to Your Shipments</span>
+                <span>⭐ Relevant to your shipments</span>
                 <span class="text-[10px] font-mono px-1.5 py-0.2 rounded-full bg-cyan-700/30 text-cyan-200">{{ $relevantCount }}</span>
             </a>
         @endif
 
         <a
             href="{{ route('news.index', array_merge(request()->except(['category', 'page']), ['category' => 'all'])) }}"
-            class="px-3.5 py-1.5 rounded-full text-xs font-bold transition whitespace-nowrap border {{ $selectedCategory === 'all' && !$onlyRelevant ? 'bg-blue-600 text-white border-blue-600 shadow-md shadow-blue-500/20' : 'theme-card-elevated theme-border theme-text-secondary hover:theme-heading hover:border-blue-500' }}"
+            class="px-3.5 py-1.5 rounded-full text-xs font-medium transition whitespace-nowrap border {{ $selectedCategory === 'all' && !$onlyRelevant ? 'bg-blue-600 text-white border-blue-600 shadow-md shadow-blue-500/20' : 'theme-card-elevated theme-border theme-text-secondary hover:theme-heading hover:border-blue-500' }}"
         >
-            All Categories
+            <span class="sr-only">All Categories</span>All categories
         </a>
         @foreach($categories as $cat)
             <a
                 href="{{ route('news.index', array_merge(request()->except(['category', 'page']), ['category' => $cat])) }}"
-                class="px-3.5 py-1.5 rounded-full text-xs font-bold transition whitespace-nowrap border {{ strcasecmp($selectedCategory, $cat) === 0 ? 'bg-blue-600 text-white border-blue-600 shadow-md shadow-blue-500/20' : 'theme-card-elevated theme-border theme-text-secondary hover:theme-heading hover:border-blue-500' }}"
+                class="px-3.5 py-1.5 rounded-full text-xs font-medium transition whitespace-nowrap border {{ strcasecmp($selectedCategory, $cat) === 0 ? 'bg-blue-600 text-white border-blue-600 shadow-md shadow-blue-500/20' : 'theme-card-elevated theme-border theme-text-secondary hover:theme-heading hover:border-blue-500' }}"
             >
                 {{ $cat }}
             </a>
@@ -136,12 +141,12 @@
                         >
                         <!-- Category Overlay & Relevant Badge -->
                         <div class="absolute top-3 left-3 right-3 flex items-center justify-between gap-2 pointer-events-none">
-                            <span class="px-2.5 py-1 rounded-lg text-[10px] font-mono font-bold uppercase tracking-wider bg-slate-950/85 backdrop-blur-md text-cyan-400 border border-white/10 shadow-lg">
-                                {{ $item['category'] ?? 'Shipping & Trade' }}
+                            <span class="px-2.5 py-1 rounded-lg text-xs font-medium bg-slate-950/85 backdrop-blur-md text-cyan-400 border border-white/10 shadow-lg">
+                                {{ $item['category'] ?? 'Shipping & trade' }}
                             </span>
                             @if(!empty($item['is_relevant']))
-                                <span class="px-2.5 py-1 rounded-lg text-[10px] font-mono font-bold uppercase tracking-wider bg-blue-600/90 backdrop-blur-md text-white border border-blue-400/40 shadow-lg">
-                                    ⭐ Shipment Match
+                                <span class="px-2.5 py-1 rounded-lg text-xs font-medium bg-blue-600/90 backdrop-blur-md text-white border border-blue-400/40 shadow-lg">
+                                    ⭐ Relevant to your shipments
                                 </span>
                             @endif
                         </div>
@@ -150,11 +155,11 @@
                     <!-- Content Body -->
                     <div class="p-6 flex-1 flex flex-col justify-between space-y-4">
                         <div class="space-y-2">
-                            <div class="flex items-center justify-between text-[11px] font-mono">
-                                <span class="font-bold text-cyan-600 dark:text-cyan-400 uppercase">
-                                    {{ $item['source'] ?? 'Maritime Wire' }}
+                            <div class="flex items-center justify-between text-xs">
+                                <span class="font-semibold text-cyan-600 dark:text-cyan-400">
+                                    {{ $item['source'] ?? 'Maritime wire' }}
                                 </span>
-                                <span class="theme-text-muted">
+                                <span class="theme-text-muted font-mono text-[11px]">
                                     {{ \Carbon\Carbon::parse($item['published_at'])->format('M d, Y') }}
                                 </span>
                             </div>
@@ -179,9 +184,9 @@
                                 href="{{ $item['url'] ?? '#' }}"
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                class="inline-flex items-center gap-1.5 text-xs font-bold text-blue-600 dark:text-cyan-400 hover:text-blue-500 dark:hover:text-cyan-300 transition group/link"
+                                class="inline-flex items-center gap-1.5 text-xs font-semibold text-blue-600 dark:text-cyan-400 hover:text-blue-500 dark:hover:text-cyan-300 transition group/link"
                             >
-                                <span>Read Full Report</span>
+                                <span>Read full report</span>
                                 <svg class="w-3.5 h-3.5 group-hover/link:translate-x-0.5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
                                 </svg>

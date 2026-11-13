@@ -19,7 +19,7 @@ class NewsWebController extends Controller
      */
     public function index(Request $request): View
     {
-        $rawNews = $this->newsService->getMaritimeNews(48);
+        $rawNews = $this->newsService->getMaritimeNews(96);
 
         // Fetch user's active shipments for relevance matching
         $user = $request->user();
@@ -64,9 +64,9 @@ class NewsWebController extends Controller
             return true;
         })->values()->all();
 
-        // Server-side pagination
+        // Server-side pagination (12 per page)
         $page = max(1, (int) $request->query('page', 1));
-        $perPage = 9;
+        $perPage = 12;
         $total = count($filteredNews);
         $offset = ($page - 1) * $perPage;
         $itemsForCurrentPage = array_slice($filteredNews, $offset, $perPage);
@@ -80,6 +80,7 @@ class NewsWebController extends Controller
         );
 
         $dataSource = $allNews[0]['data_source'] ?? 'live';
+        $dataTimestamp = $allNews[0]['published_at'] ?? now()->toIso8601String();
         $relevantCount = collect($allNews)->where('is_relevant', true)->count();
 
         return view('news.index', compact(
@@ -92,6 +93,7 @@ class NewsWebController extends Controller
             'selectedSource',
             'onlyRelevant',
             'dataSource',
+            'dataTimestamp',
             'relevantCount'
         ));
     }

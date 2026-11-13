@@ -25,15 +25,26 @@ class MaritimeNewsService
      *
      * @return array<int, array<string, mixed>>
      */
-    public function getMaritimeNews(int $limit = 24): array
+    public function getMaritimeNews(int $limit = 96): array
     {
         $feedsConfig = config('cargotrace.news.feeds', [
             'gCaptain' => 'https://gcaptain.com/feed/',
-            'Maritime Executive' => 'https://maritime-executive.com/rss',
+            'The Maritime Executive' => 'https://www.maritime-executive.com/articles.rss',
+            'Splash247' => 'https://splash247.com/feed/',
+            'World Cargo News' => 'https://www.worldcargonews.com/feed/',
+            'Container News' => 'https://container-news.com/feed/',
+            'Seatrade Maritime' => 'https://www.seatrade-maritime.com/rss.xml',
+            'Hellenic Shipping News' => 'https://www.hellenicshippingnews.com/feed/',
         ]);
 
         $allArticles = [];
         $feedsToFetch = [];
+
+        // Fetch optional GNews provider if key configured
+        $gnewsArticles = $this->fetchGNewsArticles();
+        foreach ($gnewsArticles as $item) {
+            $allArticles[] = $item;
+        }
 
         // Check per-feed fresh cache
         foreach ($feedsConfig as $name => $url) {
@@ -120,6 +131,66 @@ class MaritimeNewsService
     }
 
     /**
+     * Fetch articles from optional GNews provider if GNEWS_API_KEY is configured.
+     * Caches result for 30 minutes. Silently skips if key missing or network fails.
+     * Keys are never exposed to Blade or JS.
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    public function fetchGNewsArticles(): array
+    {
+        $key = config('services.gnews.key');
+        if (empty($key)) {
+            return [];
+        }
+
+        $cacheKey = 'maritime_gnews_articles_'.md5((string) $key);
+
+        return Cache::remember($cacheKey, 1800, function () use ($key) {
+            try {
+                $response = Http::timeout(6)->withHeaders([
+                    'User-Agent' => 'CargoTrace/1.0 (Maritime Visibility Platform; +http://cargotrace.test)',
+                ])->get('https://gnews.io/api/v4/search', [
+                    'q' => 'maritime OR "ocean freight" OR "container shipping"',
+                    'lang' => 'en',
+                    'max' => 10,
+                    'apikey' => $key,
+                ]);
+
+                if ($response->successful()) {
+                    $json = $response->json();
+                    $articles = [];
+                    foreach (($json['articles'] ?? []) as $a) {
+                        $cleanTitle = html_entity_decode(strip_tags($a['title'] ?? ''), ENT_QUOTES | ENT_HTML5, 'UTF-8');
+                        $cleanSummary = html_entity_decode(strip_tags($a['description'] ?? ''), ENT_QUOTES | ENT_HTML5, 'UTF-8');
+                        $cleanSummary = preg_replace('/\s+/', ' ', $cleanSummary);
+                        if (mb_strlen($cleanSummary) > 200) {
+                            $cleanSummary = mb_substr($cleanSummary, 0, 197).'...';
+                        }
+                        $articles[] = [
+                            'headline' => $cleanTitle,
+                            'title' => $cleanTitle,
+                            'source' => $a['source']['name'] ?? 'GNews Maritime',
+                            'url' => $a['url'] ?? '',
+                            'thumbnail' => $a['image'] ?? null,
+                            'category' => 'Global Maritime',
+                            'summary' => $cleanSummary,
+                            'published_at' => $a['publishedAt'] ?? Carbon::now()->toIso8601String(),
+                            'data_source' => 'live',
+                        ];
+                    }
+
+                    return $articles;
+                }
+            } catch (Throwable $e) {
+                Log::info('GNews fetch skipped or failed: '.$e->getMessage());
+            }
+
+            return [];
+        });
+    }
+
+    /**
      * Parse RSS XML payload into structured article records.
      * Cleans HTML entities and limits excerpts to 200 chars.
      *
@@ -131,53 +202,96 @@ class MaritimeNewsService
 
         try {
             $xml = simplexml_load_string($xmlContent, 'SimpleXMLElement', LIBXML_NOCDATA);
-            if ($xml === false || ! isset($xml->channel->item)) {
+            if ($xml === false) {
                 return [];
             }
 
-            foreach ($xml->channel->item as $item) {
-                $rawTitle = trim((string) $item->title);
-                $link = trim((string) $item->link);
-                $pubDate = (string) $item->pubDate;
-                $category = isset($item->category) ? trim((string) $item->category) : 'Shipping & Trade';
-                $rawDescription = (string) $item->description;
+            if (isset($xml->channel->item)) {
+                foreach ($xml->channel->item as $item) {
+                    $rawTitle = trim((string) $item->title);
+                    $link = trim((string) $item->link);
+                    $pubDate = (string) $item->pubDate;
+                    $category = isset($item->category) ? trim((string) $item->category) : 'Shipping & Trade';
+                    $rawDescription = (string) $item->description;
 
-                // Content encoded check
-                $contentNs = $item->children('http://purl.org/rss/1.0/modules/content/');
-                if (isset($contentNs->encoded) && empty($rawDescription)) {
-                    $rawDescription = (string) $contentNs->encoded;
-                }
-
-                // Decode HTML entities (e.g. &#8211;, &#8217;) and strip tags
-                $cleanTitle = html_entity_decode(strip_tags($rawTitle), ENT_QUOTES | ENT_HTML5, 'UTF-8');
-                $cleanSummary = html_entity_decode(strip_tags($rawDescription), ENT_QUOTES | ENT_HTML5, 'UTF-8');
-                $cleanSummary = preg_replace('/\s+/', ' ', $cleanSummary);
-                if (mb_strlen($cleanSummary) > 200) {
-                    $cleanSummary = mb_substr($cleanSummary, 0, 197).'...';
-                }
-
-                $formattedDate = Carbon::now()->toIso8601String();
-                try {
-                    if (! empty($pubDate)) {
-                        $formattedDate = Carbon::parse($pubDate)->toIso8601String();
+                    // Content encoded check
+                    $contentNs = $item->children('http://purl.org/rss/1.0/modules/content/');
+                    if (isset($contentNs->encoded) && empty($rawDescription)) {
+                        $rawDescription = (string) $contentNs->encoded;
                     }
-                } catch (Throwable $e) {
-                    // ignore date parsing exception
+
+                    // Decode HTML entities (e.g. &#8211;, &#8217;) and strip tags
+                    $cleanTitle = html_entity_decode(strip_tags($rawTitle), ENT_QUOTES | ENT_HTML5, 'UTF-8');
+                    $cleanSummary = html_entity_decode(strip_tags($rawDescription), ENT_QUOTES | ENT_HTML5, 'UTF-8');
+                    $cleanSummary = preg_replace('/\s+/', ' ', $cleanSummary);
+                    if (mb_strlen($cleanSummary) > 200) {
+                        $cleanSummary = mb_substr($cleanSummary, 0, 197).'...';
+                    }
+
+                    $formattedDate = Carbon::now()->toIso8601String();
+                    try {
+                        if (! empty($pubDate)) {
+                            $formattedDate = Carbon::parse($pubDate)->toIso8601String();
+                        }
+                    } catch (Throwable $e) {
+                        // ignore date parsing exception
+                    }
+
+                    $thumbnail = $this->extractThumbnail($item);
+
+                    $articles[] = [
+                        'headline' => $cleanTitle,
+                        'title' => $cleanTitle,
+                        'source' => $sourceName,
+                        'url' => $link,
+                        'thumbnail' => $thumbnail,
+                        'category' => $category,
+                        'summary' => $cleanSummary,
+                        'published_at' => $formattedDate,
+                        'data_source' => 'live',
+                    ];
                 }
+            } elseif (isset($xml->entry)) {
+                foreach ($xml->entry as $entry) {
+                    $rawTitle = trim((string) $entry->title);
+                    $link = '';
+                    if (isset($entry->link)) {
+                        $link = (string) ($entry->link->attributes()['href'] ?? (string) $entry->link);
+                    }
+                    $pubDate = (string) ($entry->published ?? $entry->updated ?? '');
+                    $category = 'Shipping & Trade';
+                    if (isset($entry->category)) {
+                        $category = trim((string) ($entry->category->attributes()['term'] ?? (string) $entry->category));
+                    }
+                    $rawDescription = (string) ($entry->summary ?? $entry->content ?? '');
 
-                $thumbnail = $this->extractThumbnail($item);
+                    $cleanTitle = html_entity_decode(strip_tags($rawTitle), ENT_QUOTES | ENT_HTML5, 'UTF-8');
+                    $cleanSummary = html_entity_decode(strip_tags($rawDescription), ENT_QUOTES | ENT_HTML5, 'UTF-8');
+                    $cleanSummary = preg_replace('/\s+/', ' ', $cleanSummary);
+                    if (mb_strlen($cleanSummary) > 200) {
+                        $cleanSummary = mb_substr($cleanSummary, 0, 197).'...';
+                    }
 
-                $articles[] = [
-                    'headline' => $cleanTitle,
-                    'title' => $cleanTitle,
-                    'source' => $sourceName,
-                    'url' => $link,
-                    'thumbnail' => $thumbnail,
-                    'category' => $category,
-                    'summary' => $cleanSummary,
-                    'published_at' => $formattedDate,
-                    'data_source' => 'live',
-                ];
+                    $formattedDate = Carbon::now()->toIso8601String();
+                    try {
+                        if (! empty($pubDate)) {
+                            $formattedDate = Carbon::parse($pubDate)->toIso8601String();
+                        }
+                    } catch (Throwable $e) {
+                    }
+
+                    $articles[] = [
+                        'headline' => $cleanTitle,
+                        'title' => $cleanTitle,
+                        'source' => $sourceName,
+                        'url' => $link,
+                        'thumbnail' => null,
+                        'category' => $category,
+                        'summary' => $cleanSummary,
+                        'published_at' => $formattedDate,
+                        'data_source' => 'live',
+                    ];
+                }
             }
         } catch (Throwable $e) {
             Log::warning('Error parsing maritime RSS feed: '.$e->getMessage());

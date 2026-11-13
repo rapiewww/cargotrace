@@ -22,12 +22,8 @@ class WeatherWebController extends Controller
     {
         $user = Auth::user();
 
-        // 1. Fetch available seaport locations from database (no hardcoded hubs)
-        $allLocations = Location::where('type', 'PORT')->orderBy('name')->get();
-
-        if ($allLocations->isEmpty()) {
-            $allLocations = Location::orderBy('name')->get();
-        }
+        // 1. Fetch every row of the locations table (ports on active routes first)
+        $allLocations = Location::orderBy('name')->get();
 
         // 2. Identify ports on active routes for the current user
         $shipmentsQuery = Shipment::whereNotIn('status', ['DELIVERED', 'CANCELLED']);

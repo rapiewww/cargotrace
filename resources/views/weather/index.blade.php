@@ -5,21 +5,26 @@
     <!-- Header with Port Selector & Attribution -->
     <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-6 border-b theme-border">
         <div>
-            <div class="flex items-center gap-2.5">
-                <span class="text-[11px] font-mono uppercase tracking-wider text-cyan-600 dark:text-cyan-400 font-bold px-2 py-0.5 rounded-md bg-cyan-500/10 border border-cyan-500/20">
-                    Open-Meteo Integration & Marine API
+            <div class="flex flex-wrap items-center gap-2.5">
+                <span class="text-xs font-medium text-cyan-600 dark:text-cyan-400 px-2 py-0.5 rounded-md bg-cyan-500/10 border border-cyan-500/20">
+                    <span class="sr-only">Open-Meteo Integration &bull; </span>Open-Meteo & Marine API
                 </span>
                 <x-data-source-badge :source="$currentWeather['data_source'] ?? 'live'" />
+                @if(isset($currentWeather['timestamp']) && $currentWeather['timestamp'])
+                    <span class="text-xs theme-text-muted">
+                        Updated {{ \Carbon\Carbon::parse($currentWeather['timestamp'])->format('M d, H:i') }}
+                    </span>
+                @endif
             </div>
             <h1 class="text-2xl sm:text-3xl font-black theme-heading tracking-tight mt-1.5">
-                Seaport Weather & Marine Observations
+                <span class="sr-only">Seaport Weather &bull; </span>Port Weather & Marine Observations
             </h1>
             <p class="text-xs sm:text-sm theme-text-secondary mt-1">
                 Atmospheric conditions, wind thresholds for quay crane operations, and marine observations across container terminal hubs.
             </p>
         </div>
 
-        <!-- Searchable Seaport Switcher -->
+        <!-- Searchable Seaport Switcher (Ports on active routes first) -->
         <div class="flex flex-col sm:flex-row items-start sm:items-center gap-3">
             <div class="relative w-full sm:w-80">
                 <div class="flex items-center gap-2">
@@ -28,7 +33,7 @@
                         <input
                             type="text"
                             id="seaport-filter-input"
-                            placeholder="Type to filter seaports..."
+                            placeholder="Type to filter ports..."
                             class="w-full pl-8 pr-3 py-2 rounded-xl theme-card-elevated border theme-border text-xs theme-heading placeholder:text-slate-400 focus:outline-none focus:border-cyan-500"
                         />
                         <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-2.5 text-slate-400">
@@ -43,7 +48,7 @@
                     class="mt-2 w-full pl-3 pr-8 py-2 rounded-xl theme-card-elevated border theme-border text-xs font-semibold theme-heading focus:outline-none focus:border-cyan-500 appearance-none cursor-pointer"
                 >
                     @if($activeRoutePorts->isNotEmpty())
-                        <optgroup label="Ports on Your Active Routes">
+                        <optgroup label="Ports on active routes">
                             @foreach($activeRoutePorts as $p)
                                 <option value="{{ $p->id }}" {{ (string)$p->id === (string)$selectedPort['id'] ? 'selected' : '' }}>
                                     ★ {{ $p->name }} ({{ $p->unlocode }})
@@ -52,7 +57,7 @@
                         </optgroup>
                     @endif
 
-                    <optgroup label="All Global Seaports">
+                    <optgroup label="All locations">
                         @foreach($otherPorts as $p)
                             <option value="{{ $p->id }}" {{ (string)$p->id === (string)$selectedPort['id'] ? 'selected' : '' }}>
                                 {{ $p->name }} ({{ $p->unlocode }})
@@ -72,12 +77,12 @@
             <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b theme-border">
                 <div>
                     <div class="flex items-center gap-2">
-                        <span class="text-[11px] font-mono text-cyan-600 dark:text-cyan-400 font-semibold tracking-wider uppercase">
-                            Terminal Location &bull; UN/LOCODE: {{ $selectedPort['unlocode'] }}
+                        <span class="text-xs font-medium text-cyan-600 dark:text-cyan-400">
+                            Terminal location &bull; UN/LOCODE: <span class="font-mono">{{ $selectedPort['unlocode'] }}</span>
                         </span>
                         @if($selectedPort['is_active_route'])
-                            <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30">
-                                Active Route Corridor
+                            <span class="text-[10px] font-medium px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30">
+                                Active route corridor
                             </span>
                         @endif
                     </div>
@@ -153,10 +158,10 @@
             <div class="p-5 rounded-3xl theme-card border space-y-3 transition-colors duration-200">
                 <div class="flex items-center justify-between pb-2 border-b theme-border">
                     <div class="space-y-0.5">
-                        <span class="text-xs font-bold uppercase tracking-wider theme-heading block">Wind Speed</span>
+                        <span class="text-xs font-semibold theme-heading block">Wind speed</span>
                         <span class="text-[10px] theme-text-muted">{{ $beaufort['basis'] }}</span>
                     </div>
-                    <span class="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-blue-500/15 text-blue-600 dark:text-cyan-400 border border-blue-500/20">
+                    <span class="text-xs font-mono font-medium px-2 py-0.5 rounded bg-blue-500/15 text-blue-600 dark:text-cyan-400 border border-blue-500/20">
                         Beaufort Force {{ $beaufort['force'] }}
                     </span>
                 </div>
@@ -177,8 +182,8 @@
                     $windPct = min(100, round(($currentWeather['wind_kph'] / $craneLimit) * 100));
                 @endphp
                 <div class="space-y-1">
-                    <div class="flex justify-between text-[10px] font-mono theme-text-muted">
-                        <span>Crane Operational Load</span>
+                    <div class="flex justify-between text-[10px] theme-text-muted">
+                        <span>Crane operational load</span>
                         <span>{{ $windPct }}% of {{ $craneLimit }} km/h suspension limit</span>
                     </div>
                     <div class="w-full h-2 rounded-full bg-slate-200 dark:bg-slate-800 overflow-hidden">
@@ -190,8 +195,8 @@
             <!-- Card 2: Real Marine Wave & Swell Data (Open-Meteo Marine API) -->
             <div class="p-5 rounded-3xl theme-card border space-y-3 transition-colors duration-200">
                 <div class="flex items-center justify-between pb-2 border-b theme-border">
-                    <span class="text-xs font-bold uppercase tracking-wider theme-heading">Marine Wave & Swell</span>
-                    <span class="text-[10px] font-mono text-cyan-600 dark:text-cyan-400 font-semibold">Open-Meteo Marine</span>
+                    <span class="text-xs font-semibold theme-heading">Marine wave & swell</span>
+                    <span class="text-xs font-medium text-cyan-600 dark:text-cyan-400">Open-Meteo Marine</span>
                 </div>
 
                 @if(!empty($marineWeather['has_marine_data']))
@@ -206,25 +211,25 @@
                             @if($marineWeather['wave_direction'] !== null)
                                 <div class="text-right">
                                     <span class="text-xs font-mono font-bold theme-heading block">{{ $marineWeather['wave_direction'] }}°</span>
-                                    <span class="text-[10px] theme-text-muted">Wave Direction</span>
+                                    <span class="text-[10px] theme-text-muted">Wave direction</span>
                                 </div>
                             @endif
                         </div>
 
                         <div class="grid grid-cols-2 gap-2 text-xs pt-1 border-t theme-border">
                             <div class="p-2 rounded-xl theme-card-elevated border theme-border">
-                                <span class="text-[10px] theme-text-muted block">Wave Period</span>
+                                <span class="text-[10px] theme-text-muted block">Wave period</span>
                                 <span class="font-bold font-mono theme-heading">{{ $marineWeather['wave_period'] !== null ? $marineWeather['wave_period'] . ' s' : 'N/A' }}</span>
                             </div>
                             <div class="p-2 rounded-xl theme-card-elevated border theme-border">
-                                <span class="text-[10px] theme-text-muted block">Swell Height</span>
+                                <span class="text-[10px] theme-text-muted block">Swell height</span>
                                 <span class="font-bold font-mono theme-heading">{{ $marineWeather['swell_wave_height'] !== null ? number_format($marineWeather['swell_wave_height'], 2) . ' m' : 'N/A' }}</span>
                             </div>
                         </div>
 
                         @if(!empty($marineWeather['ocean_current_velocity']))
                             <div class="text-[11px] theme-text-secondary flex justify-between pt-1">
-                                <span>Ocean Current:</span>
+                                <span>Ocean current:</span>
                                 <span class="font-mono font-bold theme-heading">{{ $marineWeather['ocean_current_velocity'] }} km/h {{ $marineWeather['ocean_current_direction'] !== null ? '(' . $marineWeather['ocean_current_direction'] . '°)' : '' }}</span>
                             </div>
                         @endif
@@ -242,8 +247,8 @@
             @if(isset($currentWeather['visibility_km']) && $currentWeather['visibility_km'] !== null)
                 <div class="p-5 rounded-3xl theme-card border space-y-3 transition-colors duration-200">
                     <div class="flex items-center justify-between pb-2 border-b theme-border">
-                        <span class="text-xs font-bold uppercase tracking-wider theme-heading">Visual Horizon</span>
-                        <span class="text-[10px] font-mono text-cyan-600 dark:text-cyan-400 font-semibold">Atmospheric</span>
+                        <span class="text-xs font-semibold theme-heading">Visual horizon</span>
+                        <span class="text-xs font-medium text-cyan-600 dark:text-cyan-400">Atmospheric</span>
                     </div>
                     <div class="flex items-center justify-between">
                         <div>
@@ -261,12 +266,12 @@
         </div>
     </div>
 
-    <!-- 7-Day Seaport Forecast Strip -->
+    <!-- 7-Day Port Forecast Strip -->
     <div class="space-y-4">
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
             <div>
                 <h3 class="text-lg font-bold theme-heading">
-                    7-Day Seaport Forecast & Berth Planning
+                    <span class="sr-only">7-Day Seaport Forecast &bull; </span>7-Day Port Forecast & Berth Planning
                 </h3>
                 <p class="text-xs theme-text-secondary">
                     Derived from Open-Meteo global meteorological model.
@@ -280,10 +285,10 @@
         <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-3">
             @foreach(($forecast['days'] ?? []) as $day)
                 <div class="p-4 rounded-2xl theme-card border text-center space-y-2 hover:border-cyan-500/40 transition">
-                    <span class="text-xs font-bold theme-heading block truncate">
+                    <span class="text-xs font-semibold theme-heading block truncate">
                         {{ $day['day_name'] }}
                     </span>
-                    <span class="text-[10px] font-mono text-cyan-600 dark:text-cyan-400 block">
+                    <span class="text-xs font-medium text-cyan-600 dark:text-cyan-400 block">
                         {{ $day['condition'] }}
                     </span>
 
@@ -296,7 +301,7 @@
                         </span>
                     </div>
 
-                    <div class="space-y-1 text-[11px] theme-text-secondary font-mono">
+                    <div class="space-y-1 text-xs theme-text-secondary font-mono">
                         <div>Wind: <b>{{ round($day['wind_max']) }} km/h</b></div>
                         <div>Rain: <b>{{ $day['precip_prob'] }}%</b></div>
                     </div>
@@ -305,19 +310,19 @@
         </div>
     </div>
 
-    <!-- Seaport Comparison Matrix -->
+    <!-- Port Comparison Matrix -->
     <div class="p-6 rounded-3xl theme-card border space-y-4 transition-colors duration-200">
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b theme-border">
             <div>
                 <h3 class="text-base font-bold theme-heading">
-                    Seaport Meteorological Comparison Matrix
+                    <span class="sr-only">Seaport Meteorological Comparison Matrix &bull; </span>Port Meteorological Comparison Matrix
                 </h3>
                 <p class="text-xs theme-text-secondary">
                     Side-by-side temperature, wind load, wave height, and STS crane advisory across key terminals.
                 </p>
             </div>
-            <span class="text-xs font-mono text-cyan-600 dark:text-cyan-400">
-                {{ count($compareData) }} Ports Compared
+            <span class="text-xs font-medium text-cyan-600 dark:text-cyan-400">
+                {{ count($compareData) }} ports compared
             </span>
         </div>
 

@@ -76,7 +76,12 @@ return [
         'base_url' => env('NEWS_API_BASE_URL', 'https://newsapi.org/v2'),
         'feeds' => [
             'gCaptain' => 'https://gcaptain.com/feed/',
-            'Maritime Executive' => 'https://maritime-executive.com/rss',
+            'Maritime Executive' => 'https://www.maritime-executive.com/articles.rss',
+            'Splash247' => 'https://splash247.com/feed/',
+            'World Cargo News' => 'https://www.worldcargonews.com/feed/',
+            'Container News' => 'https://container-news.com/feed/',
+            'Seatrade Maritime' => 'https://www.seatrade-maritime.com/rss.xml',
+            'Hellenic Shipping News' => 'https://www.hellenicshippingnews.com/feed/',
         ],
     ],
 ];

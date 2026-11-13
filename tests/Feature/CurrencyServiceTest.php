@@ -4,6 +4,7 @@ use App\Models\User;
 use App\Services\CurrencyService;
 use Database\Seeders\DatabaseSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 
@@ -149,6 +150,50 @@ test('currency service throws RuntimeException when network times out and no cac
 
     expect(fn () => $service->getRates('USD'))
         ->toThrow(RuntimeException::class);
+});
+
+test('currency service handles empty response from open.er-api gracefully', function () {
+    Http::fake([
+        'https://open.er-api.com/v6/latest/USD' => Http::response([], 200),
+    ]);
+
+    $service = app(CurrencyService::class);
+
+    expect(fn () => $service->getRates('USD'))
+        ->toThrow(RuntimeException::class);
+});
+
+test('currency service getHistory handles success, timeout, and empty response', function () {
+    // 1. Success
+    Http::fake([
+        'https://api.frankfurter.dev/v1/currencies' => Http::response(['USD' => 'US Dollar', 'EUR' => 'Euro'], 200),
+        'https://api.frankfurter.dev/v1/*' => Http::response([
+            'rates' => [
+                '2026-11-01' => ['EUR' => 0.92],
+                '2026-11-02' => ['EUR' => 0.93],
+            ],
+        ], 200),
+    ]);
+
+    $service = app(CurrencyService::class);
+    $history = $service->getHistory('USD', 'EUR', 30);
+    expect($history)->toBeArray()
+        ->and($history)->toHaveCount(2)
+        ->and($history[0]['rate'])->toBe(0.92);
+
+    // 2. Timeout
+    Cache::flush();
+    Http::fake([
+        'https://api.frankfurter.dev/v1/*' => fn () => throw new ConnectionException('Timeout'),
+    ]);
+    expect($service->getHistory('USD', 'EUR', 30))->toBeNull();
+
+    // 3. Empty response
+    Cache::flush();
+    Http::fake([
+        'https://api.frankfurter.dev/v1/*' => Http::response([], 200),
+    ]);
+    expect($service->getHistory('USD', 'EUR', 30))->toBeNull();
 });
 
 test('currency web page displays portfolio value by currency and no fake bunker indices', function () {
