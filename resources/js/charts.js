@@ -408,3 +408,287 @@ export function initExceptionsTypeChart(canvasId, exceptionCounts) {
     updateAllChartsTheme(getCurrentTheme());
     return chart;
 }
+
+/**
+ * 5. Analytics Carrier Performance Chart (On-Time Rate % per Carrier)
+ */
+export function initAnalyticsCarrierChart(canvasId, data) {
+    const el = document.getElementById(canvasId);
+    if (!el || !data || !data.labels || !data.labels.length) return null;
+
+    const chart = new Chart(el, {
+        type: 'bar',
+        data: {
+            labels: data.labels,
+            datasets: [{
+                label: 'On-time rate (%)',
+                data: data.rates,
+                backgroundColor: data.rates.map(r => r >= 85 ? '#10B981' : (r >= 70 ? '#38BDF8' : '#F59E0B')),
+                borderRadius: 6,
+                borderSkipped: false
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            indexAxis: 'y',
+            scales: {
+                x: {
+                    beginAtZero: true,
+                    max: 100,
+                    grid: { color: 'rgba(255, 255, 255, 0.05)' },
+                    ticks: {
+                        color: '#8FA3BC',
+                        callback: val => val + '%',
+                        font: { size: 10, family: "'Inter', sans-serif" }
+                    }
+                },
+                y: {
+                    grid: { display: false },
+                    ticks: {
+                        color: '#8FA3BC',
+                        font: { size: 11, family: "'Inter', sans-serif" }
+                    }
+                }
+            },
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    backgroundColor: '#0B1728',
+                    borderColor: '#1E293B',
+                    borderWidth: 1,
+                    titleColor: '#FFFFFF',
+                    bodyColor: '#E6EEF8',
+                    padding: 8,
+                    bodyFont: { family: "'Inter', sans-serif" },
+                    titleFont: { family: "'Inter', sans-serif" },
+                    callbacks: {
+                        label: function(ctx) {
+                            const total = data.totals ? data.totals[ctx.dataIndex] : 0;
+                            return `On-time: ${ctx.parsed.x}% (${total} total shipments)`;
+                        }
+                    }
+                }
+            }
+        }
+    });
+
+    activeCharts.add(chart);
+    updateAllChartsTheme(getCurrentTheme());
+    return chart;
+}
+
+/**
+ * 6. Analytics 12-Week Shipment Volume & On-Time Performance Chart
+ */
+export function initAnalyticsWeeklyChart(canvasId, data) {
+    const el = document.getElementById(canvasId);
+    if (!el || !data || !data.labels || !data.labels.length) return null;
+
+    const chart = new Chart(el, {
+        type: 'bar',
+        data: {
+            labels: data.labels,
+            datasets: [
+                {
+                    label: 'On-time',
+                    data: data.on_time,
+                    backgroundColor: '#10B981',
+                    borderRadius: 4,
+                    stack: 'stack1'
+                },
+                {
+                    label: 'Delayed',
+                    data: data.delayed,
+                    backgroundColor: '#F59E0B',
+                    borderRadius: 4,
+                    stack: 'stack1'
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                x: {
+                    stacked: true,
+                    grid: { display: false },
+                    ticks: {
+                        color: '#8FA3BC',
+                        font: { size: 10, family: "'Inter', sans-serif" }
+                    }
+                },
+                y: {
+                    stacked: true,
+                    beginAtZero: true,
+                    grid: { color: 'rgba(255, 255, 255, 0.05)' },
+                    ticks: {
+                        color: '#8FA3BC',
+                        stepSize: 1,
+                        font: { size: 10, family: "'Inter', sans-serif" }
+                    }
+                }
+            },
+            plugins: {
+                legend: {
+                    position: 'top',
+                    align: 'end',
+                    labels: {
+                        color: '#8FA3BC',
+                        font: { size: 11, family: "'Inter', sans-serif" },
+                        boxWidth: 8,
+                        boxHeight: 8
+                    }
+                },
+                tooltip: {
+                    backgroundColor: '#0B1728',
+                    borderColor: '#1E293B',
+                    borderWidth: 1,
+                    titleColor: '#FFFFFF',
+                    bodyColor: '#E6EEF8',
+                    padding: 8,
+                    bodyFont: { family: "'Inter', sans-serif" },
+                    titleFont: { family: "'Inter', sans-serif" }
+                }
+            }
+        }
+    });
+
+    activeCharts.add(chart);
+    updateAllChartsTheme(getCurrentTheme());
+    return chart;
+}
+
+/**
+ * 7. Analytics Exceptions by Category Doughnut Chart
+ */
+export function initAnalyticsExceptionChart(canvasId, data) {
+    const el = document.getElementById(canvasId);
+    if (!el || !data || !data.labels || !data.labels.length) return null;
+
+    const totalCount = data.counts.reduce((a, b) => a + b, 0);
+
+    const chart = new Chart(el, {
+        type: 'doughnut',
+        data: {
+            labels: data.labels,
+            datasets: [{
+                data: data.counts,
+                backgroundColor: [
+                    '#F43F5E', // Rose (Customs hold)
+                    '#38BDF8', // Sky (Weather delay)
+                    '#F59E0B', // Amber (Port congestion)
+                    '#EC4899', // Pink (Damaged)
+                    '#8B5CF6', // Purple (Misrouted)
+                    '#64748B'  // Slate (Documentation)
+                ],
+                borderWidth: 0,
+                hoverOffset: 4
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            cutout: '70%',
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: {
+                        color: '#8FA3BC',
+                        font: { size: 11, family: "'Inter', sans-serif" },
+                        boxWidth: 8,
+                        boxHeight: 8,
+                        padding: 10
+                    }
+                },
+                centerText: {
+                    display: true,
+                    text: String(totalCount),
+                    subtext: 'Exceptions'
+                },
+                tooltip: {
+                    backgroundColor: '#0B1728',
+                    borderColor: '#1E293B',
+                    borderWidth: 1,
+                    titleColor: '#FFFFFF',
+                    bodyColor: '#E6EEF8',
+                    padding: 8,
+                    bodyFont: { family: "'Inter', sans-serif" },
+                    titleFont: { family: "'Inter', sans-serif" }
+                }
+            }
+        }
+    });
+
+    activeCharts.add(chart);
+    updateAllChartsTheme(getCurrentTheme());
+    return chart;
+}
+
+/**
+ * 8. Analytics Top Delayed Shipping Lanes Chart
+ */
+export function initAnalyticsLaneChart(canvasId, data) {
+    const el = document.getElementById(canvasId);
+    if (!el || !data || !data.labels || !data.labels.length) return null;
+
+    const chart = new Chart(el, {
+        type: 'bar',
+        data: {
+            labels: data.labels,
+            datasets: [{
+                label: 'Avg delay (hours)',
+                data: data.delays,
+                backgroundColor: '#F59E0B',
+                borderRadius: 4,
+                borderSkipped: false
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            indexAxis: 'y',
+            scales: {
+                x: {
+                    beginAtZero: true,
+                    grid: { color: 'rgba(255, 255, 255, 0.05)' },
+                    ticks: {
+                        color: '#8FA3BC',
+                        callback: val => val + 'h',
+                        font: { size: 10, family: "'Inter', sans-serif" }
+                    }
+                },
+                y: {
+                    grid: { display: false },
+                    ticks: {
+                        color: '#8FA3BC',
+                        font: { size: 11, family: "'JetBrains Mono', monospace" }
+                    }
+                }
+            },
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    backgroundColor: '#0B1728',
+                    borderColor: '#1E293B',
+                    borderWidth: 1,
+                    titleColor: '#FFFFFF',
+                    bodyColor: '#E6EEF8',
+                    padding: 8,
+                    bodyFont: { family: "'Inter', sans-serif" },
+                    titleFont: { family: "'Inter', sans-serif" },
+                    callbacks: {
+                        label: function(ctx) {
+                            const count = data.shipments ? data.shipments[ctx.dataIndex] : 0;
+                            return `Average delay: ${ctx.parsed.x}h (${count} delayed shipments)`;
+                        }
+                    }
+                }
+            }
+        }
+    });
+
+    activeCharts.add(chart);
+    updateAllChartsTheme(getCurrentTheme());
+    return chart;
+}

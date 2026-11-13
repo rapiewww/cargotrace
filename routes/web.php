@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AnalyticsWebController;
 use App\Http\Controllers\AuditLogWebController;
 use App\Http\Controllers\CarrierLocationWebController;
 use App\Http\Controllers\CurrencyWebController;
@@ -42,6 +43,10 @@ Route::middleware('auth')->group(function () {
 
     // Dashboard
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+
+    // Fleet & Consignment Performance Analytics
+    Route::get('/analytics', [AnalyticsWebController::class, 'index'])->name('analytics.index');
+    Route::get('/analytics/export', [AnalyticsWebController::class, 'export'])->name('analytics.export');
 
     // Dedicated Maritime Intelligence Hubs
     Route::get('/weather', [WeatherWebController::class, 'index'])->name('weather.index');

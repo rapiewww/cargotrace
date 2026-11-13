@@ -12,6 +12,10 @@ import {
     initCarrierBarChart,
     initTrendLineChart,
     initExceptionsTypeChart,
+    initAnalyticsCarrierChart,
+    initAnalyticsWeeklyChart,
+    initAnalyticsExceptionChart,
+    initAnalyticsLaneChart,
     updateAllChartsTheme
 } from './charts';
 import { initTrackingModule } from './tracking';
@@ -121,6 +125,10 @@ window.CargoTrace = {
     initCarrierBarChart,
     initTrendLineChart,
     initExceptionsTypeChart,
+    initAnalyticsCarrierChart,
+    initAnalyticsWeeklyChart,
+    initAnalyticsExceptionChart,
+    initAnalyticsLaneChart,
 };
 
 // Automatic initialization on DOMContentLoaded
@@ -155,5 +163,13 @@ document.addEventListener('DOMContentLoaded', () => {
         if (carrierStats) initCarrierBarChart('carrierBarChart', carrierStats);
         if (trendData) initTrendLineChart('trendLineChart', trendData);
         if (exceptionCounts) initExceptionsTypeChart('exceptionTypeChart', exceptionCounts);
+    }
+
+    if (payload.analyticsCharts) {
+        const { carrierChartData, weeklyChartData, exceptionChartData, laneChartData } = payload.analyticsCharts;
+        if (carrierChartData) initAnalyticsCarrierChart('analyticsCarrierChart', carrierChartData);
+        if (weeklyChartData) initAnalyticsWeeklyChart('analyticsWeeklyChart', weeklyChartData);
+        if (exceptionChartData) initAnalyticsExceptionChart('analyticsExceptionChart', exceptionChartData);
+        if (laneChartData) initAnalyticsLaneChart('analyticsLaneChart', laneChartData);
     }
 });
