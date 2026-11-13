@@ -5,83 +5,62 @@
     $heroLightImage = config('cargotrace.hero_images.light') ?? (file_exists(public_path('images/backgrounds/hero-light.webp')) ? 'images/backgrounds/hero-light.webp' : null);
 @endphp
 
-<div class="min-h-screen flex flex-col md:flex-row theme-page">
-    <!-- Left: Maritime Photography Panel (Hidden on mobile, split on md+) -->
-    <div class="hidden md:flex md:w-5/12 lg:w-1/2 relative flex-col justify-between p-8 lg:p-12 overflow-hidden border-r theme-border select-none">
-        <!-- Background Imagery: Two <img> siblings toggled by [data-theme] in CSS -->
-        <div class="absolute inset-0 z-0 overflow-hidden pointer-events-none">
-            {{-- Dark Theme Image --}}
+<div class="min-h-screen relative flex flex-col justify-between p-4 sm:p-6 lg:p-8 overflow-hidden select-none">
+    <!-- Background Imagery: Full-bleed hero photo (Two <img> siblings toggled by [data-theme] in CSS) -->
+    <div class="absolute inset-0 z-0 overflow-hidden pointer-events-none">
+        {{-- Dark Theme Image --}}
+        <img
+            src="{{ asset('images/backgrounds/bg-dark.webp') }}"
+            alt="Container ship and gantry cranes at night"
+            width="2560"
+            height="1440"
+            fetchpriority="high"
+            loading="eager"
+            decoding="sync"
+            class="hero-img-dark w-full h-full object-cover [object-position:center] filter brightness-100 contrast-100"
+        >
+
+        {{-- Light Theme Image (or pale gradient + SVG motif fallback) --}}
+        @if($heroLightImage)
             <img
-                src="{{ asset('images/backgrounds/bg-dark.webp') }}"
-                alt="Container ship and gantry cranes at night"
+                src="{{ asset($heroLightImage) }}"
+                alt="Daytime maritime container port operations"
                 width="2560"
                 height="1440"
-                fetchpriority="high"
-                loading="eager"
-                decoding="sync"
-                class="hero-img-dark w-full h-full object-cover [object-position:right_bottom] md:object-center filter brightness-95 contrast-105"
+                fetchpriority="low"
+                loading="lazy"
+                decoding="async"
+                class="hero-img-light w-full h-full object-cover [object-position:center] filter brightness-100 contrast-100"
             >
-
-            {{-- Light Theme Image (or pale gradient + SVG motif fallback) --}}
-            @if($heroLightImage)
-                <img
-                    src="{{ asset($heroLightImage) }}"
-                    alt="Daytime maritime container port operations"
-                    width="2560"
-                    height="1440"
-                    fetchpriority="low"
-                    loading="lazy"
-                    decoding="async"
-                    class="hero-img-light w-full h-full object-cover [object-position:right_bottom] md:object-center filter brightness-100 contrast-100"
-                >
-            @else
-                <div class="hero-fallback-light w-full h-full bg-gradient-to-br from-[#F4F7FB] via-sky-50 to-slate-200 relative">
-                    <x-svg-network-motif class="text-slate-500 opacity-10" />
-                </div>
-            @endif
-
-            {{-- Per-Theme Overlays tuned for WCAG AA --}}
-            <!-- Dark Overlay -->
-            <div class="absolute inset-0 hidden dark:block bg-gradient-to-t from-[#050B14] via-[#050B14]/70 to-[#050B14]/30"></div>
-            <!-- Light Overlay -->
-            <div class="absolute inset-0 block dark:hidden bg-gradient-to-t from-[#F4F7FB] via-[#F4F7FB]/75 to-[#F4F7FB]/40"></div>
-        </div>
-
-        <!-- Top Left Brand in Photo Panel -->
-        <div class="relative z-10">
-            <a href="{{ route('welcome') }}" class="inline-flex items-center space-x-3 group">
-                <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 via-blue-600 to-cyan-500 text-white flex items-center justify-center shadow-lg shadow-blue-500/25 group-hover:scale-105 transition-transform duration-200">
-                    <svg class="w-5 h-5 text-white" viewBox="0 0 24 24" fill="currentColor">
-                        <path d="M12 22L2 5h20L12 22zm0-4.5l6.5-11h-13l6.5 11z"/>
-                    </svg>
-                </div>
-                <div>
-                    <span class="text-xl font-extrabold tracking-tight theme-heading font-sans block leading-none">CargoTrace</span>
-                    <span class="text-[9px] uppercase tracking-widest text-blue-600 dark:text-cyan-400 font-mono font-bold">Pure Maritime Tracking</span>
-                </div>
-            </a>
-        </div>
-
-        <!-- Bottom Caption in Photo Panel -->
-        <div class="relative z-10 space-y-3 max-w-md">
-            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full theme-card-elevated border theme-border text-[11px] font-mono text-blue-600 dark:text-cyan-400">
-                <span class="w-2 h-2 rounded-full bg-blue-600 dark:bg-cyan-400 animate-pulse"></span>
-                Ocean Container Consignment Telemetry
+        @else
+            <div class="hero-fallback-light w-full h-full bg-gradient-to-br from-[#F4F7FB] via-sky-50 to-slate-200 relative">
+                <x-svg-network-motif class="text-slate-500 opacity-10" />
             </div>
-            <h2 class="text-2xl lg:text-3xl font-extrabold tracking-tight theme-heading leading-snug">
-                Precision maritime tracking across global container lanes.
-            </h2>
-            <p class="text-xs sm:text-sm theme-text-secondary leading-relaxed">
-                Operator-recorded checkpoints, verified UN/LOCODE seaport milestones, and ETA calculations for international shipping lines.
-            </p>
-        </div>
+        @endif
+
+        {{-- Light top scrim only if needed for brand text; does NOT veil the whole photo --}}
+        <div class="absolute top-0 left-0 right-0 h-32 hidden dark:block bg-gradient-to-b from-[#050B14]/60 to-transparent"></div>
+        <div class="absolute top-0 left-0 right-0 h-32 block dark:hidden bg-gradient-to-b from-[#F4F7FB]/70 to-transparent"></div>
     </div>
 
-    <!-- Right: Login Form Column -->
-    <div class="w-full md:w-7/12 lg:w-1/2 flex flex-col justify-between p-6 sm:p-10 lg:p-14 min-h-screen theme-page relative z-10">
-        <!-- Top Controls: Back Link + Theme Switcher -->
-        <div class="flex items-center justify-between pb-6">
-            <a href="{{ route('welcome') }}" class="inline-flex items-center gap-2 text-xs font-semibold theme-text-secondary hover:theme-heading transition px-3.5 py-2 rounded-xl theme-card-elevated border theme-border">
+    <!-- Top Navigation Bar: Brand at top left, Back to Portal at top right, theme toggle beside it -->
+    <header class="relative z-20 w-full max-w-7xl mx-auto flex items-center justify-between py-2">
+        <!-- Brand at Top Left -->
+        <a href="{{ route('welcome') }}" class="inline-flex items-center space-x-3 group">
+            <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 via-blue-600 to-cyan-500 text-white flex items-center justify-center shadow-lg shadow-blue-500/25 group-hover:scale-105 transition-transform duration-200">
+                <svg class="w-5 h-5 text-white" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 22L2 5h20L12 22zm0-4.5l6.5-11h-13l6.5 11z"/>
+                </svg>
+            </div>
+            <div>
+                <span class="text-xl font-extrabold tracking-tight theme-heading font-sans block leading-none drop-shadow-sm">CargoTrace</span>
+                <span class="text-[9px] uppercase tracking-widest text-blue-600 dark:text-cyan-400 font-mono font-bold">Pure Maritime Tracking</span>
+            </div>
+        </a>
+
+        <!-- Top Right Actions: Back to Portal & Theme Switcher -->
+        <div class="flex items-center space-x-3">
+            <a href="{{ route('welcome') }}" class="inline-flex items-center gap-2 text-xs font-semibold theme-text-secondary hover:theme-heading transition px-3.5 py-2 rounded-xl bg-white/80 dark:bg-[#0B1728]/80 backdrop-blur-md border border-slate-200/90 dark:border-white/10 shadow-sm">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
                 <span>Back to Portal</span>
             </a>
@@ -96,7 +75,7 @@
                 tabindex="0"
                 onclick="window.CargoTrace && window.CargoTrace.toggleTheme ? window.CargoTrace.toggleTheme() : null"
                 onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();window.CargoTrace&&window.CargoTrace.toggleTheme?window.CargoTrace.toggleTheme():null}"
-                class="relative flex items-center p-1 rounded-full bg-slate-200 dark:bg-slate-900 border border-slate-300 dark:border-slate-800 w-14 h-7 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
+                class="relative flex items-center p-1 rounded-full bg-slate-200/90 dark:bg-slate-900/90 border border-slate-300 dark:border-slate-800 w-14 h-7 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer backdrop-blur-md"
                 aria-label="Toggle dark and light theme"
                 title="Switch theme"
             >
@@ -108,23 +87,12 @@
                 </span>
             </button>
         </div>
+    </header>
 
-        <!-- Center: Form Card -->
-        <div class="max-w-md w-full mx-auto my-auto space-y-6 py-6">
-            <div class="space-y-2">
-                <!-- Mobile Logo Header (Shown only on small screens) -->
-                <div class="md:hidden flex items-center space-x-3 pb-2">
-                    <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-blue-500 via-blue-600 to-cyan-500 text-white flex items-center justify-center shadow-md">
-                        <svg class="w-5 h-5 text-white" viewBox="0 0 24 24" fill="currentColor">
-                            <path d="M12 22L2 5h20L12 22zm0-4.5l6.5-11h-13l6.5 11z"/>
-                        </svg>
-                    </div>
-                    <div>
-                        <span class="text-lg font-extrabold tracking-tight theme-heading font-sans block leading-none">CargoTrace</span>
-                        <span class="text-[9px] uppercase tracking-widest text-blue-600 dark:text-cyan-400 font-mono font-bold">Pure Maritime Tracking</span>
-                    </div>
-                </div>
-
+    <!-- Center: Single Centered Card (max-width 28rem, frosted background: dark navy 72%, light white 88%, 1px border, 16px radius) -->
+    <main class="relative z-20 my-auto py-8 w-full">
+        <div class="w-full max-w-[28rem] mx-auto p-6 sm:p-8 rounded-[16px] bg-white/88 dark:bg-[#0B1728]/72 backdrop-blur-xl border border-slate-200/90 dark:border-white/10 shadow-2xl space-y-6 transition-colors duration-200">
+            <div class="space-y-1.5 text-center">
                 <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight theme-heading">Operations Sign In</h1>
                 <p class="text-xs sm:text-sm theme-text-secondary">Enter credentials to manage shipments, seaports, and milestones.</p>
             </div>
@@ -141,7 +109,7 @@
                 @csrf
 
                 <div class="space-y-1.5">
-                    <label for="email" class="uppercase text-xs tracking-wider theme-text-muted font-semibold block">Email Address</label>
+                    <label for="email" class="uppercase text-xs tracking-wider theme-text-muted font-semibold block text-left">Email Address</label>
                     <input
                         type="email"
                         id="email"
@@ -223,13 +191,12 @@
                 <a href="{{ route('register') }}" class="text-blue-600 dark:text-blue-400 hover:underline font-semibold ml-1">Register here</a>
             </div>
         </div>
+    </main>
 
-        <!-- Bottom: Honest Attribution -->
-        <div class="pt-6 border-t theme-border flex items-center justify-between text-[11px] theme-text-muted">
-            <span>&copy; {{ date('Y') }} CargoTrace &bull; Ocean Container Platform</span>
-            <span>Academic Capstone</span>
-        </div>
-    </div>
+    <!-- Bottom Attribution -->
+    <footer class="relative z-20 w-full max-w-7xl mx-auto py-2 text-center text-[11px] theme-text-muted">
+        <span>&copy; {{ date('Y') }} CargoTrace &bull; Ocean Container Platform</span>
+    </footer>
 </div>
 
 <script>

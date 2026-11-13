@@ -79,7 +79,7 @@
     @endphp
 
     <!-- 1. CINEMATIC MARITIME HERO SECTION (Dark: bg-dark.webp | Light: hero-light.webp) -->
-    <section class="relative min-h-[640px] md:min-h-[720px] flex items-center overflow-hidden border-b theme-border">
+    <section class="relative min-h-[580px] sm:min-h-[640px] lg:min-h-[700px] flex items-center overflow-hidden border-b theme-border">
         <!-- Background Imagery: Two <img> siblings toggled by [data-theme] in CSS -->
         <div class="absolute inset-0 z-0 overflow-hidden pointer-events-none">
             {{-- Dark Theme Background Photography --}}
@@ -91,7 +91,7 @@
                 fetchpriority="high"
                 loading="eager"
                 decoding="sync"
-                class="hero-img-dark w-full h-full object-cover [object-position:right_bottom] md:object-center filter brightness-95 contrast-105"
+                class="hero-img-dark w-full h-full object-cover [object-position:80%_center] md:[object-position:right_center] filter brightness-100 contrast-100"
             >
 
             {{-- Light Theme Background Photography (or pale gradient + SVG motif fallback) --}}
@@ -104,7 +104,7 @@
                     fetchpriority="low"
                     loading="lazy"
                     decoding="async"
-                    class="hero-img-light w-full h-full object-cover [object-position:right_bottom] md:object-center filter brightness-100 contrast-100"
+                    class="hero-img-light w-full h-full object-cover [object-position:80%_center] md:[object-position:right_center] filter brightness-100 contrast-100"
                 >
             @else
                 <div class="hero-fallback-light w-full h-full bg-gradient-to-br from-[#F4F7FB] via-sky-50 to-slate-200 relative">
@@ -112,84 +112,151 @@
                 </div>
             @endif
 
-            {{-- Per-Theme Overlays tuned for WCAG AA --}}
-            <!-- Dark Theme Gradient Overlay -->
-            <div class="absolute inset-0 hidden dark:block bg-gradient-to-r from-[#050B14]/95 via-[#050B14]/80 to-[#050B14]/40"></div>
-            <div class="absolute inset-0 hidden dark:block bg-gradient-to-t from-[#050B14] via-transparent to-transparent"></div>
+            {{-- Left-to-right gradient scrim only: light theme rgba(244,247,251,0.93) at left edge fading to transparent at ~60%; dark theme rgba(5,11,20,0.90) fading the same way. Photo stays at full color and right half unobstructed. Very light top fade under nav. --}}
+            <!-- Dark Theme Gradient Scrim -->
+            <div class="absolute inset-0 hidden dark:block" style="background: linear-gradient(90deg, rgba(5, 11, 20, 0.90) 0%, rgba(5, 11, 20, 0.82) 30%, rgba(5, 11, 20, 0.45) 48%, rgba(5, 11, 20, 0) 60%), linear-gradient(180deg, rgba(5, 11, 20, 0.25) 0%, rgba(5, 11, 20, 0) 80px);"></div>
 
-            <!-- Light Theme Gradient Overlay -->
-            <div class="absolute inset-0 block dark:hidden bg-gradient-to-r from-[#F4F7FB]/95 via-[#F4F7FB]/88 to-[#F4F7FB]/55"></div>
-            <div class="absolute inset-0 block dark:hidden bg-gradient-to-t from-[#F4F7FB] via-transparent to-transparent"></div>
+            <!-- Light Theme Gradient Scrim -->
+            <div class="absolute inset-0 block dark:hidden" style="background: linear-gradient(90deg, rgba(244, 247, 251, 0.93) 0%, rgba(244, 247, 251, 0.85) 30%, rgba(244, 247, 251, 0.45) 48%, rgba(244, 247, 251, 0) 60%), linear-gradient(180deg, rgba(244, 247, 251, 0.30) 0%, rgba(244, 247, 251, 0) 80px);"></div>
         </div>
 
         <div class="relative z-10 w-full max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-24">
-            <div class="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-12 items-center">
-                
-                <!-- Left Hero Copy & Clean CTAs -->
-                <div class="lg:col-span-7 xl:col-span-7 space-y-6">
-                    <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-blue-600/15 dark:bg-blue-600/25 border border-blue-600/30 dark:border-blue-400/30 text-blue-700 dark:text-cyan-300 text-[11px] font-semibold tracking-wider uppercase font-mono backdrop-blur-md">
-                        <span class="w-2 h-2 rounded-full bg-blue-600 dark:bg-cyan-400 shadow-sm shadow-blue-500/50"></span>
-                        GLOBAL OCEAN CONTAINER LOGISTICS & MILESTONE TRACKING
-                    </div>
-
-                    <h1 class="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-slate-900 dark:text-white leading-[1.08]">
-                        Logistics, with<br>
-                        <span class="text-transparent bg-clip-text bg-gradient-to-r from-blue-700 via-cyan-700 to-slate-900 dark:from-blue-400 dark:via-cyan-300 dark:to-white">
-                            complete visibility.
-                        </span>
-                    </h1>
-
-                    <p class="text-base sm:text-lg text-slate-700 dark:text-slate-200 max-w-xl leading-relaxed">
-                        Move ocean container consignments across markets with operator-recorded checkpoints, verified UN/LOCODE seaport milestones, container shipping lines, and rule-based ETA tracking.
-                    </p>
-
-                    <!-- Dual Clean CTAs (Unified Blue & Glass) -->
-                    <div class="flex flex-wrap items-center gap-4 pt-4">
-                        @auth
-                            <a href="{{ route('dashboard') }}" class="px-6 py-3.5 rounded-xl font-bold text-xs uppercase tracking-wider text-white bg-blue-600 hover:bg-blue-500 shadow-xl shadow-blue-500/25 transition-all duration-200 hover:scale-[1.02] flex items-center gap-2">
-                                <span>Open Maritime Portal</span>
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
-                            </a>
-                        @else
-                            <a href="{{ route('login') }}" class="px-6 py-3.5 rounded-xl font-bold text-xs uppercase tracking-wider text-white bg-blue-600 hover:bg-blue-500 shadow-xl shadow-blue-500/25 transition-all duration-200 hover:scale-[1.02] flex items-center gap-2">
-                                <span>Open Maritime Portal</span>
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
-                            </a>
-                        @endauth
-
-                        <a href="#network" class="px-6 py-3.5 rounded-xl font-semibold text-xs uppercase tracking-wider text-slate-800 dark:text-white bg-white/80 dark:bg-slate-900/60 hover:bg-white dark:hover:bg-slate-900/90 border border-slate-300 dark:border-white/20 hover:border-blue-500 dark:hover:border-cyan-400/50 backdrop-blur-md transition-all duration-200">
-                            Explore Global Network
-                        </a>
-                    </div>
+            <!-- Hero content limited to max-width 36rem so text sits entirely inside the scrim -->
+            <div class="max-w-[36rem] space-y-6">
+                <!-- Eyebrow label -->
+                <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-blue-600/10 dark:bg-blue-600/25 border border-blue-600/25 dark:border-blue-400/30 text-blue-700 dark:text-cyan-300 text-[11px] font-semibold tracking-wider uppercase font-mono backdrop-blur-sm">
+                    <span class="w-2 h-2 rounded-full bg-blue-600 dark:bg-cyan-400"></span>
+                    GLOBAL OCEAN CONTAINER LOGISTICS & MILESTONE TRACKING
                 </div>
 
-                <!-- Right Hero: Live Vessel Telemetry Card (Dashboard Global View Style) -->
-                <div class="lg:col-span-5 xl:col-span-5">
+                <!-- Headline: Light theme #0B1728 with accent word in #2563EB; Dark theme white headline, accent word in cyan -->
+                <h1 class="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-[#0B1728] dark:text-white leading-[1.08]">
+                    Logistics, with<br>
+                    <span class="text-[#2563EB] dark:text-cyan-400">
+                        complete visibility.
+                    </span>
+                </h1>
+
+                <!-- One-sentence subline -->
+                <p class="text-base sm:text-lg text-slate-700 dark:text-slate-200 leading-relaxed">
+                    Move ocean container consignments across markets with operator-recorded checkpoints, verified UN/LOCODE seaport milestones, container shipping lines, and rule-based ETA tracking.
+                </p>
+
+                <!-- Tracking-number search box -->
+                <form
+                    action="javascript:void(0)"
+                    onsubmit="if(window.handlePublicTrack){window.handlePublicTrack();}else{var q=document.getElementById('public-track-input').value.trim();if(q){window.location.href='/track/'+encodeURIComponent(q);}}"
+                    class="pt-2 space-y-2"
+                >
+                    <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5">
+                        <div class="relative flex-1">
+                            <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400 dark:text-slate-500">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                            </div>
+                            <input
+                                type="text"
+                                id="public-track-input"
+                                placeholder="Enter waybill / tracking # (e.g. {{ $feat->tracking_number ?? 'CTG-SEA-2026-00189' }})"
+                                class="w-full pl-10 pr-4 py-3 rounded-xl bg-white/95 dark:bg-[#0B1728]/90 border border-[#D5DEEA] dark:border-white/10 text-[#0B1728] dark:text-[#E6EEF8] placeholder-slate-400 dark:placeholder-slate-500 text-xs font-mono focus:outline-none focus:ring-2 focus:ring-[#2563EB] dark:focus:ring-cyan-400 shadow-sm"
+                            >
+                        </div>
+                        <button
+                            type="submit"
+                            class="px-6 py-3 rounded-xl bg-[#2563EB] hover:bg-[#1D4ED8] text-white font-semibold text-xs uppercase tracking-wider transition shadow-md shadow-blue-500/20 whitespace-nowrap cursor-pointer flex items-center justify-center gap-1.5"
+                        >
+                            <span>Track Waybill</span>
+                            <span>&rarr;</span>
+                        </button>
+                    </div>
+                </form>
+
+                <!-- One secondary link -->
+                <div class="pt-1">
+                    <a href="#network" class="inline-flex items-center gap-1.5 text-xs font-semibold text-blue-600 dark:text-cyan-400 hover:text-blue-700 dark:hover:text-cyan-300 transition-colors">
+                        <span>Explore Global Network</span>
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 2. GLOBAL METRICS STRIP (Synchronized with Dashboard Theme) -->
+    <section class="theme-card-elevated border-b theme-border py-8 transition-colors duration-200">
+        <div class="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-8 text-center divide-y md:divide-y-0 md:divide-x theme-border">
+                <div class="px-4">
+                    <div class="text-3xl sm:text-4xl lg:text-5xl font-extrabold theme-heading tracking-tight font-mono">{{ $locations->count() }}</div>
+                    <div class="text-xs theme-text-muted mt-1.5 uppercase tracking-wider font-semibold">Container Seaports</div>
+                </div>
+                <div class="px-4 pt-6 md:pt-0">
+                    <div class="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-blue-600 dark:text-cyan-400 tracking-tight font-mono">{{ $onTimePercentage }}%</div>
+                    <div class="text-xs theme-text-muted mt-1.5 uppercase tracking-wider font-semibold">On-Time Performance</div>
+                </div>
+                <div class="px-4 pt-6 md:pt-0">
+                    <div class="text-3xl sm:text-4xl lg:text-5xl font-extrabold theme-heading tracking-tight font-mono">{{ $carriers->count() }}</div>
+                    <div class="text-xs theme-text-muted mt-1.5 uppercase tracking-wider font-semibold">Shipping Lines</div>
+                </div>
+                <div class="px-4 pt-6 md:pt-0">
+                    <div class="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-blue-600 dark:text-cyan-400 tracking-tight font-mono">{{ number_format($totalShipments) }}</div>
+                    <div class="text-xs theme-text-muted mt-1.5 uppercase tracking-wider font-semibold">Tracked Consignments</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 2b. SHIPMENT TIMELINE PREVIEW ("See a shipment timeline") -->
+    <section class="py-16 lg:py-24 border-b theme-border theme-page transition-colors duration-200">
+        <div class="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
+                <!-- Short Explanation -->
+                <div class="lg:col-span-5 space-y-4">
+                    <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-600/10 dark:bg-blue-600/20 border border-blue-600/25 dark:border-blue-400/30 text-blue-700 dark:text-cyan-300 text-[11px] font-semibold tracking-wider uppercase font-mono">
+                        <span class="w-1.5 h-1.5 rounded-full bg-blue-600 dark:bg-cyan-400"></span>
+                        VERIFIED ROUTE PROGRESSION
+                    </div>
+                    <h2 class="text-3xl sm:text-4xl font-extrabold tracking-tight theme-heading">
+                        See a shipment timeline
+                    </h2>
+                    <p class="text-sm sm:text-base theme-text-secondary leading-relaxed">
+                        Every container follows verified milestone events from departure gate, ocean transit corridors, and seaport checkpoints to final delivery. Status variances calculate ETA changes directly from port logs.
+                    </p>
                     @if($feat)
-                    <div class="rounded-2xl theme-card border theme-border p-6 space-y-6 shadow-2xl max-w-md mx-auto lg:ml-auto backdrop-blur-xl transition-colors duration-200">
+                    <div class="pt-2">
+                        <a href="{{ url('/track/' . $feat->tracking_number) }}" class="inline-flex items-center gap-2 text-xs font-semibold text-blue-600 dark:text-cyan-400 hover:text-blue-700 dark:hover:text-cyan-300 font-mono transition-colors">
+                            <span>Open public tracking view for {{ $feat->tracking_number }} &rarr;</span>
+                        </a>
+                    </div>
+                    @endif
+                </div>
+
+                <!-- Wide Preview Card (keep its real data and markup) -->
+                <div class="lg:col-span-7">
+                    @if($feat)
+                    <div class="rounded-2xl theme-card border theme-border p-6 sm:p-8 space-y-6 shadow-xl backdrop-blur-xl transition-colors duration-200">
                         <!-- Card Header -->
-                        <div class="flex items-center justify-between pb-4 border-b theme-border">
+                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b theme-border">
                             <div>
                                 <div class="flex items-center gap-2">
-                                    <span class="font-mono text-sm font-bold theme-heading tracking-wide block">{{ $feat->tracking_number }}</span>
+                                    <span class="font-mono text-base font-bold theme-heading tracking-wide block">{{ $feat->tracking_number }}</span>
                                     <span class="text-[9px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full bg-blue-500/15 text-blue-600 dark:text-cyan-300 font-mono">Recorded Milestone</span>
                                 </div>
-                                <span class="text-[11px] theme-text-muted font-mono block mt-1">{{ $feat->carrier->name ?? 'Mediterranean Shipping Company (MSC)' }}</span>
+                                <span class="text-xs theme-text-muted font-mono block mt-1">{{ $feat->carrier->name ?? 'Mediterranean Shipping Company (MSC)' }}</span>
                             </div>
                             @if($feat->is_delayed && $feat->status === 'DELIVERED')
-                                <span class="px-2.5 py-1 rounded-full text-[10px] font-bold tracking-wider uppercase font-mono bg-amber-400/20 text-amber-600 dark:text-amber-400 border border-amber-400/40">
+                                <span class="self-start sm:self-auto px-2.5 py-1 rounded-full text-[10px] font-bold tracking-wider uppercase font-mono bg-amber-400/20 text-amber-600 dark:text-amber-400 border border-amber-400/40">
                                     &bull; Delivered late (+{{ (int)$feat->delay_hours }}h)
                                 </span>
                             @elseif($feat->is_delayed)
-                                <span class="px-2.5 py-1 rounded-full text-[10px] font-bold tracking-wider uppercase font-mono bg-amber-400/20 text-amber-600 dark:text-amber-400 border border-amber-400/40">
+                                <span class="self-start sm:self-auto px-2.5 py-1 rounded-full text-[10px] font-bold tracking-wider uppercase font-mono bg-amber-400/20 text-amber-600 dark:text-amber-400 border border-amber-400/40">
                                     &bull; Delayed (+{{ (int)$feat->delay_hours }}h)
                                 </span>
                             @elseif($feat->status === 'DELIVERED')
-                                <span class="px-2.5 py-1 rounded-full text-[10px] font-bold tracking-wider uppercase font-mono bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/40">
+                                <span class="self-start sm:self-auto px-2.5 py-1 rounded-full text-[10px] font-bold tracking-wider uppercase font-mono bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/40">
                                     &bull; Delivered
                                 </span>
                             @else
-                                <span class="px-2.5 py-1 rounded-full text-[10px] font-bold tracking-wider uppercase font-mono bg-blue-500/20 text-blue-600 dark:text-cyan-300 border border-blue-400/30">
+                                <span class="self-start sm:self-auto px-2.5 py-1 rounded-full text-[10px] font-bold tracking-wider uppercase font-mono bg-blue-500/20 text-blue-600 dark:text-cyan-300 border border-blue-400/30">
                                     &bull; In Transit
                                 </span>
                             @endif
@@ -255,31 +322,6 @@
                         </div>
                     </div>
                     @endif
-                </div>
-
-            </div>
-        </div>
-    </section>
-
-    <!-- 2. GLOBAL METRICS STRIP (Synchronized with Dashboard Theme) -->
-    <section class="theme-card-elevated border-b theme-border py-8 transition-colors duration-200">
-        <div class="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-8 text-center divide-y md:divide-y-0 md:divide-x theme-border">
-                <div class="px-4">
-                    <div class="text-3xl sm:text-4xl lg:text-5xl font-extrabold theme-heading tracking-tight font-mono">{{ $locations->count() }}</div>
-                    <div class="text-xs theme-text-muted mt-1.5 uppercase tracking-wider font-semibold">Container Seaports</div>
-                </div>
-                <div class="px-4 pt-6 md:pt-0">
-                    <div class="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-blue-600 dark:text-cyan-400 tracking-tight font-mono">{{ $onTimePercentage }}%</div>
-                    <div class="text-xs theme-text-muted mt-1.5 uppercase tracking-wider font-semibold">On-Time Performance</div>
-                </div>
-                <div class="px-4 pt-6 md:pt-0">
-                    <div class="text-3xl sm:text-4xl lg:text-5xl font-extrabold theme-heading tracking-tight font-mono">{{ $carriers->count() }}</div>
-                    <div class="text-xs theme-text-muted mt-1.5 uppercase tracking-wider font-semibold">Shipping Lines</div>
-                </div>
-                <div class="px-4 pt-6 md:pt-0">
-                    <div class="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-blue-600 dark:text-cyan-400 tracking-tight font-mono">{{ number_format($totalShipments) }}</div>
-                    <div class="text-xs theme-text-muted mt-1.5 uppercase tracking-wider font-semibold">Tracked Consignments</div>
                 </div>
             </div>
         </div>
