@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Support\Iso6346;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -17,6 +18,7 @@ class ShipmentItem extends Model
      */
     protected $fillable = [
         'shipment_id',
+        'container_number',
         'sku',
         'description',
         'quantity',
@@ -26,6 +28,16 @@ class ShipmentItem extends Model
         'volume_cbm',
         'is_hazardous',
     ];
+
+    /**
+     * Formatted ISO 6346 container number (e.g. "MSKU 123456 5").
+     */
+    public function getFormattedContainerNumberAttribute(): ?string
+    {
+        $num = $this->container_number ?: $this->sku;
+
+        return $num ? Iso6346::format($num) : null;
+    }
 
     /**
      * Get the attributes that should be cast.

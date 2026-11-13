@@ -64,12 +64,42 @@ class Iso6346
     }
 
     /**
-     * Validate whether an 11-character container number has a valid ISO 6346 check digit.
+     * Format a container number into standard ISO 6346 visual presentation: "ABCU 123456 7".
+     */
+    public static function format(?string $containerNumber): ?string
+    {
+        if ($containerNumber === null || trim($containerNumber) === '') {
+            return null;
+        }
+
+        $clean = strtoupper(preg_replace('/[^A-Za-z0-9]/', '', $containerNumber));
+        if (strlen($clean) === 11) {
+            return substr($clean, 0, 4).' '.substr($clean, 4, 6).' '.substr($clean, 10, 1);
+        }
+
+        return $containerNumber;
+    }
+
+    /**
+     * Normalize container number to uppercase without whitespace.
+     */
+    public static function normalize(?string $containerNumber): ?string
+    {
+        if ($containerNumber === null) {
+            return null;
+        }
+
+        return strtoupper(preg_replace('/[^A-Za-z0-9]/', '', $containerNumber));
+    }
+
+    /**
+     * Validate whether an 11-character container number has valid format and ISO 6346 check digit.
+     * Standard: 3-letter owner code (A-Z), category identifier (U, J, or Z), 6 digits, and 1 check digit.
      */
     public static function isValid(string $containerNumber): bool
     {
-        $clean = strtoupper(trim($containerNumber));
-        if (strlen($clean) !== 11) {
+        $clean = strtoupper(preg_replace('/\s+/', '', $containerNumber));
+        if (! preg_match('/^[A-Z]{3}[UJZ]\d{6}\d$/', $clean)) {
             return false;
         }
 

@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Shipment;
 
 use App\Models\Shipment;
+use App\Rules\Iso6346ContainerNumber;
 use Illuminate\Foundation\Http\FormRequest;
 
 class StoreShipmentRequest extends FormRequest
@@ -29,9 +30,11 @@ class StoreShipmentRequest extends FormRequest
             'expected_arrival_at' => ['required', 'date', 'after_or_equal:expected_departure_at'],
             'estimated_arrival_at' => ['nullable', 'date'],
             'reference_number' => ['nullable', 'string', 'max:100'],
+            'container_number' => ['nullable', 'string', new Iso6346ContainerNumber],
             'customer_id' => ['nullable', 'exists:users,id'],
             'notes' => ['nullable', 'string'],
             'items' => ['nullable', 'array'],
+            'items.*.container_number' => ['nullable', 'string', new Iso6346ContainerNumber],
             'items.*.sku' => ['nullable', 'string', 'max:100'],
             'items.*.description' => ['required_with:items', 'string', 'max:255'],
             'items.*.quantity' => ['required_with:items', 'integer', 'min:1'],

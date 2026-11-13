@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Shipment;
+use App\Services\FreeTimeService;
 use Illuminate\View\View;
 
 class PublicTrackingController extends Controller
@@ -13,15 +14,25 @@ class PublicTrackingController extends Controller
      */
     public function show(string $tracking_number): View
     {
+        $clean = strtoupper(preg_replace('/\s+/', '', $tracking_number));
         $shipment = Shipment::where('tracking_number', $tracking_number)
+            ->orWhereHas('items', function ($iq) use ($tracking_number, $clean) {
+                $iq->where('container_number', $tracking_number)
+                    ->orWhere('container_number', $clean)
+                    ->orWhere('sku', $tracking_number)
+                    ->orWhere('sku', $clean);
+            })
             ->with([
                 'carrier',
                 'originLocation',
                 'destinationLocation',
                 'currentLocation',
+                'items',
                 'trackingEvents' => fn ($q) => $q->orderBy('occurred_at', 'desc')->with('location'),
             ])
             ->firstOrFail();
+
+        $freeTime = app(FreeTimeService::class)->calculate($shipment);
 
         // Prepare map payload
         $mapPayload = [
@@ -51,6 +62,6 @@ class PublicTrackingController extends Controller
             ] : null,
         ];
 
-        return view('tracking.show', compact('shipment', 'mapPayload'));
+        return view('tracking.show', compact('shipment', 'mapPayload', 'freeTime'));
     }
 }

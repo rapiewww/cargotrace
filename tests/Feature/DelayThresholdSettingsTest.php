@@ -44,6 +44,24 @@ test('admin can update delay thresholds', function () {
         ->and(Setting::get('delay_medium_hours'))->toBe('36');
 });
 
+test('admin can update terminal free time and change is audit logged', function () {
+    $admin = User::where('role', 'admin')->first();
+
+    $response = $this->actingAs($admin)->post('/admin/settings', [
+        'delay_low_hours' => 6,
+        'delay_medium_hours' => 24,
+        'free_days_after_arrival' => 7,
+    ]);
+
+    $response->assertSessionHasNoErrors();
+    expect(Setting::get('free_days_after_arrival'))->toBe('7');
+
+    $this->assertDatabaseHas('audit_logs', [
+        'action' => 'SETTINGS_UPDATED',
+        'user_id' => $admin->id,
+    ]);
+});
+
 test('eta service correctly evaluates boundary conditions against settings', function () {
     Setting::set('delay_low_hours', 6);
     Setting::set('delay_medium_hours', 24);

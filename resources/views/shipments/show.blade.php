@@ -43,6 +43,20 @@
                 </div>
             @endif
 
+            @if(isset($freeTime) && $freeTime['has_arrived'])
+                @if($freeTime['is_over_limit'])
+                    <div class="px-3.5 py-1.5 rounded-xl bg-rose-500/15 border border-rose-500/30 text-rose-600 dark:text-rose-300 text-xs flex items-center gap-2 font-mono" title="{{ $freeTime['description'] }}">
+                        <span class="w-2 h-2 rounded-full bg-rose-500 animate-pulse"></span>
+                        <span>{{ $freeTime['badge_label'] }}</span>
+                    </div>
+                @else
+                    <div class="px-3.5 py-1.5 rounded-xl bg-blue-500/15 border border-blue-500/30 text-blue-600 dark:text-cyan-300 text-xs flex items-center gap-2 font-mono" title="{{ $freeTime['description'] }}">
+                        <span class="w-2 h-2 rounded-full bg-cyan-400"></span>
+                        <span>{{ $freeTime['badge_label'] }}</span>
+                    </div>
+                @endif
+            @endif
+
             @if(in_array(auth()->user()->role, ['admin', 'operator']))
                 <a href="{{ route('shipments.edit', $shipment) }}" class="px-3.5 py-1.5 rounded-xl bg-blue-500/15 hover:bg-blue-500/25 border border-blue-500/30 text-blue-600 dark:text-cyan-400 text-xs font-semibold flex items-center gap-1.5 transition">
                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
@@ -114,6 +128,23 @@
                             <span>Delay Reason Recorded</span>
                         </div>
                         <p class="text-[11px] text-amber-200/80">{{ $shipment->delay_reason ?? 'Adverse berth/transit weather condition.' }}</p>
+                    </div>
+                @endif
+
+                @if(isset($freeTime) && $freeTime['has_arrived'])
+                    <div class="p-3.5 rounded-xl {{ $freeTime['is_over_limit'] ? 'bg-rose-500/10 border border-rose-500/25' : 'bg-blue-500/10 border border-blue-500/20' }} text-xs space-y-1.5 font-sans">
+                        <div class="flex items-center justify-between font-mono">
+                            <span class="font-bold flex items-center gap-1.5 {{ $freeTime['is_over_limit'] ? 'text-rose-400' : 'text-cyan-400' }}">
+                                <span class="w-1.5 h-1.5 rounded-full {{ $freeTime['is_over_limit'] ? 'bg-rose-400 animate-pulse' : 'bg-cyan-400' }}"></span>
+                                <span>Terminal Free Time</span>
+                            </span>
+                            <span class="font-bold uppercase text-[10px] {{ $freeTime['is_over_limit'] ? 'text-rose-400' : 'text-cyan-400' }}">
+                                {{ $freeTime['badge_label'] }}
+                            </span>
+                        </div>
+                        <p class="text-[11px] theme-text-secondary leading-relaxed font-sans">
+                            {{ $freeTime['description'] }} Dwell allowance: {{ $freeTime['free_days_allowed'] }} calendar days (arrival {{ $freeTime['arrival_at']?->format('M d, Y H:i') }} &bull; deadline {{ $freeTime['free_time_ends_at']?->format('M d, Y') }}).
+                        </p>
                     </div>
                 @endif
             </x-card>
@@ -189,7 +220,7 @@
                         <thead>
                             <tr class="border-b border-white/5 text-slate-500 uppercase text-[10px] font-mono">
                                 <th class="pb-2">Description</th>
-                                <th class="pb-2">SKU</th>
+                                <th class="pb-2">Container Number / SKU</th>
                                 <th class="pb-2 text-right">Qty</th>
                                 <th class="pb-2 text-right">Weight (KG)</th>
                                 <th class="pb-2 text-right">Volume (CBM)</th>
@@ -199,7 +230,13 @@
                             @forelse($shipment->items as $item)
                                 <tr>
                                     <td class="py-2.5 font-sans font-semibold theme-heading">{{ $item->description }}</td>
-                                    <td class="py-2.5 text-slate-400">{{ $item->sku ?? '-' }}</td>
+                                    <td class="py-2.5 text-slate-400 font-mono">
+                                        @if($item->container_number || \App\Support\Iso6346::isValid((string) $item->sku))
+                                            <span class="text-blue-600 dark:text-cyan-400 font-semibold">{{ $item->formatted_container_number }}</span>
+                                        @else
+                                            <span>{{ $item->sku ?? '-' }}</span>
+                                        @endif
+                                    </td>
                                     <td class="py-2.5 text-right text-slate-200">{{ $item->quantity }}</td>
                                     <td class="py-2.5 text-right text-slate-200">{{ number_format($item->weight_kg, 1) }}</td>
                                     <td class="py-2.5 text-right text-slate-200">{{ number_format($item->volume_cbm, 2) }}</td>

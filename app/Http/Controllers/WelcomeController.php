@@ -33,7 +33,15 @@ class WelcomeController extends Controller
             ->first();
 
         if (request()->filled('tracking')) {
-            $searched = Shipment::where('tracking_number', request('tracking'))
+            $t = trim(request('tracking'));
+            $cleanT = strtoupper(preg_replace('/\s+/', '', $t));
+            $searched = Shipment::where('tracking_number', $t)
+                ->orWhereHas('items', function ($iq) use ($t, $cleanT) {
+                    $iq->where('container_number', $t)
+                        ->orWhere('container_number', $cleanT)
+                        ->orWhere('sku', $t)
+                        ->orWhere('sku', $cleanT);
+                })
                 ->with(['carrier', 'originLocation', 'destinationLocation', 'currentLocation', 'trackingEvents.location'])
                 ->first();
             if ($searched) {

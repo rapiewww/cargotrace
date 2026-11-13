@@ -51,6 +51,16 @@
                     <h1 class="text-3xl sm:text-4xl font-extrabold font-mono theme-heading tracking-tight mt-1">
                         {{ $shipment->tracking_number }}
                     </h1>
+                    @if($shipment->items->isNotEmpty())
+                        @php
+                            $containers = $shipment->items->map(fn($it) => $it->formatted_container_number)->filter()->unique()->values();
+                        @endphp
+                        @if($containers->isNotEmpty())
+                            <div class="text-xs font-mono text-cyan-600 dark:text-cyan-400 mt-1">
+                                Container: {{ $containers->implode(', ') }}
+                            </div>
+                        @endif
+                    @endif
                     <div class="text-xs theme-text-secondary flex items-center gap-2 mt-2 font-mono">
                         <span>{{ $shipment->originLocation->name }} ({{ $shipment->originLocation->unlocode }})</span>
                         <span class="text-blue-600 dark:text-cyan-400">&rarr;</span>
@@ -73,6 +83,18 @@
                             <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
                             On Schedule
                         </span>
+                    @endif
+
+                    @if(isset($freeTime) && $freeTime['has_arrived'])
+                        @if($freeTime['is_over_limit'])
+                            <span class="px-2.5 py-1 rounded-full text-[11px] font-mono font-bold uppercase bg-rose-500/15 text-rose-600 dark:text-rose-400 border border-rose-500/30">
+                                {{ $freeTime['badge_label'] }}
+                            </span>
+                        @else
+                            <span class="px-2.5 py-1 rounded-full text-[11px] font-mono font-bold uppercase bg-blue-500/15 text-blue-600 dark:text-cyan-400 border border-blue-500/30">
+                                {{ $freeTime['badge_label'] }}
+                            </span>
+                        @endif
                     @endif
                 </div>
             </div>

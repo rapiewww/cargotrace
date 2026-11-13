@@ -175,6 +175,11 @@
                         <label class="uppercase text-[10px] tracking-wider theme-text-secondary font-semibold block">Reference Number</label>
                         <input type="text" name="reference_number" value="{{ old('reference_number', $shipment->reference_number) }}" class="w-full px-3.5 py-2.5 rounded-xl theme-input border theme-border font-mono text-xs focus:ring-1 focus:ring-blue-500">
                     </div>
+
+                    <div class="space-y-1.5">
+                        <label class="uppercase text-[10px] tracking-wider theme-text-secondary font-semibold block">Container Number (ISO 6346)</label>
+                        <input type="text" name="container_number" placeholder="MSKU 123456 5" value="{{ old('container_number', $shipment->items->first()?->formatted_container_number) }}" class="w-full px-3.5 py-2.5 rounded-xl theme-input border theme-border font-mono text-xs focus:ring-1 focus:ring-blue-500">
+                    </div>
                 </div>
 
                 <div class="space-y-1.5">

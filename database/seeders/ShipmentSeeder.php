@@ -1530,6 +1530,7 @@ class ShipmentSeeder extends Seeder
                         'sku' => $containerNumber,
                     ],
                     [
+                        'container_number' => $containerNumber,
                         'description' => $item['desc'],
                         'quantity' => $item['qty'],
                         'unit_value' => $item['val'],

@@ -145,8 +145,8 @@
                             <input type="text" name="items[0][description]" value="Commercial Industrial Goods" required class="w-full px-3 py-1.5 rounded-lg theme-input border theme-border text-xs focus:ring-1 focus:ring-blue-500 focus:outline-none">
                         </div>
                         <div class="space-y-1">
-                            <label class="uppercase text-[10px] tracking-wider theme-text-muted font-semibold block">SKU Code</label>
-                            <input type="text" name="items[0][sku]" value="SKU-COM-01" class="w-full px-3 py-1.5 rounded-lg theme-input border theme-border font-mono text-xs focus:ring-1 focus:ring-blue-500 focus:outline-none">
+                            <label class="uppercase text-[10px] tracking-wider theme-text-muted font-semibold block">Container No (ISO 6346)</label>
+                            <input type="text" name="items[0][container_number]" placeholder="MSKU 123456 5" class="w-full px-3 py-1.5 rounded-lg theme-input border theme-border font-mono text-xs focus:ring-1 focus:ring-blue-500 focus:outline-none">
                         </div>
                         <div class="space-y-1">
                             <label class="uppercase text-[10px] tracking-wider theme-text-muted font-semibold block">Qty *</label>
@@ -189,8 +189,8 @@
                 <input type="text" name="items[${itemIdx}][description]" required placeholder="Cargo Item Name" class="w-full px-3 py-1.5 rounded-lg theme-input border theme-border text-xs focus:ring-1 focus:ring-blue-500 focus:outline-none">
             </div>
             <div class="space-y-1">
-                <label class="uppercase text-[10px] tracking-wider theme-text-muted font-semibold block">SKU Code</label>
-                <input type="text" name="items[${itemIdx}][sku]" placeholder="SKU-XXXX" class="w-full px-3 py-1.5 rounded-lg theme-input border theme-border font-mono text-xs focus:ring-1 focus:ring-blue-500 focus:outline-none">
+                <label class="uppercase text-[10px] tracking-wider theme-text-muted font-semibold block">Container No (ISO 6346)</label>
+                <input type="text" name="items[${itemIdx}][container_number]" placeholder="MSKU 123456 5" class="w-full px-3 py-1.5 rounded-lg theme-input border theme-border font-mono text-xs focus:ring-1 focus:ring-blue-500 focus:outline-none">
             </div>
             <div class="space-y-1">
                 <label class="uppercase text-[10px] tracking-wider theme-text-muted font-semibold block">Qty *</label>

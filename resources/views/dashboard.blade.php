@@ -247,8 +247,63 @@
     <!-- BOTTOM SECTION: Maritime Activities Table (Left) + Utility Panel (Right) -->
     <div class="grid grid-cols-1 xl:grid-cols-12 gap-6 items-start">
         <!-- LEFT 8 COLS: "Maritime Activities" Table with Vessel Icon, Visual Route & FlyTo -->
-        <div class="xl:col-span-8 p-6 rounded-3xl theme-card border space-y-4 transition-colors duration-200">
-            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-3 border-b theme-border">
+        <div class="xl:col-span-8 space-y-6">
+            @if(isset($overFreeTimeShipments) && $overFreeTimeShipments->isNotEmpty())
+                <!-- Attention List: Shipments Exceeding Terminal Free-Time Dwell Limit -->
+                <div class="p-5 rounded-3xl bg-rose-500/10 border border-rose-500/25 space-y-3 font-sans transition-colors duration-200">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2.5 border-b border-rose-500/20">
+                        <div class="flex items-center gap-2">
+                            <span class="w-2.5 h-2.5 rounded-full bg-rose-500 animate-pulse"></span>
+                            <h2 class="text-sm font-bold theme-heading tracking-tight font-sans">
+                                Terminal dwell attention &bull; {{ $overFreeTimeShipments->count() }} {{ $overFreeTimeShipments->count() === 1 ? 'consignment exceeds' : 'consignments exceed' }} free-time limit
+                            </h2>
+                        </div>
+                        <span class="text-[11px] font-mono text-rose-600 dark:text-rose-400">
+                            Standard free time: {{ (int) (\App\Models\Setting::get('free_days_after_arrival') ?? 5) }} days
+                        </span>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
+                        @foreach($overFreeTimeShipments as $ofs)
+                            @php
+                                $eval = $ofs->free_time_eval ?? app(\App\Services\FreeTimeService::class)->calculate($ofs);
+                                $containers = $ofs->items->map(fn($it) => $it->formatted_container_number)->filter()->unique()->values();
+                            @endphp
+                            <div class="p-3.5 rounded-2xl theme-card border theme-border flex flex-col justify-between space-y-2">
+                                <div class="flex items-start justify-between gap-2">
+                                    <div>
+                                        <a href="{{ route('shipments.show', $ofs) }}" class="font-mono font-bold text-xs theme-heading hover:text-blue-600 dark:hover:text-cyan-400 transition-colors">
+                                            {{ $ofs->tracking_number }}
+                                        </a>
+                                        <span class="text-[11px] theme-text-muted block font-sans">
+                                            {{ $ofs->carrier->name ?? 'Carrier' }} &bull; {{ $ofs->originLocation->unlocode ?? 'ORI' }} &rarr; {{ $ofs->destinationLocation->unlocode ?? 'DST' }}
+                                        </span>
+                                    </div>
+                                    <span class="px-2 py-0.5 rounded-full text-[10px] font-bold font-mono bg-rose-500/15 text-rose-600 dark:text-rose-400 border border-rose-500/30 whitespace-nowrap">
+                                        +{{ $eval['days_over'] }}d over limit
+                                    </span>
+                                </div>
+
+                                @if($containers->isNotEmpty())
+                                    <div class="text-[11px] font-mono theme-text-secondary">
+                                        <span class="theme-text-muted">Container:</span> {{ $containers->implode(', ') }}
+                                    </div>
+                                @endif
+
+                                <div class="flex items-center justify-between pt-1 border-t theme-border text-[10px] font-mono theme-text-muted">
+                                    <span>Arrived {{ $eval['arrival_at']?->format('M d, Y') }}</span>
+                                    <a href="{{ route('shipments.show', $ofs) }}" class="text-blue-600 dark:text-cyan-400 hover:underline font-sans">
+                                        Details &rarr;
+                                    </a>
+                                </div>
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
+            @endif
+
+            <div class="p-6 rounded-3xl theme-card border space-y-4 transition-colors duration-200">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-3 border-b theme-border">
                 <div>
                     <h2 class="text-lg font-bold theme-heading tracking-tight font-sans">
                         Maritime activities
@@ -307,8 +362,11 @@
                                             <a href="{{ route('shipments.show', $s) }}" class="font-mono font-bold theme-heading hover:text-cyan-500 block">
                                                 {{ $s->tracking_number }}
                                             </a>
-                                            <span class="text-[11px] theme-text-muted block">
+                                            <span class="text-[11px] theme-text-muted block font-sans">
                                                 {{ $s->carrier->name ?? 'Maritime Line' }}
+                                                @if($s->items->isNotEmpty() && ($cont = $s->items->first()->formatted_container_number))
+                                                    &bull; <span class="font-mono text-cyan-600 dark:text-cyan-400 font-semibold">{{ $cont }}</span>
+                                                @endif
                                             </span>
                                         </div>
                                     </div>
@@ -341,7 +399,14 @@
 
                                 <!-- Status Pill -->
                                 <td class="py-3.5 px-3">
-                                    @if($hasExceptions)
+                                    @php
+                                        $ftEval = ($s->actual_arrival_at || $s->status === 'DELIVERED') ? app(\App\Services\FreeTimeService::class)->calculate($s) : null;
+                                    @endphp
+                                    @if($ftEval && $ftEval['is_over_limit'])
+                                        <span class="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase font-mono bg-rose-500/15 text-rose-600 dark:text-rose-400 border border-rose-500/30" title="{{ $ftEval['badge_label'] }}">
+                                            Over free time (+{{ $ftEval['days_over'] }}d)
+                                        </span>
+                                    @elseif($hasExceptions)
                                         <span class="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase font-mono bg-rose-500/15 text-rose-600 dark:text-rose-400 border border-rose-500/30">
                                             Alert
                                         </span>
@@ -382,6 +447,7 @@
                 </table>
             </div>
         </div>
+    </div>
 
         <!-- RIGHT 4 COLS: Weather & Currency Utility Panel (Global View Style) -->
         <div class="xl:col-span-4 space-y-6 font-sans">

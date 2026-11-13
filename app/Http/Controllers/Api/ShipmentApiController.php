@@ -41,10 +41,17 @@ class ShipmentApiController extends Controller
 
         // Filters
         if ($request->filled('search')) {
-            $search = $request->query('search');
-            $query->where(function ($q) use ($search) {
+            $search = trim($request->query('search'));
+            $cleanContainer = strtoupper(preg_replace('/\s+/', '', $search));
+            $query->where(function ($q) use ($search, $cleanContainer) {
                 $q->where('tracking_number', 'like', "%{$search}%")
-                    ->orWhere('reference_number', 'like', "%{$search}%");
+                    ->orWhere('reference_number', 'like', "%{$search}%")
+                    ->orWhereHas('items', function ($iq) use ($search, $cleanContainer) {
+                        $iq->where('container_number', 'like', "%{$search}%")
+                            ->orWhere('container_number', 'like', "%{$cleanContainer}%")
+                            ->orWhere('sku', 'like', "%{$search}%")
+                            ->orWhere('sku', 'like', "%{$cleanContainer}%");
+                    });
             });
         }
 

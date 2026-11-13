@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Shipment;
 
+use App\Rules\Iso6346ContainerNumber;
 use Illuminate\Foundation\Http\FormRequest;
 
 class UpdateShipmentRequest extends FormRequest
@@ -23,6 +24,10 @@ class UpdateShipmentRequest extends FormRequest
             'delay_reason' => ['nullable', 'string', 'max:255'],
             'description' => ['nullable', 'string', 'max:500'],
             'notes' => ['nullable', 'string'],
+            'container_number' => ['nullable', 'string', new Iso6346ContainerNumber],
+            'items' => ['nullable', 'array'],
+            'items.*.container_number' => ['nullable', 'string', new Iso6346ContainerNumber],
+            'items.*.sku' => ['nullable', 'string', 'max:100'],
         ];
     }
 }

@@ -62,9 +62,19 @@
                         </span>
                     </div>
 
+                    <div class="space-y-1.5">
+                        <label class="uppercase text-[10px] tracking-wider text-slate-400 font-semibold block">
+                            Terminal Free Time Allowance (Days After Arrival) *
+                        </label>
+                        <input type="number" min="0" step="1" name="free_days_after_arrival" value="{{ old('free_days_after_arrival', $freeDays) }}" required class="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-white font-mono focus:ring-1 focus:ring-blue-500">
+                        <span class="text-[11px] text-slate-500 block">
+                            Standard calendar days granted after port arrival before container is flagged as exceeding free-time limit (default: 5 days).
+                        </span>
+                    </div>
+
                     <div class="pt-4 border-t border-white/10 flex justify-end">
-                        <button type="submit" class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-teal-400 to-teal-500 hover:from-teal-300 hover:to-teal-400 text-slate-950 font-bold uppercase tracking-wider transition shadow-lg shadow-teal-500/20">
-                            Save Thresholds
+                        <button type="submit" class="px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-semibold text-xs transition shadow-md shadow-blue-500/20">
+                            Save Settings
                         </button>
                     </div>
                 </form>

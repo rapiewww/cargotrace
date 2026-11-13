@@ -32,6 +32,10 @@ return [
         'medium_hours' => (float) env('CARGOTRACE_DELAY_MEDIUM_HOURS', 24),
     ],
 
+    'free_time' => [
+        'days' => (int) env('CARGOTRACE_FREE_DAYS_AFTER_ARRIVAL', 5),
+    ],
+
     'weather' => [
         'crane_thresholds' => [
             'caution_kph' => (float) env('CARGOTRACE_WEATHER_CRANE_CAUTION_KPH', 28.0),

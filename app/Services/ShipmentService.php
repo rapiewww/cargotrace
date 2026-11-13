@@ -7,6 +7,7 @@ use App\Models\Notification;
 use App\Models\Shipment;
 use App\Models\ShipmentItem;
 use App\Models\TrackingEvent;
+use App\Support\Iso6346;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -128,9 +129,17 @@ class ShipmentService
 
             // Save items
             foreach ($items as $itemData) {
+                $containerNumber = $itemData['container_number'] ?? ($data['container_number'] ?? null);
+                if (! $containerNumber && isset($itemData['sku']) && Iso6346::isValid($itemData['sku'])) {
+                    $containerNumber = $itemData['sku'];
+                }
+
+                $sku = $itemData['sku'] ?? ($containerNumber ?? 'SKU-'.strtoupper(Str::random(6)));
+
                 ShipmentItem::create([
                     'shipment_id' => $shipment->id,
-                    'sku' => $itemData['sku'] ?? 'SKU-'.strtoupper(Str::random(6)),
+                    'container_number' => $containerNumber ? Iso6346::normalize($containerNumber) : null,
+                    'sku' => $sku,
                     'description' => $itemData['description'] ?? 'Cargo item',
                     'quantity' => (int) ($itemData['quantity'] ?? 1),
                     'unit_value' => (float) ($itemData['unit_value'] ?? 0),

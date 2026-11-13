@@ -10,6 +10,7 @@ use App\Models\Shipment;
 use App\Models\ShipmentException;
 use App\Services\CurrencyService;
 use App\Services\ExternalIntegrationService;
+use App\Services\FreeTimeService;
 use App\Services\MaritimeNewsService;
 use App\Services\WeatherService;
 use Illuminate\Support\Facades\Auth;
@@ -216,6 +217,29 @@ class DashboardController extends Controller
         $locations = Location::all();
         $carriers = Carrier::where('is_active', true)->get();
 
+        // Free time evaluation for attention list
+        $freeTimeService = app(FreeTimeService::class);
+        $freeDaysAllowed = (int) (Setting::get('free_days_after_arrival') ?? config('cargotrace.free_time.days', 5));
+
+        $arrivedShipments = (clone $shipmentQuery)
+            ->where(function ($q) {
+                $q->whereNotNull('actual_arrival_at')
+                    ->orWhere('status', 'DELIVERED');
+            })
+            ->with(['originLocation', 'destinationLocation', 'carrier', 'items', 'trackingEvents'])
+            ->get();
+
+        $overFreeTimeShipments = $arrivedShipments->filter(function ($s) use ($freeTimeService, $freeDaysAllowed) {
+            $eval = $freeTimeService->calculate($s, null, $freeDaysAllowed);
+            if ($eval['is_over_limit']) {
+                $s->free_time_eval = $eval;
+
+                return true;
+            }
+
+            return false;
+        })->values();
+
         // User notifications
         $notifications = Notification::where('user_id', $user->id)
             ->orderByDesc('created_at')
@@ -348,7 +372,9 @@ class DashboardController extends Controller
             'delayMediumHours',
             'spark1Flat',
             'spark2Flat',
-            'onTimeComparison'
+            'onTimeComparison',
+            'overFreeTimeShipments',
+            'freeTimeService'
         ));
     }
 }

@@ -6,13 +6,16 @@ use App\Models\Carrier;
 use App\Models\Location;
 use App\Models\Shipment;
 use App\Models\User;
+use App\Rules\Iso6346ContainerNumber;
 use App\Services\EtaService;
 use App\Services\ExceptionService;
 use App\Services\ExternalIntegrationService;
+use App\Services\FreeTimeService;
 use App\Services\MaritimeNewsService;
 use App\Services\ShipmentService;
 use App\Services\TrackingService;
 use App\Services\WeatherService;
+use App\Support\Iso6346;
 use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -42,8 +45,18 @@ class ShipmentWebController extends Controller
         }
 
         if ($request->filled('search')) {
-            $s = $request->query('search');
-            $query->where(fn ($q) => $q->where('tracking_number', 'like', "%{$s}%")->orWhere('reference_number', 'like', "%{$s}%"));
+            $s = trim($request->query('search'));
+            $cleanContainer = strtoupper(preg_replace('/\s+/', '', $s));
+            $query->where(function ($q) use ($s, $cleanContainer) {
+                $q->where('tracking_number', 'like', "%{$s}%")
+                    ->orWhere('reference_number', 'like', "%{$s}%")
+                    ->orWhereHas('items', function ($iq) use ($s, $cleanContainer) {
+                        $iq->where('container_number', 'like', "%{$s}%")
+                            ->orWhere('container_number', 'like', "%{$cleanContainer}%")
+                            ->orWhere('sku', 'like', "%{$s}%")
+                            ->orWhere('sku', 'like', "%{$cleanContainer}%");
+                    });
+            });
         }
         if ($request->filled('status')) {
             $query->where('status', strtoupper($request->query('status')));
@@ -84,8 +97,18 @@ class ShipmentWebController extends Controller
         }
 
         if ($request->filled('search')) {
-            $s = $request->query('search');
-            $query->where(fn ($q) => $q->where('tracking_number', 'like', "%{$s}%")->orWhere('reference_number', 'like', "%{$s}%"));
+            $s = trim($request->query('search'));
+            $cleanContainer = strtoupper(preg_replace('/\s+/', '', $s));
+            $query->where(function ($q) use ($s, $cleanContainer) {
+                $q->where('tracking_number', 'like', "%{$s}%")
+                    ->orWhere('reference_number', 'like', "%{$s}%")
+                    ->orWhereHas('items', function ($iq) use ($s, $cleanContainer) {
+                        $iq->where('container_number', 'like', "%{$s}%")
+                            ->orWhere('container_number', 'like', "%{$cleanContainer}%")
+                            ->orWhere('sku', 'like', "%{$s}%")
+                            ->orWhere('sku', 'like', "%{$cleanContainer}%");
+                    });
+            });
         }
         if ($request->filled('status')) {
             $query->where('status', strtoupper($request->query('status')));
@@ -222,10 +245,13 @@ class ShipmentWebController extends Controller
             $beaufortScale = $this->weatherService->getBeaufortScale($windKph);
         }
 
+        $freeTime = app(FreeTimeService::class)->calculate($shipment);
+
         return view('shipments.show', compact(
             'shipment',
             'locations',
             'user',
+            'freeTime',
             'relatedNews',
             'latestLocation',
             'locationWeather',
@@ -275,11 +301,31 @@ class ShipmentWebController extends Controller
             'expected_arrival_at' => 'required|date|after_or_equal:expected_departure_at',
             'estimated_arrival_at' => 'nullable|date',
             'reference_number' => 'nullable|string|max:100',
+            'container_number' => ['nullable', 'string', new Iso6346ContainerNumber],
             'customer_id' => 'nullable|exists:users,id',
             'notes' => 'nullable|string',
+            'items' => 'nullable|array',
+            'items.*.container_number' => ['nullable', 'string', new Iso6346ContainerNumber],
         ]);
 
         $this->shipmentService->updateShipment($shipment, $validated);
+
+        if ($request->filled('container_number')) {
+            $cont = Iso6346::normalize($request->input('container_number'));
+            $item = $shipment->items()->first();
+            if ($item) {
+                $item->update(['container_number' => $cont]);
+            } else {
+                $shipment->items()->create([
+                    'container_number' => $cont,
+                    'sku' => $cont,
+                    'description' => 'Container cargo',
+                    'quantity' => 1,
+                    'weight_kg' => (float) ($shipment->total_weight_kg ?? 1000),
+                    'volume_cbm' => (float) ($shipment->total_volume_cbm ?? 10),
+                ]);
+            }
+        }
 
         return redirect()->route('shipments.show', $shipment)->with('success', 'Shipment updated successfully.');
     }
@@ -299,8 +345,11 @@ class ShipmentWebController extends Controller
             'expected_departure_at' => 'required|date',
             'expected_arrival_at' => 'required|date|after_or_equal:expected_departure_at',
             'reference_number' => 'nullable|string|max:100',
+            'container_number' => ['nullable', 'string', new Iso6346ContainerNumber],
             'customer_id' => 'nullable|exists:users,id',
             'notes' => 'nullable|string',
+            'items' => 'nullable|array',
+            'items.*.container_number' => ['nullable', 'string', new Iso6346ContainerNumber],
             'items' => 'nullable|array',
             'items.*.description' => 'required_with:items|string',
             'items.*.sku' => 'nullable|string',
