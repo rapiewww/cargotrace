@@ -14,3 +14,4 @@ class InAppChannel
         // In-app notifications are persisted via App\Models\Notification in EtaService
     }
 }
+
