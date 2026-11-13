@@ -18,75 +18,71 @@
     <div class="grid grid-cols-1 xl:grid-cols-12 gap-6">
         <!-- LEFT 9 COLS: "Global View" Canvas Container -->
         <div class="xl:col-span-9 relative rounded-3xl theme-card border overflow-hidden flex flex-col justify-between min-h-[520px]">
-            <!-- Top Controls Overlay: Title, Live Status & Engine Overlay Box -->
+            <!-- Top Controls Overlay: Title, Status, Delay Popover, Coordinates -->
             <div class="relative z-20 p-6 sm:p-8 flex flex-col sm:flex-row sm:items-start justify-between gap-6 pointer-events-none">
-                <!-- Left Title & Deterministic Engine Overlay Box -->
-                <div class="space-y-4 max-w-sm pointer-events-auto">
+                <!-- Left Title & Compact Delay Popover (Globe is the single focal point) -->
+                <div class="space-y-2 max-w-sm pointer-events-auto font-sans">
                     <div>
                         <div class="flex items-center gap-3">
-                            <h1 class="text-3xl sm:text-4xl font-extrabold theme-heading tracking-tight">
-                                Global View
+                            <h1 class="text-3xl sm:text-4xl font-extrabold theme-heading tracking-tight font-sans">
+                                Global view
                             </h1>
-                            <span class="text-xs px-2.5 py-0.5 rounded-full bg-blue-500/10 text-cyan-500 dark:text-cyan-400 border border-blue-500/20 font-mono">
+                            <span class="text-xs px-2.5 py-0.5 rounded-full bg-blue-500/10 text-cyan-600 dark:text-cyan-400 border border-blue-500/20 font-sans">
                                 Overview
                             </span>
                         </div>
                         <p class="text-xs theme-text-secondary mt-1">Global route map &bull; Operator-recorded checkpoints</p>
-                        <div class="flex items-center gap-2 mt-2">
-                            <span class="relative flex h-2 w-2">
-                                <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-                            </span>
-                            <span class="text-xs font-semibold uppercase tracking-wider text-emerald-600 dark:text-emerald-400 font-mono">
-                                Verified Milestones
-                            </span>
-                        </div>
-                    </div>
-
-                    <!-- Left Card: Deterministic ETA & Delay Engine (Anti-Slop C-1, C-5, R-36) -->
-                    <div class="p-4 rounded-2xl theme-card-elevated border theme-border space-y-3 shadow-xl backdrop-blur-md">
-                        <div class="flex items-center justify-between">
-                            <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 border border-cyan-500/25">
-                                Rule-Based Telemetry
-                            </span>
-                            <span class="text-[10px] font-mono theme-text-muted">EtaService</span>
-                        </div>
-
-                        <div>
-                            <h2 class="text-sm font-bold theme-heading leading-snug">
-                                Deterministic ETA &amp; Delay Engine
-                            </h2>
-                            <p class="text-[11px] theme-text-secondary leading-relaxed mt-1">
-                                Variance evaluation comparing ETA against expected arrival milestones using database thresholds.
-                            </p>
-                        </div>
-
-                        <!-- Threshold Metrics Matrix -->
-                        <div class="grid grid-cols-3 gap-1.5 pt-1 text-center font-mono text-[10px]">
-                            <div class="p-2 rounded-xl bg-amber-500/10 border border-amber-500/25">
-                                <span class="block font-bold text-amber-600 dark:text-amber-400">LOW</span>
-                                <span class="theme-text-muted">&le; 6h</span>
+                        <div class="flex items-center gap-3 mt-2">
+                            <div class="flex items-center gap-1.5">
+                                <span class="relative flex h-2 w-2">
+                                    <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                                </span>
+                                <span class="text-xs font-semibold text-emerald-600 dark:text-emerald-400 font-sans">
+                                    Verified milestones
+                                </span>
                             </div>
-                            <div class="p-2 rounded-xl bg-orange-500/10 border border-orange-500/25">
-                                <span class="block font-bold text-orange-600 dark:text-orange-400">MEDIUM</span>
-                                <span class="theme-text-muted">&le; 24h</span>
-                            </div>
-                            <div class="p-2 rounded-xl bg-rose-500/10 border border-rose-500/25">
-                                <span class="block font-bold text-rose-600 dark:text-rose-400">HIGH</span>
-                                <span class="theme-text-muted">&gt; 24h</span>
-                            </div>
+
+                            <!-- "How delays are calculated" small popover -->
+                            <details class="relative inline-block text-xs">
+                                <summary class="cursor-pointer text-blue-600 dark:text-cyan-400 hover:underline font-medium inline-flex items-center gap-1 focus:outline-none">
+                                    <span>How delays are calculated</span>
+                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                </summary>
+                                <div class="absolute left-0 mt-2 w-72 p-3.5 rounded-2xl theme-card-elevated border theme-border shadow-2xl space-y-2.5 z-30 font-sans">
+                                    <div class="flex items-center justify-between pb-1.5 border-b theme-border">
+                                        <span class="font-bold theme-heading text-xs">Delay evaluation rules</span>
+                                        <span class="text-[10px] theme-text-muted">Rule engine</span>
+                                    </div>
+                                    <p class="text-[11px] theme-text-secondary leading-relaxed">
+                                        Variance evaluation comparing ETA against expected arrival milestones using database thresholds.
+                                    </p>
+                                    <div class="grid grid-cols-3 gap-1.5 text-center text-[10px] font-mono">
+                                        <div class="p-1.5 rounded-xl bg-amber-500/10 border border-amber-500/25">
+                                            <span class="block font-bold text-amber-600 dark:text-amber-400">Low</span>
+                                            <span class="theme-text-muted">&le; {{ (int) $delayLowHours }}h</span>
+                                        </div>
+                                        <div class="p-1.5 rounded-xl bg-orange-500/10 border border-orange-500/25">
+                                            <span class="block font-bold text-orange-600 dark:text-orange-400">Medium</span>
+                                            <span class="theme-text-muted">&le; {{ (int) $delayMediumHours }}h</span>
+                                        </div>
+                                        <div class="p-1.5 rounded-xl bg-rose-500/10 border border-rose-500/25">
+                                            <span class="block font-bold text-rose-600 dark:text-rose-400">High</span>
+                                            <span class="theme-text-muted">&gt; {{ (int) $delayMediumHours }}h</span>
+                                        </div>
+                                    </div>
+                                    <div class="pt-1">
+                                        <a href="{{ route('shipments.index', ['is_delayed' => 1]) }}" class="w-full inline-flex items-center justify-center gap-1 px-3 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-semibold text-[11px] shadow-sm transition">
+                                            Filter delayed shipments ({{ $delayed ?? 0 }}) &rarr;
+                                        </a>
+                                    </div>
+                                </div>
+                            </details>
                         </div>
 
-                        <div class="pt-1">
-                            <a href="{{ route('shipments.index', ['is_delayed' => 1]) }}" class="w-full inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-semibold text-xs shadow-md shadow-blue-500/20 transition">
-                                Filter Delayed Shipments ({{ $delayed ?? 0 }}) &rarr;
-                            </a>
+                        <!-- Camera Center Coordinates Display: Relabeled honestly as Map center (lat, lng) -->
+                        <div class="text-[11px] theme-text-muted pt-2 font-sans">
+                            Map center (lat, lng): <span id="map-coord-lat" class="font-mono text-cyan-600 dark:text-cyan-400 font-semibold">18.000000</span>, <span id="map-coord-lng" class="font-mono text-cyan-600 dark:text-cyan-400 font-semibold">110.000000</span>
                         </div>
-                    </div>
-
-                    <!-- Checkpoint Coordinates Display -->
-                    <div class="text-[11px] font-mono theme-text-muted space-y-0.5">
-                        <div>X: <span id="telemetry-coord-x" class="text-cyan-500 dark:text-cyan-400 font-bold">18.000000</span></div>
-                        <div>Y: <span id="telemetry-coord-y" class="text-cyan-500 dark:text-cyan-400 font-bold">110.000000</span></div>
                     </div>
                 </div>
             </div>
@@ -145,72 +141,88 @@
         </div>
 
         <!-- RIGHT 3 COLS: "Main Statistics" Stack (3 Cards) -->
-        <div class="xl:col-span-3 flex flex-col justify-between gap-4">
-            <h2 class="text-sm font-bold theme-heading uppercase tracking-wider flex items-center justify-between">
-                <span>Main Statistics</span>
-                <span class="text-[11px] theme-text-muted font-mono">Database Aggregates</span>
+        <div class="xl:col-span-3 flex flex-col justify-between gap-4 font-sans">
+            <h2 class="text-sm font-bold theme-heading tracking-tight flex items-center justify-between font-sans">
+                <span>Main statistics</span>
+                <span class="text-[11px] theme-text-muted font-normal font-sans">Database aggregates</span>
             </h2>
 
-            <!-- Card 1: Active Shipments & On-Time Rate -->
+            <!-- Card 1: Active Shipments & On-Time Rate Comparison -->
             <div class="p-5 rounded-3xl theme-card border flex flex-col justify-between flex-1 transition-colors duration-200">
                 <div class="flex items-center justify-between text-xs theme-text-secondary font-medium">
                     <span>Active shipments</span>
-                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/25">
-                        &uarr; {{ $onTimeRate }}% On-Time
-                    </span>
+                    @if($onTimeComparison)
+                        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/25">
+                            {{ $onTimeComparison }}
+                        </span>
+                    @endif
                 </div>
                 <div class="text-3xl font-extrabold theme-heading tracking-tight my-2 tabular-nums">
-                    {{ count($activeShipments) }} <span class="text-xs font-normal theme-text-muted">active</span>
+                    {{ count($activeShipments) }} <span class="text-xs font-normal theme-text-muted font-sans">active</span>
                 </div>
                 <!-- Mini Sparkline SVG: 14-Day Shipment Creation (Real Database Data) -->
                 <div class="h-10 w-full mt-2" title="Shipments created per day (last 14 days)">
-                    <svg class="w-full h-full overflow-visible" viewBox="0 0 200 40">
-                        <defs>
-                            <linearGradient id="spark1" x1="0" y1="0" x2="0" y2="1">
-                                <stop offset="0%" stop-color="#2563EB" stop-opacity="0.30" class="dark:stop-color-[#38BDF8]"/>
-                                <stop offset="100%" stop-color="#2563EB" stop-opacity="0" class="dark:stop-color-[#38BDF8]"/>
-                            </linearGradient>
-                        </defs>
-                        <path d="{{ $sparkline1Area }}" fill="url(#spark1)"/>
-                        <path d="{{ $sparkline1Path }}" fill="none" class="stroke-blue-600 dark:stroke-cyan-400" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                    </svg>
+                    @if($spark1Flat)
+                        <div class="h-full w-full flex items-center justify-center text-[11px] theme-text-muted italic border border-dashed theme-border rounded-lg">
+                            Not enough data yet
+                        </div>
+                    @else
+                        <svg class="w-full h-full overflow-visible" viewBox="0 0 200 40">
+                            <defs>
+                                <linearGradient id="spark1" x1="0" y1="0" x2="0" y2="1">
+                                    <stop offset="0%" stop-color="#2563EB" stop-opacity="0.30" class="dark:stop-color-[#38BDF8]"/>
+                                    <stop offset="100%" stop-color="#2563EB" stop-opacity="0" class="dark:stop-color-[#38BDF8]"/>
+                                </linearGradient>
+                            </defs>
+                            <path d="{{ $sparkline1Area }}" fill="url(#spark1)"/>
+                            <path d="{{ $sparkline1Path }}" fill="none" class="stroke-blue-600 dark:stroke-cyan-400" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                    @endif
                 </div>
             </div>
 
-            <!-- Card 2: Total Cargo Valuation & Volume -->
+            <!-- Card 2: Total Cargo Valuation & Labeled Volume -->
             <div class="p-5 rounded-3xl theme-card border flex flex-col justify-between flex-1 transition-colors duration-200">
                 <div class="flex items-center justify-between text-xs theme-text-secondary font-medium">
-                    <span>Total Cargo Valuation</span>
-                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-cyan-500/15 text-cyan-600 dark:text-cyan-400 border border-cyan-500/25 font-mono">
-                        {{ number_format($totalVolumeCbm, 0) }} CBM
+                    <span title="Declared value converted to USD at the latest cached rate" class="cursor-help border-b border-dotted theme-border">
+                        Total cargo valuation
+                    </span>
+                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-cyan-500/15 text-cyan-600 dark:text-cyan-400 border border-cyan-500/25">
+                        Volume {{ number_format($totalVolumeCbm, 0) }} CBM
                     </span>
                 </div>
                 <div class="text-3xl font-extrabold theme-heading tracking-tight my-2 tabular-nums">
-                    ${{ number_format($totalValueUsd / 1000, 0) }}k <span class="text-xs font-normal theme-text-muted">USD</span>
+                    ${{ number_format($totalValueUsd / 1000, 0) }}k <span class="text-xs font-normal theme-text-muted font-sans">USD</span>
                 </div>
                 <!-- Mini Sparkline SVG: 8-Week On-Time Rate (Real Database Data) -->
                 <div class="h-10 w-full mt-2" title="Weekly on-time performance (last 8 weeks)">
-                    <svg class="w-full h-full overflow-visible" viewBox="0 0 200 40">
-                        <defs>
-                            <linearGradient id="spark2" x1="0" y1="0" x2="0" y2="1">
-                                <stop offset="0%" stop-color="#2563EB" stop-opacity="0.30"/>
-                                <stop offset="100%" stop-color="#2563EB" stop-opacity="0"/>
-                            </linearGradient>
-                        </defs>
-                        <path d="{{ $sparkline2Area }}" fill="url(#spark2)"/>
-                        <path d="{{ $sparkline2Path }}" fill="none" class="stroke-blue-600 dark:stroke-blue-400" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                    </svg>
+                    @if($spark2Flat)
+                        <div class="h-full w-full flex items-center justify-center text-[11px] theme-text-muted italic border border-dashed theme-border rounded-lg">
+                            Not enough data yet
+                        </div>
+                    @else
+                        <svg class="w-full h-full overflow-visible" viewBox="0 0 200 40">
+                            <defs>
+                                <linearGradient id="spark2" x1="0" y1="0" x2="0" y2="1">
+                                    <stop offset="0%" stop-color="#2563EB" stop-opacity="0.30"/>
+                                    <stop offset="100%" stop-color="#2563EB" stop-opacity="0"/>
+                                </linearGradient>
+                            </defs>
+                            <path d="{{ $sparkline2Area }}" fill="url(#spark2)"/>
+                            <path d="{{ $sparkline2Path }}" fill="none" class="stroke-blue-600 dark:stroke-blue-400" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                    @endif
                 </div>
             </div>
 
             <!-- Card 3: Exception Rate (Real Database Metric) -->
             <div class="p-5 rounded-3xl theme-card border flex items-center justify-between flex-1 transition-colors duration-200">
                 <div class="space-y-1">
-                    <span class="text-xs theme-text-secondary font-medium block">Exception Rate</span>
+                    <span class="text-xs theme-text-secondary font-medium block">Exception rate</span>
                     <div class="text-3xl font-extrabold theme-heading tabular-nums font-mono">
                         {{ $exceptionRate }}%
                     </div>
-                    <span class="text-[10px] theme-text-muted block font-mono">
+                    <span class="text-[10px] theme-text-muted block font-sans">
                         {{ $openExceptions }} open / {{ $activeShipmentsCount }} active
                     </span>
                 </div>
@@ -238,10 +250,10 @@
         <div class="xl:col-span-8 p-6 rounded-3xl theme-card border space-y-4 transition-colors duration-200">
             <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-3 border-b theme-border">
                 <div>
-                    <h2 class="text-lg font-bold theme-heading tracking-tight">
-                        Maritime Activities
+                    <h2 class="text-lg font-bold theme-heading tracking-tight font-sans">
+                        Maritime activities
                     </h2>
-                    <p class="text-xs theme-text-secondary mt-0.5">Click any vessel row to focus camera on the 3D Globe / 2D Map</p>
+                    <p class="text-xs theme-text-secondary mt-0.5">Click any vessel row to focus camera on the 3D globe or 2D map</p>
                 </div>
 
                 <!-- Search Input in Header -->
@@ -372,8 +384,8 @@
         </div>
 
         <!-- RIGHT 4 COLS: Weather & Currency Utility Panel (Global View Style) -->
-        <div class="xl:col-span-4 space-y-6">
-            <!-- 1. Seaport Live Weather Widget (High-Contrast Accent Card) -->
+        <div class="xl:col-span-4 space-y-6 font-sans">
+            <!-- 1. Port Weather Widget -->
             @php
                 $selectedPort = $weatherPorts[0] ?? [
                     'city' => 'Singapore',
@@ -388,10 +400,10 @@
             @endphp
             <div class="p-6 rounded-3xl theme-card border theme-border shadow-xl space-y-4 transition-colors duration-200">
                 <div class="flex items-center justify-between pb-2 border-b theme-border">
-                    <span class="text-xs font-bold uppercase tracking-wider theme-heading">Seaport Live Weather</span>
+                    <span class="text-xs font-semibold theme-heading font-sans">Port weather</span>
                     <div class="flex items-center gap-1.5">
                         <x-data-source-badge :source="$selectedPort['data_source'] ?? 'live'" />
-                        <a href="{{ route('weather.index') }}" class="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded theme-card-elevated border theme-border hover:border-blue-500 theme-heading font-mono transition inline-flex items-center gap-1" title="Open full Weather Hub">
+                        <a href="{{ route('weather.index') }}" class="text-[10px] font-semibold px-2 py-0.5 rounded theme-card-elevated border theme-border hover:border-blue-500 theme-heading font-sans transition inline-flex items-center gap-1" title="Open full weather hub">
                             <span>Hub</span>
                             <span>&rarr;</span>
                         </a>
@@ -401,33 +413,22 @@
                 <div class="space-y-3">
                     <div class="flex items-center justify-between">
                         <div>
-                            <h3 class="text-base font-extrabold theme-heading">{{ $selectedPort['city'] ?? 'Singapore' }}</h3>
-                            <span class="text-[11px] theme-text-muted font-mono">{{ $selectedPort['unlocode'] ?? 'SGSIN' }} Container Terminal</span>
+                            <h3 class="text-base font-extrabold theme-heading font-sans">{{ $selectedPort['city'] ?? 'Singapore' }}</h3>
+                            <span class="text-[11px] theme-text-muted font-mono" title="{{ $selectedPort['unlocode'] ?? 'SGSIN' }} Container Terminal">{{ $selectedPort['unlocode'] ?? 'SGSIN' }} container terminal</span>
                         </div>
                         <div class="text-right">
-                            <span class="text-3xl font-black theme-heading tabular-nums">
+                            <span class="text-3xl font-black theme-heading tabular-nums font-mono">
                                 {{ $selectedPort['weather']['temperature_c'] ?? '31.5' }}°C
                             </span>
-                            <span class="text-xs font-semibold theme-text-secondary block">
+                            <span class="text-xs font-semibold theme-text-secondary block font-sans">
                                 {{ $selectedPort['weather']['condition'] ?? 'Clear & Sunny' }}
                             </span>
                         </div>
                     </div>
 
-                    <!-- Sun / Temperature Arch Visual (Global View Reference Style) -->
-                    <div class="h-20 w-full relative flex items-center justify-center my-1">
-                        <svg class="w-full h-full" viewBox="0 0 200 80">
-                            <path d="M20,70 Q100,10 180,70" fill="none" stroke="#D97706" stroke-width="2" stroke-dasharray="3,3"/>
-                            <!-- Sun Icon at Apex -->
-                            <circle cx="100" cy="30" r="10" fill="#F59E0B"/>
-                            <circle cx="100" cy="30" r="14" fill="none" stroke="#F59E0B" stroke-width="1.5" stroke-dasharray="2,2"/>
-                        </svg>
-                        <span class="absolute text-[11px] font-bold theme-text-primary bottom-1">{{ round($selectedPort['weather']['temperature_c'] ?? 31.5) }}° Sea Breeze</span>
-                    </div>
-
-                    <div class="grid grid-cols-2 gap-2 text-xs theme-text-secondary pt-2 border-t theme-border">
-                        <div>Wind: <b class="theme-heading">{{ $selectedPort['weather']['wind_kph'] ?? '14.5' }} km/h</b></div>
-                        <div>Humidity: <b class="theme-heading">{{ $selectedPort['weather']['humidity'] ?? '68' }}%</b></div>
+                    <div class="grid grid-cols-2 gap-2 text-xs theme-text-secondary pt-3 border-t theme-border font-sans">
+                        <div>Wind speed: <b class="theme-heading font-mono">{{ $selectedPort['weather']['wind_kph'] ?? '14.5' }} km/h</b></div>
+                        <div>Relative humidity: <b class="theme-heading font-mono">{{ $selectedPort['weather']['humidity'] ?? '68' }}%</b></div>
                     </div>
                 </div>
             </div>
@@ -435,11 +436,11 @@
             <!-- 2. Two-Way Global Currency Converter Widget -->
             <div class="p-5 rounded-3xl theme-card border space-y-3 transition-colors duration-200">
                 <div class="flex items-center justify-between pb-2 border-b theme-border">
-                    <span class="text-xs font-bold uppercase tracking-wider theme-heading">Currency Calculator</span>
+                    <span class="text-xs font-semibold theme-heading font-sans">Currency converter</span>
                     <div class="flex items-center gap-1.5">
                         <x-data-source-badge :source="$currencyData['data_source'] ?? 'live'" />
-                        <a href="{{ route('currency.index') }}" class="text-[10px] text-cyan-600 dark:text-cyan-400 hover:underline font-mono" title="Open full Currency FX Hub">
-                            Full FX &rarr;
+                        <a href="{{ route('currency.index') }}" class="text-[10px] text-cyan-600 dark:text-cyan-400 hover:underline font-sans" title="Open full currency converter">
+                            Full rates &rarr;
                         </a>
                     </div>
                 </div>
@@ -450,7 +451,7 @@
                         id="two-way-amount"
                         value="1000"
                         oninput="calculateTwoWayCurrency()"
-                        class="col-span-2 px-3 py-1.5 rounded-xl theme-input border text-xs tabular-nums focus:outline-none focus:border-cyan-500"
+                        class="col-span-2 px-3 py-1.5 rounded-xl theme-input border text-xs tabular-nums focus:outline-none focus:border-cyan-500 font-mono"
                     >
                     <select
                         id="two-way-from"
@@ -488,8 +489,8 @@
                     </select>
                 </div>
 
-                <div class="p-3 rounded-2xl theme-card-elevated border theme-border flex items-center justify-between">
-                    <span class="text-xs theme-text-secondary">Converted Amount:</span>
+                <div class="p-3 rounded-2xl theme-card-elevated border theme-border flex items-center justify-between font-sans">
+                    <span class="text-xs theme-text-secondary">Converted amount:</span>
                     <span id="two-way-result" class="text-sm font-bold font-mono text-cyan-600 dark:text-cyan-400">
                         Rp 15,873,000 IDR
                     </span>
@@ -497,13 +498,13 @@
             </div>
 
             <!-- 3. Live Maritime News Feed -->
-            <div class="p-5 rounded-3xl theme-card border space-y-3 transition-colors duration-200">
+            <div class="p-5 rounded-3xl theme-card border space-y-3 transition-colors duration-200 font-sans">
                 <div class="flex items-center justify-between pb-2 border-b theme-border">
-                    <span class="text-xs font-bold uppercase tracking-wider theme-heading">Maritime News Wire</span>
+                    <span class="text-xs font-semibold theme-heading font-sans">Maritime news wire</span>
                     <div class="flex items-center gap-1.5">
                         <x-data-source-badge :source="$news[0]['data_source'] ?? 'live'" />
-                        <a href="{{ route('news.index') }}" class="text-[10px] text-cyan-600 dark:text-cyan-400 hover:underline font-mono" title="Open all Maritime News">
-                            All News &rarr;
+                        <a href="{{ route('news.index') }}" class="text-[10px] text-cyan-600 dark:text-cyan-400 hover:underline font-sans" title="Open all maritime news">
+                            All news &rarr;
                         </a>
                     </div>
                 </div>
@@ -520,20 +521,20 @@
                             <div class="min-w-0 flex-1 space-y-1">
                                 <div class="flex items-center justify-between gap-1">
                                     <div class="flex items-center gap-1.5 min-w-0">
-                                        <span class="text-[9px] font-bold uppercase text-cyan-600 dark:text-cyan-400 font-mono truncate max-w-[100px]">
+                                        <span class="text-[10px] font-semibold text-cyan-600 dark:text-cyan-400 font-sans truncate max-w-[110px]" title="{{ $n['source'] ?? 'Maritime Wire' }}">
                                             {{ $n['source'] ?? 'Maritime Wire' }}
                                         </span>
                                         @if(!empty($n['is_relevant']))
-                                            <span class="px-1.5 py-0.2 rounded text-[8px] font-mono font-bold uppercase bg-blue-500/20 text-cyan-300 border border-blue-400/30">
-                                                Match
+                                            <span class="px-1.5 py-0.5 rounded text-[9px] font-sans font-medium bg-blue-500/20 text-cyan-400 border border-blue-400/30">
+                                                Related
                                             </span>
                                         @endif
                                     </div>
-                                    <span class="text-[10px] theme-text-muted flex-shrink-0 font-mono">
+                                    <span class="text-[10px] theme-text-muted flex-shrink-0 font-sans">
                                         {{ \Carbon\Carbon::parse($n['published_at'])->diffForHumans(null, true) }}
                                     </span>
                                 </div>
-                                <a href="{{ $n['url'] ?? '#' }}" target="_blank" rel="noopener noreferrer" class="text-xs font-semibold theme-heading hover:text-cyan-500 transition line-clamp-2 block leading-snug">
+                                <a href="{{ $n['url'] ?? '#' }}" target="_blank" rel="noopener noreferrer" class="text-xs font-semibold theme-heading hover:text-cyan-500 transition line-clamp-2 block leading-snug" title="{{ $n['headline'] }}">
                                     {{ $n['headline'] }}
                                 </a>
                             </div>

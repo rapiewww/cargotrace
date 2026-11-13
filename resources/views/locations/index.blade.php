@@ -41,7 +41,7 @@
                         </span>
                     </div>
 
-                    <!-- Telemetry & Currency Snapshot -->
+                    <!-- Weather & Currency Snapshot -->
                     <div class="p-3 rounded-xl theme-card-elevated border theme-border space-y-2 text-xs">
                         <div class="flex items-center justify-between theme-text-secondary text-[11px] font-mono">
                             <span>Currency: <strong class="theme-heading">{{ $loc->currency_code }}</strong></span>

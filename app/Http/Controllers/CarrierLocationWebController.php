@@ -122,7 +122,7 @@ class CarrierLocationWebController extends Controller
 
         $this->auditService->log('LOCATION_CREATED', $location, null, $validated);
 
-        return back()->with('success', 'Location created successfully with coordinates and telemetry.');
+        return back()->with('success', 'Location created successfully with coordinates and weather observations.');
     }
 
     public function updateLocation(Request $request, Location $location): RedirectResponse

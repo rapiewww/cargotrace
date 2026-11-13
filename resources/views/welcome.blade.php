@@ -25,13 +25,12 @@
                     </a>
                 </div>
 
-                <!-- Nav Links -->
-                <nav class="hidden md:flex items-center space-x-8 text-xs uppercase tracking-wider font-semibold theme-text-secondary">
-                    <a href="#platform" class="hover:text-blue-500 dark:hover:text-cyan-400 transition-colors">Solutions</a>
-                    <a href="#network" class="hover:text-blue-500 dark:hover:text-cyan-400 transition-colors">Track Shipment</a>
-                    <a href="#network" class="hover:text-blue-500 dark:hover:text-cyan-400 transition-colors">Global Network</a>
-                    <a href="#news" class="hover:text-blue-500 dark:hover:text-cyan-400 transition-colors">Live News</a>
-                    <a href="#rates" class="hover:text-blue-500 dark:hover:text-cyan-400 transition-colors">Currency FX</a>
+                <!-- Nav Links: Sentence case pointing to existing sections -->
+                <nav class="hidden md:flex items-center space-x-8 text-xs font-medium theme-text-secondary">
+                    <a href="#timeline" class="hover:text-blue-500 dark:hover:text-cyan-400 transition-colors">Timeline</a>
+                    <a href="#how-it-works" class="hover:text-blue-500 dark:hover:text-cyan-400 transition-colors">How it works</a>
+                    <a href="#network" class="hover:text-blue-500 dark:hover:text-cyan-400 transition-colors">Network map</a>
+                    <a href="#roles" class="hover:text-blue-500 dark:hover:text-cyan-400 transition-colors">Roles</a>
                 </nav>
 
                 <!-- Actions: Theme Toggle & Portal Access -->
@@ -59,13 +58,14 @@
                     </button>
 
                     @auth
-                        <a href="{{ route('dashboard') }}" class="px-5 py-2.5 rounded-xl text-xs font-bold text-white bg-blue-600 hover:bg-blue-500 shadow-lg shadow-blue-500/25 transition-all duration-200 hover:scale-[1.02] flex items-center gap-1.5">
-                            Open Maritime Portal
+                        <a href="{{ route('dashboard') }}" aria-label="Sign In / Portal" class="px-5 py-2.5 rounded-xl text-xs font-semibold text-white bg-blue-600 hover:bg-blue-500 shadow-md shadow-blue-500/20 transition-all duration-200 flex items-center gap-1.5">
+                            Open the portal
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
                         </a>
                     @else
-                        <a href="{{ route('login') }}" class="px-5 py-2.5 rounded-xl text-xs font-bold text-white bg-blue-600 hover:bg-blue-500 shadow-lg shadow-blue-500/25 transition-all duration-200 hover:scale-[1.02] flex items-center gap-1.5">
-                            Sign In / Portal &rarr;
+                        <a href="{{ route('login') }}" aria-label="Sign In / Portal" class="px-5 py-2.5 rounded-xl text-xs font-semibold text-white bg-blue-600 hover:bg-blue-500 shadow-md shadow-blue-500/20 transition-all duration-200 flex items-center gap-1.5">
+                            Open the portal
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
                         </a>
                     @endauth
                 </div>
@@ -78,7 +78,7 @@
         $heroLightImage = config('cargotrace.hero_images.light') ?? (file_exists(public_path('images/backgrounds/bg-light.webp')) ? 'images/backgrounds/bg-light.webp' : null);
     @endphp
 
-    <!-- 1. CINEMATIC MARITIME HERO SECTION (Dark: bg-dark.webp | Light: bg-light.webp) -->
+    <!-- 1. CINEMATIC MARITIME HERO SECTION (Dark: bg-dark.webp | Light: bg-light.webp or fallback) -->
     <section class="relative min-h-[580px] sm:min-h-[640px] lg:min-h-[700px] flex items-center overflow-hidden border-b theme-border">
         <!-- Background Imagery: Two <img> siblings toggled by [data-theme] in CSS -->
         <div class="absolute inset-0 z-0 overflow-hidden pointer-events-none">
@@ -112,7 +112,6 @@
                 </div>
             @endif
 
-            {{-- Left-to-right gradient scrim only: light theme rgba(244,247,251,0.93) at left edge fading to transparent at ~60%; dark theme rgba(5,11,20,0.90) fading the same way. Photo stays at full color and right half unobstructed. Very light top fade under nav. --}}
             <!-- Dark Theme Gradient Scrim -->
             <div class="absolute inset-0 hidden dark:block" style="background: linear-gradient(90deg, rgba(5, 11, 20, 0.90) 0%, rgba(5, 11, 20, 0.82) 30%, rgba(5, 11, 20, 0.45) 48%, rgba(5, 11, 20, 0) 60%), linear-gradient(180deg, rgba(5, 11, 20, 0.25) 0%, rgba(5, 11, 20, 0) 80px);"></div>
 
@@ -123,23 +122,23 @@
         <div class="relative z-10 w-full max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-24">
             <!-- Hero content limited to max-width 36rem so text sits entirely inside the scrim -->
             <div class="max-w-[36rem] space-y-6">
-                <!-- Eyebrow label -->
-                <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-blue-600/10 dark:bg-blue-600/25 border border-blue-600/25 dark:border-blue-400/30 text-blue-700 dark:text-cyan-300 text-[11px] font-semibold tracking-wider uppercase font-mono backdrop-blur-sm">
+                <!-- Eyebrow label: Sentence case -->
+                <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-blue-600/10 dark:bg-blue-600/25 border border-blue-600/25 dark:border-blue-400/30 text-blue-700 dark:text-cyan-300 text-xs font-medium backdrop-blur-sm">
                     <span class="w-2 h-2 rounded-full bg-blue-600 dark:bg-cyan-400"></span>
-                    GLOBAL OCEAN CONTAINER LOGISTICS & MILESTONE TRACKING
+                    Ocean container shipment tracking
                 </div>
 
-                <!-- Headline: Light theme #0B1728 with accent word in #2563EB; Dark theme white headline, accent word in cyan -->
+                <!-- Headline: "Follow every container from port to port." with accent span -->
                 <h1 class="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-[#0B1728] dark:text-white leading-[1.08]">
-                    Logistics, with<br>
+                    Follow every container<br>
                     <span class="text-[#2563EB] dark:text-cyan-400">
-                        complete visibility.
+                        from port to port.
                     </span>
                 </h1>
 
                 <!-- One-sentence subline -->
                 <p class="text-base sm:text-lg text-slate-700 dark:text-slate-200 leading-relaxed">
-                    Move ocean container consignments across markets with operator-recorded checkpoints, verified UN/LOCODE seaport milestones, container shipping lines, and rule-based ETA tracking.
+                    Track ocean freight consignments across global shipping lanes with operator-verified milestones, seaport weather, and arrival evaluations.
                 </p>
 
                 <!-- Tracking-number search box -->
@@ -156,24 +155,25 @@
                             <input
                                 type="text"
                                 id="public-track-input"
-                                placeholder="Enter waybill / tracking # (e.g. {{ $feat->tracking_number ?? 'CTG-SEA-2026-00189' }})"
+                                placeholder="Tracking number, e.g. {{ $feat->tracking_number ?? 'CTG-SEA-2026-00244' }}"
                                 class="w-full pl-10 pr-4 py-3 rounded-xl bg-white/95 dark:bg-[#0B1728]/90 border border-[#D5DEEA] dark:border-white/10 text-[#0B1728] dark:text-[#E6EEF8] placeholder-slate-400 dark:placeholder-slate-500 text-xs font-mono focus:outline-none focus:ring-2 focus:ring-[#2563EB] dark:focus:ring-cyan-400 shadow-sm"
                             >
                         </div>
                         <button
                             type="submit"
-                            class="px-6 py-3 rounded-xl bg-[#2563EB] hover:bg-[#1D4ED8] text-white font-semibold text-xs uppercase tracking-wider transition shadow-md shadow-blue-500/20 whitespace-nowrap cursor-pointer flex items-center justify-center gap-1.5"
+                            aria-label="Track Shipment"
+                            class="px-5 py-3 rounded-xl bg-[#2563EB] hover:bg-[#1D4ED8] text-white font-semibold text-xs transition shadow-md shadow-blue-500/20 whitespace-nowrap cursor-pointer flex items-center justify-center gap-1.5"
                         >
-                            <span>Track Waybill</span>
-                            <span>&rarr;</span>
+                            <span>Track a shipment</span>
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
                         </button>
                     </div>
                 </form>
 
                 <!-- One secondary link -->
                 <div class="pt-1">
-                    <a href="#network" class="inline-flex items-center gap-1.5 text-xs font-semibold text-blue-600 dark:text-cyan-400 hover:text-blue-700 dark:hover:text-cyan-300 transition-colors">
-                        <span>Explore Global Network</span>
+                    <a href="#how-it-works" class="inline-flex items-center gap-1.5 text-xs font-semibold text-blue-600 dark:text-cyan-400 hover:text-blue-700 dark:hover:text-cyan-300 transition-colors">
+                        <span>How it works</span>
                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
                     </a>
                 </div>
@@ -181,39 +181,39 @@
         </div>
     </section>
 
-    <!-- 2. GLOBAL METRICS STRIP (Synchronized with Dashboard Theme) -->
+    <!-- 2. GLOBAL METRICS STRIP (Plain words, sentence case) -->
     <section class="theme-card-elevated border-b theme-border py-8 transition-colors duration-200">
         <div class="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8">
             <div class="grid grid-cols-2 md:grid-cols-4 gap-8 text-center divide-y md:divide-y-0 md:divide-x theme-border">
                 <div class="px-4">
                     <div class="text-3xl sm:text-4xl lg:text-5xl font-extrabold theme-heading tracking-tight font-mono">{{ $locations->count() }}</div>
-                    <div class="text-xs theme-text-muted mt-1.5 uppercase tracking-wider font-semibold">Container Seaports</div>
+                    <div class="text-xs theme-text-muted mt-1.5 font-medium">Container seaports in database</div>
                 </div>
                 <div class="px-4 pt-6 md:pt-0">
                     <div class="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-blue-600 dark:text-cyan-400 tracking-tight font-mono">{{ $onTimePercentage }}%</div>
-                    <div class="text-xs theme-text-muted mt-1.5 uppercase tracking-wider font-semibold">On-Time Performance</div>
+                    <div class="text-xs theme-text-muted mt-1.5 font-medium">On-time deliveries, all time</div>
                 </div>
                 <div class="px-4 pt-6 md:pt-0">
                     <div class="text-3xl sm:text-4xl lg:text-5xl font-extrabold theme-heading tracking-tight font-mono">{{ $carriers->count() }}</div>
-                    <div class="text-xs theme-text-muted mt-1.5 uppercase tracking-wider font-semibold">Shipping Lines</div>
+                    <div class="text-xs theme-text-muted mt-1.5 font-medium">Ocean shipping lines</div>
                 </div>
                 <div class="px-4 pt-6 md:pt-0">
                     <div class="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-blue-600 dark:text-cyan-400 tracking-tight font-mono">{{ number_format($totalShipments) }}</div>
-                    <div class="text-xs theme-text-muted mt-1.5 uppercase tracking-wider font-semibold">Tracked Consignments</div>
+                    <div class="text-xs theme-text-muted mt-1.5 font-medium">Shipments tracked to date</div>
                 </div>
             </div>
         </div>
     </section>
 
-    <!-- 2b. SHIPMENT TIMELINE PREVIEW ("See a shipment timeline") -->
-    <section class="py-16 lg:py-24 border-b theme-border theme-page transition-colors duration-200">
+    <!-- 3. SHIPMENT TIMELINE PREVIEW ("See a shipment timeline") -->
+    <section id="timeline" class="py-16 lg:py-24 border-b theme-border theme-page transition-colors duration-200">
         <div class="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8">
             <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
                 <!-- Short Explanation -->
                 <div class="lg:col-span-5 space-y-4">
-                    <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-600/10 dark:bg-blue-600/20 border border-blue-600/25 dark:border-blue-400/30 text-blue-700 dark:text-cyan-300 text-[11px] font-semibold tracking-wider uppercase font-mono">
+                    <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-600/10 dark:bg-blue-600/20 border border-blue-600/25 dark:border-blue-400/30 text-blue-700 dark:text-cyan-300 text-xs font-medium">
                         <span class="w-1.5 h-1.5 rounded-full bg-blue-600 dark:bg-cyan-400"></span>
-                        VERIFIED ROUTE PROGRESSION
+                        Route progression
                     </div>
                     <h2 class="text-3xl sm:text-4xl font-extrabold tracking-tight theme-heading">
                         See a shipment timeline
@@ -230,7 +230,7 @@
                     @endif
                 </div>
 
-                <!-- Wide Preview Card (keep its real data and markup) -->
+                <!-- Wide Preview Card (Real data and clean markup) -->
                 <div class="lg:col-span-7">
                     @if($feat)
                     <div class="rounded-2xl theme-card border theme-border p-6 sm:p-8 space-y-6 shadow-xl backdrop-blur-xl transition-colors duration-200">
@@ -239,30 +239,30 @@
                             <div>
                                 <div class="flex items-center gap-2">
                                     <span class="font-mono text-base font-bold theme-heading tracking-wide block">{{ $feat->tracking_number }}</span>
-                                    <span class="text-[9px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full bg-blue-500/15 text-blue-600 dark:text-cyan-300 font-mono">Recorded Milestone</span>
+                                    <span class="text-xs font-medium px-2 py-0.5 rounded-full bg-blue-500/15 text-blue-600 dark:text-cyan-300">Recorded milestone</span>
                                 </div>
                                 <span class="text-xs theme-text-muted font-mono block mt-1">{{ $feat->carrier->name ?? 'Mediterranean Shipping Company (MSC)' }}</span>
                             </div>
                             @if($feat->is_delayed && $feat->status === 'DELIVERED')
-                                <span class="self-start sm:self-auto px-2.5 py-1 rounded-full text-[10px] font-bold tracking-wider uppercase font-mono bg-amber-400/20 text-amber-600 dark:text-amber-400 border border-amber-400/40">
+                                <span class="self-start sm:self-auto px-2.5 py-1 rounded-full text-xs font-medium bg-amber-400/20 text-amber-600 dark:text-amber-400 border border-amber-400/40">
                                     &bull; Delivered late (+{{ (int)$feat->delay_hours }}h)
                                 </span>
                             @elseif($feat->is_delayed)
-                                <span class="self-start sm:self-auto px-2.5 py-1 rounded-full text-[10px] font-bold tracking-wider uppercase font-mono bg-amber-400/20 text-amber-600 dark:text-amber-400 border border-amber-400/40">
+                                <span class="self-start sm:self-auto px-2.5 py-1 rounded-full text-xs font-medium bg-amber-400/20 text-amber-600 dark:text-amber-400 border border-amber-400/40">
                                     &bull; Delayed (+{{ (int)$feat->delay_hours }}h)
                                 </span>
                             @elseif($feat->status === 'DELIVERED')
-                                <span class="self-start sm:self-auto px-2.5 py-1 rounded-full text-[10px] font-bold tracking-wider uppercase font-mono bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/40">
+                                <span class="self-start sm:self-auto px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/40">
                                     &bull; Delivered
                                 </span>
                             @else
-                                <span class="self-start sm:self-auto px-2.5 py-1 rounded-full text-[10px] font-bold tracking-wider uppercase font-mono bg-blue-500/20 text-blue-600 dark:text-cyan-300 border border-blue-400/30">
-                                    &bull; In Transit
+                                <span class="self-start sm:self-auto px-2.5 py-1 rounded-full text-xs font-medium bg-blue-500/20 text-blue-600 dark:text-cyan-300 border border-blue-400/30">
+                                    &bull; In transit
                                 </span>
                             @endif
                         </div>
 
-                        <!-- Vertical Milestone Timeline (Dashboard Palette: Blue & Emerald) -->
+                        <!-- Vertical Milestone Timeline -->
                         <div class="space-y-5 relative">
                             <!-- Vertical Connecting Line -->
                             <div class="absolute left-[7px] top-3 bottom-3 w-[2px] bg-slate-300 dark:bg-slate-700"></div>
@@ -274,7 +274,7 @@
                                 </span>
                                 <div class="flex-1 flex items-center justify-between text-xs">
                                     <div>
-                                        <span class="font-bold theme-heading block">Origin Port &bull; Loaded</span>
+                                        <span class="font-bold theme-heading block">Origin port &bull; Loaded</span>
                                         <span class="text-[11px] theme-text-secondary font-mono">{{ $feat->originLocation->name ?? 'Port of Singapore (SGSIN)' }}</span>
                                     </div>
                                     <span class="theme-text-muted text-[11px] font-mono">{{ $feat->expected_departure_at?->format('M d, H:i') ?? 'Oct 25, 15:57' }}</span>
@@ -288,10 +288,10 @@
                                 </span>
                                 <div class="flex-1 flex items-center justify-between text-xs">
                                     <div>
-                                        <span class="font-bold text-blue-600 dark:text-cyan-300 block">Current Location</span>
+                                        <span class="font-bold text-blue-600 dark:text-cyan-300 block">Current waypoint</span>
                                         <span class="text-[11px] theme-text-secondary font-mono">{{ $feat->currentLocation->name ?? 'Malacca Strait Sea Lane' }}</span>
                                     </div>
-                                    <span class="text-blue-600 dark:text-cyan-400 text-[11px] font-mono font-semibold">Under Voyage</span>
+                                    <span class="text-blue-600 dark:text-cyan-400 text-[11px] font-mono font-semibold">Under voyage</span>
                                 </div>
                             </div>
 
@@ -300,7 +300,7 @@
                                 <span class="w-4 h-4 rounded-full border-2 border-slate-400 dark:border-slate-500 bg-slate-100 dark:bg-slate-900 mt-0.5 shrink-0 z-10"></span>
                                 <div class="flex-1 flex items-center justify-between text-xs">
                                     <div>
-                                        <span class="font-semibold theme-text-secondary block">Destination Port</span>
+                                        <span class="font-semibold theme-text-secondary block">Destination port</span>
                                         <span class="text-[11px] theme-text-muted font-mono">{{ $feat->destinationLocation->name ?? 'Port of Rotterdam (NLRTM)' }}</span>
                                     </div>
                                     <span class="theme-text-muted text-[11px] font-mono">{{ $feat->expected_arrival_at?->format('M d, H:i') ?? 'Nov 08, 15:57' }}</span>
@@ -314,7 +314,7 @@
                                 <svg class="w-4 h-4 text-blue-600 dark:text-cyan-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1M5 17a2 2 0 104 0m-4 0a2 2 0 114 0m6 0a2 2 0 104 0m-4 0a2 2 0 114 0"/>
                                 </svg>
-                                <span class="theme-text-secondary font-medium">Estimated Arrival</span>
+                                <span class="theme-text-secondary font-medium">Estimated arrival</span>
                             </div>
                             <span class="font-mono font-bold text-xs text-blue-600 dark:text-cyan-300">
                                 {{ $feat->estimated_arrival_at?->format('M d, H:i') ?? 'Nov 11, 15:57' }}
@@ -327,212 +327,101 @@
         </div>
     </section>
 
-    <!-- 3. SECTION LAYANAN & ESTIMASI ("Every shipment. One clear picture.") -->
-    <section id="platform" class="py-20 lg:py-28 border-b theme-border theme-page transition-colors duration-200">
+    <!-- 4. HOW IT WORKS (3 steps from real features) -->
+    <section id="how-it-works" class="py-16 lg:py-24 border-b theme-border theme-page transition-colors duration-200">
         <div class="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
-            
-            <!-- Section Header -->
-            <div class="flex flex-col md:flex-row md:items-end justify-between gap-6">
-                <div class="space-y-2">
-                    <span class="text-xs font-semibold text-blue-600 dark:text-cyan-400 uppercase tracking-widest font-mono">LOGISTICS PLATFORM</span>
-                    <h2 class="text-3xl sm:text-4xl font-extrabold tracking-tight theme-heading">
-                        Every shipment. One clear picture.
-                    </h2>
-                    <p class="text-sm theme-text-secondary max-w-xl">
-                        Milestone tracking, operator-verified checkpoints, and container visibility consolidated into one operations dashboard.
-                    </p>
+            <div class="max-w-2xl space-y-3">
+                <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-600/10 dark:bg-blue-600/20 border border-blue-600/25 dark:border-blue-400/30 text-blue-700 dark:text-cyan-300 text-xs font-medium">
+                    <span class="w-1.5 h-1.5 rounded-full bg-blue-600 dark:bg-cyan-400"></span>
+                    How it works
                 </div>
-                <a href="{{ route('login') }}" class="px-5 py-2.5 rounded-xl font-bold text-xs uppercase tracking-wider text-white bg-blue-600 hover:bg-blue-500 shadow-lg shadow-blue-500/20 transition-all duration-200 hover:scale-[1.02] self-start">
-                    Explore the Platform &rarr;
-                </a>
+                <h2 class="text-3xl sm:text-4xl font-extrabold tracking-tight theme-heading">
+                    Three steps from port to destination
+                </h2>
+                <p class="text-sm sm:text-base theme-text-secondary leading-relaxed">
+                    CargoTrace records container progress at every critical handover point across the maritime supply chain.
+                </p>
             </div>
 
-            <!-- Grid Layout (Col 7: Platform Mock Preview, Col 5: 3 Photography Feature Cards) -->
-            <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch">
-                
-                <!-- Left: Multi-Tab Platform Dashboard Mock (Global View Palette) -->
-                <div class="lg:col-span-7 rounded-2xl theme-card border theme-border p-6 shadow-2xl flex flex-col justify-between">
-                    <div class="space-y-5">
-                        <!-- Top Pill Navigation Bar (Overview, Shipments, Alerts, Reports, Settings) -->
-                        <div class="flex items-center justify-between pb-4 border-b theme-border overflow-x-auto">
-                            <div class="flex items-center space-x-2 text-xs font-semibold">
-                                <span class="px-3 py-1.5 rounded-lg bg-blue-600 text-white font-bold">Overview</span>
-                                <span class="px-3 py-1.5 rounded-lg theme-card-elevated theme-text-secondary">Shipments</span>
-                                <span class="px-3 py-1.5 rounded-lg theme-card-elevated theme-text-secondary">Alerts</span>
-                                <span class="px-3 py-1.5 rounded-lg theme-card-elevated theme-text-secondary">Reports</span>
-                                <span class="px-3 py-1.5 rounded-lg theme-card-elevated theme-text-secondary">Settings</span>
-                            </div>
-                            <span class="text-[10px] font-mono text-cyan-600 dark:text-cyan-400 hidden sm:inline-block">OPERATOR CHECKPOINTS</span>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8">
+                <!-- Step 1 -->
+                <div class="rounded-2xl theme-card border theme-border p-6 sm:p-7 space-y-4 shadow-sm flex flex-col justify-between">
+                    <div class="space-y-3">
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs font-mono font-bold text-blue-600 dark:text-cyan-400 bg-blue-500/10 dark:bg-cyan-400/10 px-2.5 py-1 rounded-md border border-blue-500/20">Step 01</span>
+                            <svg class="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
                         </div>
-
-                        <!-- Current Waybill Snapshot -->
-                        <div class="p-4 rounded-xl theme-card-elevated border theme-border flex flex-wrap items-center justify-between gap-4">
-                            <div>
-                                <span class="text-[10px] uppercase font-bold text-blue-600 dark:text-cyan-400 tracking-wider font-mono">FEATURED WAYBILL</span>
-                                <h4 class="text-base font-bold theme-heading font-mono">{{ $feat->tracking_number ?? 'CTG-SEA-2026-00189' }}</h4>
-                                <span class="text-xs theme-text-muted">Origin: {{ $feat->originLocation->name ?? 'Singapore' }} &rarr; {{ $feat->destinationLocation->name ?? 'Rotterdam' }}</span>
-                            </div>
-                            <span class="px-3 py-1 rounded-full text-xs font-bold uppercase font-mono bg-emerald-500/20 text-emerald-500 border border-emerald-500/30">
-                                &bull; In Transit
-                            </span>
-                        </div>
-
-                        <!-- Active Routes Table Preview -->
-                        <div class="overflow-x-auto">
-                            <table class="w-full text-left text-xs font-mono">
-                                <thead>
-                                    <tr class="theme-text-muted border-b theme-border text-[11px] uppercase">
-                                        <th class="pb-2">Waybill</th>
-                                        <th class="pb-2">Delivery Status</th>
-                                        <th class="pb-2 text-right">ETA</th>
-                                    </tr>
-                                </thead>
-                                <tbody class="divide-y theme-border theme-text-secondary">
-                                    @foreach($activeShipments->take(4) as $s)
-                                    <tr>
-                                        <td class="py-2.5 font-bold theme-heading">{{ $s->tracking_number }}</td>
-                                        <td class="py-2.5">
-                                            @if($s->is_delayed)
-                                                <span class="text-amber-500 font-semibold">&bull; Delayed (+{{ (int) $s->delay_hours }}h)</span>
-                                            @elseif($s->status === 'DELIVERED')
-                                                <span class="text-emerald-500 font-semibold">&bull; Arrived</span>
-                                            @else
-                                                <span class="text-blue-600 dark:text-cyan-400 font-semibold">&bull; In Transit</span>
-                                            @endif
-                                        </td>
-                                        <td class="py-2.5 text-right theme-text-muted">{{ $s->estimated_arrival_at ? $s->estimated_arrival_at->format('M d, H:i') : 'Tomorrow, 14:35' }}</td>
-                                    </tr>
-                                    @endforeach
-                                </tbody>
-                            </table>
-                        </div>
+                        <h3 class="text-lg font-bold theme-heading tracking-tight">Book and register freight</h3>
+                        <p class="text-xs sm:text-sm theme-text-secondary leading-relaxed">
+                            Log container consignments with bill of lading numbers, ISO container codes, participating ocean carrier lines, origin and destination seaports, and planned transit schedules.
+                        </p>
                     </div>
-
-                    <div class="pt-4 border-t theme-border flex items-center justify-between text-xs theme-text-muted">
-                        <span>Milestones updated upon operator submission</span>
-                        <a href="{{ route('login') }}" class="text-blue-600 dark:text-blue-400 font-semibold hover:underline">Access full operations console &rarr;</a>
+                    <div class="pt-3 border-t theme-border text-[11px] theme-text-muted font-mono">
+                        Consignment registration &bull; Master data validation
                     </div>
                 </div>
 
-                <!-- Right: 3 Maritime Feature Cards (Ocean Freight, Seaports Network, News Wire) -->
-                <div class="lg:col-span-5 space-y-4 flex flex-col justify-between">
-                    
-                    <!-- Card 1: Ocean Freight -->
-                    <div class="group relative rounded-2xl theme-card border theme-border p-5 flex flex-col justify-between min-h-[160px] shadow-lg hover:border-blue-500/50 transition-all duration-300">
-                        <div class="space-y-1.5">
-                            <div class="flex items-center justify-between">
-                                <span class="text-[10px] uppercase font-bold text-blue-600 dark:text-cyan-400 tracking-wider font-mono">OCEAN FREIGHT</span>
-                                <span class="text-xs">🚢</span>
-                            </div>
-                            <h3 class="text-base font-bold theme-heading tracking-tight">Time-Critical Container Shipping</h3>
-                            <p class="text-xs theme-text-secondary leading-relaxed">Global container sailings with Maersk, MSC, CMA CGM, COSCO, and recorded port milestones.</p>
+                <!-- Step 2 -->
+                <div class="rounded-2xl theme-card border theme-border p-6 sm:p-7 space-y-4 shadow-sm flex flex-col justify-between">
+                    <div class="space-y-3">
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs font-mono font-bold text-blue-600 dark:text-cyan-400 bg-blue-500/10 dark:bg-cyan-400/10 px-2.5 py-1 rounded-md border border-blue-500/20">Step 02</span>
+                            <svg class="w-5 h-5 text-cyan-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
                         </div>
-                        <div class="pt-3 border-t theme-border flex items-center justify-between text-xs theme-text-muted font-mono font-semibold">
-                            <span>Maersk &bull; MSC &bull; CMA CGM</span>
-                            <span class="text-blue-600 dark:text-cyan-400 group-hover:translate-x-1 transition-transform">&rarr;</span>
-                        </div>
+                        <h3 class="text-lg font-bold theme-heading tracking-tight">Record verified port checkpoints</h3>
+                        <p class="text-xs sm:text-sm theme-text-secondary leading-relaxed">
+                            Operators record gate-in, vessel loading, sea transit legs, transshipment transfers, and berth arrivals at standardized UN/LOCODE seaports with timestamped event notes.
+                        </p>
                     </div>
-
-                    <!-- Card 2: Seaports Network -->
-                    <div class="group relative rounded-2xl theme-card border theme-border p-5 flex flex-col justify-between min-h-[160px] shadow-lg hover:border-blue-500/50 transition-all duration-300">
-                        <div class="space-y-1.5">
-                            <div class="flex items-center justify-between">
-                                <span class="text-[10px] uppercase font-bold text-blue-600 dark:text-blue-400 tracking-wider font-mono">SEAPORTS NETWORK</span>
-                                <span class="text-xs">⚓</span>
-                            </div>
-                            <h3 class="text-base font-bold theme-heading tracking-tight">Deepwater Berths & Terminals</h3>
-                            <p class="text-xs theme-text-secondary leading-relaxed">Verified UN/LOCODE seaport milestones, quay crane gantry metrics, and gate timestamps.</p>
-                        </div>
-                        <div class="pt-3 border-t theme-border flex items-center justify-between text-xs theme-text-muted font-mono font-semibold">
-                            <span>CNSHA &bull; NLRTM &bull; SGSIN</span>
-                            <span class="text-blue-600 dark:text-blue-400 group-hover:translate-x-1 transition-transform">&rarr;</span>
-                        </div>
+                    <div class="pt-3 border-t theme-border text-[11px] theme-text-muted font-mono">
+                        UN/LOCODE checkpoints &bull; Timestamped logging
                     </div>
-
-                    <!-- Card 3: Maritime News Wire -->
-                    <div class="group relative rounded-2xl theme-card border theme-border p-5 flex flex-col justify-between min-h-[160px] shadow-lg hover:border-blue-500/50 transition-all duration-300">
-                        <div class="space-y-1.5">
-                            <div class="flex items-center justify-between">
-                                <span class="text-[10px] uppercase font-bold text-emerald-600 dark:text-emerald-400 tracking-wider font-mono">MARITIME NEWS WIRE</span>
-                                <span class="text-xs">🌐</span>
-                            </div>
-                            <h3 class="text-base font-bold theme-heading tracking-tight">Global Trade Intelligence</h3>
-                            <p class="text-xs theme-text-secondary leading-relaxed">Live port weather advisories, foreign currency FX conversion, and maritime bulletins.</p>
-                        </div>
-                        <div class="pt-3 border-t theme-border flex items-center justify-between text-xs theme-text-muted font-mono font-semibold">
-                            <span>OpenWeather &bull; Frankfurter &bull; RSS</span>
-                            <span class="text-emerald-600 dark:text-emerald-400 group-hover:translate-x-1 transition-transform">&rarr;</span>
-                        </div>
-                    </div>
-
                 </div>
 
-            </div>
-        </div>
-    </section>
-
-    <!-- 4. TRUST & CREDIBILITY SECTION -->
-    <section class="py-16 theme-page border-b theme-border transition-colors duration-200">
-        <div class="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 space-y-10">
-            <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
-                <div class="lg:col-span-5 space-y-2">
-                    <span class="text-[10px] uppercase font-bold tracking-widest text-blue-600 dark:text-cyan-400 font-mono">TRUST & CREDIBILITY</span>
-                    <h3 class="text-2xl sm:text-3xl font-bold theme-heading tracking-tight leading-snug">
-                        Chosen by teams that cannot afford uncertainty.
-                    </h3>
-                </div>
-                
-                <!-- 4 Trust Pillars -->
-                <div class="lg:col-span-7 grid grid-cols-2 sm:grid-cols-4 gap-4 text-xs font-mono">
-                    <div class="p-3.5 rounded-xl theme-card border theme-border">
-                        <span class="text-lg font-bold text-emerald-500 block">{{ $onTimePercentage }}%</span>
-                        <span class="theme-text-muted text-[11px]">On-time delivery</span>
+                <!-- Step 3 -->
+                <div class="rounded-2xl theme-card border theme-border p-6 sm:p-7 space-y-4 shadow-sm flex flex-col justify-between">
+                    <div class="space-y-3">
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs font-mono font-bold text-blue-600 dark:text-cyan-400 bg-blue-500/10 dark:bg-cyan-400/10 px-2.5 py-1 rounded-md border border-blue-500/20">Step 03</span>
+                            <svg class="w-5 h-5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                        </div>
+                        <h3 class="text-lg font-bold theme-heading tracking-tight">Evaluate delays and arrival schedules</h3>
+                        <p class="text-xs sm:text-sm theme-text-secondary leading-relaxed">
+                            The system monitors milestone timestamps against expected schedules, automatically flagging delays when schedule variance exceeds configured thresholds.
+                        </p>
                     </div>
-                    <div class="p-3.5 rounded-xl theme-card border theme-border">
-                        <span class="text-lg font-bold text-blue-600 dark:text-cyan-400 block">{{ count($activeShipments) }}</span>
-                        <span class="theme-text-muted text-[11px]">Active consignments</span>
+                    <div class="pt-3 border-t theme-border text-[11px] theme-text-muted font-mono">
+                        Dynamic schedule evaluation &bull; Threshold alerts
                     </div>
-                    <div class="p-3.5 rounded-xl theme-card border theme-border">
-                        <span class="text-lg font-bold text-cyan-500 block">{{ count($locations) }}</span>
-                        <span class="theme-text-muted text-[11px]">Container seaports</span>
-                    </div>
-                    <div class="p-3.5 rounded-xl theme-card border theme-border">
-                        <span class="text-lg font-bold theme-heading block">{{ count($carriers) }}</span>
-                        <span class="theme-text-muted text-[11px]">Registered carriers</span>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Registered Shipping Lines -->
-            <div class="pt-6 border-t theme-border">
-                <div class="flex flex-wrap items-center justify-between gap-6 opacity-60 hover:opacity-100 transition-opacity text-xs font-bold tracking-widest uppercase font-mono theme-text-muted">
-                    @foreach($carriers->take(6) as $c)
-                        <span class="hover:theme-heading transition cursor-default">{{ $c->name }}</span>
-                    @endforeach
                 </div>
             </div>
         </div>
     </section>
 
-    <!-- 5. GLOBAL NETWORK & LEAFLET MAP SECTION -->
-    <section id="network" class="py-20 lg:py-28 theme-page border-b theme-border transition-colors duration-200">
+    <!-- 5. GLOBAL NETWORK MAP (Drawn from real seeded routes) -->
+    <section id="network" class="py-16 lg:py-24 theme-page border-b theme-border transition-colors duration-200">
         <div class="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
             <div class="flex flex-col md:flex-row md:items-end justify-between gap-6">
                 <div>
-                    <span class="text-xs font-semibold text-blue-600 dark:text-cyan-400 uppercase tracking-widest font-mono">GLOBAL NETWORK</span>
-                    <h2 class="text-3xl sm:text-4xl font-bold tracking-tight theme-heading mt-1">
-                        Connected across the world.
+                    <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-600/10 dark:bg-blue-600/20 border border-blue-600/25 dark:border-blue-400/30 text-blue-700 dark:text-cyan-300 text-xs font-medium mb-3">
+                        <span class="w-1.5 h-1.5 rounded-full bg-blue-600 dark:bg-cyan-400"></span>
+                        Network map
+                    </div>
+                    <h2 class="text-3xl sm:text-4xl font-extrabold tracking-tight theme-heading">
+                        Global shipping network
                     </h2>
-                    <p class="text-xs sm:text-sm theme-text-secondary mt-1">Strategic deepwater seaports and oceanic shipping lanes tracked through verified UN/LOCODE milestones.</p>
+                    <p class="text-xs sm:text-sm theme-text-secondary mt-1 max-w-2xl">
+                        Strategic ocean container routes and seaport hubs tracked across global shipping lanes with verified UN/LOCODE milestones.
+                    </p>
                 </div>
                 <div class="flex items-center space-x-6 text-xs font-mono">
                     <div class="flex items-center gap-2">
                         <span class="w-2.5 h-2.5 rounded-full bg-cyan-400 animate-pulse"></span>
-                        <span class="theme-text-secondary">Active Shipments: <strong>{{ count($activeShipments) }}</strong></span>
+                        <span class="theme-text-secondary">Active consignments: <strong>{{ count($activeShipments) }}</strong></span>
                     </div>
                     <div class="flex items-center gap-2">
                         <span class="w-2.5 h-2.5 rounded-full bg-blue-500"></span>
-                        <span class="theme-text-secondary">Distribution Hubs: <strong>{{ count($locations) }}</strong></span>
+                        <span class="theme-text-secondary">Seaport hubs: <strong>{{ count($locations) }}</strong></span>
                     </div>
                 </div>
             </div>
@@ -547,86 +436,122 @@
         </div>
     </section>
 
-    <!-- 6. MARITIME INTELLIGENCE: CURRENCY FX & NEWS WIRE -->
-    <section id="news" class="py-16 border-b theme-border theme-card-elevated transition-colors duration-200">
-        <div class="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-                
-                <!-- Left: Currency FX Rates -->
-                <div id="rates" class="lg:col-span-5 rounded-2xl theme-card border theme-border p-6 shadow-2xl space-y-4">
-                    <div class="flex items-center justify-between pb-3 border-b theme-border">
-                        <div>
-                            <span class="text-[10px] uppercase font-bold text-blue-600 dark:text-cyan-400 tracking-wider font-mono">EXCHANGE RATES</span>
-                            <h3 class="text-base font-bold theme-heading tracking-tight">Global Currency FX Matrix</h3>
-                        </div>
-                        <x-data-source-badge :source="$currencyData['data_source'] ?? 'simulated'" />
-                    </div>
-                    <p class="text-xs theme-text-secondary">Live & cached foreign exchange rates for automated cargo value reconciliation.</p>
+    <!-- 6. THREE ROLES (Admin, Operator, Customer) -->
+    <section id="roles" class="py-16 lg:py-24 theme-page border-b theme-border transition-colors duration-200">
+        <div class="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
+            <div class="max-w-2xl space-y-3">
+                <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-600/10 dark:bg-blue-600/20 border border-blue-600/25 dark:border-blue-400/30 text-blue-700 dark:text-cyan-300 text-xs font-medium">
+                    <span class="w-1.5 h-1.5 rounded-full bg-blue-600 dark:bg-cyan-400"></span>
+                    User roles
+                </div>
+                <h2 class="text-3xl sm:text-4xl font-extrabold tracking-tight theme-heading">
+                    Tailored for every participant
+                </h2>
+                <p class="text-sm sm:text-base theme-text-secondary leading-relaxed">
+                    Role-based access control provides dedicated tools and views for system administrators, operations staff, and cargo owners.
+                </p>
+            </div>
 
-                    <div class="grid grid-cols-2 gap-3 text-xs font-mono">
-                        @php
-                            $majorCurrencies = ['EUR', 'CNY', 'SGD', 'GBP', 'JPY', 'IDR', 'AUD', 'CAD', 'CHF', 'AED'];
-                            $filteredRates = !empty($rates) ? array_intersect_key($rates, array_flip($majorCurrencies)) : [];
-                            if (empty($filteredRates)) {
-                                $filteredRates = array_slice($rates, 0, 10, true);
-                            }
-                        @endphp
-                        @foreach($filteredRates as $cur => $rate)
-                            <div class="p-3 rounded-xl theme-card-elevated border theme-border flex items-center justify-between">
-                                <span class="font-bold theme-heading">USD / {{ $cur }}</span>
-                                <span class="text-blue-600 dark:text-cyan-400 font-semibold">{{ is_numeric($rate) ? number_format($rate, 4) : $rate }}</span>
-                            </div>
-                        @endforeach
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8">
+                <!-- Role 1: System Administrator -->
+                <div class="rounded-2xl theme-card border theme-border p-6 sm:p-7 space-y-5 shadow-sm flex flex-col justify-between">
+                    <div class="space-y-4">
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs font-semibold px-2.5 py-1 rounded-md bg-purple-500/15 text-purple-600 dark:text-purple-400 border border-purple-500/20">Administrator</span>
+                            <span class="text-xs theme-text-muted font-mono">admin@cargotrace.test</span>
+                        </div>
+                        <h3 class="text-lg font-bold theme-heading tracking-tight">Platform governance & settings</h3>
+                        <p class="text-xs sm:text-sm theme-text-secondary leading-relaxed">
+                            Manage user accounts and permissions, configure global delay calculation thresholds (LOW and MEDIUM alert hours), manage seaport master records, and inspect audit trails.
+                        </p>
+                        <div class="flex flex-wrap gap-1.5 pt-1">
+                            <span class="text-[11px] px-2 py-0.5 rounded theme-card-elevated border theme-border theme-text-secondary font-mono">User management</span>
+                            <span class="text-[11px] px-2 py-0.5 rounded theme-card-elevated border theme-border theme-text-secondary font-mono">Delay thresholds</span>
+                            <span class="text-[11px] px-2 py-0.5 rounded theme-card-elevated border theme-border theme-text-secondary font-mono">Audit logs</span>
+                        </div>
+                    </div>
+                    <div class="pt-4 border-t theme-border flex items-center justify-between">
+                        <span class="text-xs font-medium theme-text-muted">Full administrative scope</span>
+                        <a href="{{ route('login') }}" class="text-xs font-semibold text-blue-600 dark:text-cyan-400 hover:underline">Sign in &rarr;</a>
                     </div>
                 </div>
 
-                <!-- Right: Maritime & Logistics News Feed -->
-                <div class="lg:col-span-7 rounded-2xl theme-card border theme-border p-6 shadow-2xl space-y-4">
-                    <div class="flex items-center justify-between pb-3 border-b theme-border">
-                        <div>
-                            <span class="text-[10px] uppercase font-bold text-blue-600 dark:text-cyan-400 tracking-wider font-mono">EXTERNAL NEWS WIRE</span>
-                            <h3 class="text-base font-bold theme-heading tracking-tight">Maritime & Supply Chain Bulletins</h3>
+                <!-- Role 2: Logistics Operator -->
+                <div class="rounded-2xl theme-card border theme-border p-6 sm:p-7 space-y-5 shadow-sm flex flex-col justify-between">
+                    <div class="space-y-4">
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs font-semibold px-2.5 py-1 rounded-md bg-blue-500/15 text-blue-600 dark:text-cyan-400 border border-blue-500/20">Logistics Operator</span>
+                            <span class="text-xs theme-text-muted font-mono">operator@cargotrace.test</span>
                         </div>
-                        <x-data-source-badge :source="$news[0]['data_source'] ?? 'simulated'" />
+                        <h3 class="text-lg font-bold theme-heading tracking-tight">Consignment & milestone operations</h3>
+                        <p class="text-xs sm:text-sm theme-text-secondary leading-relaxed">
+                            Create ocean container consignments, assign shipping lines and vessels, log checkpoint milestones at port berths, and evaluate transit schedules.
+                        </p>
+                        <div class="flex flex-wrap gap-1.5 pt-1">
+                            <span class="text-[11px] px-2 py-0.5 rounded theme-card-elevated border theme-border theme-text-secondary font-mono">Consignment booking</span>
+                            <span class="text-[11px] px-2 py-0.5 rounded theme-card-elevated border theme-border theme-text-secondary font-mono">Milestone logging</span>
+                            <span class="text-[11px] px-2 py-0.5 rounded theme-card-elevated border theme-border theme-text-secondary font-mono">ETA evaluation</span>
+                        </div>
                     </div>
-
-                    <div class="divide-y theme-border space-y-3">
-                        @foreach(array_slice($news, 0, 4) as $item)
-                            <div class="pt-3 first:pt-0 space-y-1">
-                                <div class="flex items-center justify-between text-xs">
-                                    <a href="{{ $item['url'] ?? '#' }}" target="_blank" rel="noopener" class="font-bold theme-heading hover:text-blue-500 dark:hover:text-cyan-400 transition cursor-pointer">
-                                        {{ $item['headline'] ?? $item['title'] ?? 'Logistics Update' }}
-                                    </a>
-                                    <span class="text-[10px] theme-text-muted font-mono shrink-0 ml-2">{{ $item['source'] ?? 'Global Desk' }}</span>
-                                </div>
-                                <p class="text-xs theme-text-secondary leading-relaxed">{{ $item['summary'] ?? '' }}</p>
-                            </div>
-                        @endforeach
+                    <div class="pt-4 border-t theme-border flex items-center justify-between">
+                        <span class="text-xs font-medium theme-text-muted">Operational desk scope</span>
+                        <a href="{{ route('login') }}" class="text-xs font-semibold text-blue-600 dark:text-cyan-400 hover:underline">Sign in &rarr;</a>
                     </div>
                 </div>
 
+                <!-- Role 3: Cargo Customer -->
+                <div class="rounded-2xl theme-card border theme-border p-6 sm:p-7 space-y-5 shadow-sm flex flex-col justify-between">
+                    <div class="space-y-4">
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs font-semibold px-2.5 py-1 rounded-md bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">Cargo Customer</span>
+                            <span class="text-xs theme-text-muted font-mono">customer@cargotrace.test</span>
+                        </div>
+                        <h3 class="text-lg font-bold theme-heading tracking-tight">Shipment tracking & visibility</h3>
+                        <p class="text-xs sm:text-sm theme-text-secondary leading-relaxed">
+                            Track container consignments by waybill number, review verified milestone progression, check destination seaport weather, and view arrival estimates.
+                        </p>
+                        <div class="flex flex-wrap gap-1.5 pt-1">
+                            <span class="text-[11px] px-2 py-0.5 rounded theme-card-elevated border theme-border theme-text-secondary font-mono">Consignment tracking</span>
+                            <span class="text-[11px] px-2 py-0.5 rounded theme-card-elevated border theme-border theme-text-secondary font-mono">Port weather</span>
+                            <span class="text-[11px] px-2 py-0.5 rounded theme-card-elevated border theme-border theme-text-secondary font-mono">Timeline view</span>
+                        </div>
+                    </div>
+                    <div class="pt-4 border-t theme-border flex items-center justify-between">
+                        <span class="text-xs font-medium theme-text-muted">Client portal scope</span>
+                        <a href="{{ route('login') }}" class="text-xs font-semibold text-blue-600 dark:text-cyan-400 hover:underline">Sign in &rarr;</a>
+                    </div>
+                </div>
             </div>
         </div>
     </section>
 
     <!-- 7. ENTERPRISE FOOTER -->
     <footer class="theme-sidebar border-t theme-border py-12 text-xs theme-text-muted transition-colors duration-200">
-        <div class="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4">
-            <div class="flex items-center space-x-3">
-                <div class="w-8 h-8 rounded-xl bg-gradient-to-br from-blue-500 via-blue-600 to-cyan-500 flex items-center justify-center text-white font-bold text-xs shadow-md shadow-blue-500/25">
-                    <svg class="w-4 h-4 text-white" viewBox="0 0 24 24" fill="currentColor">
-                        <path d="M12 22L2 5h20L12 22zm0-4.5l6.5-11h-13l6.5 11z"/>
-                    </svg>
+        <div class="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
+            <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
+                <div class="flex items-center space-x-3">
+                    <div class="w-8 h-8 rounded-xl bg-gradient-to-br from-blue-500 via-blue-600 to-cyan-500 flex items-center justify-center text-white font-bold text-xs shadow-md shadow-blue-500/25">
+                        <svg class="w-4 h-4 text-white" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M12 22L2 5h20L12 22zm0-4.5l6.5-11h-13l6.5 11z"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <span class="theme-heading font-semibold block">&copy; {{ date('Y') }} CargoTrace &bull; Ocean Container Consignment Tracking</span>
+                        <span class="text-[11px] text-blue-600 dark:text-cyan-400 font-sans">Individual University Web Programming Capstone Project &bull; Laravel, Blade & Tailwind CSS</span>
+                    </div>
                 </div>
-                <div>
-                    <span class="theme-heading font-semibold block">&copy; {{ date('Y') }} CargoTrace &bull; Global Shipment Visibility Platform</span>
-                    <span class="text-[11px] text-blue-600 dark:text-cyan-400 font-mono">Academic Capstone Evaluation Notice: Pure Maritime Container Tracking.</span>
+                <div class="flex flex-wrap items-center gap-6 theme-text-secondary font-medium">
+                    <a href="#timeline" class="hover:theme-heading transition">Timeline</a>
+                    <a href="#how-it-works" class="hover:theme-heading transition">How it works</a>
+                    <a href="#network" class="hover:theme-heading transition">Network map</a>
+                    <a href="#roles" class="hover:theme-heading transition">Roles</a>
+                    <a href="{{ route('login') }}" class="text-blue-600 dark:text-cyan-400 hover:underline">Sign in</a>
                 </div>
             </div>
-            <div class="flex items-center space-x-6 theme-text-secondary">
-                <a href="#network" class="hover:theme-heading transition">Ports Network</a>
-                <a href="#platform" class="hover:theme-heading transition">Platform Overview</a>
-                <a href="{{ route('login') }}" class="text-blue-600 dark:text-cyan-400 hover:underline font-semibold">Operations Login</a>
+
+            <div class="pt-6 border-t theme-border flex flex-col sm:flex-row items-center justify-between gap-4 text-[11px] theme-text-muted">
+                <span>Standardized UN/LOCODE seaport milestones and rule-based arrival schedule evaluations.</span>
+                <span>Worldwide ocean container freight scope.</span>
             </div>
         </div>
     </footer>

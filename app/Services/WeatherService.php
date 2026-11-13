@@ -25,7 +25,7 @@ class WeatherService
     protected int $cacheTtl = 1800;
 
     /**
-     * Fetch live seaport atmospheric telemetry with Open-Meteo API and 30-min cache.
+     * Fetch live seaport atmospheric observations with Open-Meteo API and 30-min cache.
      *
      * @return array<string, mixed>
      */
@@ -103,7 +103,7 @@ class WeatherService
     }
 
     /**
-     * Fetch real Open-Meteo Marine API telemetry (wave height, swell, current, period, direction).
+     * Fetch real Open-Meteo Marine API observations (wave height, swell, current, period, direction).
      *
      * @return array<string, mixed>
      */

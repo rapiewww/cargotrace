@@ -15,7 +15,7 @@
                 Seaport Weather & Marine Observations
             </h1>
             <p class="text-xs sm:text-sm theme-text-secondary mt-1">
-                Atmospheric conditions, wind thresholds for quay crane operations, and live marine telemetry across container terminal hubs.
+                Atmospheric conditions, wind thresholds for quay crane operations, and marine observations across container terminal hubs.
             </p>
         </div>
 

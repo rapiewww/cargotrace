@@ -75,7 +75,7 @@
         <div class="space-y-6">
             <x-card class="space-y-4">
                 <div>
-                    <h3 class="text-sm font-bold text-white uppercase tracking-wider font-mono">Fleet Telemetry Status</h3>
+                    <h3 class="text-sm font-bold theme-heading tracking-tight font-sans">Active tracking status</h3>
                     <div class="mt-3 space-y-2 text-xs font-mono">
                         <div class="p-3 rounded-xl bg-slate-950/60 border border-slate-800 flex justify-between">
                             <span class="text-slate-400">Active Shipments:</span>

@@ -13,7 +13,7 @@
             Create Global Cargo Manifest
         </h1>
         <p class="text-xs sm:text-sm theme-text-secondary">
-            Register freight waybill, schedule departure/arrival windows, and initialize rule-based telemetry.
+            Register freight waybill, schedule departure/arrival windows, and initialize milestone tracking.
         </p>
     </div>
 
@@ -168,7 +168,7 @@
             <div class="pt-4 border-t theme-border flex items-center justify-between">
                 <a href="{{ route('shipments.index') }}" class="text-xs theme-text-secondary hover:theme-heading transition">Cancel</a>
                 <button type="submit" class="px-6 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs uppercase tracking-wider transition shadow-lg shadow-blue-500/25">
-                    Save & Initialize Telemetry &rarr;
+                    Save & Initialize Milestones &rarr;
                 </button>
             </div>
         </form>

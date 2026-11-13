@@ -93,7 +93,7 @@ class MasterApiController extends Controller
 
         return response()->json([
             'status' => 'success',
-            'message' => 'Location created successfully with geocoding and external telemetry.',
+            'message' => 'Location created successfully with geocoding and weather observations.',
             'data' => new LocationResource($location),
         ], Response::HTTP_CREATED);
     }

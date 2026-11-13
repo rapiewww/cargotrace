@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Carrier;
 use App\Models\Location;
 use App\Models\Notification;
+use App\Models\Setting;
 use App\Models\Shipment;
 use App\Models\ShipmentException;
 use App\Services\CurrencyService;
@@ -107,6 +108,10 @@ class DashboardController extends Controller
         $exceptionRate = $activeShipmentsCount > 0 ? round(($openExceptions / $activeShipmentsCount) * 100, 1) : 0.0;
         $totalVolumeCbm = (clone $shipmentQuery)->sum('total_volume_cbm');
 
+        // Dynamic delay thresholds from database settings
+        $delayLowHours = (float) (Setting::get('delay_low_hours') ?? config('cargotrace.delay.low_hours', 6));
+        $delayMediumHours = (float) (Setting::get('delay_medium_hours') ?? config('cargotrace.delay.medium_hours', 24));
+
         // Real 14-day creation series for Sparkline 1
         $sparklineShipments = [];
         for ($d = 13; $d >= 0; $d--) {
@@ -115,6 +120,9 @@ class DashboardController extends Controller
             $cnt = (clone $shipmentQuery)->whereBetween('created_at', [$date, $nextDate])->count();
             $sparklineShipments[] = $cnt;
         }
+        $spark1NonZero = array_filter($sparklineShipments, fn ($v) => $v > 0);
+        $spark1Flat = (count($sparklineShipments) < 3) || (min($sparklineShipments) === max($sparklineShipments)) || (count($spark1NonZero) < 2);
+
         $maxSpark = max(max($sparklineShipments), 1);
         $sparkPoints = [];
         foreach ($sparklineShipments as $idx => $val) {
@@ -126,6 +134,14 @@ class DashboardController extends Controller
         $sparkline1Area = $sparkline1Path.' L200,40 L0,40 Z';
 
         // Real 8-week on-time performance rate for Sparkline 2
+        $onTimeRates = array_map(function ($tw) {
+            $totalWk = $tw['on_time'] + $tw['delayed'];
+
+            return $totalWk > 0 ? round(($tw['on_time'] / $totalWk) * 100, 1) : null;
+        }, $trendData);
+        $validRates = array_values(array_filter($onTimeRates, fn ($v) => $v !== null));
+        $spark2Flat = (count($validRates) < 3) || (min($validRates) === max($validRates));
+
         $spark2Points = [];
         foreach ($trendData as $idx => $tw) {
             $totalWk = $tw['on_time'] + $tw['delayed'];
@@ -136,6 +152,22 @@ class DashboardController extends Controller
         }
         $sparkline2Path = 'M'.implode(' L', $spark2Points);
         $sparkline2Area = $sparkline2Path.' L200,40 L0,40 Z';
+
+        // Comparison with previous 30-day period for on-time rate
+        $currPeriodDelivered = (clone $shipmentQuery)->where('status', 'DELIVERED')->where('updated_at', '>=', now()->subDays(30))->count();
+        $currPeriodOnTime = (clone $shipmentQuery)->where('status', 'DELIVERED')->where('is_delayed', false)->where('updated_at', '>=', now()->subDays(30))->count();
+        $currPeriodRate = $currPeriodDelivered > 0 ? round(($currPeriodOnTime / $currPeriodDelivered) * 100, 1) : null;
+
+        $prevPeriodDelivered = (clone $shipmentQuery)->where('status', 'DELIVERED')->whereBetween('updated_at', [now()->subDays(60), now()->subDays(30)])->count();
+        $prevPeriodOnTime = (clone $shipmentQuery)->where('status', 'DELIVERED')->where('is_delayed', false)->whereBetween('updated_at', [now()->subDays(60), now()->subDays(30)])->count();
+        $prevPeriodRate = $prevPeriodDelivered > 0 ? round(($prevPeriodOnTime / $prevPeriodDelivered) * 100, 1) : null;
+
+        $onTimeComparison = null;
+        if ($currPeriodRate !== null && $prevPeriodRate !== null) {
+            $diff = round($currPeriodRate - $prevPeriodRate, 1);
+            $sign = $diff >= 0 ? '+' : '';
+            $onTimeComparison = "{$sign}{$diff}% vs prev 30d";
+        }
 
         // Featured shipment (prefer active in-transit with exceptions or delay)
         $featuredShipment = (clone $shipmentQuery)
@@ -311,7 +343,12 @@ class DashboardController extends Controller
             'sparkline1Path',
             'sparkline1Area',
             'sparkline2Path',
-            'sparkline2Area'
+            'sparkline2Area',
+            'delayLowHours',
+            'delayMediumHours',
+            'spark1Flat',
+            'spark2Flat',
+            'onTimeComparison'
         ));
     }
 }

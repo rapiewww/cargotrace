@@ -71,7 +71,7 @@
         <x-status-stepper :status="$shipment->status" :compact="false" />
     </x-card>
 
-    <!-- Main Grid: Left Route Map & Actions / Right Timeline & Telemetry -->
+    <!-- Main Grid: Left Route Map & Actions / Right Timeline & Milestones -->
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
         <!-- Left Column: Map & Route Details (7 cols) -->
         <div class="lg:col-span-7 space-y-6">
@@ -344,7 +344,7 @@
                             </div>
                             <input type="text" name="description" placeholder="Checkpoint remark (e.g. Cleared customs gate 3)" required class="w-full px-3 py-2 rounded-xl theme-input border theme-border text-xs focus:ring-1 focus:ring-blue-500">
                             <button type="submit" class="w-full py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs uppercase tracking-wider transition">
-                                Add Checkpoint & Sync Telemetry
+                                Add Checkpoint & Evaluate ETA
                             </button>
                         </form>
                     </div>

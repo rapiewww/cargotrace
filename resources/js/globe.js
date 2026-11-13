@@ -193,10 +193,10 @@ export function initMaritimeGlobe(containerId, options = {}) {
         controls.autoRotateSpeed = 0.45;
         controls.enableZoom = true;
 
-        // When user interacts, update telemetry coordinates display
+        // When user interacts, update map center coordinates display
         controls.addEventListener('change', () => {
             const pov = globeInstance.pointOfView();
-            updateTelemetryCoordinates(pov.lat, pov.lng);
+            updateMapCoordinates(pov.lat, pov.lng);
         });
     }
 
@@ -204,7 +204,7 @@ export function initMaritimeGlobe(containerId, options = {}) {
     globeInstance.onPointClick(point => {
         if (controls) controls.autoRotate = false;
         globeInstance.pointOfView({ lat: point.lat, lng: point.lng, altitude: 1.5 }, 1200);
-        updateTelemetryCoordinates(point.lat, point.lng);
+        updateMapCoordinates(point.lat, point.lng);
         highlightActivityRow(null, point.unlocode);
     });
 
@@ -228,20 +228,20 @@ export function initMaritimeGlobe(containerId, options = {}) {
 }
 
 /**
- * Update the dynamic X / Y telemetry coordinates displayed on the left panel
+ * Update the dynamic map center coordinates displayed on the left panel
  */
-export function updateTelemetryCoordinates(lat, lng) {
-    const xEl = document.getElementById('telemetry-coord-x');
-    const yEl = document.getElementById('telemetry-coord-y');
-    if (xEl) xEl.textContent = Number(lat).toFixed(6);
-    if (yEl) yEl.textContent = Number(lng).toFixed(6);
+export function updateMapCoordinates(lat, lng) {
+    const latEl = document.getElementById('map-coord-lat');
+    const lngEl = document.getElementById('map-coord-lng');
+    if (latEl) latEl.textContent = Number(lat).toFixed(6);
+    if (lngEl) lngEl.textContent = Number(lng).toFixed(6);
 }
 
 /**
  * Fly camera to a specific shipment route or seaport on 3D Globe and 2D Map
  */
 export function focusMaritimeEntity(lat, lng, trackingNumber = null) {
-    updateTelemetryCoordinates(lat, lng);
+    updateMapCoordinates(lat, lng);
 
     // 1. Focus 3D Globe
     if (globeInstance) {

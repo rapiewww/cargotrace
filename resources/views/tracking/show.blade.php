@@ -164,7 +164,7 @@
         <div class="max-w-5xl mx-auto px-4 space-y-2">
             <div>&copy; {{ date('Y') }} CargoTrace &bull; Public Shipment Visibility</div>
             <p class="text-[11px] theme-text-muted opacity-80">
-                Non-sensitive telemetry view. Shipper identity, cargo value, and commercial invoices are restricted to authenticated consignees.
+                Non-sensitive checkpoint view. Shipper identity, cargo value, and commercial invoices are restricted to authenticated consignees.
             </p>
         </div>
     </footer>

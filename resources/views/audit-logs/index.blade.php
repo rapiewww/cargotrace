@@ -13,7 +13,7 @@
                 </span>
             </div>
             <p class="text-xs sm:text-sm theme-text-secondary mt-1">
-                Chronological record of status advancements, telemetry changes, and exception reports.
+                Chronological record of status advancements, milestone updates, and exception reports.
             </p>
         </div>
     </div>

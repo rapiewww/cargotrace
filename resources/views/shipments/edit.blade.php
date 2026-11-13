@@ -15,7 +15,7 @@
             Edit Cargo Manifest: <span class="font-mono text-blue-600 dark:text-cyan-400">{{ $shipment->tracking_number }}</span>
         </h1>
         <p class="text-xs sm:text-sm theme-text-secondary">
-            Update routing, schedule windows, status progression, and re-evaluate ETA telemetry.
+            Update routing, schedule windows, status progression, and re-evaluate ETA calculations.
         </p>
     </div>
 
@@ -187,7 +187,7 @@
             <div class="pt-4 border-t theme-border flex items-center justify-between">
                 <a href="{{ route('shipments.show', $shipment) }}" class="text-xs theme-text-secondary hover:theme-heading transition">Cancel</a>
                 <button type="submit" class="px-6 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs transition shadow-md shadow-blue-600/20">
-                    Save Changes & Re-evaluate Telemetry &rarr;
+                    Save Changes & Re-evaluate Schedule &rarr;
                 </button>
             </div>
         </form>
