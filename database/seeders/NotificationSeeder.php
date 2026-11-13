@@ -104,3 +104,4 @@ class NotificationSeeder extends Seeder
         }
     }
 }
+
