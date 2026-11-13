@@ -18,9 +18,7 @@ use Illuminate\Support\Facades\Route;
 Route::post('/register', [AuthController::class, 'register'])->middleware('throttle:10,1');
 Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:10,1');
 Route::get('/currency/currencies', [CurrencyApiController::class, 'currencies']);
-Route::get('/currency/currencies', [CurrencyApiController::class, 'currencies']);
 Route::match(['get', 'post'], '/currency/convert', [CurrencyApiController::class, 'convert']);
-Route::get('/currency/history', [CurrencyApiController::class, 'history']);
 Route::get('/currency/history', [CurrencyApiController::class, 'history']);
 
 // Authenticated Endpoints (Sanctum)

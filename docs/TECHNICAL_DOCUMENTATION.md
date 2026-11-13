@@ -35,42 +35,48 @@ graph TD
     subgraph HttpRouting [Routing & Middleware Guard]
         WebRouter["routes/web.php (Session Auth + CSRF)"]
         ApiRouter["routes/api.php (Sanctum Bearer Token)"]
+        SecurityHeaders["SecurityHeadersMiddleware (HSTS, CSP, FrameOptions)"]
         RbacMiddleware["EnsureUserHasRole Middleware (admin, operator, customer)"]
-        ThrottleGate["Rate Limiter (throttle:30,1 on Public Tracking)"]
+        ThrottleGate["Rate Limiter (throttle:30,1 on Track, throttle:10,1 on Login)"]
     end
 
     subgraph ControllerLayer [Controller Layer]
-        WebControllers["Web Controllers (Dashboard, Shipments, Exceptions, Admin, etc.)"]
-        ApiControllers["Api Controllers (ShipmentApi, TrackingApi, ExceptionApi, MasterApi)"]
+        WebControllers["Web Controllers (Dashboard, Shipments, Import, Exceptions, Analytics, etc.)"]
+        ApiControllers["API Controllers (ShipmentApi, TrackingApi, ExceptionApi, MasterApi, CurrencyApi)"]
         PolicyGate["Laravel Policies (ShipmentPolicy)"]
     end
 
     subgraph ServiceLayer [Application Service Layer (app/Services)]
         ShipmentSvc["ShipmentService (Waybill CRUD, Status Progression, Terminal Locks)"]
-        EtaSvc["EtaService (Deterministic Delay Variance & Severity Categorization)"]
-        TrackingSvc["TrackingService (Checkpoint Milestones & Port Weather Snapping)"]
+        EtaSvc["EtaService (Deterministic Delay Variance & Notification Dispatch)"]
+        TrackingSvc["TrackingService (Milestones & Port Weather Snapping)"]
         ExceptionSvc["ExceptionService (Incident Logging, Investigation, Resolution)"]
-        ExternalSvc["ExternalIntegrationService (OpenWeather, OpenExchange, NewsData)"]
-        AuditSvc["AuditService (Immutable Audit Trail & IP Logging)"]
+        FreeTimeSvc["FreeTimeService (Container Free Days & Demurrage Countdown)"]
+        ImportSvc["ShipmentImportService (CSV Parsing, ISO 6346 Validation, Atomic Commit)"]
+        AnalyticsSvc["AnalyticsService (SQL Aggregates, On-Time Rates, Delayed Lanes)"]
+        WeatherSvc["WeatherService (Open-Meteo Atmospheric & Marine Wave Height API)"]
+        CurrencySvc["CurrencyService (ExchangeRate-API & Frankfurter ECB Time-Series)"]
+        NewsSvc["MaritimeNewsService (Verified Maritime RSS Syndication & GNews)"]
+        AuditSvc["AuditService (Immutable Audit Trail & Actor Attribution)"]
     end
 
     subgraph DataCacheLayer [Persistence & Caching Infrastructure]
         AppDb[("MySQL 8.4 Relational Storage (InnoDB Engine)")]
-        CacheStore[("Cache Layer (15m Cache for External Telemetry & Settings)")]
+        CacheStore[("Cache Store (15m-30m TTL for External Weather, FX & RSS)")]
     end
 
-    subgraph ExternalGateways [External Telemetry Gateways]
-        OpenWeather["OpenWeatherMap API (Port Atmospheric Conditions)"]
-        OpenExchange["Open Exchange Rates API (Foreign Currency to USD)"]
-        NewsData["NewsData.io API (Maritime Logistics Bulletins)"]
-        Nominatim["OpenStreetMap Nominatim (UN/LOCODE Geocoding)"]
+    subgraph ExternalGateways [External Maritime & Open Data Gateways]
+        OpenMeteo["Open-Meteo & Marine API (Atmospheric & Wave Heights)"]
+        OpenERAPI["ExchangeRate-API & Frankfurter (Spot & ECB 30-Day Trends)"]
+        NewsRSS["Maritime RSS Wire (gCaptain, Maritime Exec, Splash247, etc.)"]
+        Nominatim["OpenStreetMap Nominatim (Seaport UN/LOCODE Geocoding)"]
     end
 
     BrowserWeb --> WebRouter
     PostmanClient --> ApiRouter
 
-    WebRouter --> RbacMiddleware --> WebControllers
-    ApiRouter --> RbacMiddleware --> ApiControllers
+    WebRouter --> SecurityHeaders --> ThrottleGate --> RbacMiddleware --> WebControllers
+    ApiRouter --> SecurityHeaders --> ThrottleGate --> RbacMiddleware --> ApiControllers
 
     WebControllers --> PolicyGate
     ApiControllers --> PolicyGate
@@ -79,22 +85,29 @@ graph TD
     ShipmentSvc --> AppDb
     ShipmentSvc --> AuditSvc
     ShipmentSvc --> EtaSvc
-    ShipmentSvc --> ExternalSvc
+    ShipmentSvc --> FreeTimeSvc
 
     TrackingSvc --> AppDb
-    TrackingSvc --> ExternalSvc
+    TrackingSvc --> WeatherSvc
 
     ExceptionSvc --> AppDb
     ExceptionSvc --> AuditSvc
 
-    EtaSvc --> AppDb
-    EtaSvc --> CacheStore
+    ImportSvc --> AppDb
+    ImportSvc --> AuditSvc
 
-    ExternalSvc --> CacheStore
-    ExternalSvc -.->|Cache Miss| OpenWeather
-    ExternalSvc -.->|Cache Miss| OpenExchange
-    ExternalSvc -.->|Cache Miss| NewsData
-    ExternalSvc -.->|Cache Miss| Nominatim
+    AnalyticsSvc --> AppDb
+
+    EtaSvc --> AppDb
+
+    WeatherSvc --> CacheStore
+    WeatherSvc -.->|Cache Miss| OpenMeteo
+
+    CurrencySvc --> CacheStore
+    CurrencySvc -.->|Cache Miss| OpenERAPI
+
+    NewsSvc --> CacheStore
+    NewsSvc -.->|Cache Miss| NewsRSS
 
     AuditSvc --> AppDb
 ```
@@ -106,7 +119,12 @@ graph TD
   - `EtaService`: Deterministically evaluates schedule variances, assigns `delay_severity` (`NONE`, `LOW`, `MEDIUM`, `HIGH`), and dispatches in-app notifications.
   - `TrackingService`: Records point-in-time milestones, binds geographic coordinates, and automatically snaps verified atmospheric weather.
   - `ExceptionService`: Tracks maritime anomalies (`PORT_CONGESTION`, `CUSTOMS_HOLD`, `WEATHER_DELAY`, etc.), escalates statuses, and records resolution notes.
-  - `ExternalIntegrationService`: Wraps HTTP callouts with a resilient 15-minute caching mechanism and transparent fallback simulation flags.
+  - `FreeTimeService`: Calculates container free-time dwell days remaining or days over limit based on arrival milestones and administrative thresholds.
+  - `ShipmentImportService`: Processes batch CSV consignment uploads with header validation, ISO 6346 container number checking, preview rendering, and atomic transaction commits.
+  - `AnalyticsService`: Executes high-performance SQL aggregate queries to compute carrier on-time rates, average delay hours by lane, weekly consignment trends, and exception resolution times.
+  - `WeatherService`: Fetches and caches Open-Meteo atmospheric metrics (temperature, wind, visibility) and marine wave heights with STS crane wind advisories.
+  - `CurrencyService`: Manages multi-currency spot conversions to USD and historical ECB 30-day time-series data.
+  - `MaritimeNewsService`: Pools, de-duplicates, and caches RSS maritime intelligence from 7 verified maritime sources with optional GNews fallback.
   - `AuditService`: Persists JSON deltas of model modifications, user identities, and client IP addresses into `audit_logs`.
 
 ---
@@ -210,6 +228,7 @@ erDiagram
     shipment_items {
         bigint id PK
         bigint shipment_id FK "References shipments.id (Cascade)"
+        string container_number "ISO 6346 (e.g. MSKU 123456 7)"
         string sku
         string description
         int quantity
@@ -391,6 +410,7 @@ Detailed line-item cargo inventory enclosed inside the ocean container.
 |---|---|---|---|---|---|
 | `id` | `BIGINT UNSIGNED` | No | Auto | Primary Key | Item identifier |
 | `shipment_id` | `BIGINT UNSIGNED` | No | None | Foreign Key (`shipments.id` on delete cascade) | Parent shipment waybill |
+| `container_number` | `VARCHAR(20)` | Yes | `NULL` | Index | ISO 6346 compliant container number (e.g. `MSKU 123456 7`) |
 | `sku` | `VARCHAR(100)` | No | None | Index | Stock Keeping Unit / Part number |
 | `description` | `VARCHAR(255)` | No | None | - | Description of commodity |
 | `quantity` | `INT` | No | None | Minimum 1 | Unit count packed |
@@ -611,22 +631,37 @@ CargoTrace exposes a comprehensive RESTful API under `/api` documented in `docs/
   ```
 - Subsequent requests pass the header: `Authorization: Bearer {{sanctum_token}}`.
 
-### 6.2 Key Endpoint Summary
-- `POST /api/register` &bull; Public customer self-registration.
-- `POST /api/login` &bull; Issue Sanctum token.
-- `POST /api/logout` &bull; Revoke active token.
-- `GET /api/user` &bull; Authenticated profile.
-- `GET /api/shipments` &bull; Paginated shipments list with filters (`status`, `is_delayed`, `carrier_id`, `search`).
-- `POST /api/shipments` &bull; Create new container shipment (Admin/Operator).
-- `GET /api/shipments/{id}` &bull; Retrieve full waybill with milestones and exceptions.
-- `PUT /api/shipments/{id}` &bull; Revise status and ETA (triggers delay recalculation).
-- `DELETE /api/shipments/{id}` &bull; Delete shipment record (Strictly Admin only).
-- `POST /api/shipments/{id}/tracking` &bull; Log milestone event with weather snapshot.
-- `POST /api/shipments/{id}/exceptions` &bull; Report operational incident.
-- `PATCH /api/exceptions/{id}` &bull; Update exception resolution status.
-- `GET /api/integrations/weather` &bull; Query weather by latitude/longitude.
-- `GET /api/integrations/currency` &bull; Live currency conversion.
-- `GET /api/integrations/news` &bull; Query maritime logistics bulletins.
+### 6.2 Complete REST API Endpoint Specification
+
+All API endpoints are prefixed with `/api` (except the root `/up` healthcheck) and return standard JSON payloads.
+
+| Method | Endpoint | Authentication / Middleware | Access Scope | Description & Payload |
+|---|---|---|---|---|
+| `GET` | `/up` | None | Public | Container healthcheck endpoint returning HTTP 200. |
+| `POST` | `/api/register` | `throttle:10,1` | Guest | Customer self-registration with name, email, password, and company. |
+| `POST` | `/api/login` | `throttle:10,1` | Guest | Authenticate user credentials; issues Sanctum personal access bearer token. |
+| `POST` | `/api/logout` | `auth:sanctum` | Authenticated | Revoke caller's active personal access bearer token. |
+| `GET` | `/api/user` | `auth:sanctum` | Authenticated | Retrieve authenticated user profile, role, and corporate affiliation. |
+| `GET` | `/api/shipments` | `auth:sanctum` | Role-Scoped | Paginated consignments with filters (`status`, `is_delayed`, `carrier_id`, `search`). Customers automatically scoped to their consignments. |
+| `POST` | `/api/shipments` | `auth:sanctum`, `role:admin,operator` | Admin, Operator | Create new ocean container consignment with ISO 6346 container validation. |
+| `GET` | `/api/shipments/{shipment}` | `auth:sanctum` | Policy-Scoped | Retrieve detailed bill of lading with items, milestones, and exceptions. |
+| `PUT\|PATCH` | `/api/shipments/{shipment}` | `auth:sanctum`, `role:admin,operator` | Admin, Operator | Revise consignment schedule, carrier, or status (triggers ETA delay evaluation). |
+| `DELETE` | `/api/shipments/{shipment}` | `auth:sanctum`, `role:admin` | Admin only | Permanently delete consignment record and cascade associated items. |
+| `GET` | `/api/shipments/{shipment}/tracking` | `auth:sanctum` | Policy-Scoped | Retrieve chronological milestone tracking history. |
+| `POST` | `/api/shipments/{shipment}/tracking` | `auth:sanctum`, `role:admin,operator` | Admin, Operator | Record milestone event; automatically captures seaport atmospheric/marine weather snapshot. |
+| `GET` | `/api/shipments/{shipment}/exceptions`| `auth:sanctum` | Policy-Scoped | Retrieve operational incidents logged against consignment. |
+| `POST` | `/api/shipments/{shipment}/exceptions`| `auth:sanctum`, `role:admin,operator` | Admin, Operator | Log operational exception (`CUSTOMS_HOLD`, `WEATHER_DELAY`, `PORT_CONGESTION`, etc.). |
+| `PATCH` | `/api/exceptions/{exception}` | `auth:sanctum`, `role:admin,operator` | Admin, Operator | Update exception resolution lifecycle (`INVESTIGATING`, `RESOLVED`) with resolution notes. |
+| `GET` | `/api/carriers` | `auth:sanctum` | Authenticated | Retrieve directory of active ocean container carriers. |
+| `POST` | `/api/carriers` | `auth:sanctum`, `role:admin,operator` | Admin, Operator | Register a new ocean shipping line. |
+| `GET` | `/api/locations` | `auth:sanctum` | Authenticated | Retrieve container seaport directory with UN/LOCODE, coordinates, and timezones. |
+| `POST` | `/api/locations` | `auth:sanctum`, `role:admin,operator` | Admin, Operator | Register a new container seaport terminal facility. |
+| `GET` | `/api/currency/currencies` | None | Public | List supported sovereign currencies with symbols, names, and codes. |
+| `GET\|POST`| `/api/currency/convert` | None | Public | Live multi-currency conversion with rate multiplier and source attribution. |
+| `GET` | `/api/currency/history` | None | Public | 30-day historical ECB reference rates time-series for currency pair. |
+| `GET` | `/api/integrations/weather` | `auth:sanctum` | Authenticated | Live Open-Meteo atmospheric and marine wave telemetry by port coordinates. |
+| `GET` | `/api/integrations/currency` | `auth:sanctum` | Authenticated | Cached spot exchange rate matrix against USD base. |
+| `GET` | `/api/integrations/news` | `auth:sanctum` | Authenticated | Maritime logistics bulletins syndicated from verified RSS maritime sources. |
 
 ---
 
@@ -652,18 +687,20 @@ CargoTrace does not claim real-time satellite AIS tracking or artificial intelli
 
 ## 8. Third-Party Services & Dependency Attributions
 
-| Service / Library | Version | License / Provider | Purpose in CargoTrace |
+| Service / Library | Version / Source | License / Provider | Purpose in CargoTrace |
 |---|---|---|---|
 | **Laravel Framework** | 13.x | MIT License | Full-stack PHP framework, ORM, Service Container, Sanctum API auth |
 | **Tailwind CSS** | v4.0 | MIT License | Utility-first CSS styling and custom theme variant engine |
 | **Leaflet.js** | 1.9.4 | BSD 2-Clause | Interactive geospatial seaport mapping and Quadratic Bezier maritime arcs |
-| **CartoDB Basemaps** | Latest | CC BY 3.0 / OpenStreetMap | Positron (Light) and Dark Matter (Dark) tile layers |
+| **OpenStreetMap Tiles** | Standard Tile Server | ODbL / OpenStreetMap | Base cartography tiles rendered with theme adaptability |
 | **Chart.js** | 4.4 | MIT License | Responsive container lifecycle doughnut and delivery timeline graphs |
-| **Globe.gl / Three.js** | Latest | MIT License | Interactive 3D WebGL Maritime Route Globe |
-| **OpenWeatherMap API** | 2.5 | Free Tier API | Live atmospheric checkpoint temperature, wind, and conditions |
-| **Open Exchange Rates** | Open Access | open.er-api.com | Multi-currency FX conversion to base USD |
-| **NewsData.io API** | 1.0 | Free Tier API | Global maritime supply chain and port congestion bulletins |
+| **Globe.gl / Three.js** | Latest | MIT License | Interactive 3D WebGL Maritime Route Globe with local NASA textures |
+| **Open-Meteo Weather & Marine API** | Latest | CC BY 4.0 | Live atmospheric conditions and oceanic wave height observations |
+| **ExchangeRate-API & Frankfurter** | Open Access | open.er-api.com / ECB | Multi-currency FX conversion and 30-day historical ECB time-series |
+| **Maritime RSS News Feeds** | Active Feeds | Editorial Syndication | Headlines and excerpts from gCaptain, Maritime Executive, Splash247, etc. |
 | **OpenStreetMap Nominatim** | Latest | ODbL | Geocoding fallback for port coordinates |
+| **Anti-Slop Design Community** | Latest | Open Source | Human-centric interface design guidelines (`.claude/skills/anti-slop/antislop.md`) |
+| **Cinematic Maritime Photography** | Unsplash | Unsplash License | Twilight container terminal (`bg-dark.webp`) & daytime port (`hero-light.webp`) |
 
 ---
 

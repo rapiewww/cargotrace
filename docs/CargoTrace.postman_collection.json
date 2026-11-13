@@ -877,7 +877,182 @@
 								}
 							]
 						},
-						"description": "Fetches current maritime transport advisories and port traffic articles via NewsData.io."
+						"description": "Fetches current maritime transport advisories and port traffic articles syndicated from verified maritime sources."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "7. Currency & Platform Utilities",
+			"item": [
+				{
+					"name": "Get Supported Currencies",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/currency/currencies",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"currency",
+								"currencies"
+							]
+						},
+						"description": "Returns dictionary of supported global sovereign currencies with full names, symbols, and ISO 4217 codes."
+					},
+					"response": []
+				},
+				{
+					"name": "Convert Currency (POST)",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"amount\": 50000,\n    \"from\": \"EUR\",\n    \"to\": \"USD\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/currency/convert",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"currency",
+								"convert"
+							]
+						},
+						"description": "Converts declared cargo valuations between sovereign currencies using live/cached exchange rates."
+					},
+					"response": []
+				},
+				{
+					"name": "Convert Currency (GET)",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/currency/convert?amount=50000&from=EUR&to=USD",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"currency",
+								"convert"
+							],
+							"query": [
+								{
+									"key": "amount",
+									"value": "50000"
+								},
+								{
+									"key": "from",
+									"value": "EUR"
+								},
+								{
+									"key": "to",
+									"value": "USD"
+								}
+							]
+						},
+						"description": "GET variant for converting currency values via query parameters."
+					},
+					"response": []
+				},
+				{
+					"name": "Get 30-Day Historical FX Trend",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/currency/history?from=EUR&to=USD",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"currency",
+								"history"
+							],
+							"query": [
+								{
+									"key": "from",
+									"value": "EUR"
+								},
+								{
+									"key": "to",
+									"value": "USD"
+								}
+							]
+						},
+						"description": "Fetches 30-day time-series exchange rate history from European Central Bank (Frankfurter) reference rates."
+					},
+					"response": []
+				},
+				{
+					"name": "Application Healthcheck",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/up",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"up"
+							]
+						},
+						"description": "Production healthcheck endpoint returning HTTP 200 when application runtime is healthy."
 					},
 					"response": []
 				}

@@ -5,7 +5,7 @@
 [![Tailwind CSS v4](https://img.shields.io/badge/TailwindCSS-v4.0-38B2AC?style=flat&logo=tailwind-css&logoColor=white)](https://tailwindcss.com)
 [![Leaflet.js](https://img.shields.io/badge/Leaflet-1.9.4-199900?style=flat&logo=leaflet&logoColor=white)](https://leafletjs.com)
 [![Chart.js](https://img.shields.io/badge/Chart.js-4.4-FF6384?style=flat&logo=chartdotjs&logoColor=white)](https://www.chartjs.org)
-[![Pest Tests](https://img.shields.io/badge/Tests-100%20Passed%20(529%20assertions)-10B981?style=flat)](https://pestphp.com)
+[![Pest Tests](https://img.shields.io/badge/Tests-174%20Passed%20(1695%20assertions)-10B981?style=flat)](https://pestphp.com)
 
 > **Academic Capstone Project**  
 > Course: Web Programming / Final Individual Project  
@@ -219,7 +219,7 @@ The database seeder provisions pre-configured personas with default password: `p
 The entire application is verified using **Pest PHP** against an isolated in-memory SQLite database, guaranteeing zero side-effects on local MySQL development data.
 
 ```bash
-# Run complete test suite (100 tests, 529 assertions)
+# Run complete test suite (174 tests, 1,695 assertions)
 php artisan test
 
 # Run feature-specific test suites
@@ -230,11 +230,13 @@ php artisan test --filter=CustomerScopeTest
 php artisan test --filter=DelayThresholdSettingsTest
 php artisan test --filter=AdminUserManagementTest
 php artisan test --filter=ShipmentCsvExportTest
+php artisan test --filter=ShipmentCsvImportTest
+php artisan test --filter=DeploymentAndSecurityTest
 ```
 
 **Verification Results:**
-- **100 passed tests** (100% green)
-- **529 assertions** validating authorization policies, customer query scoping, status transitions, Open-Meteo marine wave height, currency combobox validation, RSS pool parsing, and delay recalculations.
+- **174 passed tests** (100% green)
+- **1,695 assertions** validating authorization policies, customer query scoping, status transitions, Open-Meteo marine wave height, currency combobox validation, RSS pool parsing, container number ISO 6346 validation, and delay recalculations. Full report: **[docs/TEST_REPORT.md](docs/TEST_REPORT.md)**.
 
 ---
 
@@ -250,26 +252,40 @@ This project strictly adheres to the Anti-Slop design guidelines (`.claude/skill
 
 ## 9. Known Limitations
 
-1. **No Live AIS Transponder Data:** CargoTrace chronicles container vessel positions based on registered seaport milestones and mathematical great-circle trajectory interpolations. It does not ingest live satellite AIS VHF transponder telemetry.
-2. **Marine Wave Data Coverage:** Open-Meteo Marine API provides wave and swell metrics for coastal and oceanic coordinates. Inland terminals or river ports display "No marine data for this location".
-3. **Frankfurter ECB Coverage:** 30-day historical currency trends depend on European Central Bank reference pairs. Non-ECB sovereign pairs gracefully hide the historical chart while preserving real-time conversion.
+1. **No Live Satellite AIS Transponder Feeds:** CargoTrace chronicles container positions and transit progress through registered seaport milestones, operator-verified checkpoints, and mathematical great-circle spherical calculations. It does not ingest raw VHF satellite AIS vessel broadcasts.
+2. **Marine Wave Data Coverage:** Open-Meteo Marine API provides wave and swell observations for oceanic and coastal coordinates. Inland waterways, river terminals, or dry ports gracefully display "No marine wave observations at this inland terminal".
+3. **Historical FX Time-Series Coverage:** 30-day historical currency charts rely on European Central Bank (Frankfurter) reference currencies. Rare non-ECB sovereign pairs preserve real-time spot conversions while gracefully omitting the historical trendline.
+4. **Nominatim Geocoding Rate Limits:** Seaport reverse geocoding via OpenStreetMap Nominatim is strictly rate-limited to 1 request/second and cached persistently in the database.
+5. **Single Primary Ocean Carrier Lane:** Shipments currently model one primary ocean carrier booking from port of loading to port of discharge; intermediate feeder barge and transshipment legs are captured as sequential tracking checkpoints.
 
 ---
 
 ## 10. Future Work
 
-1. **EDIFACT & DCSA Integration:** Support for standard maritime EDIFACT protocols (IFTMIN, IFTSTA) and DCSA Track & Trace APIs for automated ocean carrier manifest ingestion.
-2. **Commercial AIS Satellite Feeds:** Direct integration with commercial maritime AIS providers (e.g. Spire, MarineTraffic) for live ocean vessel transponder positions.
-3. **Reefer Container IoT Telemetry:** Direct sensor logging for cold-chain containers (internal temperature, relative humidity, power supply state).
-4. **Intermodal Transshipment Routing:** Multi-leg routing support with barge, rail, and port terminal gate in/gate out tracking.
+1. **EDIFACT & DCSA Maritime Standards:** Native parser for UN/EDIFACT maritime messages (IFTMIN booking instructions, IFTSTA status reports) and DCSA OpenAPI Track & Trace 2.0 specifications.
+2. **Commercial Terrestrial & Satellite AIS Feeds:** Integration with maritime transponder providers (Spire, MarineTraffic, VesselFinder) for high-frequency mid-ocean GPS coordinates.
+3. **Reefer Container IoT Telemetry:** Direct sensor logging for cold-chain refrigerated containers (internal temperature, relative humidity, power supply state, door-open alerts).
+4. **Single-Window Customs Clearance API:** Electronic customs filing integrations (US CBP ACE, EU ICS2, UK CDS) for automated import hold clearance.
+5. **Predictive Lane Congestion Engine:** Machine learning model blending historical port dwell times, berth waiting queues, seasonal monsoon patterns, and carrier reliability indexes.
 
 ---
 
-## 11. Attribution & AI Usage Disclosure
+## 11. Attribution, Credits & Academic Disclosure
 
-- **Academic Integrity Statement:** This application was developed as an individual university final project for Web Programming.
-- **AI Tool Assistance:** Generative AI tools (Claude Code / Antigravity) were used in a pair-programming capacity for boilerplate scaffolding, test case creation, and documentation refinement under developer direction and rigorous verification.
-- **Utility Scripts:** The `scripts/capture-dashboards.js` script leverages Puppeteer Core and headless Chrome to generate multi-viewport automated verification screenshots across roles and themes.
+- **Academic Integrity Statement:** This platform was developed as an individual university final project for Web Programming.
+- **Anti-Slop Design Community:** Built strictly following the design ethos and delivery gates of the open-source **Anti-Slop Guidelines** (`.claude/skills/anti-slop/antislop.md`) for dignified typography, zero synthetic marketing claims, dual-theme parity, and accessible contrast.
+- **Cinematic Maritime Photography:**
+  - *Dark Theme Hero & Login Panel:* Container terminal gantry cranes at dusk (`public/images/backgrounds/bg-dark.webp`), photography courtesy of Unsplash under the Unsplash License (free to use for commercial and non-commercial purposes).
+  - *Light Theme Hero Panel:* Daytime container vessel berthing (`public/images/backgrounds/hero-light.webp`), royalty-free maritime photography from Unsplash.
+- **Design & Layout Inspirations:**
+  - *Axis Logistics / CargoWise TMS:* Operational density, monospace bill of lading formatting, and split-screen milestone tracking.
+  - *GlobalLink Maritime:* Visual hierarchy for waypoint progression and UN/LOCODE seaport labeling.
+- **Third-Party Services & Open Data:**
+  - **Open-Meteo & Marine API:** Atmospheric and oceanic wave metrics licensed under [CC BY 4.0](https://open-meteo.com).
+  - **OpenStreetMap & Nominatim:** Geographic map tiles and geocoding &copy; [OpenStreetMap contributors](https://www.openstreetmap.org/copyright) under ODbL.
+  - **ExchangeRate-API & Frankfurter:** Multi-currency spot rates and ECB historical time-series data.
+  - **Maritime RSS News Feeds:** Syndicated maritime editorial excerpts courtesy of *gCaptain*, *The Maritime Executive*, *Splash247*, *World Cargo News*, *Container News*, *Seatrade Maritime*, and *Hellenic Shipping News*.
+- **AI Tool Assistance:** Generative AI tools (Claude Code / Antigravity) were used in a pair-programming capacity for boilerplate scaffolding, unit test suites, and documentation refinement under developer direction and rigorous verification.
 
 ---
 
