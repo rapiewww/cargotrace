@@ -58,3 +58,4 @@ class ShipmentExceptionFactory extends Factory
         });
     }
 }
+

@@ -94,3 +94,4 @@ class AnalyticsWebController extends Controller
         return $this->analyticsService->exportCsv($table, $user, $from, $to);
     }
 }
+
