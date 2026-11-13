@@ -13,6 +13,20 @@ return [
     | > 24 hours: HIGH
     |
     */
+    /*
+    |--------------------------------------------------------------------------
+    | Hero Imagery Configuration
+    |--------------------------------------------------------------------------
+    |
+    | Dark theme uses bg-dark.webp by default. Light theme uses hero-light.webp
+    | if present on disk or specified here; otherwise falls back to a clean
+    | pale theme gradient with the SVG network motif.
+    |
+    */
+    'hero_images' => [
+        'light' => env('CARGOTRACE_HERO_LIGHT_IMAGE', null),
+    ],
+
     'delay' => [
         'low_hours' => (float) env('CARGOTRACE_DELAY_LOW_HOURS', 6),
         'medium_hours' => (float) env('CARGOTRACE_DELAY_MEDIUM_HOURS', 24),

@@ -11,7 +11,8 @@ import {
     initStatusDoughnut,
     initCarrierBarChart,
     initTrendLineChart,
-    initExceptionsTypeChart
+    initExceptionsTypeChart,
+    updateAllChartsTheme
 } from './charts';
 import { initTrackingModule } from './tracking';
 import { initUiModule } from './ui';
@@ -37,9 +38,17 @@ export function applyTheme(theme) {
 
     localStorage.setItem('cargotrace_theme', validTheme);
 
-    // Notify maps and globe
+    // Notify maps, globe, and charts
     updateAllMapsTheme(validTheme);
     updateMaritimeGlobeTheme(validTheme);
+    updateAllChartsTheme(validTheme);
+
+    // Update accessible switch buttons
+    const isDark = validTheme === 'dark';
+    document.querySelectorAll('#theme-toggle-btn, #welcome-theme-toggle, #login-theme-toggle, #register-theme-toggle, button[role="switch"]').forEach(btn => {
+        btn.setAttribute('aria-checked', isDark ? 'true' : 'false');
+        btn.setAttribute('aria-pressed', isDark ? 'true' : 'false');
+    });
 
     window.dispatchEvent(new CustomEvent('cargotrace:theme-change', { detail: { theme: validTheme } }));
 }
@@ -116,9 +125,12 @@ window.CargoTrace = {
 
 // Automatic initialization on DOMContentLoaded
 document.addEventListener('DOMContentLoaded', () => {
-    // Theme setup from localStorage
-    const savedTheme = localStorage.getItem('cargotrace_theme') || 'dark';
-    applyTheme(savedTheme);
+    // Theme setup from localStorage or prefers-color-scheme on first visit
+    let initialTheme = localStorage.getItem('cargotrace_theme');
+    if (!initialTheme) {
+        initialTheme = (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches) ? 'light' : 'dark';
+    }
+    applyTheme(initialTheme);
 
     const payload = window.__CARGOTRACE__;
     if (!payload) return;

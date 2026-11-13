@@ -61,7 +61,7 @@
             @if(!empty($searchQuery) || $selectedSource !== 'all' || $selectedCategory !== 'all' || $onlyRelevant)
                 <a
                     href="{{ route('news.index') }}"
-                    class="px-2.5 py-2 rounded-xl theme-card-elevated border theme-border text-xs theme-text-secondary hover:text-white transition"
+                    class="px-2.5 py-2 rounded-xl theme-card-elevated border theme-border text-xs theme-text-secondary hover:theme-heading hover:border-blue-500 transition"
                     title="Clear filters"
                 >
                     Reset
@@ -85,14 +85,14 @@
 
         <a
             href="{{ route('news.index', array_merge(request()->except(['category', 'page']), ['category' => 'all'])) }}"
-            class="px-3.5 py-1.5 rounded-full text-xs font-bold transition whitespace-nowrap border {{ $selectedCategory === 'all' && !$onlyRelevant ? 'bg-blue-600 text-white border-blue-600 shadow-md shadow-blue-500/20' : 'theme-card-elevated theme-border theme-text-secondary hover:text-white' }}"
+            class="px-3.5 py-1.5 rounded-full text-xs font-bold transition whitespace-nowrap border {{ $selectedCategory === 'all' && !$onlyRelevant ? 'bg-blue-600 text-white border-blue-600 shadow-md shadow-blue-500/20' : 'theme-card-elevated theme-border theme-text-secondary hover:theme-heading hover:border-blue-500' }}"
         >
             All Categories
         </a>
         @foreach($categories as $cat)
             <a
                 href="{{ route('news.index', array_merge(request()->except(['category', 'page']), ['category' => $cat])) }}"
-                class="px-3.5 py-1.5 rounded-full text-xs font-bold transition whitespace-nowrap border {{ strcasecmp($selectedCategory, $cat) === 0 ? 'bg-blue-600 text-white border-blue-600 shadow-md shadow-blue-500/20' : 'theme-card-elevated theme-border theme-text-secondary hover:text-white' }}"
+                class="px-3.5 py-1.5 rounded-full text-xs font-bold transition whitespace-nowrap border {{ strcasecmp($selectedCategory, $cat) === 0 ? 'bg-blue-600 text-white border-blue-600 shadow-md shadow-blue-500/20' : 'theme-card-elevated theme-border theme-text-secondary hover:theme-heading hover:border-blue-500' }}"
             >
                 {{ $cat }}
             </a>
@@ -102,7 +102,7 @@
     <!-- Grid of Maritime News Cards with Fixed Aspect Ratio & Lazy Loaded Thumbnails -->
     @if($paginatedNews->isEmpty())
         <div class="p-12 text-center rounded-3xl theme-card border space-y-4">
-            <div class="w-12 h-12 rounded-full bg-slate-800 flex items-center justify-center text-slate-400 mx-auto">
+            <div class="w-12 h-12 rounded-full bg-slate-200 dark:bg-slate-800 flex items-center justify-center text-slate-500 dark:text-slate-400 mx-auto">
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z"/></svg>
             </div>
             <div>
@@ -115,7 +115,7 @@
                 <a href="{{ route('news.index') }}" class="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold transition">
                     Reset All Filters
                 </a>
-                <button type="button" onclick="window.location.reload()" class="px-4 py-2 rounded-xl theme-card-elevated border theme-border text-xs font-bold theme-heading hover:bg-slate-800/40 transition">
+                <button type="button" onclick="window.location.reload()" class="px-4 py-2 rounded-xl theme-card-elevated border theme-border text-xs font-bold theme-heading hover:bg-slate-500/10 transition">
                     Retry Feed Connection
                 </button>
             </div>
@@ -125,7 +125,7 @@
             @foreach($paginatedNews as $item)
                 <article class="rounded-3xl theme-card border overflow-hidden flex flex-col justify-between hover:border-cyan-500/40 transition group">
                     <!-- Thumbnail with Fixed Aspect Ratio (16/9) preventing layout shift -->
-                    <div class="relative aspect-video w-full bg-slate-900 overflow-hidden">
+                    <div class="relative aspect-video w-full bg-slate-200 dark:bg-slate-900 overflow-hidden">
                         <img
                             src="{{ $item['thumbnail'] ?? asset('images/news-placeholder.svg') }}"
                             alt="{{ $item['headline'] }}"

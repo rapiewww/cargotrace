@@ -158,3 +158,13 @@ This project has domain-specific skills available in `**/skills/**`. You MUST ac
 
 ## Anti-Slop Design Guidelines
 Always refer to and strictly follow the design principles in `.claude/skills/anti-slop/antislop.md` for all UI, layout, typography, and styling tasks.
+
+## Task rules
+- Read DESIGN.md first.
+- Keep ShipmentPolicy, status transitions, routes, API contracts and passing tests intact; add tests for new behavior.
+- Individual project, worldwide ocean-container scope.
+- When done run: php artisan test, vendor/bin/pint --dirty and npm run build.
+- Open http://cargotrace.test, click through everything you changed in dark AND light at 1440px and 390px.
+- Output the antislop Delivery Gate PASS/FAIL report with evidence per line and fix every FAIL before reporting.
+- Commit with a conventional message.
+

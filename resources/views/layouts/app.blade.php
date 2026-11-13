@@ -5,12 +5,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
-    <title>{{ $title ?? 'CargoTrace — Pure Maritime Container Tracking' }}</title>
+    <title>{{ $title ?? 'CargoTrace: Pure Maritime Container Tracking' }}</title>
 
-    <!-- Instant Theme & Sidebar Rail Loader (Zero-Flicker) -->
+    <!-- Instant Theme & Sidebar Rail Loader (Zero-Flicker, prefers-color-scheme fallback) -->
     <script>
         (function() {
-            const savedTheme = localStorage.getItem('cargotrace_theme') || 'dark';
+            let savedTheme = localStorage.getItem('cargotrace_theme');
+            if (!savedTheme) {
+                savedTheme = (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches) ? 'light' : 'dark';
+            }
             document.documentElement.setAttribute('data-theme', savedTheme);
             if (savedTheme === 'light') {
                 document.documentElement.classList.add('light');
@@ -32,8 +35,13 @@
 
     @stack('styles')
 </head>
-<body class="theme-page font-sans antialiased min-h-full flex flex-col selection:bg-cyan-500 selection:text-slate-950 transition-colors duration-200">
-    <div class="min-h-full flex flex-col">
+<body class="theme-page font-sans antialiased min-h-full flex flex-col selection:bg-cyan-500 selection:text-slate-950 transition-colors duration-200 relative">
+    {{-- Faint Reusable SVG Network Motif (Fixed behind all application content, follows theme) --}}
+    <div class="fixed inset-0 pointer-events-none z-0 overflow-hidden" aria-hidden="true">
+        <x-svg-network-motif class="text-slate-500 dark:text-slate-300" />
+    </div>
+
+    <div class="min-h-full flex flex-col relative z-10">
         <!-- 1. RESPONSIVE ENTERPRISE MARITIME SIDEBAR (Fixed w-64 desktop, drawer mobile) -->
         @include('layouts.sidebar')
 
@@ -71,19 +79,25 @@
 
                     <button
                         type="button"
+                        id="theme-toggle-btn"
+                        role="switch"
+                        aria-checked="true"
+                        aria-pressed="true"
+                        tabindex="0"
                         onclick="window.CargoTrace && window.CargoTrace.toggleTheme ? window.CargoTrace.toggleTheme() : null"
-                        class="relative flex items-center p-1 rounded-full bg-slate-900 dark:bg-slate-900 light:bg-slate-200 border border-slate-800 light:border-slate-300 w-16 h-8 transition-colors duration-200 focus:outline-none"
+                        onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();window.CargoTrace&&window.CargoTrace.toggleTheme?window.CargoTrace.toggleTheme():null}"
+                        class="relative flex items-center p-1 rounded-full bg-slate-200 dark:bg-slate-900 border border-slate-300 dark:border-slate-800 w-16 h-8 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
                         aria-label="Toggle dark and light theme"
                         title="Switch theme"
                     >
                         <!-- Moon Icon (Left) -->
-                        <span class="w-6 h-6 flex items-center justify-center text-cyan-400 dark:text-cyan-400 light:text-slate-400 transition-colors">
+                        <span class="w-6 h-6 flex items-center justify-center text-slate-400 dark:text-cyan-400 transition-colors">
                             <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
                                 <path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"/>
                             </svg>
                         </span>
                         <!-- Sun Icon (Right) -->
-                        <span class="w-6 h-6 flex items-center justify-center text-slate-500 dark:text-slate-500 light:text-amber-500 transition-colors">
+                        <span class="w-6 h-6 flex items-center justify-center text-amber-500 dark:text-slate-500 transition-colors">
                             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/>
                             </svg>
@@ -130,7 +144,7 @@
                             id="notif-btn"
                             type="button"
                             onclick="document.getElementById('notif-menu').classList.toggle('hidden')"
-                            class="relative p-2 rounded-full text-slate-400 hover:text-white bg-slate-900/60 dark:bg-slate-900/60 light:bg-slate-100 border border-slate-800 light:border-slate-300 transition"
+                            class="relative p-2 rounded-full text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white bg-slate-100 dark:bg-slate-900/60 border border-slate-300 dark:border-slate-800 transition"
                             aria-label="View notifications"
                         >
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -141,32 +155,32 @@
                             @endif
                         </button>
 
-                        <div id="notif-menu" class="hidden absolute right-0 mt-3 w-80 sm:w-96 rounded-2xl bg-[#0B101E] light:bg-white border border-slate-800 light:border-slate-200 shadow-2xl p-4 z-50">
-                            <div class="flex items-center justify-between pb-3 border-b border-slate-800 light:border-slate-200">
-                                <span class="text-xs font-semibold text-white light:text-slate-900">Maritime Alerts ({{ $unreadCount }})</span>
+                        <div id="notif-menu" class="hidden absolute right-0 mt-3 w-80 sm:w-96 rounded-2xl theme-card-elevated border theme-border shadow-2xl p-4 z-50">
+                            <div class="flex items-center justify-between pb-3 border-b theme-border">
+                                <span class="text-xs font-semibold theme-heading">Maritime Alerts ({{ $unreadCount }})</span>
                                 @if($unreadCount > 0)
                                     <form action="{{ route('notifications.read-all') }}" method="POST">
                                         @csrf
-                                        <button type="submit" class="text-[11px] text-cyan-400 hover:underline font-medium">Mark all read</button>
+                                        <button type="submit" class="text-[11px] text-cyan-500 dark:text-cyan-400 hover:underline font-medium">Mark all read</button>
                                     </form>
                                 @endif
                             </div>
-                            <div class="divide-y divide-slate-800/80 light:divide-slate-100 max-h-72 overflow-y-auto mt-2">
+                            <div class="divide-y theme-border max-h-72 overflow-y-auto mt-2">
                                 @forelse($unreadNotifications as $notif)
                                     <div class="py-2.5 space-y-1">
-                                        <div class="flex items-center justify-between text-xs font-semibold text-white light:text-slate-900">
+                                        <div class="flex items-center justify-between text-xs font-semibold theme-heading">
                                             <span>{{ $notif->title }}</span>
-                                            <span class="text-[10px] text-slate-500">{{ $notif->created_at->diffForHumans() }}</span>
+                                            <span class="text-[10px] theme-text-muted">{{ $notif->created_at->diffForHumans() }}</span>
                                         </div>
-                                        <p class="text-xs text-slate-400 light:text-slate-600 leading-relaxed">{{ $notif->message }}</p>
+                                        <p class="text-xs theme-text-secondary leading-relaxed">{{ $notif->message }}</p>
                                     </div>
                                 @empty
-                                    <div class="py-6 text-center text-xs text-slate-500">No unread alerts</div>
+                                    <div class="py-6 text-center text-xs theme-text-muted">No unread alerts</div>
                                 @endforelse
                             </div>
                             @if(Route::has('notifications.index'))
-                                <div class="pt-3 border-t border-slate-800 light:border-slate-200 text-center">
-                                    <a href="{{ route('notifications.index') }}" class="text-xs text-cyan-400 hover:underline font-medium">View all notifications &rarr;</a>
+                                <div class="pt-3 border-t theme-border text-center">
+                                    <a href="{{ route('notifications.index') }}" class="text-xs text-cyan-500 dark:text-cyan-400 hover:underline font-medium">View all notifications &rarr;</a>
                                 </div>
                             @endif
                         </div>

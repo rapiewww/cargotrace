@@ -38,7 +38,7 @@
                 @foreach(['USD', 'EUR', 'SGD'] as $b)
                     <a
                         href="?base={{ $b }}@if(request('matrix'))&matrix={{ request('matrix') }}@endif"
-                        class="px-2.5 py-1 rounded-lg text-xs font-mono font-bold transition border {{ $baseCurrency === $b ? 'bg-blue-600 text-white border-blue-600' : 'theme-card-elevated theme-border theme-text-secondary hover:text-white' }}"
+                        class="px-2.5 py-1 rounded-lg text-xs font-mono font-bold transition border {{ $baseCurrency === $b ? 'bg-blue-600 text-white border-blue-600' : 'theme-card-elevated theme-border theme-text-secondary hover:theme-heading hover:border-blue-500' }}"
                     >
                         {{ $b }}
                     </a>
@@ -305,7 +305,7 @@
                     <button
                         type="button"
                         onclick="toggleMatrixCurrency('{{ $cur }}')"
-                        class="px-3 py-1 rounded-xl text-xs font-mono font-bold transition border {{ $isSelected ? 'bg-blue-600 text-white border-blue-600 shadow-sm' : 'theme-card-elevated theme-border theme-text-secondary hover:text-white' }}"
+                        class="px-3 py-1 rounded-xl text-xs font-mono font-bold transition border {{ $isSelected ? 'bg-blue-600 text-white border-blue-600 shadow-sm' : 'theme-card-elevated theme-border theme-text-secondary hover:theme-heading hover:border-blue-500' }}"
                     >
                         {{ $cur }} {{ $isSelected ? '✓' : '+' }}
                     </button>

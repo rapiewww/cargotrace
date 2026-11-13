@@ -6,16 +6,16 @@
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
             <div class="flex items-center gap-3">
-                <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight text-white font-sans">
+                <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight theme-heading font-sans">
                     Notifications & Alerts
                 </h1>
                 @if($unreadCount > 0)
-                    <span class="text-xs px-2.5 py-0.5 rounded-full bg-amber-400/20 text-amber-300 border border-amber-400/30 font-mono">
+                    <span class="text-xs px-2.5 py-0.5 rounded-full bg-amber-400/20 text-amber-600 dark:text-amber-300 border border-amber-400/30 font-mono">
                         {{ $unreadCount }} Unread
                     </span>
                 @endif
             </div>
-            <p class="text-xs sm:text-sm text-slate-400 mt-1">
+            <p class="text-xs sm:text-sm theme-text-secondary mt-1">
                 Event dispatch alerts, ETA delay adjustments, and shipment exception reports.
             </p>
         </div>
@@ -24,7 +24,7 @@
             @if($unreadCount > 0)
                 <form action="{{ route('notifications.read-all') }}" method="POST">
                     @csrf
-                    <button type="submit" class="px-3.5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-teal-300 border border-teal-500/30 text-xs font-semibold transition">
+                    <button type="submit" class="px-3.5 py-2 rounded-xl theme-card-elevated border theme-border hover:border-blue-500 text-blue-600 dark:text-cyan-400 text-xs font-semibold transition">
                         Mark All as Read
                     </button>
                 </form>
@@ -34,24 +34,24 @@
 
     <!-- Filter Pills -->
     <div class="flex items-center space-x-2 text-xs font-semibold">
-        <a href="{{ route('notifications.index') }}" class="px-3 py-1.5 rounded-lg border {{ !request('filter') ? 'bg-teal-500/20 text-teal-300 border-teal-500/40' : 'bg-slate-900/50 text-slate-400 border-slate-800 hover:text-white' }} transition">
+        <a href="{{ route('notifications.index') }}" class="px-3 py-1.5 rounded-lg border {{ !request('filter') ? 'bg-blue-600/20 text-blue-600 dark:text-cyan-300 border-blue-500/40' : 'theme-card-elevated theme-text-secondary theme-border hover:theme-heading' }} transition">
             All Notifications
         </a>
-        <a href="{{ route('notifications.index', ['filter' => 'unread']) }}" class="px-3 py-1.5 rounded-lg border {{ request('filter') === 'unread' ? 'bg-teal-500/20 text-teal-300 border-teal-500/40' : 'bg-slate-900/50 text-slate-400 border-slate-800 hover:text-white' }} transition">
+        <a href="{{ route('notifications.index', ['filter' => 'unread']) }}" class="px-3 py-1.5 rounded-lg border {{ request('filter') === 'unread' ? 'bg-blue-600/20 text-blue-600 dark:text-cyan-300 border-blue-500/40' : 'theme-card-elevated theme-text-secondary theme-border hover:theme-heading' }} transition">
             Unread Only ({{ $unreadCount }})
         </a>
     </div>
 
     <!-- Notification List -->
-    <x-card :padded="false" class="divide-y divide-white/5">
+    <x-card :padded="false" class="divide-y theme-border">
         @forelse($notifications as $notif)
-            <div class="p-4 sm:p-5 flex items-start justify-between gap-4 transition hover:bg-white/[0.02] {{ is_null($notif->read_at) ? 'bg-amber-500/[0.03]' : '' }}">
+            <div class="p-4 sm:p-5 flex items-start justify-between gap-4 transition hover:bg-slate-500/5 {{ is_null($notif->read_at) ? 'bg-amber-500/5' : '' }}">
                 <div class="flex items-start space-x-3.5">
                     @php
                         $iconClass = match($notif->type) {
-                            'SHIPMENT_DELAY_ALERT' => 'bg-amber-500/20 text-amber-300 border-amber-500/30',
-                            'EXCEPTION_DETECTED' => 'bg-rose-500/20 text-rose-300 border-rose-500/30',
-                            default => 'bg-teal-500/20 text-teal-300 border-teal-500/30',
+                            'SHIPMENT_DELAY_ALERT' => 'bg-amber-500/15 text-amber-600 dark:text-amber-300 border-amber-500/30',
+                            'EXCEPTION_DETECTED' => 'bg-rose-500/15 text-rose-600 dark:text-rose-300 border-rose-500/30',
+                            default => 'bg-blue-500/15 text-blue-600 dark:text-cyan-300 border-blue-500/30',
                         };
                     @endphp
                     <div class="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 border {{ $iconClass }}">
@@ -60,16 +60,16 @@
 
                     <div class="space-y-1">
                         <div class="flex items-center gap-2">
-                            <h3 class="text-sm font-bold text-white">{{ $notif->title }}</h3>
+                            <h3 class="text-sm font-bold theme-heading">{{ $notif->title }}</h3>
                             @if(is_null($notif->read_at))
                                 <span class="w-2 h-2 rounded-full bg-amber-400"></span>
                             @endif
                         </div>
-                        <p class="text-xs text-slate-300 leading-relaxed">{{ $notif->message }}</p>
-                        <div class="flex items-center gap-3 pt-1 text-[11px] font-mono text-slate-500">
+                        <p class="text-xs theme-text-secondary leading-relaxed">{{ $notif->message }}</p>
+                        <div class="flex items-center gap-3 pt-1 text-[11px] font-mono theme-text-muted">
                             <span>{{ $notif->created_at?->diffForHumans() }}</span>
                             @if($notif->shipment)
-                                <a href="{{ route('shipments.show', $notif->shipment) }}" class="text-teal-300 hover:underline">
+                                <a href="{{ route('shipments.show', $notif->shipment) }}" class="text-blue-600 dark:text-cyan-400 hover:underline">
                                     Waybill: {{ $notif->shipment->tracking_number }} &rarr;
                                 </a>
                             @endif
@@ -80,14 +80,14 @@
                 @if(is_null($notif->read_at))
                     <form action="{{ route('notifications.read', $notif) }}" method="POST">
                         @csrf
-                        <button type="submit" class="px-2.5 py-1 rounded-lg text-slate-400 hover:text-white hover:bg-white/5 border border-white/5 text-[11px] transition">
+                        <button type="submit" class="px-2.5 py-1 rounded-lg theme-text-secondary hover:theme-heading hover:bg-slate-500/10 border theme-border text-[11px] transition">
                             Mark Read
                         </button>
                     </form>
                 @endif
             </div>
         @empty
-            <div class="py-12 text-center text-slate-500 text-xs">
+            <div class="py-12 text-center theme-text-muted text-xs">
                 No notifications matching current criteria.
             </div>
         @endforelse

@@ -5,12 +5,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
-    <title>{{ $title ?? 'CargoTrace — Global Logistics Intelligence' }}</title>
+    <title>{{ $title ?? 'CargoTrace: Global Logistics Intelligence' }}</title>
 
-    <!-- Theme Initialization Script (Zero-Flicker) -->
+    <!-- Theme Initialization Script (Zero-Flicker, prefers-color-scheme fallback) -->
     <script>
         (function() {
-            const theme = localStorage.getItem('cargotrace_theme') || 'dark';
+            let theme = localStorage.getItem('cargotrace_theme');
+            if (!theme) {
+                theme = (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches) ? 'light' : 'dark';
+            }
             document.documentElement.setAttribute('data-theme', theme);
             if (theme === 'light') {
                 document.documentElement.classList.add('light');

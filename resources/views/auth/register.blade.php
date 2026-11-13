@@ -2,15 +2,14 @@
 
 @section('content')
 <div class="relative min-h-screen flex items-center justify-center p-4 sm:p-6 theme-page overflow-hidden">
-    <!-- Sunset Maritime Container Port Backdrop -->
-    <div class="absolute inset-0 z-0">
-        <img src="{{ asset('images/hero-sunset-terminal.jpg') }}" alt="Maritime container port terminal" class="w-full h-full object-cover filter brightness-75 contrast-110">
-        <div class="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-950/60 to-slate-950/40"></div>
+    {{-- Faint SVG Network Motif Background (No raster photography per DESIGN.md) --}}
+    <div class="fixed inset-0 pointer-events-none z-0 overflow-hidden" aria-hidden="true">
+        <x-svg-network-motif class="text-slate-500 dark:text-slate-300" />
     </div>
 
     <!-- Top Floating Controls (Theme Switcher & Back Link) -->
     <div class="absolute top-6 inset-x-0 max-w-6xl mx-auto px-6 flex items-center justify-between z-20">
-        <a href="{{ route('welcome') }}" class="inline-flex items-center gap-2 text-xs font-semibold text-slate-300 hover:text-white transition bg-slate-900/60 hover:bg-slate-900/80 backdrop-blur-md px-3.5 py-2 rounded-xl border border-white/10">
+        <a href="{{ route('welcome') }}" class="inline-flex items-center gap-2 text-xs font-semibold theme-text-secondary hover:theme-heading transition px-3.5 py-2 rounded-xl theme-card-elevated border theme-border">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
             <span>Back to Maritime Portal</span>
         </a>
@@ -18,15 +17,21 @@
         <!-- Theme Toggle Switcher -->
         <button
             type="button"
+            id="register-theme-toggle"
+            role="switch"
+            aria-checked="true"
+            aria-pressed="true"
+            tabindex="0"
             onclick="window.CargoTrace && window.CargoTrace.toggleTheme ? window.CargoTrace.toggleTheme() : null"
-            class="relative flex items-center p-1 rounded-full bg-slate-900/80 backdrop-blur-md border border-white/15 w-14 h-7 transition-colors duration-200 focus:outline-none"
+            onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();window.CargoTrace&&window.CargoTrace.toggleTheme?window.CargoTrace.toggleTheme():null}"
+            class="relative flex items-center p-1 rounded-full bg-slate-200 dark:bg-slate-900 border border-slate-300 dark:border-slate-800 w-14 h-7 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
             aria-label="Toggle dark and light theme"
             title="Switch theme"
         >
-            <span class="w-5 h-5 flex items-center justify-center text-cyan-400">
+            <span class="w-5 h-5 flex items-center justify-center text-slate-400 dark:text-cyan-400 transition-colors">
                 <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"/></svg>
             </span>
-            <span class="w-5 h-5 flex items-center justify-center text-slate-400">
+            <span class="w-5 h-5 flex items-center justify-center text-amber-500 dark:text-slate-500 transition-colors">
                 <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
             </span>
         </button>

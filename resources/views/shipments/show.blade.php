@@ -188,7 +188,7 @@
                         <tbody class="divide-y divide-white/5 font-mono">
                             @forelse($shipment->items as $item)
                                 <tr>
-                                    <td class="py-2.5 font-sans font-semibold text-white">{{ $item->description }}</td>
+                                    <td class="py-2.5 font-sans font-semibold theme-heading">{{ $item->description }}</td>
                                     <td class="py-2.5 text-slate-400">{{ $item->sku ?? '-' }}</td>
                                     <td class="py-2.5 text-right text-slate-200">{{ $item->quantity }}</td>
                                     <td class="py-2.5 text-right text-slate-200">{{ number_format($item->weight_kg, 1) }}</td>
@@ -243,31 +243,31 @@
             <!-- Related Maritime News Corridor Intelligence -->
             @if(!empty($relatedNews))
                 <x-card class="space-y-4">
-                    <div class="flex items-center justify-between pb-3 border-b border-white/10">
+                    <div class="flex items-center justify-between pb-3 border-b theme-border">
                         <div>
-                            <span class="uppercase text-[10px] tracking-wider text-cyan-400 font-semibold block font-mono">Corridor Intelligence</span>
-                            <h3 class="text-base font-bold text-white">Related Maritime News</h3>
+                            <span class="uppercase text-[10px] tracking-wider text-cyan-600 dark:text-cyan-400 font-semibold block font-mono">Corridor Intelligence</span>
+                            <h3 class="text-base font-bold theme-heading">Related Maritime News</h3>
                         </div>
-                        <a href="{{ route('news.index') }}" class="text-xs font-mono text-cyan-400 hover:underline">All News &rarr;</a>
+                        <a href="{{ route('news.index') }}" class="text-xs font-mono text-blue-600 dark:text-cyan-400 hover:underline">All News &rarr;</a>
                     </div>
 
                     <div class="space-y-3">
                         @foreach($relatedNews as $rn)
-                            <div class="p-3 rounded-xl bg-slate-900/60 border border-white/5 flex items-center gap-3 group">
+                            <div class="p-3 rounded-xl theme-card-elevated border theme-border flex items-center gap-3 group">
                                 <img
                                     src="{{ $rn['thumbnail'] ?? asset('images/news-placeholder.svg') }}"
                                     alt=""
-                                    class="w-16 h-12 rounded-lg object-cover flex-shrink-0 bg-slate-800"
+                                    class="w-16 h-12 rounded-lg object-cover flex-shrink-0 bg-slate-200 dark:bg-slate-800"
                                     loading="lazy"
                                     referrerpolicy="no-referrer"
                                     onerror="this.onerror=null;this.src='{{ asset('images/news-placeholder.svg') }}';"
                                 >
                                 <div class="min-w-0 flex-1 space-y-1">
                                     <div class="flex items-center justify-between text-[10px] font-mono">
-                                        <span class="text-cyan-400 font-bold uppercase truncate max-w-[120px]">{{ $rn['source'] ?? 'Maritime Wire' }}</span>
-                                        <span class="text-slate-400">{{ \Carbon\Carbon::parse($rn['published_at'])->diffForHumans(null, true) }}</span>
+                                        <span class="text-blue-600 dark:text-cyan-400 font-bold uppercase truncate max-w-[120px]">{{ $rn['source'] ?? 'Maritime Wire' }}</span>
+                                        <span class="theme-text-muted">{{ \Carbon\Carbon::parse($rn['published_at'])->diffForHumans(null, true) }}</span>
                                     </div>
-                                    <a href="{{ $rn['url'] ?? '#' }}" target="_blank" rel="noopener noreferrer" class="text-xs font-semibold text-white group-hover:text-cyan-400 transition line-clamp-2 block leading-snug">
+                                    <a href="{{ $rn['url'] ?? '#' }}" target="_blank" rel="noopener noreferrer" class="text-xs font-semibold theme-heading group-hover:text-blue-600 dark:group-hover:text-cyan-400 transition line-clamp-2 block leading-snug">
                                         {{ $rn['headline'] }}
                                     </a>
                                 </div>
@@ -282,41 +282,41 @@
         <div class="lg:col-span-5 space-y-6">
             <!-- Tracking Events Timeline (Assertion: Tracking Checkpoints) -->
             <x-card class="space-y-4">
-                <div class="flex items-center justify-between pb-3 border-b border-white/10">
+                <div class="flex items-center justify-between pb-3 border-b theme-border">
                     <div>
-                        <span class="uppercase text-[10px] tracking-wider text-slate-500 font-semibold block">Milestone Ledger</span>
-                        <h3 class="text-base font-bold text-white">Tracking Checkpoints</h3>
+                        <span class="uppercase text-[10px] tracking-wider theme-text-muted font-semibold block">Milestone Ledger</span>
+                        <h3 class="text-base font-bold theme-heading">Tracking Checkpoints</h3>
                     </div>
-                    <span class="text-xs font-mono text-teal-300">{{ count($shipment->trackingEvents) }} Events</span>
+                    <span class="text-xs font-mono text-blue-600 dark:text-cyan-400">{{ count($shipment->trackingEvents) }} Events</span>
                 </div>
 
                 <!-- Timeline List -->
-                <div class="relative pl-6 space-y-6 before:absolute before:left-2 before:top-2 before:bottom-2 before:w-0.5 before:bg-slate-800">
+                <div class="relative pl-6 space-y-6 before:absolute before:left-2 before:top-2 before:bottom-2 before:w-0.5 before:bg-slate-300 dark:before:bg-slate-800">
                     @forelse($shipment->trackingEvents->sortByDesc('event_time') as $evt)
                         <div class="relative">
                             <!-- Bullet -->
-                            <div class="absolute -left-6 top-1 w-3.5 h-3.5 rounded-full border-2 border-[#0B1728] {{ $loop->first ? 'bg-teal-400 ring-4 ring-teal-500/20' : 'bg-slate-600' }}"></div>
+                            <div class="absolute -left-6 top-1 w-3.5 h-3.5 rounded-full border-2 border-slate-200 dark:border-[#0B1728] {{ $loop->first ? 'bg-cyan-500 ring-4 ring-cyan-500/20' : 'bg-slate-400 dark:bg-slate-600' }}"></div>
 
                             <div class="space-y-1">
                                 <div class="flex items-center justify-between text-xs font-mono">
-                                    <span class="font-bold text-white">{{ $evt->status }}</span>
-                                    <span class="text-slate-500 text-[11px]">{{ $evt->event_time?->format('M d, H:i') }}</span>
+                                    <span class="font-bold theme-heading">{{ $evt->status }}</span>
+                                    <span class="theme-text-muted text-[11px]">{{ $evt->event_time?->format('M d, H:i') }}</span>
                                 </div>
 
-                                <div class="text-xs text-slate-300 font-sans">
+                                <div class="text-xs theme-text-secondary font-sans">
                                     {{ $evt->description }}
                                 </div>
 
-                                <div class="flex items-center justify-between text-[11px] text-slate-400 font-mono pt-1">
-                                    <span class="text-teal-400">@ {{ $evt->location->name ?? 'Port Gateway' }} ({{ $evt->location->unlocode ?? 'N/A' }})</span>
+                                <div class="flex items-center justify-between text-[11px] theme-text-muted font-mono pt-1">
+                                    <span class="text-blue-600 dark:text-cyan-400">@ {{ $evt->location->name ?? 'Port Gateway' }} ({{ $evt->location->unlocode ?? 'N/A' }})</span>
                                     @if($evt->weather_snapshot)
-                                        <span class="text-slate-400">{{ $evt->weather_snapshot['temperature_c'] ?? '' }}°C {{ $evt->weather_snapshot['condition'] ?? '' }}</span>
+                                        <span class="theme-text-muted">{{ $evt->weather_snapshot['temperature_c'] ?? '' }}°C {{ $evt->weather_snapshot['condition'] ?? '' }}</span>
                                     @endif
                                 </div>
                             </div>
                         </div>
                     @empty
-                        <div class="py-6 text-center text-slate-500 text-xs">
+                        <div class="py-6 text-center theme-text-muted text-xs">
                             No milestone checkpoints recorded yet.
                         </div>
                     @endforelse
@@ -324,17 +324,17 @@
 
                 <!-- Operator Action: Record New Checkpoint -->
                 @if(in_array(auth()->user()->role, ['admin', 'operator']))
-                    <div class="pt-4 border-t border-white/10 space-y-3">
-                        <span class="uppercase text-[10px] tracking-wider text-slate-500 font-semibold block">Record New Checkpoint</span>
+                    <div class="pt-4 border-t theme-border space-y-3">
+                        <span class="uppercase text-[10px] tracking-wider theme-text-muted font-semibold block">Record New Checkpoint</span>
                         <form action="{{ route('shipments.add-tracking', $shipment) }}" method="POST" class="space-y-3">
                             @csrf
                             <div class="grid grid-cols-2 gap-2 text-xs">
-                                <select name="status" required class="px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-slate-200 font-mono text-xs focus:ring-1 focus:ring-amber-500">
+                                <select name="status" required class="px-3 py-2 rounded-xl theme-input border theme-border font-mono text-xs focus:ring-1 focus:ring-blue-500">
                                     @foreach(['CREATED', 'BOOKED', 'PICKED_UP', 'IN_TRANSIT', 'DELIVERED'] as $sOpt)
                                         <option value="{{ $sOpt }}" {{ $shipment->status === $sOpt ? 'selected' : '' }}>{{ $sOpt }}</option>
                                     @endforeach
                                 </select>
-                                <select name="location_id" required class="px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-slate-200 text-xs focus:ring-1 focus:ring-amber-500">
+                                <select name="location_id" required class="px-3 py-2 rounded-xl theme-input border theme-border text-xs focus:ring-1 focus:ring-blue-500">
                                     @foreach($locations as $loc)
                                         <option value="{{ $loc->id }}" {{ $shipment->current_location_id == $loc->id ? 'selected' : '' }}>
                                             {{ $loc->city }} ({{ $loc->unlocode }})
@@ -342,8 +342,8 @@
                                     @endforeach
                                 </select>
                             </div>
-                            <input type="text" name="description" placeholder="Checkpoint remark (e.g. Cleared customs gate 3)" required class="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-white placeholder-slate-500 text-xs focus:ring-1 focus:ring-amber-500">
-                            <button type="submit" class="w-full py-2 rounded-xl bg-gradient-to-r from-teal-400 to-teal-500 hover:from-teal-300 hover:to-teal-400 text-slate-950 font-bold text-xs uppercase tracking-wider transition">
+                            <input type="text" name="description" placeholder="Checkpoint remark (e.g. Cleared customs gate 3)" required class="w-full px-3 py-2 rounded-xl theme-input border theme-border text-xs focus:ring-1 focus:ring-blue-500">
+                            <button type="submit" class="w-full py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs uppercase tracking-wider transition">
                                 Add Checkpoint & Sync Telemetry
                             </button>
                         </form>
@@ -354,27 +354,27 @@
             <!-- Operator Action: Log Exception / Incident -->
             @if(in_array(auth()->user()->role, ['admin', 'operator']))
                 <x-card class="space-y-3">
-                    <span class="uppercase text-[10px] tracking-wider text-rose-400 font-semibold block">Log Exception Incident</span>
+                    <span class="uppercase text-[10px] tracking-wider text-rose-500 dark:text-rose-400 font-semibold block">Log Exception Incident</span>
                     <form action="{{ route('shipments.report-exception', $shipment) }}" method="POST" class="space-y-3">
                         @csrf
                         <div class="grid grid-cols-2 gap-2 text-xs">
-                            <select name="exception_code" required class="px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-slate-200 font-mono text-xs focus:ring-1 focus:ring-rose-500">
+                            <select name="exception_code" required class="px-3 py-2 rounded-xl theme-input border theme-border font-mono text-xs focus:ring-1 focus:ring-rose-500">
                                 <option value="CUSTOMS_HOLD">CUSTOMS_HOLD</option>
                                 <option value="WEATHER_DELAY">WEATHER_DELAY</option>
                                 <option value="PORT_CONGESTION">PORT_CONGESTION</option>
                                 <option value="DAMAGED_CARGO">DAMAGED_CARGO</option>
                                 <option value="MISROUTED">MISROUTED</option>
                             </select>
-                            <select name="severity" required class="px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-slate-200 font-mono text-xs focus:ring-1 focus:ring-rose-500">
+                            <select name="severity" required class="px-3 py-2 rounded-xl theme-input border theme-border font-mono text-xs focus:ring-1 focus:ring-rose-500">
                                 <option value="LOW">LOW</option>
                                 <option value="MEDIUM">MEDIUM</option>
                                 <option value="HIGH">HIGH</option>
                                 <option value="CRITICAL">CRITICAL</option>
                             </select>
                         </div>
-                        <input type="text" name="title" placeholder="Incident Title (e.g. Typhoon warning alert)" required class="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-white placeholder-slate-500 text-xs focus:ring-1 focus:ring-rose-500">
-                        <textarea name="description" rows="2" placeholder="Full incident context and impact..." class="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-white placeholder-slate-500 text-xs focus:ring-1 focus:ring-rose-500"></textarea>
-                        <button type="submit" class="w-full py-2 rounded-xl bg-rose-500 hover:bg-rose-400 text-white font-bold text-xs uppercase tracking-wider transition">
+                        <input type="text" name="title" placeholder="Incident Title (e.g. Typhoon warning alert)" required class="w-full px-3 py-2 rounded-xl theme-input border theme-border text-xs focus:ring-1 focus:ring-rose-500">
+                        <textarea name="description" rows="2" placeholder="Full incident context and impact..." class="w-full px-3 py-2 rounded-xl theme-input border theme-border text-xs focus:ring-1 focus:ring-rose-500"></textarea>
+                        <button type="submit" class="w-full py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs uppercase tracking-wider transition">
                             Record Incident Notice
                         </button>
                     </form>

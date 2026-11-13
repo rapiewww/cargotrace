@@ -23,7 +23,7 @@
         @foreach($order as $idx => $st)
             <div
                 title="{{ $stages[$st]['label'] }}"
-                class="w-5 h-1.5 rounded-full {{ $idx <= $currentIndex ? ($st === 'DELIVERED' ? 'bg-emerald-400' : 'bg-teal-400') : 'bg-slate-800' }}"
+                class="w-5 h-1.5 rounded-full {{ $idx <= $currentIndex ? ($st === 'DELIVERED' ? 'bg-emerald-500' : 'bg-blue-600') : 'bg-slate-300 dark:bg-slate-800' }}"
             ></div>
         @endforeach
     </div>
@@ -31,9 +31,9 @@
     <!-- Full visual milestone stepper -->
     <div class="w-full py-4">
         <div class="grid grid-cols-5 relative">
-            <div class="absolute top-4 left-6 right-6 h-0.5 bg-slate-800 -z-0">
+            <div class="absolute top-4 left-6 right-6 h-0.5 bg-slate-300 dark:bg-slate-800 -z-0">
                 <div
-                    class="h-full bg-gradient-to-r from-teal-400 to-emerald-400 transition-all duration-500"
+                    class="h-full bg-gradient-to-r from-blue-600 to-emerald-500 transition-all duration-500"
                     style="width: {{ ($currentIndex / 4) * 100 }}%"
                 ></div>
             </div>
@@ -44,7 +44,7 @@
                     $isCurrent = $idx === $currentIndex;
                 @endphp
                 <div class="flex flex-col items-center text-center relative z-10 space-y-2">
-                    <div class="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold font-mono transition-all duration-300 {{ $isCurrent ? 'bg-amber-500 text-slate-950 ring-4 ring-amber-500/20 shadow-lg shadow-amber-500/30' : ($isPassed ? 'bg-teal-500 text-slate-950' : 'bg-slate-900 border border-slate-700 text-slate-500') }}">
+                    <div class="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold font-mono transition-all duration-300 {{ $isCurrent ? 'bg-amber-500 text-slate-950 ring-4 ring-amber-500/20 shadow-lg shadow-amber-500/30' : ($isPassed ? 'bg-blue-600 text-white' : 'bg-slate-200 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-slate-500 dark:text-slate-400') }}">
                         @if($isPassed)
                             ✓
                         @else
@@ -52,10 +52,10 @@
                         @endif
                     </div>
                     <div class="hidden sm:block">
-                        <span class="text-[11px] font-semibold block leading-tight {{ $isCurrent ? 'text-amber-400' : ($isPassed ? 'text-white' : 'text-slate-500') }}">
+                        <span class="text-[11px] font-semibold block leading-tight {{ $isCurrent ? 'text-amber-500' : ($isPassed ? 'theme-heading' : 'theme-text-muted') }}">
                             {{ $stages[$st]['label'] }}
                         </span>
-                        <span class="text-[9px] uppercase tracking-wider text-slate-500 font-mono">{{ $st }}</span>
+                        <span class="text-[9px] uppercase tracking-wider theme-text-muted font-mono">{{ $st }}</span>
                     </div>
                 </div>
             @endforeach

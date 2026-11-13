@@ -27,6 +27,54 @@ Chart.register(
     Legend
 );
 
+const activeCharts = new Set();
+
+function getCurrentTheme() {
+    return document.documentElement.getAttribute('data-theme')
+        || (document.documentElement.classList.contains('light') ? 'light' : 'dark');
+}
+
+export function updateAllChartsTheme(theme) {
+    const isLight = theme === 'light';
+    const gridColor = isLight ? 'rgba(0, 0, 0, 0.08)' : 'rgba(255, 255, 255, 0.05)';
+    const tickColor = isLight ? '#52647A' : '#8FA3BC';
+    const headingColor = isLight ? '#0B1728' : '#FFFFFF';
+    const mutedColor = isLight ? '#52647A' : '#8FA3BC';
+    const tooltipBg = isLight ? '#FFFFFF' : '#0B1728';
+    const tooltipBorder = isLight ? '#D5DEEA' : 'rgba(255, 255, 255, 0.1)';
+
+    activeCharts.forEach(chart => {
+        try {
+            if (chart.options.scales) {
+                if (chart.options.scales.x) {
+                    if (chart.options.scales.x.grid) chart.options.scales.x.grid.color = gridColor;
+                    if (chart.options.scales.x.ticks) chart.options.scales.x.ticks.color = tickColor;
+                }
+                if (chart.options.scales.y) {
+                    if (chart.options.scales.y.grid) chart.options.scales.y.grid.color = gridColor;
+                    if (chart.options.scales.y.ticks) chart.options.scales.y.ticks.color = tickColor;
+                }
+            }
+            if (chart.options.plugins?.legend?.labels) {
+                chart.options.plugins.legend.labels.color = isLight ? '#0B1728' : '#94A3B8';
+            }
+            if (chart.options.plugins?.tooltip) {
+                chart.options.plugins.tooltip.backgroundColor = tooltipBg;
+                chart.options.plugins.tooltip.borderColor = tooltipBorder;
+                chart.options.plugins.tooltip.titleColor = headingColor;
+                chart.options.plugins.tooltip.bodyColor = mutedColor;
+            }
+            if (chart.config.options.plugins?.centerText) {
+                chart.config.options.plugins.centerText.color = headingColor;
+                chart.config.options.plugins.centerText.subtextColor = mutedColor;
+            }
+            chart.update('none');
+        } catch (e) {
+            // ignore if detached
+        }
+    });
+}
+
 // Plugin to draw total number in center of Doughnut Chart
 const centerTextPlugin = {
     id: 'centerText',
@@ -75,7 +123,7 @@ export function initStatusDoughnut(canvasId, statusCounts, totalCount) {
         return l.toLowerCase().replace(/_/g, ' ').replace(/^\w/, c => c.toUpperCase());
     });
 
-    return new Chart(el, {
+    const chart = new Chart(el, {
         type: 'doughnut',
         data: {
             labels: labels.length ? labels : ['No shipments'],
@@ -125,6 +173,10 @@ export function initStatusDoughnut(canvasId, statusCounts, totalCount) {
             }
         }
     });
+
+    activeCharts.add(chart);
+    updateAllChartsTheme(getCurrentTheme());
+    return chart;
 }
 
 /**
@@ -138,7 +190,7 @@ export function initCarrierBarChart(canvasId, carrierStats) {
     const labels = fullNames.map(name => name.length > 22 ? name.substring(0, 20) + '…' : name);
     const counts = (carrierStats || []).map(c => c.shipments_count || c.count || 0);
 
-    return new Chart(el, {
+    const chart = new Chart(el, {
         type: 'bar',
         data: {
             labels: labels.length ? labels : ['None'],
@@ -199,6 +251,10 @@ export function initCarrierBarChart(canvasId, carrierStats) {
             }
         }
     });
+
+    activeCharts.add(chart);
+    updateAllChartsTheme(getCurrentTheme());
+    return chart;
 }
 
 /**
@@ -212,7 +268,7 @@ export function initTrendLineChart(canvasId, trendData) {
     const onTime = (trendData || []).map(d => d.on_time || 0);
     const delayed = (trendData || []).map(d => d.delayed || 0);
 
-    return new Chart(el, {
+    const chart = new Chart(el, {
         type: 'line',
         data: {
             labels: weeks,
@@ -278,6 +334,10 @@ export function initTrendLineChart(canvasId, trendData) {
             }
         }
     });
+
+    activeCharts.add(chart);
+    updateAllChartsTheme(getCurrentTheme());
+    return chart;
 }
 
 /**
@@ -295,7 +355,7 @@ export function initExceptionsTypeChart(canvasId, exceptionCounts) {
         return l.toLowerCase().replace(/_/g, ' ').replace(/^\w/, c => c.toUpperCase());
     });
 
-    return new Chart(el, {
+    const chart = new Chart(el, {
         type: 'bar',
         data: {
             labels: labels.length ? labels : ['None'],
@@ -343,4 +403,8 @@ export function initExceptionsTypeChart(canvasId, exceptionCounts) {
             }
         }
     });
+
+    activeCharts.add(chart);
+    updateAllChartsTheme(getCurrentTheme());
+    return chart;
 }

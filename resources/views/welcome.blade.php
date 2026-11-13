@@ -39,15 +39,21 @@
                     <!-- Theme Toggle Switcher -->
                     <button
                         type="button"
+                        id="welcome-theme-toggle"
+                        role="switch"
+                        aria-checked="true"
+                        aria-pressed="true"
+                        tabindex="0"
                         onclick="window.CargoTrace && window.CargoTrace.toggleTheme ? window.CargoTrace.toggleTheme() : null"
-                        class="relative flex items-center p-1 rounded-full bg-slate-900 dark:bg-slate-900 light:bg-slate-200 border border-slate-800 light:border-slate-300 w-14 h-7 transition-colors duration-200 focus:outline-none"
+                        onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();window.CargoTrace&&window.CargoTrace.toggleTheme?window.CargoTrace.toggleTheme():null}"
+                        class="relative flex items-center p-1 rounded-full bg-slate-200 dark:bg-slate-900 border border-slate-300 dark:border-slate-800 w-14 h-7 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
                         aria-label="Toggle dark and light theme"
                         title="Switch theme"
                     >
-                        <span class="w-5 h-5 flex items-center justify-center text-cyan-400 dark:text-cyan-400 light:text-slate-400">
+                        <span class="w-5 h-5 flex items-center justify-center text-slate-400 dark:text-cyan-400 transition-colors">
                             <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"/></svg>
                         </span>
-                        <span class="w-5 h-5 flex items-center justify-center text-slate-500 dark:text-slate-500 light:text-blue-600">
+                        <span class="w-5 h-5 flex items-center justify-center text-amber-500 dark:text-slate-500 transition-colors">
                             <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
                         </span>
                     </button>
@@ -69,16 +75,51 @@
 
     @php
         $feat = $featuredShipment ?? $activeShipments->first();
+        $heroLightImage = config('cargotrace.hero_images.light') ?? (file_exists(public_path('images/backgrounds/hero-light.webp')) ? 'images/backgrounds/hero-light.webp' : null);
     @endphp
 
-    <!-- 1. CINEMATIC HERO SECTION (BERLATAR BELAKANG hero-sunset-terminal.jpg) -->
-    <section class="relative min-h-[640px] md:min-h-[720px] flex items-center overflow-hidden border-b border-white/10">
-        <!-- Crisp Cinematic Background Imagery (Subtle Gradient to keep vessel and cranes vivid) -->
-        <div class="absolute inset-0 z-0">
-            <img src="{{ asset('images/hero-sunset-terminal.jpg') }}" alt="Container ship moored at deepwater container terminal during golden sunset" class="w-full h-full object-cover object-center filter brightness-95 contrast-105">
-            <!-- Smooth left-side gradient overlay and bottom fade -->
-            <div class="absolute inset-0 bg-gradient-to-r from-slate-950/90 via-slate-950/65 to-transparent"></div>
-            <div class="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-transparent to-transparent"></div>
+    <!-- 1. CINEMATIC MARITIME HERO SECTION (Dark: bg-dark.webp | Light: hero-light.webp) -->
+    <section class="relative min-h-[640px] md:min-h-[720px] flex items-center overflow-hidden border-b theme-border">
+        <!-- Background Imagery: Two <img> siblings toggled by [data-theme] in CSS -->
+        <div class="absolute inset-0 z-0 overflow-hidden pointer-events-none">
+            {{-- Dark Theme Background Photography --}}
+            <img
+                src="{{ asset('images/backgrounds/bg-dark.webp') }}"
+                alt="Container ship and gantry cranes at night"
+                width="2560"
+                height="1440"
+                fetchpriority="high"
+                loading="eager"
+                decoding="sync"
+                class="hero-img-dark w-full h-full object-cover [object-position:right_bottom] md:object-center filter brightness-95 contrast-105"
+            >
+
+            {{-- Light Theme Background Photography (or pale gradient + SVG motif fallback) --}}
+            @if($heroLightImage)
+                <img
+                    src="{{ asset($heroLightImage) }}"
+                    alt="Daytime maritime container port operations"
+                    width="2560"
+                    height="1440"
+                    fetchpriority="low"
+                    loading="lazy"
+                    decoding="async"
+                    class="hero-img-light w-full h-full object-cover [object-position:right_bottom] md:object-center filter brightness-100 contrast-100"
+                >
+            @else
+                <div class="hero-fallback-light w-full h-full bg-gradient-to-br from-[#F4F7FB] via-sky-50 to-slate-200 relative">
+                    <x-svg-network-motif class="text-slate-500 opacity-10" />
+                </div>
+            @endif
+
+            {{-- Per-Theme Overlays tuned for WCAG AA --}}
+            <!-- Dark Theme Gradient Overlay -->
+            <div class="absolute inset-0 hidden dark:block bg-gradient-to-r from-[#050B14]/95 via-[#050B14]/80 to-[#050B14]/40"></div>
+            <div class="absolute inset-0 hidden dark:block bg-gradient-to-t from-[#050B14] via-transparent to-transparent"></div>
+
+            <!-- Light Theme Gradient Overlay -->
+            <div class="absolute inset-0 block dark:hidden bg-gradient-to-r from-[#F4F7FB]/95 via-[#F4F7FB]/88 to-[#F4F7FB]/55"></div>
+            <div class="absolute inset-0 block dark:hidden bg-gradient-to-t from-[#F4F7FB] via-transparent to-transparent"></div>
         </div>
 
         <div class="relative z-10 w-full max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-24">
@@ -86,19 +127,19 @@
                 
                 <!-- Left Hero Copy & Clean CTAs -->
                 <div class="lg:col-span-7 xl:col-span-7 space-y-6">
-                    <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-blue-600/25 border border-blue-400/30 text-cyan-300 text-[11px] font-semibold tracking-wider uppercase font-mono backdrop-blur-md">
-                        <span class="w-2 h-2 rounded-full bg-cyan-400 shadow-sm shadow-cyan-400"></span>
+                    <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-blue-600/15 dark:bg-blue-600/25 border border-blue-600/30 dark:border-blue-400/30 text-blue-700 dark:text-cyan-300 text-[11px] font-semibold tracking-wider uppercase font-mono backdrop-blur-md">
+                        <span class="w-2 h-2 rounded-full bg-blue-600 dark:bg-cyan-400 shadow-sm shadow-blue-500/50"></span>
                         GLOBAL OCEAN CONTAINER LOGISTICS & MILESTONE TRACKING
                     </div>
 
-                    <h1 class="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-white leading-[1.08]">
+                    <h1 class="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-slate-900 dark:text-white leading-[1.08]">
                         Logistics, with<br>
-                        <span class="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-cyan-300 to-white">
+                        <span class="text-transparent bg-clip-text bg-gradient-to-r from-blue-700 via-cyan-700 to-slate-900 dark:from-blue-400 dark:via-cyan-300 dark:to-white">
                             complete visibility.
                         </span>
                     </h1>
 
-                    <p class="text-base sm:text-lg text-slate-200 max-w-xl leading-relaxed">
+                    <p class="text-base sm:text-lg text-slate-700 dark:text-slate-200 max-w-xl leading-relaxed">
                         Move ocean container consignments across markets with operator-recorded checkpoints, verified UN/LOCODE seaport milestones, container shipping lines, and rule-based ETA tracking.
                     </p>
 
@@ -116,7 +157,7 @@
                             </a>
                         @endauth
 
-                        <a href="#network" class="px-6 py-3.5 rounded-xl font-semibold text-xs uppercase tracking-wider text-white bg-slate-900/60 hover:bg-slate-900/90 border border-white/20 hover:border-cyan-400/50 backdrop-blur-md transition-all duration-200">
+                        <a href="#network" class="px-6 py-3.5 rounded-xl font-semibold text-xs uppercase tracking-wider text-slate-800 dark:text-white bg-white/80 dark:bg-slate-900/60 hover:bg-white dark:hover:bg-slate-900/90 border border-slate-300 dark:border-white/20 hover:border-blue-500 dark:hover:border-cyan-400/50 backdrop-blur-md transition-all duration-200">
                             Explore Global Network
                         </a>
                     </div>
@@ -125,30 +166,30 @@
                 <!-- Right Hero: Live Vessel Telemetry Card (Dashboard Global View Style) -->
                 <div class="lg:col-span-5 xl:col-span-5">
                     @if($feat)
-                    <div class="rounded-2xl bg-[#09182A]/85 backdrop-blur-xl border border-blue-400/20 p-6 space-y-6 shadow-2xl text-white max-w-md mx-auto lg:ml-auto">
+                    <div class="rounded-2xl theme-card border theme-border p-6 space-y-6 shadow-2xl max-w-md mx-auto lg:ml-auto backdrop-blur-xl transition-colors duration-200">
                         <!-- Card Header -->
-                        <div class="flex items-center justify-between pb-4 border-b border-white/10">
+                        <div class="flex items-center justify-between pb-4 border-b theme-border">
                             <div>
                                 <div class="flex items-center gap-2">
-                                    <span class="font-mono text-sm font-bold text-white tracking-wide block">{{ $feat->tracking_number }}</span>
-                                    <span class="text-[9px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full bg-blue-500/20 text-cyan-300 font-mono">Recorded Milestone</span>
+                                    <span class="font-mono text-sm font-bold theme-heading tracking-wide block">{{ $feat->tracking_number }}</span>
+                                    <span class="text-[9px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full bg-blue-500/15 text-blue-600 dark:text-cyan-300 font-mono">Recorded Milestone</span>
                                 </div>
-                                <span class="text-[11px] text-slate-300 font-mono block mt-1">{{ $feat->carrier->name ?? 'Mediterranean Shipping Company (MSC)' }}</span>
+                                <span class="text-[11px] theme-text-muted font-mono block mt-1">{{ $feat->carrier->name ?? 'Mediterranean Shipping Company (MSC)' }}</span>
                             </div>
                             @if($feat->is_delayed && $feat->status === 'DELIVERED')
-                                <span class="px-2.5 py-1 rounded-full text-[10px] font-bold tracking-wider uppercase font-mono bg-amber-400/20 text-amber-400 border border-amber-400/40">
+                                <span class="px-2.5 py-1 rounded-full text-[10px] font-bold tracking-wider uppercase font-mono bg-amber-400/20 text-amber-600 dark:text-amber-400 border border-amber-400/40">
                                     &bull; Delivered late (+{{ (int)$feat->delay_hours }}h)
                                 </span>
                             @elseif($feat->is_delayed)
-                                <span class="px-2.5 py-1 rounded-full text-[10px] font-bold tracking-wider uppercase font-mono bg-amber-400/20 text-amber-400 border border-amber-400/40">
+                                <span class="px-2.5 py-1 rounded-full text-[10px] font-bold tracking-wider uppercase font-mono bg-amber-400/20 text-amber-600 dark:text-amber-400 border border-amber-400/40">
                                     &bull; Delayed (+{{ (int)$feat->delay_hours }}h)
                                 </span>
                             @elseif($feat->status === 'DELIVERED')
-                                <span class="px-2.5 py-1 rounded-full text-[10px] font-bold tracking-wider uppercase font-mono bg-emerald-500/20 text-emerald-400 border border-emerald-500/40">
+                                <span class="px-2.5 py-1 rounded-full text-[10px] font-bold tracking-wider uppercase font-mono bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/40">
                                     &bull; Delivered
                                 </span>
                             @else
-                                <span class="px-2.5 py-1 rounded-full text-[10px] font-bold tracking-wider uppercase font-mono bg-blue-500/20 text-cyan-300 border border-blue-400/30">
+                                <span class="px-2.5 py-1 rounded-full text-[10px] font-bold tracking-wider uppercase font-mono bg-blue-500/20 text-blue-600 dark:text-cyan-300 border border-blue-400/30">
                                     &bull; In Transit
                                 </span>
                             @endif
@@ -157,7 +198,7 @@
                         <!-- Vertical Milestone Timeline (Dashboard Palette: Blue & Emerald) -->
                         <div class="space-y-5 relative">
                             <!-- Vertical Connecting Line -->
-                            <div class="absolute left-[7px] top-3 bottom-3 w-[2px] bg-slate-700"></div>
+                            <div class="absolute left-[7px] top-3 bottom-3 w-[2px] bg-slate-300 dark:bg-slate-700"></div>
 
                             <!-- Milestone 1: Origin Port -->
                             <div class="relative flex items-start space-x-3.5">
@@ -166,49 +207,49 @@
                                 </span>
                                 <div class="flex-1 flex items-center justify-between text-xs">
                                     <div>
-                                        <span class="font-bold text-white block">Origin Port &bull; Loaded</span>
-                                        <span class="text-[11px] text-slate-300 font-mono">{{ $feat->originLocation->name ?? 'Port of Singapore (SGSIN)' }}</span>
+                                        <span class="font-bold theme-heading block">Origin Port &bull; Loaded</span>
+                                        <span class="text-[11px] theme-text-secondary font-mono">{{ $feat->originLocation->name ?? 'Port of Singapore (SGSIN)' }}</span>
                                     </div>
-                                    <span class="text-slate-400 text-[11px] font-mono">{{ $feat->expected_departure_at?->format('M d, H:i') ?? 'Oct 25, 15:57' }}</span>
+                                    <span class="theme-text-muted text-[11px] font-mono">{{ $feat->expected_departure_at?->format('M d, H:i') ?? 'Oct 25, 15:57' }}</span>
                                 </div>
                             </div>
 
                             <!-- Milestone 2: Active Sea Leg -->
                             <div class="relative flex items-start space-x-3.5">
-                                <span class="w-4 h-4 rounded-full bg-cyan-400 mt-0.5 shrink-0 ring-4 ring-cyan-400/30 z-10 animate-pulse flex items-center justify-center">
-                                    <span class="w-1.5 h-1.5 rounded-full bg-slate-950"></span>
+                                <span class="w-4 h-4 rounded-full bg-cyan-500 dark:bg-cyan-400 mt-0.5 shrink-0 ring-4 ring-cyan-500/30 z-10 animate-pulse flex items-center justify-center">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-white dark:bg-slate-950"></span>
                                 </span>
                                 <div class="flex-1 flex items-center justify-between text-xs">
                                     <div>
-                                        <span class="font-bold text-cyan-300 block">Current Location</span>
-                                        <span class="text-[11px] text-slate-200 font-mono">{{ $feat->currentLocation->name ?? 'Malacca Strait Sea Lane' }}</span>
+                                        <span class="font-bold text-blue-600 dark:text-cyan-300 block">Current Location</span>
+                                        <span class="text-[11px] theme-text-secondary font-mono">{{ $feat->currentLocation->name ?? 'Malacca Strait Sea Lane' }}</span>
                                     </div>
-                                    <span class="text-cyan-400 text-[11px] font-mono font-semibold">Under Voyage</span>
+                                    <span class="text-blue-600 dark:text-cyan-400 text-[11px] font-mono font-semibold">Under Voyage</span>
                                 </div>
                             </div>
 
                             <!-- Milestone 3: Destination Port -->
                             <div class="relative flex items-start space-x-3.5">
-                                <span class="w-4 h-4 rounded-full border-2 border-slate-500 bg-slate-900 mt-0.5 shrink-0 z-10"></span>
+                                <span class="w-4 h-4 rounded-full border-2 border-slate-400 dark:border-slate-500 bg-slate-100 dark:bg-slate-900 mt-0.5 shrink-0 z-10"></span>
                                 <div class="flex-1 flex items-center justify-between text-xs">
                                     <div>
-                                        <span class="font-semibold text-slate-300 block">Destination Port</span>
-                                        <span class="text-[11px] text-slate-400 font-mono">{{ $feat->destinationLocation->name ?? 'Port of Rotterdam (NLRTM)' }}</span>
+                                        <span class="font-semibold theme-text-secondary block">Destination Port</span>
+                                        <span class="text-[11px] theme-text-muted font-mono">{{ $feat->destinationLocation->name ?? 'Port of Rotterdam (NLRTM)' }}</span>
                                     </div>
-                                    <span class="text-slate-400 text-[11px] font-mono">{{ $feat->expected_arrival_at?->format('M d, H:i') ?? 'Nov 08, 15:57' }}</span>
+                                    <span class="theme-text-muted text-[11px] font-mono">{{ $feat->expected_arrival_at?->format('M d, H:i') ?? 'Nov 08, 15:57' }}</span>
                                 </div>
                             </div>
                         </div>
 
                         <!-- Card Footer: ETA & Vessel Coordinates -->
-                        <div class="pt-4 border-t border-white/10 flex items-center justify-between">
+                        <div class="pt-4 border-t theme-border flex items-center justify-between">
                             <div class="flex items-center space-x-2 text-xs">
-                                <svg class="w-4 h-4 text-cyan-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <svg class="w-4 h-4 text-blue-600 dark:text-cyan-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1M5 17a2 2 0 104 0m-4 0a2 2 0 114 0m6 0a2 2 0 104 0m-4 0a2 2 0 114 0"/>
                                 </svg>
-                                <span class="text-slate-300 font-medium">Estimated Arrival</span>
+                                <span class="theme-text-secondary font-medium">Estimated Arrival</span>
                             </div>
-                            <span class="font-mono font-bold text-xs text-cyan-300">
+                            <span class="font-mono font-bold text-xs text-blue-600 dark:text-cyan-300">
                                 {{ $feat->estimated_arrival_at?->format('M d, H:i') ?? 'Nov 11, 15:57' }}
                             </span>
                         </div>
@@ -331,57 +372,54 @@
                     </div>
                 </div>
 
-                <!-- Right: 3 Photography Feature Cards (Ocean Freight, Seaports Network, News Wire) -->
+                <!-- Right: 3 Maritime Feature Cards (Ocean Freight, Seaports Network, News Wire) -->
                 <div class="lg:col-span-5 space-y-4 flex flex-col justify-between">
                     
                     <!-- Card 1: Ocean Freight -->
-                    <div class="group relative rounded-2xl overflow-hidden bg-slate-900 border border-slate-800 p-5 flex flex-col justify-between min-h-[160px] shadow-xl hover:border-blue-400/50 transition-all duration-300">
-                        <div class="absolute inset-0 z-0">
-                            <img src="{{ asset('images/hero-vessel.webp') }}" alt="Ocean container vessel loaded with cargo" class="w-full h-full object-cover opacity-35 group-hover:opacity-45 group-hover:scale-105 transition-all duration-500">
-                            <div class="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/70 to-slate-950/20"></div>
+                    <div class="group relative rounded-2xl theme-card border theme-border p-5 flex flex-col justify-between min-h-[160px] shadow-lg hover:border-blue-500/50 transition-all duration-300">
+                        <div class="space-y-1.5">
+                            <div class="flex items-center justify-between">
+                                <span class="text-[10px] uppercase font-bold text-blue-600 dark:text-cyan-400 tracking-wider font-mono">OCEAN FREIGHT</span>
+                                <span class="text-xs">🚢</span>
+                            </div>
+                            <h3 class="text-base font-bold theme-heading tracking-tight">Time-Critical Container Shipping</h3>
+                            <p class="text-xs theme-text-secondary leading-relaxed">Global container sailings with Maersk, MSC, CMA CGM, COSCO, and recorded port milestones.</p>
                         </div>
-                        <div class="relative z-10 space-y-1">
-                            <span class="text-[10px] uppercase font-bold text-cyan-400 tracking-wider font-mono">OCEAN FREIGHT</span>
-                            <h3 class="text-base font-bold text-white tracking-tight">Time-Critical Container Shipping</h3>
-                            <p class="text-xs text-slate-300">Global container sailings with Maersk, MSC, CMA CGM, COSCO, and recorded port milestones.</p>
-                        </div>
-                        <div class="relative z-10 pt-2 flex items-center justify-between text-xs text-slate-300 font-semibold">
+                        <div class="pt-3 border-t theme-border flex items-center justify-between text-xs theme-text-muted font-mono font-semibold">
                             <span>Maersk &bull; MSC &bull; CMA CGM</span>
-                            <span class="text-cyan-400 group-hover:translate-x-1 transition-transform">&rarr;</span>
+                            <span class="text-blue-600 dark:text-cyan-400 group-hover:translate-x-1 transition-transform">&rarr;</span>
                         </div>
                     </div>
 
                     <!-- Card 2: Seaports Network -->
-                    <div class="group relative rounded-2xl overflow-hidden bg-slate-900 border border-slate-800 p-5 flex flex-col justify-between min-h-[160px] shadow-xl hover:border-blue-400/50 transition-all duration-300">
-                        <div class="absolute inset-0 z-0">
-                            <img src="{{ asset('images/hero-port.webp') }}" alt="Deepwater container terminal and gantry cranes" class="w-full h-full object-cover opacity-35 group-hover:opacity-45 group-hover:scale-105 transition-all duration-500">
-                            <div class="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/70 to-slate-950/20"></div>
+                    <div class="group relative rounded-2xl theme-card border theme-border p-5 flex flex-col justify-between min-h-[160px] shadow-lg hover:border-blue-500/50 transition-all duration-300">
+                        <div class="space-y-1.5">
+                            <div class="flex items-center justify-between">
+                                <span class="text-[10px] uppercase font-bold text-blue-600 dark:text-blue-400 tracking-wider font-mono">SEAPORTS NETWORK</span>
+                                <span class="text-xs">⚓</span>
+                            </div>
+                            <h3 class="text-base font-bold theme-heading tracking-tight">Deepwater Berths & Terminals</h3>
+                            <p class="text-xs theme-text-secondary leading-relaxed">Verified UN/LOCODE seaport milestones, quay crane gantry metrics, and gate timestamps.</p>
                         </div>
-                        <div class="relative z-10 space-y-1">
-                            <span class="text-[10px] uppercase font-bold text-blue-400 tracking-wider font-mono">SEAPORTS NETWORK</span>
-                            <h3 class="text-base font-bold text-white tracking-tight">Deepwater Berths & Terminals</h3>
-                            <p class="text-xs text-slate-300">Verified UN/LOCODE seaport milestones, quay crane gantry metrics, and gate timestamps.</p>
-                        </div>
-                        <div class="relative z-10 pt-2 flex items-center justify-between text-xs text-slate-300 font-semibold">
+                        <div class="pt-3 border-t theme-border flex items-center justify-between text-xs theme-text-muted font-mono font-semibold">
                             <span>CNSHA &bull; NLRTM &bull; SGSIN</span>
-                            <span class="text-blue-400 group-hover:translate-x-1 transition-transform">&rarr;</span>
+                            <span class="text-blue-600 dark:text-blue-400 group-hover:translate-x-1 transition-transform">&rarr;</span>
                         </div>
                     </div>
 
                     <!-- Card 3: Maritime News Wire -->
-                    <div class="group relative rounded-2xl overflow-hidden bg-slate-900 border border-slate-800 p-5 flex flex-col justify-between min-h-[160px] shadow-xl hover:border-blue-400/50 transition-all duration-300">
-                        <div class="absolute inset-0 z-0">
-                            <img src="{{ asset('images/service-ocean.webp') }}" alt="Maritime container transport logistics" class="w-full h-full object-cover opacity-35 group-hover:opacity-45 group-hover:scale-105 transition-all duration-500">
-                            <div class="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/70 to-slate-950/20"></div>
+                    <div class="group relative rounded-2xl theme-card border theme-border p-5 flex flex-col justify-between min-h-[160px] shadow-lg hover:border-blue-500/50 transition-all duration-300">
+                        <div class="space-y-1.5">
+                            <div class="flex items-center justify-between">
+                                <span class="text-[10px] uppercase font-bold text-emerald-600 dark:text-emerald-400 tracking-wider font-mono">MARITIME NEWS WIRE</span>
+                                <span class="text-xs">🌐</span>
+                            </div>
+                            <h3 class="text-base font-bold theme-heading tracking-tight">Global Trade Intelligence</h3>
+                            <p class="text-xs theme-text-secondary leading-relaxed">Live port weather advisories, foreign currency FX conversion, and maritime bulletins.</p>
                         </div>
-                        <div class="relative z-10 space-y-1">
-                            <span class="text-[10px] uppercase font-bold text-emerald-400 tracking-wider font-mono">MARITIME NEWS WIRE</span>
-                            <h3 class="text-base font-bold text-white tracking-tight">Global Trade Intelligence</h3>
-                            <p class="text-xs text-slate-300">Live port congestion alerts, weather advisories, and foreign currency FX conversion.</p>
-                        </div>
-                        <div class="relative z-10 pt-2 flex items-center justify-between text-xs text-slate-300 font-semibold">
-                            <span>OpenWeather &bull; OpenExchange &bull; NewsData</span>
-                            <span class="text-emerald-400 group-hover:translate-x-1 transition-transform">&rarr;</span>
+                        <div class="pt-3 border-t theme-border flex items-center justify-between text-xs theme-text-muted font-mono font-semibold">
+                            <span>OpenWeather &bull; Frankfurter &bull; RSS</span>
+                            <span class="text-emerald-600 dark:text-emerald-400 group-hover:translate-x-1 transition-transform">&rarr;</span>
                         </div>
                     </div>
 

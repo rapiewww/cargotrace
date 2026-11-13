@@ -167,12 +167,12 @@
                     <svg class="w-full h-full overflow-visible" viewBox="0 0 200 40">
                         <defs>
                             <linearGradient id="spark1" x1="0" y1="0" x2="0" y2="1">
-                                <stop offset="0%" stop-color="#38BDF8" stop-opacity="0.35"/>
-                                <stop offset="100%" stop-color="#38BDF8" stop-opacity="0"/>
+                                <stop offset="0%" stop-color="#2563EB" stop-opacity="0.30" class="dark:stop-color-[#38BDF8]"/>
+                                <stop offset="100%" stop-color="#2563EB" stop-opacity="0" class="dark:stop-color-[#38BDF8]"/>
                             </linearGradient>
                         </defs>
                         <path d="{{ $sparkline1Area }}" fill="url(#spark1)"/>
-                        <path d="{{ $sparkline1Path }}" fill="none" stroke="#0284C7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="{{ $sparkline1Path }}" fill="none" class="stroke-blue-600 dark:stroke-cyan-400" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                     </svg>
                 </div>
             </div>
@@ -193,12 +193,12 @@
                     <svg class="w-full h-full overflow-visible" viewBox="0 0 200 40">
                         <defs>
                             <linearGradient id="spark2" x1="0" y1="0" x2="0" y2="1">
-                                <stop offset="0%" stop-color="#2563EB" stop-opacity="0.35"/>
+                                <stop offset="0%" stop-color="#2563EB" stop-opacity="0.30"/>
                                 <stop offset="100%" stop-color="#2563EB" stop-opacity="0"/>
                             </linearGradient>
                         </defs>
                         <path d="{{ $sparkline2Area }}" fill="url(#spark2)"/>
-                        <path d="{{ $sparkline2Path }}" fill="none" stroke="#2563EB" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="{{ $sparkline2Path }}" fill="none" class="stroke-blue-600 dark:stroke-blue-400" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                     </svg>
                 </div>
             </div>
@@ -386,12 +386,12 @@
                     ],
                 ];
             @endphp
-            <div class="p-6 rounded-3xl bg-[#FDF6E2] dark:bg-[#FDF6E2] text-slate-950 border border-amber-200/80 shadow-xl space-y-4">
-                <div class="flex items-center justify-between pb-2 border-b border-amber-900/10">
-                    <span class="text-xs font-bold uppercase tracking-wider text-amber-950">Seaport Live Weather</span>
+            <div class="p-6 rounded-3xl theme-card border theme-border shadow-xl space-y-4 transition-colors duration-200">
+                <div class="flex items-center justify-between pb-2 border-b theme-border">
+                    <span class="text-xs font-bold uppercase tracking-wider theme-heading">Seaport Live Weather</span>
                     <div class="flex items-center gap-1.5">
                         <x-data-source-badge :source="$selectedPort['data_source'] ?? 'live'" />
-                        <a href="{{ route('weather.index') }}" class="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-amber-900/15 hover:bg-amber-900/25 text-amber-950 font-mono transition inline-flex items-center gap-1" title="Open full Weather Hub">
+                        <a href="{{ route('weather.index') }}" class="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded theme-card-elevated border theme-border hover:border-blue-500 theme-heading font-mono transition inline-flex items-center gap-1" title="Open full Weather Hub">
                             <span>Hub</span>
                             <span>&rarr;</span>
                         </a>
@@ -401,14 +401,14 @@
                 <div class="space-y-3">
                     <div class="flex items-center justify-between">
                         <div>
-                            <h3 class="text-base font-extrabold text-slate-950">{{ $selectedPort['city'] ?? 'Singapore' }}</h3>
-                            <span class="text-[11px] text-amber-900 font-mono">{{ $selectedPort['unlocode'] ?? 'SGSIN' }} Container Terminal</span>
+                            <h3 class="text-base font-extrabold theme-heading">{{ $selectedPort['city'] ?? 'Singapore' }}</h3>
+                            <span class="text-[11px] theme-text-muted font-mono">{{ $selectedPort['unlocode'] ?? 'SGSIN' }} Container Terminal</span>
                         </div>
                         <div class="text-right">
-                            <span class="text-3xl font-black text-slate-950 tabular-nums">
+                            <span class="text-3xl font-black theme-heading tabular-nums">
                                 {{ $selectedPort['weather']['temperature_c'] ?? '31.5' }}°C
                             </span>
-                            <span class="text-xs font-semibold text-amber-900 block">
+                            <span class="text-xs font-semibold theme-text-secondary block">
                                 {{ $selectedPort['weather']['condition'] ?? 'Clear & Sunny' }}
                             </span>
                         </div>
@@ -422,12 +422,12 @@
                             <circle cx="100" cy="30" r="10" fill="#F59E0B"/>
                             <circle cx="100" cy="30" r="14" fill="none" stroke="#F59E0B" stroke-width="1.5" stroke-dasharray="2,2"/>
                         </svg>
-                        <span class="absolute text-[11px] font-bold text-amber-950 bottom-1">{{ round($selectedPort['weather']['temperature_c'] ?? 31.5) }}° Sea Breeze</span>
+                        <span class="absolute text-[11px] font-bold theme-text-primary bottom-1">{{ round($selectedPort['weather']['temperature_c'] ?? 31.5) }}° Sea Breeze</span>
                     </div>
 
-                    <div class="grid grid-cols-2 gap-2 text-xs text-amber-950 pt-2 border-t border-amber-900/10">
-                        <div>Wind: <b>{{ $selectedPort['weather']['wind_kph'] ?? '14.5' }} km/h</b></div>
-                        <div>Humidity: <b>{{ $selectedPort['weather']['humidity'] ?? '68' }}%</b></div>
+                    <div class="grid grid-cols-2 gap-2 text-xs theme-text-secondary pt-2 border-t theme-border">
+                        <div>Wind: <b class="theme-heading">{{ $selectedPort['weather']['wind_kph'] ?? '14.5' }} km/h</b></div>
+                        <div>Humidity: <b class="theme-heading">{{ $selectedPort['weather']['humidity'] ?? '68' }}%</b></div>
                     </div>
                 </div>
             </div>

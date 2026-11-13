@@ -57,52 +57,73 @@
     --color-accent-amber: #F5A524;
 }
 
-/* Dark / Light Mode Palette Tokens */
+/* Dark / Light Mode Palette Tokens per DESIGN.md */
 :root,
 html[data-theme="dark"],
 html.dark {
-    --bg-page: #050811;
-    --bg-surface: #0B1222;
-    --bg-surface-elevated: #111A2E;
-    --bg-sidebar: #080D1A;
-    --bg-header: rgba(5, 8, 17, 0.92);
-    --border-color: #1E293B;
+    --bg-page: #050B14;
+    --bg-surface: #0B1728;
+    --bg-surface-elevated: #11233B;
+    --bg-sidebar: #0B1728;
+    --bg-header: rgba(5, 11, 20, 0.92);
+    --border-color: rgba(255, 255, 255, 0.10);
     --border-subtle: rgba(255, 255, 255, 0.08);
-    --border-card: rgba(255, 255, 255, 0.08);
-    --text-primary: #F8FAFC;
-    --text-secondary: #94A3B8;
-    --text-muted: #64748B;
+    --border-card: rgba(255, 255, 255, 0.10);
+    --text-primary: #E6EEF8;
+    --text-secondary: #8FA3BC;
+    --text-muted: #8FA3BC;
     --text-heading: #FFFFFF;
-    --input-bg: rgba(2, 6, 23, 0.8);
-    --input-border: #1E293B;
-    --table-header-bg: #0B1222;
-    --table-row-hover: rgba(30, 41, 59, 0.4);
+    --input-bg: rgba(5, 11, 20, 0.85);
+    --input-border: rgba(255, 255, 255, 0.12);
+    --table-header-bg: #0B1728;
+    --table-row-hover: rgba(255, 255, 255, 0.03);
     --card-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 8px 10px -6px rgba(0, 0, 0, 0.5);
     --accent-blue: #2563EB;
-    --accent-cyan: #38BDF8;
+    --accent-blue-hover: #1D4ED8;
+    --accent-cyan: #22D3EE;
+    --motif-stroke: rgba(230, 238, 248, 0.05);
 }
 
 html[data-theme="light"],
 html.light {
-    --bg-page: #F1F5F9;
+    --bg-page: #F4F7FB;
     --bg-surface: #FFFFFF;
     --bg-surface-elevated: #F8FAFC;
     --bg-sidebar: #FFFFFF;
     --bg-header: rgba(255, 255, 255, 0.96);
-    --border-color: #E2E8F0;
+    --border-color: #D5DEEA;
     --border-subtle: #E2E8F0;
-    --border-card: #E2E8F0;
-    --text-primary: #0F172A;
-    --text-secondary: #475569;
-    --text-muted: #64748B;
-    --text-heading: #0F172A;
+    --border-card: #D5DEEA;
+    --text-primary: #0B1728;
+    --text-secondary: #52647A;
+    --text-muted: #52647A;
+    --text-heading: #0B1728;
     --input-bg: #FFFFFF;
-    --input-border: #CBD5E1;
+    --input-border: #D5DEEA;
     --table-header-bg: #F8FAFC;
     --table-row-hover: #F1F5F9;
     --card-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
-    --accent-blue: #1D4ED8;
-    --accent-cyan: #0284C7;
+    --accent-blue: #2563EB;
+    --accent-blue-hover: #1D4ED8;
+    --accent-cyan: #0E7490;
+    --motif-stroke: rgba(11, 23, 40, 0.05);
+}
+
+/* Photography Toggle (Landing Hero & Login Panel) */
+html[data-theme="dark"] .hero-img-dark {
+    display: block !important;
+}
+html[data-theme="dark"] .hero-img-light,
+html[data-theme="dark"] .hero-fallback-light {
+    display: none !important;
+}
+
+html[data-theme="light"] .hero-img-dark {
+    display: none !important;
+}
+html[data-theme="light"] .hero-img-light,
+html[data-theme="light"] .hero-fallback-light {
+    display: block !important;
 }
 
 html, body {
