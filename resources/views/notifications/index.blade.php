@@ -7,11 +7,11 @@
         <div>
             <div class="flex items-center gap-3">
                 <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight theme-heading font-sans">
-                    Notifications & Alerts
+                    Notifications and alerts
                 </h1>
                 @if($unreadCount > 0)
                     <span class="text-xs px-2.5 py-0.5 rounded-full bg-amber-400/20 text-amber-600 dark:text-amber-300 border border-amber-400/30 font-mono">
-                        {{ $unreadCount }} Unread
+                        {{ $unreadCount }} unread
                     </span>
                 @endif
             </div>
@@ -25,7 +25,7 @@
                 <form action="{{ route('notifications.read-all') }}" method="POST">
                     @csrf
                     <button type="submit" class="px-3.5 py-2 rounded-xl theme-card-elevated border theme-border hover:border-blue-500 text-blue-600 dark:text-cyan-400 text-xs font-semibold transition">
-                        Mark All as Read
+                        Mark all as read
                     </button>
                 </form>
             @endif
@@ -35,10 +35,10 @@
     <!-- Filter Pills -->
     <div class="flex items-center space-x-2 text-xs font-semibold">
         <a href="{{ route('notifications.index') }}" class="px-3 py-1.5 rounded-lg border {{ !request('filter') ? 'bg-blue-600/20 text-blue-600 dark:text-cyan-300 border-blue-500/40' : 'theme-card-elevated theme-text-secondary theme-border hover:theme-heading' }} transition">
-            All Notifications
+            All notifications
         </a>
         <a href="{{ route('notifications.index', ['filter' => 'unread']) }}" class="px-3 py-1.5 rounded-lg border {{ request('filter') === 'unread' ? 'bg-blue-600/20 text-blue-600 dark:text-cyan-300 border-blue-500/40' : 'theme-card-elevated theme-text-secondary theme-border hover:theme-heading' }} transition">
-            Unread Only ({{ $unreadCount }})
+            Unread only ({{ $unreadCount }})
         </a>
     </div>
 
@@ -81,7 +81,7 @@
                     <form action="{{ route('notifications.read', $notif) }}" method="POST">
                         @csrf
                         <button type="submit" class="px-2.5 py-1 rounded-lg theme-text-secondary hover:theme-heading hover:bg-slate-500/10 border theme-border text-[11px] transition">
-                            Mark Read
+                            Mark read
                         </button>
                     </form>
                 @endif

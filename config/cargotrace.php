@@ -36,6 +36,10 @@ return [
         'days' => (int) env('CARGOTRACE_FREE_DAYS_AFTER_ARRIVAL', 5),
     ],
 
+    'notifications' => [
+        'email' => (bool) env('CARGOTRACE_NOTIFICATIONS_EMAIL', false),
+    ],
+
     'weather' => [
         'crane_thresholds' => [
             'caution_kph' => (float) env('CARGOTRACE_WEATHER_CRANE_CAUTION_KPH', 28.0),

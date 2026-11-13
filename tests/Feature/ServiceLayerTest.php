@@ -43,7 +43,7 @@ test('AuditService creates audit log entry with user and IP', function () {
 
 test('EtaService evaluates delay thresholds accurately and notifies customer', function () {
     $etaService = app(EtaService::class);
-    $shipment = Shipment::first();
+    $shipment = Shipment::where('status', '!=', 'DELIVERED')->first();
     $customer = $shipment->customer;
 
     // 1. On time (ETA <= Expected)
