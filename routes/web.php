@@ -10,6 +10,7 @@ use App\Http\Controllers\NewsWebController;
 use App\Http\Controllers\NotificationWebController;
 use App\Http\Controllers\PublicTrackingController;
 use App\Http\Controllers\SettingsWebController;
+use App\Http\Controllers\ShipmentImportWebController;
 use App\Http\Controllers\ShipmentWebController;
 use App\Http\Controllers\UserManagementWebController;
 use App\Http\Controllers\WeatherWebController;
@@ -60,6 +61,10 @@ Route::middleware('auth')->group(function () {
     Route::post('/shipments', [ShipmentWebController::class, 'store'])->name('shipments.store')
         ->middleware('role:admin,operator');
     Route::get('/shipments/export/csv', [ShipmentWebController::class, 'exportCsv'])->name('shipments.export.csv');
+    Route::get('/shipments/import/sample', [ShipmentImportWebController::class, 'sample'])->name('shipments.import.sample');
+    Route::get('/shipments/import', [ShipmentImportWebController::class, 'index'])->name('shipments.import.index');
+    Route::post('/shipments/import/preview', [ShipmentImportWebController::class, 'preview'])->name('shipments.import.preview');
+    Route::post('/shipments/import/confirm', [ShipmentImportWebController::class, 'confirm'])->name('shipments.import.confirm');
     Route::get('/shipments/{shipment}', [ShipmentWebController::class, 'show'])->name('shipments.show');
     Route::get('/shipments/{shipment}/edit', [ShipmentWebController::class, 'edit'])->name('shipments.edit')
         ->middleware('role:admin,operator');

@@ -58,6 +58,15 @@ class ShipmentPolicy
     }
 
     /**
+     * Determine whether the user can bulk import shipments via CSV.
+     * Restricted to admin and operator.
+     */
+    public function import(User $user): bool
+    {
+        return $user->role === 'operator';
+    }
+
+    /**
      * Determine whether the user can update the shipment.
      * Restricted to admin and operator.
      */
