@@ -297,16 +297,25 @@ class DashboardController extends Controller
             'data_source' => 'live',
         ];
 
+        // Active shipments per mode for dashboard cards / segmented bar
+        $activeModesCount = [
+            'SEA' => (clone $shipmentQuery)->whereIn('status', ['IN_TRANSIT', 'PICKED_UP', 'BOOKED'])->where('transport_mode', 'SEA')->count(),
+            'AIR' => (clone $shipmentQuery)->whereIn('status', ['IN_TRANSIT', 'PICKED_UP', 'BOOKED'])->where('transport_mode', 'AIR')->count(),
+            'ROAD' => (clone $shipmentQuery)->whereIn('status', ['IN_TRANSIT', 'PICKED_UP', 'BOOKED'])->where('transport_mode', 'ROAD')->count(),
+        ];
+
         // Map payload formatting for client-side Leaflet
         $mapShipments = $activeShipments->map(function ($s) {
             return [
                 'id' => $s->id,
                 'tracking_number' => $s->tracking_number,
+                'transport_mode' => $s->transport_mode ?? 'SEA',
+                'primary_reference' => $s->primary_reference,
                 'status' => $s->status,
                 'is_delayed' => (bool) $s->is_delayed,
                 'delay_hours' => (int) $s->delay_hours,
                 'carrier' => $s->carrier?->name ?? 'Carrier',
-                'carrier_mode' => $s->carrier?->mode ?? 'SEA',
+                'carrier_mode' => $s->carrier?->mode ?? $s->transport_mode ?? 'SEA',
                 'origin' => [
                     'name' => $s->originLocation?->name ?? 'Origin',
                     'city' => $s->originLocation?->city ?? '',
@@ -374,7 +383,8 @@ class DashboardController extends Controller
             'spark2Flat',
             'onTimeComparison',
             'overFreeTimeShipments',
-            'freeTimeService'
+            'freeTimeService',
+            'activeModesCount'
         ));
     }
 }

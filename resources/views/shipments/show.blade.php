@@ -12,6 +12,7 @@
             </div>
             <div class="flex items-center space-x-3.5">
                 <h1 class="text-2xl sm:text-3xl font-extrabold font-mono theme-heading tracking-tight">{{ $shipment->tracking_number }}</h1>
+                <x-mode-badge :mode="$shipment->transport_mode ?? 'SEA'" size="sm" />
                 @php
                     $statusConfigs = [
                         'CREATED' => ['class' => 'bg-slate-500/15 text-slate-600 dark:text-slate-300 border-slate-500/30', 'dot' => 'bg-slate-400'],
@@ -80,9 +81,9 @@
     <x-card class="space-y-3">
         <div class="flex items-center justify-between pb-2">
             <span class="uppercase text-[10px] tracking-wider theme-text-muted font-semibold block">Transit Progression</span>
-            <span class="text-xs font-mono theme-text-secondary">Current Phase: <strong class="theme-heading">{{ $shipment->status }}</strong></span>
+            <span class="text-xs font-mono theme-text-secondary">Current Phase: <strong class="theme-heading">{{ $shipment->status_display_label }} ({{ $shipment->status }})</strong></span>
         </div>
-        <x-status-stepper :status="$shipment->status" :compact="false" />
+        <x-status-stepper :status="$shipment->status" :mode="$shipment->transport_mode ?? 'SEA'" :compact="false" />
     </x-card>
 
     <!-- Main Grid: Left Route Map & Actions / Right Timeline & Milestones -->
@@ -94,6 +95,59 @@
                 <div id="shipment-route-map" class="w-full h-80 sm:h-96 z-10 theme-page"></div>
                 <div class="absolute top-3 left-3 z-20 px-3 py-1.5 rounded-xl theme-card-elevated border theme-border text-xs theme-heading font-mono shadow-md">
                     {{ $shipment->originLocation->unlocode ?? 'ORIG' }} &rarr; {{ $shipment->destinationLocation->unlocode ?? 'DEST' }} &bull; {{ $shipment->cargo_type }}
+                </div>
+            </x-card>
+
+            <!-- Multimodal Reference Block -->
+            <x-card class="space-y-3">
+                <div class="flex items-center justify-between pb-2 border-b theme-border">
+                    <div class="flex items-center gap-2">
+                        <span class="uppercase text-[10px] tracking-wider theme-text-muted font-semibold block">Consignment Reference</span>
+                        <x-mode-badge :mode="$shipment->transport_mode ?? 'SEA'" size="xs" />
+                    </div>
+                    <span class="text-xs font-mono theme-text-secondary font-semibold">Carrier: {{ $shipment->carrier?->name }} ({{ $shipment->carrier?->code }})</span>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs font-mono">
+                    @if(($shipment->transport_mode ?? 'SEA') === 'SEA')
+                        <div class="p-3 rounded-xl theme-card-elevated border theme-border">
+                            <span class="uppercase text-[10px] tracking-wider theme-text-muted font-semibold block">Container Number</span>
+                            <span class="font-bold text-blue-600 dark:text-cyan-400 text-sm">{{ $shipment->formatted_container_number ?? $shipment->container_number ?? 'Not assigned' }}</span>
+                        </div>
+                        <div class="p-3 rounded-xl theme-card-elevated border theme-border">
+                            <span class="uppercase text-[10px] tracking-wider theme-text-muted font-semibold block">Bill of Lading (B/L)</span>
+                            <span class="font-bold theme-heading text-sm">{{ $shipment->bill_of_lading_number ?? $shipment->reference_number ?? 'Pending issuance' }}</span>
+                        </div>
+                        <div class="p-3 rounded-xl theme-card-elevated border theme-border">
+                            <span class="uppercase text-[10px] tracking-wider theme-text-muted font-semibold block">Vessel / Voyage Reference</span>
+                            <span class="font-bold theme-heading text-sm">{{ $shipment->reference_number ?? 'Direct Sea Leg' }}</span>
+                        </div>
+                    @elseif(($shipment->transport_mode ?? 'SEA') === 'AIR')
+                        <div class="p-3 rounded-xl theme-card-elevated border theme-border">
+                            <span class="uppercase text-[10px] tracking-wider theme-text-muted font-semibold block">Air Waybill (AWB)</span>
+                            <span class="font-bold text-sky-600 dark:text-sky-400 text-sm">{{ $shipment->formatted_awb_number ?? $shipment->awb_number ?? 'Not assigned' }}</span>
+                        </div>
+                        <div class="p-3 rounded-xl theme-card-elevated border theme-border">
+                            <span class="uppercase text-[10px] tracking-wider theme-text-muted font-semibold block">Flight / Booking Reference</span>
+                            <span class="font-bold theme-heading text-sm">{{ $shipment->reference_number ?? 'Flight Scheduled' }}</span>
+                        </div>
+                        <div class="p-3 rounded-xl theme-card-elevated border theme-border">
+                            <span class="uppercase text-[10px] tracking-wider theme-text-muted font-semibold block">Cargo Type & Handling</span>
+                            <span class="font-bold theme-heading text-sm">{{ $shipment->cargo_type }} &bull; Priority Air</span>
+                        </div>
+                    @elseif(($shipment->transport_mode ?? 'SEA') === 'ROAD')
+                        <div class="p-3 rounded-xl theme-card-elevated border theme-border">
+                            <span class="uppercase text-[10px] tracking-wider theme-text-muted font-semibold block">Vehicle License Plate</span>
+                            <span class="font-bold text-emerald-600 dark:text-emerald-400 text-sm">{{ $shipment->vehicle_plate ?? 'Not assigned' }}</span>
+                        </div>
+                        <div class="p-3 rounded-xl theme-card-elevated border theme-border">
+                            <span class="uppercase text-[10px] tracking-wider theme-text-muted font-semibold block">CMR / Waybill Number</span>
+                            <span class="font-bold theme-heading text-sm">{{ $shipment->cmr_number ?? 'Pending' }}</span>
+                        </div>
+                        <div class="p-3 rounded-xl theme-card-elevated border theme-border">
+                            <span class="uppercase text-[10px] tracking-wider theme-text-muted font-semibold block">Road Consignment Ref</span>
+                            <span class="font-bold theme-heading text-sm">{{ $shipment->reference_number ?? 'Regional Haul' }}</span>
+                        </div>
+                    @endif
                 </div>
             </x-card>
 
@@ -400,17 +454,53 @@
 
             <!-- Operator Action: Log Exception / Incident -->
             @if(in_array(auth()->user()->role, ['admin', 'operator']))
+                @php
+                    $shipMode = strtoupper($shipment->transport_mode ?? 'SEA');
+                    // Common exceptions: CUSTOMS_HOLD, WEATHER_DELAY, PORT_CONGESTION, DAMAGED, MISROUTED, DOCUMENTATION_ISSUE
+                    // Air only: FLIGHT_OFFLOAD
+                    // Road only: BORDER_QUEUE, VEHICLE_BREAKDOWN
+                    $allowedExceptions = match($shipMode) {
+                        'AIR' => [
+                            'CUSTOMS_HOLD' => 'Customs hold',
+                            'WEATHER_DELAY' => 'Weather delay',
+                            'PORT_CONGESTION' => 'Airport congestion / Ramp hold',
+                            'DAMAGED' => 'Damaged cargo',
+                            'MISROUTED' => 'Misrouted cargo',
+                            'DOCUMENTATION_ISSUE' => 'Documentation issue',
+                            'FLIGHT_OFFLOAD' => 'Flight offload',
+                        ],
+                        'ROAD' => [
+                            'CUSTOMS_HOLD' => 'Customs hold',
+                            'WEATHER_DELAY' => 'Weather delay',
+                            'PORT_CONGESTION' => 'Border / Terminal congestion',
+                            'DAMAGED' => 'Damaged cargo',
+                            'MISROUTED' => 'Misrouted cargo',
+                            'DOCUMENTATION_ISSUE' => 'Documentation issue',
+                            'BORDER_QUEUE' => 'Border crossing queue',
+                            'VEHICLE_BREAKDOWN' => 'Vehicle mechanical breakdown',
+                        ],
+                        default => [
+                            'CUSTOMS_HOLD' => 'Customs hold',
+                            'WEATHER_DELAY' => 'Weather delay',
+                            'PORT_CONGESTION' => 'Seaport congestion / Berth delay',
+                            'DAMAGED' => 'Damaged cargo',
+                            'MISROUTED' => 'Misrouted cargo',
+                            'DOCUMENTATION_ISSUE' => 'Documentation issue',
+                        ],
+                    };
+                @endphp
                 <x-card class="space-y-3">
-                    <span class="uppercase text-[10px] tracking-wider text-rose-500 dark:text-rose-400 font-semibold block">Log Exception Incident</span>
+                    <div class="flex items-center justify-between">
+                        <span class="uppercase text-[10px] tracking-wider text-rose-500 dark:text-rose-400 font-semibold block">Log Exception Incident</span>
+                        <span class="text-[10px] theme-text-muted font-mono">{{ $shipMode }} Mode Allowed Types</span>
+                    </div>
                     <form action="{{ route('shipments.report-exception', $shipment) }}" method="POST" class="space-y-3">
                         @csrf
                         <div class="grid grid-cols-2 gap-2 text-xs">
                             <select name="exception_code" required class="px-3 py-2 rounded-xl theme-input border theme-border font-mono text-xs focus:ring-1 focus:ring-rose-500">
-                                <option value="CUSTOMS_HOLD">CUSTOMS_HOLD</option>
-                                <option value="WEATHER_DELAY">WEATHER_DELAY</option>
-                                <option value="PORT_CONGESTION">PORT_CONGESTION</option>
-                                <option value="DAMAGED_CARGO">DAMAGED_CARGO</option>
-                                <option value="MISROUTED">MISROUTED</option>
+                                @foreach($allowedExceptions as $code => $label)
+                                    <option value="{{ $code }}">{{ $code }} ({{ $label }})</option>
+                                @endforeach
                             </select>
                             <select name="severity" required class="px-3 py-2 rounded-xl theme-input border theme-border font-mono text-xs focus:ring-1 focus:ring-rose-500">
                                 <option value="LOW">LOW</option>
@@ -419,7 +509,7 @@
                                 <option value="CRITICAL">CRITICAL</option>
                             </select>
                         </div>
-                        <input type="text" name="title" placeholder="Incident Title (e.g. Typhoon warning alert)" required class="w-full px-3 py-2 rounded-xl theme-input border theme-border text-xs focus:ring-1 focus:ring-rose-500">
+                        <input type="text" name="title" placeholder="Incident Title (e.g. Flight delay / Berth congestion)" required class="w-full px-3 py-2 rounded-xl theme-input border theme-border text-xs focus:ring-1 focus:ring-rose-500">
                         <textarea name="description" rows="2" placeholder="Full incident context and impact..." class="w-full px-3 py-2 rounded-xl theme-input border theme-border text-xs focus:ring-1 focus:ring-rose-500"></textarea>
                         <button type="submit" class="w-full py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs uppercase tracking-wider transition">
                             Record Incident Notice
@@ -437,6 +527,7 @@
         'id' => $shipment->id,
         'tracking_number' => $shipment->tracking_number,
         'status' => $shipment->status,
+        'transport_mode' => $shipment->transport_mode ?? 'SEA',
         'is_delayed' => (bool) $shipment->is_delayed,
         'originLocation' => [
             'name' => $shipment->originLocation->name,

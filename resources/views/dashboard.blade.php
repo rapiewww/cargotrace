@@ -14,6 +14,57 @@
 @endphp
 
 <div class="px-4 sm:px-6 lg:px-8 py-6 space-y-6 max-w-[1720px] mx-auto">
+    <!-- Top Row: Active Shipments Per Mode Cards -->
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <!-- Sea Mode Card -->
+        <a href="{{ route('shipments.index', ['mode' => 'SEA']) }}" class="p-4 rounded-2xl theme-card border hover:border-blue-500/50 transition-all flex items-center justify-between group">
+            <div class="space-y-1">
+                <span class="text-xs font-semibold theme-text-secondary flex items-center gap-1.5">
+                    <span>🚢</span> Ocean freight (Sea)
+                </span>
+                <div class="text-2xl font-extrabold theme-heading font-mono tabular-nums">
+                    {{ $activeModesCount['SEA'] ?? 0 }} <span class="text-xs font-normal theme-text-muted font-sans">active</span>
+                </div>
+                <span class="text-[10px] theme-text-muted block">Solid bezier maritime arcs</span>
+            </div>
+            <span class="px-2.5 py-1 rounded-full text-xs font-bold font-mono bg-blue-500/15 text-blue-600 dark:text-cyan-400 border border-blue-500/25 group-hover:scale-105 transition-transform">
+                Sea &rarr;
+            </span>
+        </a>
+
+        <!-- Air Mode Card -->
+        <a href="{{ route('shipments.index', ['mode' => 'AIR']) }}" class="p-4 rounded-2xl theme-card border hover:border-sky-500/50 transition-all flex items-center justify-between group">
+            <div class="space-y-1">
+                <span class="text-xs font-semibold theme-text-secondary flex items-center gap-1.5">
+                    <span>✈️</span> Air freight (Air)
+                </span>
+                <div class="text-2xl font-extrabold theme-heading font-mono tabular-nums">
+                    {{ $activeModesCount['AIR'] ?? 0 }} <span class="text-xs font-normal theme-text-muted font-sans">active</span>
+                </div>
+                <span class="text-[10px] theme-text-muted block">Dashed high-altitude flight curves</span>
+            </div>
+            <span class="px-2.5 py-1 rounded-full text-xs font-bold font-mono bg-sky-500/15 text-sky-600 dark:text-sky-400 border border-sky-500/25 group-hover:scale-105 transition-transform">
+                Air &rarr;
+            </span>
+        </a>
+
+        <!-- Road Mode Card -->
+        <a href="{{ route('shipments.index', ['mode' => 'ROAD']) }}" class="p-4 rounded-2xl theme-card border hover:border-emerald-500/50 transition-all flex items-center justify-between group">
+            <div class="space-y-1">
+                <span class="text-xs font-semibold theme-text-secondary flex items-center gap-1.5">
+                    <span>🚚</span> Road freight (Road)
+                </span>
+                <div class="text-2xl font-extrabold theme-heading font-mono tabular-nums">
+                    {{ $activeModesCount['ROAD'] ?? 0 }} <span class="text-xs font-normal theme-text-muted font-sans">active</span>
+                </div>
+                <span class="text-[10px] theme-text-muted block">Direct overland haul lines</span>
+            </div>
+            <span class="px-2.5 py-1 rounded-full text-xs font-bold font-mono bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/25 group-hover:scale-105 transition-transform">
+                Road &rarr;
+            </span>
+        </a>
+    </div>
+
     <!-- TOP SECTION: Global View (3D Earth Globe / 2D Map) + Main Statistics -->
     <div class="grid grid-cols-1 xl:grid-cols-12 gap-6">
         <!-- LEFT 9 COLS: "Global View" Canvas Container -->
@@ -92,6 +143,75 @@
 
             <!-- 2D Leaflet Map Canvas (Alternative) -->
             <div id="globe-2d-canvas" class="absolute inset-0 w-full h-full z-10 hidden theme-page"></div>
+
+            <!-- Map Mode & Filter Tabs Overlay (Top Right of Map) -->
+            <div class="absolute top-6 right-6 z-20 pointer-events-auto flex flex-col items-end gap-2">
+                <!-- Mode & Filter Tabs -->
+                <div class="flex items-center p-1 rounded-2xl theme-card-elevated border theme-border shadow-xl backdrop-blur-md overflow-x-auto max-w-full text-xs">
+                    <button
+                        type="button"
+                        onclick="setMapFilter('ALL')"
+                        id="tab-filter-all"
+                        class="px-2.5 py-1 rounded-xl font-semibold transition map-filter-tab bg-blue-600 text-white"
+                    >
+                        All
+                    </button>
+                    <button
+                        type="button"
+                        onclick="setMapFilter('SEA')"
+                        id="tab-filter-sea"
+                        class="px-2.5 py-1 rounded-xl font-semibold transition map-filter-tab theme-text-muted hover:theme-heading"
+                    >
+                        🚢 Sea
+                    </button>
+                    <button
+                        type="button"
+                        onclick="setMapFilter('AIR')"
+                        id="tab-filter-air"
+                        class="px-2.5 py-1 rounded-xl font-semibold transition map-filter-tab theme-text-muted hover:theme-heading"
+                    >
+                        ✈️ Air
+                    </button>
+                    <button
+                        type="button"
+                        onclick="setMapFilter('ROAD')"
+                        id="tab-filter-road"
+                        class="px-2.5 py-1 rounded-xl font-semibold transition map-filter-tab theme-text-muted hover:theme-heading"
+                    >
+                        🚚 Road
+                    </button>
+                    <span class="w-px h-3.5 bg-slate-300 dark:bg-slate-700 mx-1"></span>
+                    <button
+                        type="button"
+                        onclick="setMapFilter('DELAYED')"
+                        id="tab-filter-delayed"
+                        class="px-2.5 py-1 rounded-xl font-semibold transition map-filter-tab theme-text-muted hover:text-amber-500"
+                    >
+                        Delayed
+                    </button>
+                    <button
+                        type="button"
+                        onclick="setMapFilter('EXCEPTIONS')"
+                        id="tab-filter-exceptions"
+                        class="px-2.5 py-1 rounded-xl font-semibold transition map-filter-tab theme-text-muted hover:text-rose-500"
+                    >
+                        Exceptions
+                    </button>
+                </div>
+
+                <!-- Legend Pill -->
+                <div class="px-3 py-1.5 rounded-xl theme-card-elevated border theme-border shadow-lg backdrop-blur-md text-[10px] flex items-center gap-3 font-mono">
+                    <span class="flex items-center gap-1 theme-text-secondary">
+                        <span class="w-2.5 h-0.5 bg-blue-500 rounded"></span> Sea (Solid)
+                    </span>
+                    <span class="flex items-center gap-1 theme-text-secondary">
+                        <span class="w-2.5 h-0.5 border-b border-dashed border-sky-400"></span> Air (Dashed arc)
+                    </span>
+                    <span class="flex items-center gap-1 theme-text-secondary">
+                        <span class="w-2.5 h-0.5 bg-emerald-500 rounded"></span> Road (Direct line)
+                    </span>
+                </div>
+            </div>
 
             <!-- Bottom Mode Switcher Pill [ 3D ] | [ 2D ] & Zoom Buttons -->
             <div class="relative z-20 p-6 flex items-center justify-between pointer-events-none mt-auto">
@@ -306,9 +426,9 @@
                 <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-3 border-b theme-border">
                 <div>
                     <h2 class="text-lg font-bold theme-heading tracking-tight font-sans">
-                        Maritime activities
+                        Freight activities
                     </h2>
-                    <p class="text-xs theme-text-secondary mt-0.5">Click any vessel row to focus camera on the 3D globe or 2D map</p>
+                    <p class="text-xs theme-text-secondary mt-0.5">Click any consignment row to focus camera on the 3D globe or 2D map</p>
                 </div>
 
                 <!-- Search Input in Header -->
@@ -316,7 +436,7 @@
                     <input
                         type="text"
                         id="activities-search-input"
-                        placeholder="Search container ID, port..."
+                        placeholder="Search waybill, reference, hub..."
                         onkeyup="filterActivitiesTable()"
                         class="w-64 pl-9 pr-3 py-1.5 rounded-xl theme-input border text-xs focus:outline-none focus:border-cyan-500"
                     >
@@ -326,13 +446,13 @@
                 </div>
             </div>
 
-            <!-- Table Rows with Visual Route ──🚢──> and FlyTo Click -->
+            <!-- Table Rows with Visual Route and FlyTo Click -->
             <div class="overflow-x-auto">
                 <table class="w-full min-w-[700px] text-left text-xs border-collapse" id="activities-table">
                     <thead>
                         <tr class="theme-text-muted uppercase text-[10px] font-semibold tracking-wider border-b theme-border">
-                            <th class="py-3 px-3">Cargo ID & Carrier</th>
-                            <th class="py-3 px-4">Ocean Route & Distance</th>
+                            <th class="py-3 px-3">Cargo ID & Mode</th>
+                            <th class="py-3 px-4">Freight Route & Corridor</th>
                             <th class="py-3 px-3">ETA Date</th>
                             <th class="py-3 px-3">Status</th>
                             <th class="py-3 px-2 text-right">Action</th>
@@ -345,6 +465,8 @@
                                 $dest = $s->destinationLocation;
                                 $curr = $s->currentLocation;
                                 $hasExceptions = $s->exceptions->isNotEmpty();
+                                $sMode = strtoupper($s->transport_mode ?? 'SEA');
+                                $modeIcon = $sMode === 'AIR' ? '✈️' : ($sMode === 'ROAD' ? '🚚' : '🚢');
                             @endphp
                             <tr
                                 class="activity-row cursor-pointer hover:bg-blue-600/10 transition-colors duration-150 border-l-2 border-transparent"
@@ -354,38 +476,39 @@
                                 <!-- Cargo ID & Carrier Icon -->
                                 <td class="py-3.5 px-3">
                                     <div class="flex items-center space-x-3">
-                                        <!-- Carrier/Ship Icon Capsule -->
-                                        <div class="w-8 h-8 rounded-xl {{ $s->is_delayed ? 'bg-amber-500/15 text-amber-500' : 'bg-blue-500/15 text-blue-500' }} flex items-center justify-center font-bold text-xs shrink-0">
-                                            🚢
+                                        <!-- Carrier/Mode Icon Capsule -->
+                                        <div class="w-8 h-8 rounded-xl {{ $s->is_delayed ? 'bg-amber-500/15 text-amber-500' : ($sMode === 'AIR' ? 'bg-sky-500/15 text-sky-500' : ($sMode === 'ROAD' ? 'bg-emerald-500/15 text-emerald-500' : 'bg-blue-500/15 text-blue-500')) }} flex items-center justify-center font-bold text-xs shrink-0" title="Mode: {{ $sMode }}">
+                                            {{ $modeIcon }}
                                         </div>
                                         <div>
-                                            <a href="{{ route('shipments.show', $s) }}" class="font-mono font-bold theme-heading hover:text-cyan-500 block">
-                                                {{ $s->tracking_number }}
-                                            </a>
+                                            <div class="flex items-center gap-1.5">
+                                                <a href="{{ route('shipments.show', $s) }}" class="font-mono font-bold theme-heading hover:text-cyan-500 block">
+                                                    {{ $s->tracking_number }}
+                                                </a>
+                                                <x-mode-badge :mode="$sMode" size="xs" />
+                                            </div>
                                             <span class="text-[11px] theme-text-muted block font-sans">
-                                                {{ $s->carrier->name ?? 'Maritime Line' }}
-                                                @if($s->items->isNotEmpty() && ($cont = $s->items->first()->formatted_container_number))
-                                                    &bull; <span class="font-mono text-cyan-600 dark:text-cyan-400 font-semibold">{{ $cont }}</span>
-                                                @endif
+                                                {{ $s->carrier->name ?? 'Freight Carrier' }}
+                                                &bull; <span class="font-mono text-cyan-600 dark:text-cyan-400 font-semibold">{{ $s->primary_reference }}</span>
                                             </span>
                                         </div>
                                     </div>
                                 </td>
 
-                                <!-- Visual Route: ORIGIN ───🚢───> DESTINATION -->
+                                <!-- Visual Route: ORIGIN ───[Icon]───> DESTINATION -->
                                 <td class="py-3.5 px-4">
                                     <div class="space-y-1 max-w-xs">
                                         <div class="flex items-center justify-between text-[11px] font-mono">
                                             <span class="font-bold theme-text-primary">{{ $orig->unlocode ?? 'ORI' }}</span>
-                                            <span class="text-[10px] theme-text-muted font-mono" title="Great-circle distance between seaports">
-                                                {{ $s->status === 'DELIVERED' ? 'Arrived' : ($s->great_circle_distance_nm ? number_format($s->great_circle_distance_nm) . ' nm (great-circle)' : 'Direct Leg') }}
+                                            <span class="text-[10px] theme-text-muted font-mono" title="Great-circle distance between locations">
+                                                {{ $s->status === 'DELIVERED' ? 'Arrived' : ($s->great_circle_distance_nm ? number_format($s->great_circle_distance_nm) . ' nm' : ($sMode === 'ROAD' ? 'Road Leg' : 'Direct Corridor')) }}
                                             </span>
                                             <span class="font-bold theme-text-primary">{{ $dest->unlocode ?? 'DST' }}</span>
                                         </div>
                                         <!-- Visual Progress Line -->
                                         <div class="w-full h-1.5 rounded-full bg-slate-200 dark:bg-slate-800 overflow-hidden">
                                             <div
-                                                class="h-full rounded-full transition-all duration-500 {{ $hasExceptions ? 'bg-rose-500' : ($s->is_delayed ? 'bg-amber-500' : 'bg-cyan-500') }}"
+                                                class="h-full rounded-full transition-all duration-500 {{ $hasExceptions ? 'bg-rose-500' : ($s->is_delayed ? 'bg-amber-500' : ($sMode === 'AIR' ? 'bg-sky-400' : ($sMode === 'ROAD' ? 'bg-emerald-400' : 'bg-cyan-500'))) }}"
                                                 style="width: {{ $s->status === 'DELIVERED' ? '100%' : ($s->status === 'IN_TRANSIT' ? '65%' : '15%') }}"
                                             ></div>
                                         </div>
@@ -707,7 +830,7 @@
         calculateTwoWayCurrency();
     }
 
-    // Filter Maritime Activities Table by Search Input
+    // Filter Maritime / Freight Activities Table by Search Input
     function filterActivitiesTable() {
         const query = (document.getElementById('activities-search-input').value || '').toLowerCase();
         const rows = document.querySelectorAll('#activities-table tbody tr');
@@ -715,6 +838,26 @@
             const text = r.textContent.toLowerCase();
             r.style.display = text.includes(query) ? '' : 'none';
         });
+    }
+
+    // Map Filter Tabs (All, Sea, Air, Road, Delayed, Exceptions)
+    function setMapFilter(filterKey) {
+        document.querySelectorAll('.map-filter-tab').forEach(btn => {
+            btn.className = 'px-2.5 py-1 rounded-xl font-semibold transition map-filter-tab theme-text-muted hover:theme-heading';
+        });
+        const activeBtn = document.getElementById(`tab-filter-${filterKey.toLowerCase()}`);
+        if (activeBtn) {
+            activeBtn.className = 'px-2.5 py-1 rounded-xl font-semibold transition map-filter-tab bg-blue-600 text-white shadow-sm';
+        }
+
+        const mapObj = window.CargoTraceLeafletMap;
+        if (mapObj && mapObj._modeLayers) {
+            Object.values(mapObj._modeLayers).forEach(layer => mapObj.removeLayer(layer));
+            const target = mapObj._modeLayers[filterKey];
+            if (target) {
+                mapObj.addLayer(target);
+            }
+        }
     }
 </script>
 @endsection

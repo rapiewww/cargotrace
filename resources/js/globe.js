@@ -72,20 +72,45 @@ export function initMaritimeGlobe(containerId, options = {}) {
         if (startLat && endLat) {
             const isDelayed = Boolean(s.is_delayed);
             const hasException = Boolean(s.exceptions && s.exceptions.length > 0);
+            const mode = (s.transport_mode || s.carrier_mode || 'SEA').toUpperCase();
 
-            const arcColor = hasException
-                ? ['#F43F5E', '#FB7185']
-                : (isDelayed ? ['#F59E0B', '#FBBF24'] : ['#0284C7', '#38BDF8']);
+            // Mode icon & label for tooltips / popups
+            const modeIcon = mode === 'AIR' ? '✈️' : (mode === 'ROAD' ? '🚚' : '🚢');
+            const modeLabel = mode === 'AIR' ? 'Air' : (mode === 'ROAD' ? 'Road' : 'Sea');
+
+            // Arc colors
+            let arcColor;
+            if (hasException) {
+                arcColor = ['#F43F5E', '#FB7185'];
+            } else if (isDelayed) {
+                arcColor = ['#F59E0B', '#FBBF24'];
+            } else {
+                arcColor = mode === 'AIR'
+                    ? ['#0284C7', '#38BDF8']
+                    : (mode === 'ROAD' ? ['#059669', '#34D399'] : ['#2563EB', '#60A5FA']);
+            }
+
+            // Styling per mode:
+            // Sea: solid arc (arcAltitude 0.22, dashLength 1.0)
+            // Air: dashed higher arc (arcAltitude 0.45, dashLength 0.3)
+            // Road: straight low line (arcAltitude 0.05, dashLength 1.0)
+            const arcAltitude = mode === 'AIR' ? 0.45 : (mode === 'ROAD' ? 0.05 : 0.22);
+            const arcDashLength = mode === 'AIR' ? 0.3 : 1.0;
+            const arcDashGap = mode === 'AIR' ? 0.15 : 0;
 
             arcsData.push({
                 shipmentId: s.id,
                 trackingNumber: s.tracking_number,
-                carrier: s.carrier || 'Ocean Carrier',
+                transportMode: mode,
+                carrier: s.carrier || 'Carrier',
                 startLat,
                 startLng,
                 endLat,
                 endLng,
                 color: arcColor,
+                altitude: arcAltitude,
+                dashLength: arcDashLength,
+                dashGap: arcDashGap,
                 status: s.status,
                 isDelayed,
                 hasException,
@@ -97,13 +122,14 @@ export function initMaritimeGlobe(containerId, options = {}) {
             vesselMarkers.push({
                 shipmentId: s.id,
                 trackingNumber: s.tracking_number,
+                transportMode: mode,
                 lat: s.current ? parseFloat(s.current.lat) : midLat,
                 lng: s.current ? parseFloat(s.current.lng) : midLng,
-                carrier: s.carrier || 'Vessel',
+                carrier: s.carrier || 'Freight',
                 status: s.status,
                 isDelayed,
-                color: hasException ? '#F43F5E' : (isDelayed ? '#F59E0B' : '#38BDF8'),
-                name: `🚢 ${s.tracking_number} (${orig?.unlocode || 'ORI'} → ${dest?.unlocode || 'DST'})`,
+                color: hasException ? '#F43F5E' : (isDelayed ? '#F59E0B' : (mode === 'AIR' ? '#38BDF8' : (mode === 'ROAD' ? '#34D399' : '#60A5FA'))),
+                name: `${modeIcon} ${s.tracking_number} [${modeLabel}] (${orig?.unlocode || 'ORI'} → ${dest?.unlocode || 'DST'})`,
             });
         }
     });
@@ -143,13 +169,13 @@ export function initMaritimeGlobe(containerId, options = {}) {
         .atmosphereColor(themeCfg.atmosphereColor)
         .atmosphereAltitude(themeCfg.atmosphereAltitude)
         .showAtmosphere(true)
-        // Arcs (Ocean trade lanes)
+        // Arcs (Trade lanes per mode)
         .arcsData(arcsData)
         .arcColor('color')
-        .arcAltitude(0.24)
+        .arcAltitude('altitude')
         .arcStroke(1.8)
-        .arcDashLength(0.4)
-        .arcDashGap(0.15)
+        .arcDashLength('dashLength')
+        .arcDashGap('dashGap')
         .arcDashInitialGap(() => Math.random())
         .arcDashAnimateTime(2200)
         // Seaports (Points)
@@ -287,9 +313,23 @@ export function initMaritime2DMap(containerId, options = {}) {
 
     if (!map) return null;
     leafletMapInstance = map;
+    window.CargoTraceLeafletMap = map;
 
-    const locations = options.locations || [];
-    const shipments = options.shipments || [];
+    const layerAll = L.layerGroup().addTo(map);
+    const layerSea = L.layerGroup();
+    const layerAir = L.layerGroup();
+    const layerRoad = L.layerGroup();
+    const layerDelayed = L.layerGroup();
+    const layerExceptions = L.layerGroup();
+
+    map._modeLayers = {
+        ALL: layerAll,
+        SEA: layerSea,
+        AIR: layerAir,
+        ROAD: layerRoad,
+        DELAYED: layerDelayed,
+        EXCEPTIONS: layerExceptions,
+    };
 
     // Plot Seaports
     locations.forEach(loc => {
@@ -311,7 +351,7 @@ export function initMaritime2DMap(containerId, options = {}) {
         `);
     });
 
-    // Plot Ocean Arcs
+    // Plot Ocean / Multimodal Arcs
     shipments.forEach(s => {
         const orig = s.origin_location || s.originLocation || s.origin;
         const dest = s.destination_location || s.destinationLocation || s.destination;
@@ -324,30 +364,57 @@ export function initMaritime2DMap(containerId, options = {}) {
         if (origLat && destLat) {
             const start = [parseFloat(origLat), parseFloat(origLng)];
             const end = [parseFloat(destLat), parseFloat(destLng)];
-            const curvePoints = getBezierCurve(start, end);
+            const mode = (s.transport_mode || s.carrier_mode || 'SEA').toUpperCase();
 
+            // Route styling per mode:
+            // Sea: solid arc
+            // Air: dashed higher curve
+            // Road: straight line (direct polyline without curve)
             const isDelayed = Boolean(s.is_delayed);
             const hasException = Boolean(s.exceptions && s.exceptions.length > 0);
 
-            const strokeColor = hasException ? '#F43F5E' : (isDelayed ? '#F59E0B' : '#0284C7');
-            const polyline = L.polyline(curvePoints, {
+            let strokeColor;
+            if (hasException) {
+                strokeColor = '#F43F5E';
+            } else if (isDelayed) {
+                strokeColor = '#F59E0B';
+            } else {
+                strokeColor = mode === 'AIR' ? '#0284C7' : (mode === 'ROAD' ? '#059669' : '#2563EB');
+            }
+
+            const points = mode === 'ROAD' ? [start, end] : getBezierCurve(start, end);
+            const dashArray = mode === 'AIR'
+                ? '6, 6'
+                : (mode === 'ROAD' ? null : (isDelayed ? '8, 6' : null));
+
+            const polyline = L.polyline(points, {
                 color: strokeColor,
-                weight: 2.4,
-                dashArray: isDelayed ? '6, 6' : '3, 6',
-                opacity: 0.85,
+                weight: mode === 'ROAD' ? 2.8 : 2.4,
+                dashArray: dashArray,
+                opacity: 0.88,
             });
+
+            const modeBadgeText = mode === 'AIR' ? '✈️ Air' : (mode === 'ROAD' ? '🚚 Road' : '🚢 Sea');
 
             polyline.bindPopup(`
                 <div style="font-family: 'Inter', sans-serif; font-size: 11px;">
-                    <div style="font-weight: 700; color: #0284C7;">${s.tracking_number}</div>
-                    <div style="color: #64748B; margin-top: 2px;">${orig?.name || 'Origin'} &rarr; ${dest?.name || 'Destination'}</div>
+                    <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px;">
+                        <span style="font-weight: 700; color: #0284C7;">${s.tracking_number}</span>
+                        <span style="font-size: 10px; font-weight: 600; padding: 2px 6px; border-radius: 9999px; background: rgba(2, 132, 199, 0.15);">${modeBadgeText}</span>
+                    </div>
+                    <div style="color: #64748B; margin-top: 4px;">${orig?.name || 'Origin'} &rarr; ${dest?.name || 'Destination'}</div>
                     <div style="margin-top: 4px; font-weight: 600; color: ${strokeColor};">
                         Status: ${s.status} ${isDelayed ? '(DELAYED)' : ''}
                     </div>
                 </div>
             `);
 
-            polyline.addTo(map);
+            polyline.addTo(layerAll);
+            if (isDelayed) polyline.addTo(layerDelayed);
+            if (hasException) polyline.addTo(layerExceptions);
+            if (mode === 'SEA') polyline.addTo(layerSea);
+            if (mode === 'AIR') polyline.addTo(layerAir);
+            if (mode === 'ROAD') polyline.addTo(layerRoad);
         }
     });
 

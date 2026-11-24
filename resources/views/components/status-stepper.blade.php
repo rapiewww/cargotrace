@@ -1,15 +1,19 @@
 @props([
-    'currentStatus' => 'CREATED',
+    'status' => 'CREATED',
+    'mode' => 'SEA',
     'compact' => false,
 ])
 
 @php
+    $currentStatus = $status;
+    $transportMode = strtoupper((string) ($mode ?? 'SEA'));
+
     $stages = [
-        'CREATED' => ['label' => 'Order Created', 'icon' => '1'],
-        'BOOKED' => ['label' => 'Carrier Booked', 'icon' => '2'],
-        'PICKED_UP' => ['label' => 'Picked Up', 'icon' => '3'],
-        'IN_TRANSIT' => ['label' => 'In Transit', 'icon' => '4'],
-        'DELIVERED' => ['label' => 'Delivered', 'icon' => '✓'],
+        'CREATED' => ['label' => \App\Models\Shipment::statusDisplayLabel('CREATED', $transportMode), 'icon' => '1'],
+        'BOOKED' => ['label' => \App\Models\Shipment::statusDisplayLabel('BOOKED', $transportMode), 'icon' => '2'],
+        'PICKED_UP' => ['label' => \App\Models\Shipment::statusDisplayLabel('PICKED_UP', $transportMode), 'icon' => '3'],
+        'IN_TRANSIT' => ['label' => \App\Models\Shipment::statusDisplayLabel('IN_TRANSIT', $transportMode), 'icon' => '4'],
+        'DELIVERED' => ['label' => \App\Models\Shipment::statusDisplayLabel('DELIVERED', $transportMode), 'icon' => '✓'],
     ];
 
     $order = array_keys($stages);

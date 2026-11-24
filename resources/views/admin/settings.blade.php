@@ -42,7 +42,37 @@
                 <form action="{{ route('admin.settings.update') }}" method="POST" class="space-y-6 text-xs">
                     @csrf
 
-                    <!-- AIR THRESHOLDS -->
+                    <!-- SEA THRESHOLDS CARD -->
+                    <div class="p-4 rounded-xl bg-slate-950/40 border border-slate-800 space-y-3">
+                        <div class="flex items-center justify-between">
+                            <span class="font-bold text-white uppercase tracking-wider text-[11px] flex items-center gap-2">
+                                <span>🚢</span> Sea Freight (SEA)
+                            </span>
+                            <span class="text-[10px] text-slate-400 font-mono">Default: 12h / 48h</span>
+                        </div>
+                        <div class="grid grid-cols-2 gap-3">
+                            <div class="space-y-1">
+                                <label class="uppercase text-[10px] tracking-wider text-slate-400 font-semibold block">
+                                    Low threshold (hours) *
+                                </label>
+                                <div class="relative">
+                                    <input type="number" step="0.5" name="delay_sea_low_hours" value="{{ old('delay_sea_low_hours', $seaThresholds['low']) }}" required class="w-full px-3 py-2 pr-14 rounded-xl bg-slate-950 border border-slate-800 text-white font-mono focus:ring-1 focus:ring-cyan-500">
+                                    <span class="absolute right-3 top-2 text-slate-500 text-xs font-mono">hours</span>
+                                </div>
+                            </div>
+                            <div class="space-y-1">
+                                <label class="uppercase text-[10px] tracking-wider text-slate-400 font-semibold block">
+                                    Medium threshold (hours) *
+                                </label>
+                                <div class="relative">
+                                    <input type="number" step="0.5" name="delay_sea_medium_hours" value="{{ old('delay_sea_medium_hours', $seaThresholds['medium']) }}" required class="w-full px-3 py-2 pr-14 rounded-xl bg-slate-950 border border-slate-800 text-white font-mono focus:ring-1 focus:ring-cyan-500">
+                                    <span class="absolute right-3 top-2 text-slate-500 text-xs font-mono">hours</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- AIR THRESHOLDS CARD -->
                     <div class="p-4 rounded-xl bg-slate-950/40 border border-slate-800 space-y-3">
                         <div class="flex items-center justify-between">
                             <span class="font-bold text-white uppercase tracking-wider text-[11px] flex items-center gap-2">
@@ -53,20 +83,26 @@
                         <div class="grid grid-cols-2 gap-3">
                             <div class="space-y-1">
                                 <label class="uppercase text-[10px] tracking-wider text-slate-400 font-semibold block">
-                                    LOW Threshold (Hours) *
+                                    Low threshold (hours) *
                                 </label>
-                                <input type="number" step="0.5" name="delay_air_low_hours" value="{{ old('delay_air_low_hours', $airThresholds['low']) }}" required class="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-white font-mono focus:ring-1 focus:ring-cyan-500">
+                                <div class="relative">
+                                    <input type="number" step="0.5" name="delay_air_low_hours" value="{{ old('delay_air_low_hours', $airThresholds['low']) }}" required class="w-full px-3 py-2 pr-14 rounded-xl bg-slate-950 border border-slate-800 text-white font-mono focus:ring-1 focus:ring-cyan-500">
+                                    <span class="absolute right-3 top-2 text-slate-500 text-xs font-mono">hours</span>
+                                </div>
                             </div>
                             <div class="space-y-1">
                                 <label class="uppercase text-[10px] tracking-wider text-slate-400 font-semibold block">
-                                    MEDIUM Threshold (Hours) *
+                                    Medium threshold (hours) *
                                 </label>
-                                <input type="number" step="0.5" name="delay_air_medium_hours" value="{{ old('delay_air_medium_hours', $airThresholds['medium']) }}" required class="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-white font-mono focus:ring-1 focus:ring-cyan-500">
+                                <div class="relative">
+                                    <input type="number" step="0.5" name="delay_air_medium_hours" value="{{ old('delay_air_medium_hours', $airThresholds['medium']) }}" required class="w-full px-3 py-2 pr-14 rounded-xl bg-slate-950 border border-slate-800 text-white font-mono focus:ring-1 focus:ring-cyan-500">
+                                    <span class="absolute right-3 top-2 text-slate-500 text-xs font-mono">hours</span>
+                                </div>
                             </div>
                         </div>
                     </div>
 
-                    <!-- ROAD THRESHOLDS -->
+                    <!-- ROAD THRESHOLDS CARD -->
                     <div class="p-4 rounded-xl bg-slate-950/40 border border-slate-800 space-y-3">
                         <div class="flex items-center justify-between">
                             <span class="font-bold text-white uppercase tracking-wider text-[11px] flex items-center gap-2">
@@ -77,39 +113,21 @@
                         <div class="grid grid-cols-2 gap-3">
                             <div class="space-y-1">
                                 <label class="uppercase text-[10px] tracking-wider text-slate-400 font-semibold block">
-                                    LOW Threshold (Hours) *
+                                    Low threshold (hours) *
                                 </label>
-                                <input type="number" step="0.5" name="delay_road_low_hours" value="{{ old('delay_road_low_hours', $roadThresholds['low']) }}" required class="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-white font-mono focus:ring-1 focus:ring-cyan-500">
+                                <div class="relative">
+                                    <input type="number" step="0.5" name="delay_road_low_hours" value="{{ old('delay_road_low_hours', $roadThresholds['low']) }}" required class="w-full px-3 py-2 pr-14 rounded-xl bg-slate-950 border border-slate-800 text-white font-mono focus:ring-1 focus:ring-cyan-500">
+                                    <span class="absolute right-3 top-2 text-slate-500 text-xs font-mono">hours</span>
+                                </div>
                             </div>
                             <div class="space-y-1">
                                 <label class="uppercase text-[10px] tracking-wider text-slate-400 font-semibold block">
-                                    MEDIUM Threshold (Hours) *
+                                    Medium threshold (hours) *
                                 </label>
-                                <input type="number" step="0.5" name="delay_road_medium_hours" value="{{ old('delay_road_medium_hours', $roadThresholds['medium']) }}" required class="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-white font-mono focus:ring-1 focus:ring-cyan-500">
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- SEA THRESHOLDS -->
-                    <div class="p-4 rounded-xl bg-slate-950/40 border border-slate-800 space-y-3">
-                        <div class="flex items-center justify-between">
-                            <span class="font-bold text-white uppercase tracking-wider text-[11px] flex items-center gap-2">
-                                <span>🚢</span> Ocean Freight (SEA)
-                            </span>
-                            <span class="text-[10px] text-slate-400 font-mono">Default: 12h / 48h</span>
-                        </div>
-                        <div class="grid grid-cols-2 gap-3">
-                            <div class="space-y-1">
-                                <label class="uppercase text-[10px] tracking-wider text-slate-400 font-semibold block">
-                                    LOW Threshold (Hours) *
-                                </label>
-                                <input type="number" step="0.5" name="delay_sea_low_hours" value="{{ old('delay_sea_low_hours', $seaThresholds['low']) }}" required class="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-white font-mono focus:ring-1 focus:ring-cyan-500">
-                            </div>
-                            <div class="space-y-1">
-                                <label class="uppercase text-[10px] tracking-wider text-slate-400 font-semibold block">
-                                    MEDIUM Threshold (Hours) *
-                                </label>
-                                <input type="number" step="0.5" name="delay_sea_medium_hours" value="{{ old('delay_sea_medium_hours', $seaThresholds['medium']) }}" required class="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-white font-mono focus:ring-1 focus:ring-cyan-500">
+                                <div class="relative">
+                                    <input type="number" step="0.5" name="delay_road_medium_hours" value="{{ old('delay_road_medium_hours', $roadThresholds['medium']) }}" required class="w-full px-3 py-2 pr-14 rounded-xl bg-slate-950 border border-slate-800 text-white font-mono focus:ring-1 focus:ring-cyan-500">
+                                    <span class="absolute right-3 top-2 text-slate-500 text-xs font-mono">hours</span>
+                                </div>
                             </div>
                         </div>
                     </div>

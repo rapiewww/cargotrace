@@ -2,11 +2,13 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\Shipment\UpdateShipmentRequest;
 use App\Models\Carrier;
 use App\Models\Location;
 use App\Models\Shipment;
 use App\Models\User;
-use App\Rules\Iso6346ContainerNumber;
+use App\Rules\AwbRule;
+use App\Rules\Iso6346Rule;
 use App\Services\EtaService;
 use App\Services\ExceptionService;
 use App\Services\ExternalIntegrationService;
@@ -38,18 +40,43 @@ class ShipmentWebController extends Controller
     public function index(Request $request): View
     {
         $user = Auth::user();
-        $query = Shipment::with(['carrier', 'originLocation', 'destinationLocation', 'currentLocation', 'customer']);
+        $query = Shipment::with(['carrier', 'originLocation', 'destinationLocation', 'currentLocation', 'customer', 'items']);
 
         if ($user->role === 'customer') {
             $query->where('customer_id', $user->id);
         }
 
+        // Mode counts for filter chips
+        $countQuery = Shipment::query();
+        if ($user->role === 'customer') {
+            $countQuery->where('customer_id', $user->id);
+        }
+        $modeCounts = [
+            'ALL' => (clone $countQuery)->count(),
+            'SEA' => (clone $countQuery)->where('transport_mode', 'SEA')->count(),
+            'AIR' => (clone $countQuery)->where('transport_mode', 'AIR')->count(),
+            'ROAD' => (clone $countQuery)->where('transport_mode', 'ROAD')->count(),
+        ];
+
+        // Mode filter
+        if ($request->filled('mode') && in_array(strtoupper($request->query('mode')), ['SEA', 'AIR', 'ROAD'])) {
+            $query->where('transport_mode', strtoupper($request->query('mode')));
+        }
+
         if ($request->filled('search')) {
             $s = trim($request->query('search'));
             $cleanContainer = strtoupper(preg_replace('/\s+/', '', $s));
-            $query->where(function ($q) use ($s, $cleanContainer) {
+            $cleanDigits = preg_replace('/[^\d]/', '', $s);
+            $query->where(function ($q) use ($s, $cleanContainer, $cleanDigits) {
                 $q->where('tracking_number', 'like', "%{$s}%")
                     ->orWhere('reference_number', 'like', "%{$s}%")
+                    ->orWhere('container_number', 'like', "%{$s}%")
+                    ->orWhere('container_number', 'like', "%{$cleanContainer}%")
+                    ->orWhere('bill_of_lading_number', 'like', "%{$s}%")
+                    ->orWhere('awb_number', 'like', "%{$s}%")
+                    ->when($cleanDigits !== '', fn ($sub) => $sub->orWhere('awb_number', 'like', "%{$cleanDigits}%"))
+                    ->orWhere('vehicle_plate', 'like', "%{$s}%")
+                    ->orWhere('cmr_number', 'like', "%{$s}%")
                     ->orWhereHas('items', function ($iq) use ($s, $cleanContainer) {
                         $iq->where('container_number', 'like', "%{$s}%")
                             ->orWhere('container_number', 'like', "%{$cleanContainer}%")
@@ -84,7 +111,7 @@ class ShipmentWebController extends Controller
         $carriers = Carrier::where('is_active', true)->orderBy('name')->get();
         $locations = Location::orderBy('name')->get();
 
-        return view('shipments.index', compact('shipments', 'carriers', 'locations', 'user'));
+        return view('shipments.index', compact('shipments', 'carriers', 'locations', 'user', 'modeCounts'));
     }
 
     public function exportCsv(Request $request): StreamedResponse
@@ -283,30 +310,11 @@ class ShipmentWebController extends Controller
         return view('shipments.edit', compact('shipment', 'carriers', 'locations', 'customers'));
     }
 
-    public function update(Request $request, Shipment $shipment): RedirectResponse
+    public function update(UpdateShipmentRequest $request, Shipment $shipment): RedirectResponse
     {
         $this->authorize('update', $shipment);
 
-        $validated = $request->validate([
-            'carrier_id' => 'required|exists:carriers,id',
-            'origin_location_id' => 'required|exists:locations,id',
-            'destination_location_id' => 'required|exists:locations,id|different:origin_location_id',
-            'current_location_id' => 'nullable|exists:locations,id',
-            'status' => 'nullable|string|in:CREATED,BOOKED,PICKED_UP,IN_TRANSIT,DELIVERED',
-            'cargo_type' => 'required|string',
-            'currency_code' => 'nullable|string|size:3',
-            'declared_value' => 'nullable|numeric|min:0',
-            'shipping_cost' => 'nullable|numeric|min:0',
-            'expected_departure_at' => 'required|date',
-            'expected_arrival_at' => 'required|date|after_or_equal:expected_departure_at',
-            'estimated_arrival_at' => 'nullable|date',
-            'reference_number' => 'nullable|string|max:100',
-            'container_number' => ['nullable', 'string', new Iso6346ContainerNumber],
-            'customer_id' => 'nullable|exists:users,id',
-            'notes' => 'nullable|string',
-            'items' => 'nullable|array',
-            'items.*.container_number' => ['nullable', 'string', new Iso6346ContainerNumber],
-        ]);
+        $validated = $request->validated();
 
         $this->shipmentService->updateShipment($shipment, $validated);
 
@@ -334,35 +342,58 @@ class ShipmentWebController extends Controller
     {
         $this->authorize('create', Shipment::class);
 
-        $validated = $request->validate([
-            'carrier_id' => 'required|exists:carriers,id',
-            'origin_location_id' => 'required|exists:locations,id',
-            'destination_location_id' => 'required|exists:locations,id|different:origin_location_id',
-            'cargo_type' => 'required|string',
-            'currency_code' => 'nullable|string|size:3',
-            'declared_value' => 'nullable|numeric|min:0',
-            'shipping_cost' => 'nullable|numeric|min:0',
-            'expected_departure_at' => 'required|date',
-            'expected_arrival_at' => 'required|date|after_or_equal:expected_departure_at',
-            'reference_number' => 'nullable|string|max:100',
-            'container_number' => ['nullable', 'string', new Iso6346ContainerNumber],
-            'customer_id' => 'nullable|exists:users,id',
-            'notes' => 'nullable|string',
-            'items' => 'nullable|array',
-            'items.*.container_number' => ['nullable', 'string', new Iso6346ContainerNumber],
-            'items' => 'nullable|array',
-            'items.*.description' => 'required_with:items|string',
-            'items.*.sku' => 'nullable|string',
-            'items.*.quantity' => 'required_with:items|integer|min:1',
-            'items.*.unit_value' => 'nullable|numeric|min:0',
-            'items.*.weight_kg' => 'required_with:items|numeric|min:0',
-            'items.*.volume_cbm' => 'required_with:items|numeric|min:0',
-            'items.*.is_hazardous' => 'nullable|boolean',
-        ]);
+        // If request is from multimodal web form or has transport_mode, validate with rules
+        $rules = [
+            'transport_mode' => ['nullable', 'string', 'in:SEA,AIR,ROAD'],
+            'carrier_id' => ['required', 'exists:carriers,id'],
+            'origin_location_id' => ['required', 'exists:locations,id'],
+            'destination_location_id' => ['required', 'exists:locations,id', 'different:origin_location_id'],
+            'cargo_type' => ['required', 'string', 'max:50'],
+            'currency_code' => ['nullable', 'string', 'size:3'],
+            'declared_value' => ['nullable', 'numeric', 'min:0'],
+            'shipping_cost' => ['nullable', 'numeric', 'min:0'],
+            'expected_departure_at' => ['required', 'date'],
+            'expected_arrival_at' => ['required', 'date', 'after_or_equal:expected_departure_at'],
+            'estimated_arrival_at' => ['nullable', 'date'],
+            'reference_number' => ['nullable', 'string', 'max:100'],
+            'container_number' => ['nullable', 'string'],
+            'bill_of_lading_number' => ['nullable', 'string', 'max:100'],
+            'awb_number' => ['nullable', 'string'],
+            'vehicle_plate' => ['nullable', 'string', 'max:50'],
+            'cmr_number' => ['nullable', 'string', 'max:100'],
+            'customer_id' => ['nullable', 'exists:users,id'],
+            'notes' => ['nullable', 'string'],
+            'items' => ['nullable', 'array'],
+        ];
 
+        // Mode specific validation
+        $mode = strtoupper($request->input('transport_mode') ?? 'SEA');
+        if ($mode === 'SEA') {
+            $rules['container_number'] = ['nullable', 'string', new Iso6346Rule];
+            $rules['items.*.container_number'] = ['nullable', 'string', new Iso6346Rule];
+        } elseif ($mode === 'AIR') {
+            $rules['awb_number'] = ['required', 'string', new AwbRule];
+        } elseif ($mode === 'ROAD') {
+            $rules['vehicle_plate'] = ['required', 'string', 'max:50'];
+            $rules['cmr_number'] = ['required', 'string', 'max:100'];
+        }
+
+        $validated = $request->validate($rules);
         $validated['customer_id'] ??= Auth::id();
-        $items = $validated['items'] ?? [];
-        unset($validated['items']);
+        $validated['transport_mode'] = $mode;
+
+        $items = $request->input('items', []);
+
+        // If container_number was provided on top level for SEA and no items, auto-seed a line item
+        if (empty($items) && ! empty($validated['container_number'])) {
+            $items[] = [
+                'container_number' => $validated['container_number'],
+                'description' => 'Spice Cargo Consignment',
+                'quantity' => 1,
+                'weight_kg' => 1000,
+                'volume_cbm' => 10,
+            ];
+        }
 
         $shipment = $this->shipmentService->createShipment($validated, $items);
 

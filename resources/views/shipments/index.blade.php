@@ -14,7 +14,7 @@
                 </span>
             </div>
             <p class="text-xs sm:text-sm theme-text-secondary mt-1">
-                Manage, track, and filter end-to-end global cargo movements across ocean corridors.
+                Manage, track, and filter end-to-end global cargo movements across sea, air, and road corridors.
             </p>
         </div>
 
@@ -36,6 +36,33 @@
                 </a>
             @endif
         </div>
+    </div>
+
+    <!-- Mode Filter Chips (All, Sea, Air, Road) with Counts -->
+    <div class="flex items-center gap-2 overflow-x-auto pb-1">
+        @php
+            $currentMode = strtoupper(request('mode', 'ALL'));
+            $modesList = [
+                'ALL' => ['label' => 'All modes', 'icon' => '🌐', 'count' => $modeCounts['ALL'] ?? $shipments->total()],
+                'SEA' => ['label' => 'Sea', 'icon' => '🚢', 'count' => $modeCounts['SEA'] ?? 0],
+                'AIR' => ['label' => 'Air', 'icon' => '✈️', 'count' => $modeCounts['AIR'] ?? 0],
+                'ROAD' => ['label' => 'Road', 'icon' => '🚚', 'count' => $modeCounts['ROAD'] ?? 0],
+            ];
+        @endphp
+        @foreach($modesList as $mKey => $mData)
+            @php
+                $isActive = $currentMode === $mKey || ($mKey === 'ALL' && !request()->filled('mode'));
+                $chipUrl = request()->fullUrlWithQuery(['mode' => $mKey === 'ALL' ? null : $mKey, 'page' => null]);
+            @endphp
+            <a href="{{ $chipUrl }}"
+               class="px-3.5 py-1.5 rounded-full text-xs font-semibold border inline-flex items-center gap-2 transition whitespace-nowrap {{ $isActive ? 'bg-blue-600 text-white border-blue-600 shadow-sm shadow-blue-500/20' : 'theme-card-elevated theme-border theme-text-secondary hover:theme-heading hover:border-blue-500' }}">
+                <span>{{ $mData['icon'] }}</span>
+                <span>{{ $mData['label'] }}</span>
+                <span class="px-1.5 py-0.2 rounded-full text-[10px] font-mono {{ $isActive ? 'bg-white/20 text-white' : 'bg-slate-200 dark:bg-slate-800 theme-text-muted' }}">
+                    {{ $mData['count'] }}
+                </span>
+            </a>
+        @endforeach
     </div>
 
     <!-- Search & Multi-Filter Bar -->
@@ -115,6 +142,8 @@
                 <thead>
                     <tr class="theme-card-elevated border-b theme-border theme-text-muted font-mono uppercase text-[10px] tracking-wider">
                         <th class="py-3.5 px-4 font-semibold">Waybill / Resi</th>
+                        <th class="py-3.5 px-4 font-semibold">Mode</th>
+                        <th class="py-3.5 px-4 font-semibold">Reference</th>
                         <th class="py-3.5 px-4 font-semibold">Carrier</th>
                         <th class="py-3.5 px-4 font-semibold">Origin &rarr; Destination</th>
                         <th class="py-3.5 px-4 font-semibold">Lifecycle Status</th>
@@ -136,6 +165,35 @@
                                 @endif
                                 @if(auth()->user()->role !== 'customer' && $s->customer)
                                     <span class="text-[10px] theme-text-secondary block">{{ $s->customer->company_name ?? $s->customer->name }}</span>
+                                @endif
+                            </td>
+
+                            <!-- Mode Column -->
+                            <td class="py-4 px-4 whitespace-nowrap">
+                                <x-mode-badge :mode="$s->transport_mode ?? 'SEA'" size="xs" />
+                            </td>
+
+                            <!-- Reference Column (Mode's main reference) -->
+                            <td class="py-4 px-4 font-mono text-xs">
+                                @if(($s->transport_mode ?? 'SEA') === 'SEA')
+                                    <span class="text-blue-600 dark:text-cyan-400 font-semibold block">
+                                        {{ $s->formatted_container_number ?? $s->container_number ?? 'No container' }}
+                                    </span>
+                                    @if($s->bill_of_lading_number)
+                                        <span class="text-[10px] theme-text-muted block">B/L: {{ $s->bill_of_lading_number }}</span>
+                                    @endif
+                                @elseif(($s->transport_mode ?? 'SEA') === 'AIR')
+                                    <span class="text-sky-600 dark:text-sky-400 font-semibold block">
+                                        {{ $s->formatted_awb_number ?? $s->awb_number ?? 'No AWB' }}
+                                    </span>
+                                    <span class="text-[10px] theme-text-muted block">Air waybill</span>
+                                @elseif(($s->transport_mode ?? 'SEA') === 'ROAD')
+                                    <span class="text-emerald-600 dark:text-emerald-400 font-semibold block">
+                                        {{ $s->vehicle_plate ?? 'No plate' }}
+                                    </span>
+                                    @if($s->cmr_number)
+                                        <span class="text-[10px] theme-text-muted block">CMR: {{ $s->cmr_number }}</span>
+                                    @endif
                                 @endif
                             </td>
 
@@ -166,7 +224,7 @@
 
                             <!-- Lifecycle Status with Stepper -->
                             <td class="py-4 px-4 min-w-[200px]">
-                                <x-status-stepper :status="$s->status" :compact="true" />
+                                <x-status-stepper :status="$s->status" :mode="$s->transport_mode ?? 'SEA'" :compact="true" />
                             </td>
 
                             <!-- Delay Status -->

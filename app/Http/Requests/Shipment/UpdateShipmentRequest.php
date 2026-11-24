@@ -30,6 +30,14 @@ class UpdateShipmentRequest extends FormRequest
             'estimated_arrival_at' => ['nullable', 'date'],
             'delay_reason' => ['nullable', 'string', 'max:255'],
             'description' => ['nullable', 'string', 'max:500'],
+            'cargo_type' => ['nullable', 'string', 'max:50'],
+            'currency_code' => ['nullable', 'string', 'size:3'],
+            'declared_value' => ['nullable', 'numeric', 'min:0'],
+            'shipping_cost' => ['nullable', 'numeric', 'min:0'],
+            'expected_departure_at' => ['nullable', 'date'],
+            'expected_arrival_at' => ['nullable', 'date'],
+            'reference_number' => ['nullable', 'string', 'max:100'],
+            'customer_id' => ['nullable', 'exists:users,id'],
             'notes' => ['nullable', 'string'],
 
             // Multimodal references

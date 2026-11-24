@@ -139,6 +139,18 @@ export function initWorldMap(containerId, options = {}) {
     const layerAll = L.layerGroup().addTo(map);
     const layerDelayed = L.layerGroup();
     const layerExceptions = L.layerGroup();
+    const layerSea = L.layerGroup();
+    const layerAir = L.layerGroup();
+    const layerRoad = L.layerGroup();
+
+    map._modeLayers = {
+        ALL: layerAll,
+        DELAYED: layerDelayed,
+        EXCEPTIONS: layerExceptions,
+        SEA: layerSea,
+        AIR: layerAir,
+        ROAD: layerRoad,
+    };
 
     // Plot locations with clean markers
     locations.forEach(loc => {
@@ -174,23 +186,46 @@ export function initWorldMap(containerId, options = {}) {
         if (origLat && destLat) {
             const start = [parseFloat(origLat), parseFloat(origLng)];
             const end = [parseFloat(destLat), parseFloat(destLng)];
-            const curvePoints = getBezierCurve(start, end);
+            const mode = (s.transport_mode || s.carrier_mode || 'SEA').toUpperCase();
+
+            // Route styling per mode:
+            // Sea: solid arc
+            // Air: dashed higher curve
+            // Road: straight line
+            const points = mode === 'ROAD' ? [start, end] : getBezierCurve(start, end);
 
             const isDelayed = Boolean(s.is_delayed);
             const hasException = Boolean(s.exceptions && s.exceptions.length > 0);
 
-            const strokeColor = hasException ? '#F43F5E' : (isDelayed ? '#F59E0B' : '#0284C7');
-            const polyline = L.polyline(curvePoints, {
+            let strokeColor;
+            if (hasException) {
+                strokeColor = '#F43F5E';
+            } else if (isDelayed) {
+                strokeColor = '#F59E0B';
+            } else {
+                strokeColor = mode === 'AIR' ? '#0284C7' : (mode === 'ROAD' ? '#059669' : '#2563EB');
+            }
+
+            const dashArray = mode === 'AIR'
+                ? '6, 6'
+                : (mode === 'ROAD' ? null : (isDelayed ? '8, 6' : null));
+
+            const polyline = L.polyline(points, {
                 color: strokeColor,
-                weight: 2.2,
-                dashArray: isDelayed ? '6, 6' : '2, 6',
-                opacity: 0.85,
+                weight: mode === 'ROAD' ? 2.8 : 2.4,
+                dashArray: dashArray,
+                opacity: 0.88,
             });
+
+            const modeBadgeText = mode === 'AIR' ? '✈️ Air' : (mode === 'ROAD' ? '🚚 Road' : '🚢 Sea');
 
             polyline.bindPopup(`
                 <div style="font-family: 'Inter', sans-serif; font-size: 11px;">
-                    <div style="font-weight: 700; color: #0284C7;">${s.tracking_number}</div>
-                    <div style="color: #64748B; margin-top: 2px;">${orig.name} &rarr; ${dest.name}</div>
+                    <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px;">
+                        <span style="font-weight: 700; color: #0284C7;">${s.tracking_number}</span>
+                        <span style="font-size: 10px; font-weight: 600; padding: 2px 6px; border-radius: 9999px; background: rgba(2, 132, 199, 0.15);">${modeBadgeText}</span>
+                    </div>
+                    <div style="color: #64748B; margin-top: 4px;">${orig.name} &rarr; ${dest.name}</div>
                     <div style="margin-top: 4px; font-weight: 600; color: ${strokeColor};">
                         Status: ${s.status} ${isDelayed ? '(DELAYED)' : ''}
                     </div>
@@ -200,6 +235,9 @@ export function initWorldMap(containerId, options = {}) {
             polyline.addTo(layerAll);
             if (isDelayed) polyline.addTo(layerDelayed);
             if (hasException) polyline.addTo(layerExceptions);
+            if (mode === 'SEA') polyline.addTo(layerSea);
+            if (mode === 'AIR') polyline.addTo(layerAir);
+            if (mode === 'ROAD') polyline.addTo(layerRoad);
         }
     });
 
@@ -267,16 +305,33 @@ export function initShipmentRouteMap(containerId, shipment) {
         }).addTo(map).bindPopup(`<b>Current Location:</b> ${curr.name} (${curr.unlocode})`).openPopup();
     }
 
-    // Great circle bezier arc
-    const curvePoints = getBezierCurve([origLat, origLng], [destLat, destLng]);
+    // Route polyline per mode:
+    // Sea: solid bezier arc
+    // Air: dashed higher bezier arc
+    // Road: straight direct line
+    const mode = (shipment.transport_mode || shipment.carrier_mode || 'SEA').toUpperCase();
+    const isRoad = mode === 'ROAD';
+    const isAir = mode === 'AIR';
+
+    const curvePoints = isRoad ? [[origLat, origLng], [destLat, destLng]] : getBezierCurve([origLat, origLng], [destLat, destLng]);
     const isDelayed = Boolean(shipment.is_delayed);
     const hasException = Boolean(shipment.exceptions && shipment.exceptions.length > 0);
-    const strokeColor = hasException ? '#F43F5E' : (isDelayed ? '#F59E0B' : '#0284C7');
+
+    let strokeColor;
+    if (hasException) {
+        strokeColor = '#F43F5E';
+    } else if (isDelayed) {
+        strokeColor = '#F59E0B';
+    } else {
+        strokeColor = isAir ? '#0284C7' : (isRoad ? '#059669' : '#2563EB');
+    }
+
+    const dashArray = isAir ? '6, 6' : (isDelayed ? '8, 6' : null);
 
     L.polyline(curvePoints, {
         color: strokeColor,
-        weight: 3,
-        dashArray: isDelayed ? '8, 6' : null,
+        weight: isRoad ? 3.2 : 2.8,
+        dashArray: dashArray,
         opacity: 0.9,
     }).addTo(map);
 

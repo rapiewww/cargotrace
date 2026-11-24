@@ -54,7 +54,7 @@
             </div>
             <div>
                 <span class="text-xl font-extrabold tracking-tight theme-heading font-sans block leading-none drop-shadow-sm">CargoTrace</span>
-                <span class="text-[9px] uppercase tracking-widest text-blue-600 dark:text-cyan-400 font-mono font-bold">Pure Maritime Tracking</span>
+                <span class="text-[9px] uppercase tracking-widest text-blue-600 dark:text-cyan-400 font-mono font-bold">Multimodal Freight Tracking</span>
             </div>
         </a>
 
@@ -94,7 +94,7 @@
         <div class="w-full max-w-[28rem] mx-auto p-6 sm:p-8 rounded-[16px] bg-white/88 dark:bg-[#0B1728]/72 backdrop-blur-xl border border-slate-200/90 dark:border-white/10 shadow-2xl space-y-6 transition-colors duration-200">
             <div class="space-y-1.5 text-center">
                 <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight theme-heading">Operations Sign In</h1>
-                <p class="text-xs sm:text-sm theme-text-secondary">Enter credentials to manage shipments, seaports, and milestones.</p>
+                <p class="text-xs sm:text-sm theme-text-secondary">Track nutmeg, cloves, patchouli oil and more across sea, air and road.</p>
             </div>
 
             @if($errors->any())

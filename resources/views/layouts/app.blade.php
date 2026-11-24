@@ -7,7 +7,7 @@
     <meta name="map-tile-url" content="{{ config('cargotrace.map.tile_url') }}">
     <meta name="map-tile-attribution" content="{{ config('cargotrace.map.attribution') }}">
 
-    <title>{{ $title ?? 'CargoTrace: Pure Maritime Container Tracking' }}</title>
+    <title>{{ $title ?? 'CargoTrace: Multimodal Freight & Spice Tracking' }}</title>
 
     <!-- Instant Theme & Sidebar Rail Loader (Zero-Flicker, prefers-color-scheme fallback) -->
     <script>
@@ -199,9 +199,9 @@
             <footer class="border-t theme-border py-6 text-xs theme-text-muted mt-auto theme-sidebar transition-colors duration-200">
                 <div class="max-w-[1600px] mx-auto px-6 sm:px-8 flex flex-col sm:flex-row items-center justify-between gap-4">
                     <div class="flex items-center space-x-2">
-                        <span class="font-bold theme-text-primary">CargoTrace &bull; Ocean Container Visibility Platform</span>
+                        <span class="font-bold theme-text-primary">CargoTrace &bull; Multimodal Freight Visibility Platform</span>
                         <span class="text-slate-500">&bull;</span>
-                        <span class="text-[11px] text-cyan-500 dark:text-cyan-400 font-mono">Pure Maritime Container Tracking</span>
+                        <span class="text-[11px] text-cyan-500 dark:text-cyan-400 font-mono">Sea, Air & Road Tracking</span>
                     </div>
                     <div class="flex items-center space-x-4 theme-text-muted text-[11px]">
                         <span>Interactive 3D Earth Globe &bull; Operator Checkpoints</span>

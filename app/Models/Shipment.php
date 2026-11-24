@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Support\Iso6346;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -186,6 +187,47 @@ class Shipment extends Model
         $distanceKm = $earthRadiusKm * $c;
 
         return (int) round($distanceKm * 0.539957);
+    }
+
+    /**
+     * Formatted ISO 6346 container number on shipment level.
+     */
+    public function getFormattedContainerNumberAttribute(): ?string
+    {
+        $num = $this->container_number ?: $this->items->first()?->container_number ?: $this->items->first()?->sku;
+
+        return $num ? Iso6346::format($num) : null;
+    }
+
+    /**
+     * Formatted Air Waybill (e.g. "126-12345675").
+     */
+    public function getFormattedAwbNumberAttribute(): ?string
+    {
+        if (! $this->awb_number) {
+            return null;
+        }
+
+        $clean = preg_replace('/[\s\-]+/', '', (string) $this->awb_number);
+        if (strlen($clean) === 11) {
+            return substr($clean, 0, 3).'-'.substr($clean, 3);
+        }
+
+        return $this->awb_number;
+    }
+
+    /**
+     * Primary reference summary per mode.
+     */
+    public function getPrimaryReferenceAttribute(): string
+    {
+        $mode = strtoupper($this->transport_mode ?? 'SEA');
+
+        return match ($mode) {
+            'AIR' => $this->formatted_awb_number ?? $this->awb_number ?? 'AWB Pending',
+            'ROAD' => trim(($this->vehicle_plate ? $this->vehicle_plate : '').($this->cmr_number ? ' / '.$this->cmr_number : '')) ?: 'Plate / CMR Pending',
+            default => $this->formatted_container_number ?? $this->container_number ?? $this->bill_of_lading_number ?? 'Container Pending',
+        };
     }
 
     /**

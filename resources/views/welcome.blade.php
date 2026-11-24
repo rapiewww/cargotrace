@@ -125,20 +125,20 @@
                 <!-- Eyebrow label: Sentence case -->
                 <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-blue-600/10 dark:bg-blue-600/25 border border-blue-600/25 dark:border-blue-400/30 text-blue-700 dark:text-cyan-300 text-xs font-medium backdrop-blur-sm">
                     <span class="w-2 h-2 rounded-full bg-blue-600 dark:bg-cyan-400"></span>
-                    Ocean container shipment tracking
+                    Global spice freight by sea, air and road
                 </div>
 
                 <!-- Headline: "Follow every container from port to port." with accent span -->
                 <h1 class="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-[#0B1728] dark:text-white leading-[1.08]">
-                    Follow every container<br>
+                    Follow every consignment<br>
                     <span class="text-[#2563EB] dark:text-cyan-400">
-                        from port to port.
+                        across sea, air and road.
                     </span>
                 </h1>
 
                 <!-- One-sentence subline -->
                 <p class="text-base sm:text-lg text-slate-700 dark:text-slate-200 leading-relaxed">
-                    Track ocean freight consignments across global shipping lanes with operator-verified milestones, seaport weather, and arrival evaluations.
+                    Track nutmeg, cloves, patchouli oil and more across sea, air and road.
                 </p>
 
                 <!-- Tracking-number search box -->
@@ -187,15 +187,15 @@
             <div class="grid grid-cols-2 md:grid-cols-4 gap-8 text-center divide-y md:divide-y-0 md:divide-x theme-border">
                 <div class="px-4">
                     <div class="text-3xl sm:text-4xl lg:text-5xl font-extrabold theme-heading tracking-tight font-mono">{{ $locations->count() }}</div>
-                    <div class="text-xs theme-text-muted mt-1.5 font-medium">Container seaports in database</div>
+                    <div class="text-xs theme-text-muted mt-1.5 font-medium">Locations in database</div>
                 </div>
                 <div class="px-4 pt-6 md:pt-0">
                     <div class="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-blue-600 dark:text-cyan-400 tracking-tight font-mono">{{ $onTimePercentage }}%</div>
-                    <div class="text-xs theme-text-muted mt-1.5 font-medium">On-time deliveries, all time</div>
+                    <div class="text-xs theme-text-muted mt-1.5 font-medium">On-time rate</div>
                 </div>
                 <div class="px-4 pt-6 md:pt-0">
                     <div class="text-3xl sm:text-4xl lg:text-5xl font-extrabold theme-heading tracking-tight font-mono">{{ $carriers->count() }}</div>
-                    <div class="text-xs theme-text-muted mt-1.5 font-medium">Ocean shipping lines</div>
+                    <div class="text-xs theme-text-muted mt-1.5 font-medium">Carriers</div>
                 </div>
                 <div class="px-4 pt-6 md:pt-0">
                     <div class="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-blue-600 dark:text-cyan-400 tracking-tight font-mono">{{ number_format($totalShipments) }}</div>
