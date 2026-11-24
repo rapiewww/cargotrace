@@ -44,6 +44,7 @@ test('AuditService creates audit log entry with user and IP', function () {
 test('EtaService evaluates delay thresholds accurately and notifies customer', function () {
     $etaService = app(EtaService::class);
     $shipment = Shipment::where('status', '!=', 'DELIVERED')->first();
+    $shipment->transport_mode = 'SEA';
     $customer = $shipment->customer;
 
     // 1. On time (ETA <= Expected)
@@ -55,7 +56,7 @@ test('EtaService evaluates delay thresholds accurately and notifies customer', f
         ->and((float) $shipment->delay_hours)->toBe(0.0)
         ->and($shipment->delay_severity)->toBe('NONE');
 
-    // 2. LOW Delay (3 hours delay <= 6 hours)
+    // 2. LOW Delay (under or at SEA low_hours of 12.0)
     $shipment->estimated_arrival_at = Carbon::parse('2026-11-20 15:00:00');
     $etaService->evaluateDelay($shipment);
 
@@ -71,20 +72,35 @@ test('EtaService evaluates delay thresholds accurately and notifies customer', f
     expect($notification)->not->toBeNull()
         ->and($notification->title)->toContain('LOW');
 
-    // 3. MEDIUM Delay (12 hours delay > 6h and <= 24h)
-    $shipment->estimated_arrival_at = Carbon::parse('2026-11-21 00:00:00');
+    // 3. MEDIUM Delay under SEA mode (12/48 hours: 20 hours is > 12h and <= 48h -> MEDIUM)
+    $shipment->estimated_arrival_at = Carbon::parse('2026-11-21 08:00:00');
     $etaService->evaluateDelay($shipment);
 
     expect($shipment->is_delayed)->toBeTrue()
-        ->and((float) $shipment->delay_hours)->toBe(12.0)
+        ->and((float) $shipment->delay_hours)->toBe(20.0)
         ->and($shipment->delay_severity)->toBe('MEDIUM');
 
-    // 4. HIGH Delay (30 hours delay > 24h)
-    $shipment->estimated_arrival_at = Carbon::parse('2026-11-21 18:00:00');
+    // Assert that the exact same delay hours (20.0h) produce different severities under AIR and ROAD
+    // AIR thresholds (3/12): 20h > 12h -> HIGH
+    $airShipment = clone $shipment;
+    $airShipment->transport_mode = 'AIR';
+    $etaService->evaluateDelay($airShipment);
+    expect($airShipment->delay_severity)->toBe('HIGH');
+
+    // ROAD thresholds (6/24): 20h is > 6h and <= 24h -> MEDIUM; with 28.0h delay, ROAD is HIGH while SEA is still MEDIUM
+    $roadShipment = clone $shipment;
+    $roadShipment->transport_mode = 'ROAD';
+    $roadShipment->estimated_arrival_at = Carbon::parse('2026-11-21 16:00:00'); // 28 hours delay
+    $etaService->evaluateDelay($roadShipment);
+    expect((float) $roadShipment->delay_hours)->toBe(28.0)
+        ->and($roadShipment->delay_severity)->toBe('HIGH');
+
+    // 4. HIGH Delay for SEA (> 48 hours)
+    $shipment->estimated_arrival_at = Carbon::parse('2026-11-22 18:00:00');
     $etaService->evaluateDelay($shipment);
 
     expect($shipment->is_delayed)->toBeTrue()
-        ->and((float) $shipment->delay_hours)->toBe(30.0)
+        ->and((float) $shipment->delay_hours)->toBe(54.0)
         ->and($shipment->delay_severity)->toBe('HIGH');
 });
 
