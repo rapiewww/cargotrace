@@ -24,6 +24,21 @@ class ExceptionService
         'DAMAGED',
         'MISROUTED',
         'DOCUMENTATION_ISSUE',
+        'FLIGHT_OFFLOAD',
+        'BORDER_QUEUE',
+        'VEHICLE_BREAKDOWN',
+    ];
+
+    /**
+     * Allowed exception codes per mode.
+     * PORT_CONGESTION is allowed for all modes.
+     *
+     * @var array<string, list<string>>
+     */
+    public const MODE_ALLOWED_EXCEPTIONS = [
+        'SEA' => ['CUSTOMS_HOLD', 'WEATHER_DELAY', 'PORT_CONGESTION', 'DAMAGED', 'MISROUTED', 'DOCUMENTATION_ISSUE'],
+        'AIR' => ['CUSTOMS_HOLD', 'WEATHER_DELAY', 'PORT_CONGESTION', 'DAMAGED', 'MISROUTED', 'DOCUMENTATION_ISSUE', 'FLIGHT_OFFLOAD'],
+        'ROAD' => ['CUSTOMS_HOLD', 'WEATHER_DELAY', 'PORT_CONGESTION', 'DAMAGED', 'MISROUTED', 'DOCUMENTATION_ISSUE', 'BORDER_QUEUE', 'VEHICLE_BREAKDOWN'],
     ];
 
     /**
@@ -53,6 +68,15 @@ class ExceptionService
         if (! in_array($code, $this->allowedCodes, true)) {
             throw ValidationException::withMessages([
                 'exception_code' => "Invalid exception code: {$code}. Must be one of: ".implode(', ', $this->allowedCodes),
+            ]);
+        }
+
+        $shipmentMode = strtoupper($shipment->transport_mode ?? 'SEA');
+        $allowedForMode = self::MODE_ALLOWED_EXCEPTIONS[$shipmentMode] ?? self::MODE_ALLOWED_EXCEPTIONS['SEA'];
+
+        if (! in_array($code, $allowedForMode, true)) {
+            throw ValidationException::withMessages([
+                'exception_code' => "Exception code [{$code}] is not allowed for transport mode [{$shipmentMode}].",
             ]);
         }
 

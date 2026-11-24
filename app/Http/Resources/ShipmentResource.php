@@ -17,7 +17,13 @@ class ShipmentResource extends JsonResource
         return [
             'id' => $this->id,
             'tracking_number' => $this->tracking_number,
+            'transport_mode' => $this->transport_mode ?? 'SEA',
             'reference_number' => $this->reference_number,
+            'container_number' => $this->container_number,
+            'bill_of_lading_number' => $this->bill_of_lading_number,
+            'awb_number' => $this->awb_number,
+            'vehicle_plate' => $this->vehicle_plate,
+            'cmr_number' => $this->cmr_number,
             'customer_id' => $this->customer_id,
             'carrier_id' => $this->carrier_id,
             'origin_location_id' => $this->origin_location_id,
@@ -37,6 +43,7 @@ class ShipmentResource extends JsonResource
 
             // Status, Schedule & Delay
             'status' => $this->status,
+            'status_label' => $this->status_display_label,
             'expected_departure_at' => $this->expected_departure_at?->toIso8601String(),
             'expected_arrival_at' => $this->expected_arrival_at?->toIso8601String(),
             'estimated_arrival_at' => $this->estimated_arrival_at?->toIso8601String(),

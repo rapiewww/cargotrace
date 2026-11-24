@@ -135,6 +135,32 @@ All live third-party services in CargoTrace operate keyless without requiring AP
 6. **Globe Textures**:
    - Three-Globe NASA Blue Marble, night lights, and Earth topology textures self-hosted locally under `/images/globe/` for zero third-party CDN dependency.
 
+### REST API Endpoints Specification
+
+| Method | URI | Role / Auth | Description | Mode / Parameters |
+|---|---|---|---|---|
+| `POST` | `/api/register` | Public | Register customer account | Body: name, email, password, company_name, preferred_currency |
+| `POST` | `/api/login` | Public | Sanctum token authentication | Body: email, password |
+| `POST` | `/api/logout` | Sanctum | Revoke current API token | Header: `Bearer <token>` |
+| `GET` | `/api/user` | Sanctum | Get authenticated user profile | Returns authenticated user resource |
+| `GET` | `/api/shipments` | Sanctum | List shipments (scoped by customer) | Query: `?mode=SEA\|AIR\|ROAD`, `?status=`, `?carrier_id=`, `?is_delayed=`, `?search=` |
+| `POST` | `/api/shipments` | Admin, Operator | Create shipment with cargo items | Mode-specific: SEA requires container_number; AIR requires awb_number; ROAD requires vehicle_plate & cmr_number |
+| `GET` | `/api/shipments/{id}` | Sanctum | Show shipment details & events | Scoped to customer owner, admin or operator |
+| `PUT/PATCH` | `/api/shipments/{id}` | Admin, Operator | Update shipment status, ETA or notes | Validates status progression, recalculates ETA delay variance |
+| `DELETE` | `/api/shipments/{id}` | Admin | Delete shipment record | Hard deletion with cascade to items & events |
+| `GET` | `/api/shipments/{id}/tracking` | Sanctum | Chronological tracking timeline | List milestone tracking checkpoints |
+| `POST` | `/api/shipments/{id}/tracking` | Admin, Operator | Record new tracking checkpoint | Captures status, location, notes, and weather snapshot |
+| `GET` | `/api/shipments/{id}/exceptions` | Sanctum | List shipment exceptions | Open and resolved operational incidents |
+| `POST` | `/api/shipments/{id}/exceptions` | Admin, Operator | Report shipment exception | Validates code vs mode (FLIGHT_OFFLOAD for AIR, BORDER_QUEUE/VEHICLE_BREAKDOWN for ROAD, PORT_CONGESTION universal) |
+| `PATCH` | `/api/exceptions/{id}` | Admin, Operator | Resolve or update exception status | Transitions OPEN &rarr; INVESTIGATING &rarr; RESOLVED |
+| `GET` | `/api/carriers` | Sanctum | Master carrier directory | Filterable by active status and transport mode |
+| `POST` | `/api/carriers` | Admin | Register new carrier | Body: code, name, mode (SEA, AIR, ROAD, LAND, MULTIMODAL) |
+| `GET` | `/api/locations` | Sanctum | Master location directory | UN/LOCODE, IATA, type (SEAPORT, AIRPORT, DEPOT, BORDER) |
+| `POST` | `/api/locations` | Admin | Register location checkpoint | Body: unlocode, iata_code, name, city, country, type |
+| `GET` | `/api/integrations/weather` | Sanctum | Live Open-Meteo marine telemetry | Coordinates or port UN/LOCODE |
+| `GET` | `/api/integrations/currency` | Sanctum | Spot FX rates (ExchangeRate-API) | Base USD spot rate snapshot |
+| `GET` | `/api/integrations/news` | Sanctum | Maritime logistics RSS news feeds | Filterable by feed source |
+
 ---
 
 ## 5. Installation & Setup

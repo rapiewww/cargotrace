@@ -18,12 +18,13 @@ class StoreLocationRequest extends FormRequest
     {
         return [
             'unlocode' => ['required', 'string', 'max:10', 'unique:locations,unlocode'],
+            'iata_code' => ['nullable', 'string', 'max:10'],
             'name' => ['required', 'string', 'max:255'],
             'city' => ['required', 'string', 'max:100'],
             'country' => ['required', 'string', 'max:100'],
             'country_code' => ['required', 'string', 'size:2'],
             'currency_code' => ['required', 'string', 'size:3'],
-            'type' => ['required', 'string', 'in:PORT,AIRPORT,HUB,WAREHOUSE'],
+            'type' => ['required', 'string', 'in:SEAPORT,AIRPORT,DEPOT,BORDER,PORT,HUB,WAREHOUSE'],
             'latitude' => ['nullable', 'numeric', 'between:-90,90'],
             'longitude' => ['nullable', 'numeric', 'between:-180,180'],
             'timezone' => ['nullable', 'string', 'max:100'],

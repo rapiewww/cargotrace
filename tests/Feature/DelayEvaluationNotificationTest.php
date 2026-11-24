@@ -132,8 +132,8 @@ test('severity escalation sends new notification and logs audit trail', function
     expect($shipment->delay_severity)->toBe('LOW');
     expect(InAppNotification::where('user_id', $customer->id)->count())->toBe(1);
 
-    // Now escalate delay to 30 hours -> HIGH (> 24h)
-    $shipment->estimated_arrival_at = Carbon::parse('2026-11-14 20:00:00');
+    // Now escalate delay to 30 hours (or > medium threshold) -> HIGH
+    $shipment->estimated_arrival_at = Carbon::parse('2026-11-15 16:00:00'); // 50 hours delay > 48h SEA medium threshold
     $shipment->save();
 
     $etaService->evaluateDelay($shipment);

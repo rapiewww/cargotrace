@@ -1371,63 +1371,68 @@ class ShipmentSeeder extends Seeder
                 ],
             ],
 
-            // 44. Busan -> Tokyo [HMMU / IN_TRANSIT]
+            // 44. Jakarta (CGK) -> Amsterdam (AMS) [GIA / AIR / IN_TRANSIT]
             [
-                'tracking_number' => 'CTG-SEA-2026-00704',
-                'reference_number' => 'B/L-HMMU-770192',
+                'tracking_number' => 'CTG-AIR-2026-00704',
+                'transport_mode' => 'AIR',
+                'awb_number' => '12612345675',
+                'reference_number' => 'AWB-126-12345675',
                 'customer_key' => 'c4',
-                'carrier_code' => 'HMMU',
-                'origin' => 'KRPUS',
-                'destination' => 'JPTYO',
-                'current' => 'JPTYO',
-                'cargo_type' => 'FCL',
-                'weight_kg' => 18500.0,
-                'volume_cbm' => 48.0,
-                'declared_value' => 140000000.0,
-                'currency' => 'KRW',
-                'shipping_cost' => 1800000.0,
+                'carrier_code' => 'GIA',
+                'origin' => 'IDCGK',
+                'destination' => 'NLAMS',
+                'current' => 'NLAMS',
+                'cargo_type' => 'AIR_FREIGHT',
+                'weight_kg' => 1250.0,
+                'volume_cbm' => 4.5,
+                'declared_value' => 75000.0,
+                'currency' => 'EUR',
+                'shipping_cost' => 6200.0,
                 'status' => 'IN_TRANSIT',
-                'expected_departure' => $now->copy()->subDays(2),
-                'expected_arrival' => $now->copy()->addDays(2),
+                'expected_departure' => $now->copy()->subDays(1),
+                'expected_arrival' => $now->copy()->addDay(),
                 'actual_arrival' => null,
-                'estimated_arrival' => $now->copy()->addDays(2),
+                'estimated_arrival' => $now->copy()->addDay(),
                 'is_delayed' => false,
                 'delay_hours' => 0.0,
                 'delay_severity' => 'NONE',
                 'delay_reason' => null,
-                'notes' => 'Direct Japan-Korea shuttle feeder container.',
+                'notes' => 'High-value Indonesian patchouli and clove essential oils air freight.',
                 'items' => [
-                    ['desc' => '20ft Container: Precision Electronics Soldering Pastes & Flux', 'qty' => 250, 'val' => 560000.0, 'cur' => 'KRW', 'wt' => 18500.0, 'cbm' => 48.0],
+                    ['desc' => 'Air Cargo ULD: Pure Java Vetiver & Patchouli Essential Oil (3301.29)', 'qty' => 50, 'val' => 1500.0, 'cur' => 'EUR', 'wt' => 1250.0, 'cbm' => 4.5, 'hs_code' => '3301.29', 'packaging' => 'Steel Drums'],
                 ],
             ],
 
-            // 45. Laem Chabang -> Singapore [CREATED]
+            // 45. Medan -> Jakarta [LOGIS / ROAD / CREATED]
             [
-                'tracking_number' => 'CTG-SEA-2026-00705',
-                'reference_number' => 'B/L-COSU-330198',
+                'tracking_number' => 'CTG-ROAD-2026-00705',
+                'transport_mode' => 'ROAD',
+                'vehicle_plate' => 'B 9123 TX',
+                'cmr_number' => 'CMR-2026-0045',
+                'reference_number' => 'CMR-2026-0045',
                 'customer_key' => 'c1',
-                'carrier_code' => 'COSU',
-                'origin' => 'THLCH',
-                'destination' => 'SGSIN',
-                'current' => 'THLCH',
-                'cargo_type' => 'FCL',
-                'weight_kg' => 20500.0,
-                'volume_cbm' => 53.0,
-                'declared_value' => 4200000.0,
-                'currency' => 'THB',
-                'shipping_cost' => 65000.0,
+                'carrier_code' => 'LOGIS',
+                'origin' => 'IDMES',
+                'destination' => 'IDJKT',
+                'current' => 'IDMES',
+                'cargo_type' => 'ROAD',
+                'weight_kg' => 8500.0,
+                'volume_cbm' => 22.0,
+                'declared_value' => 380000000.0,
+                'currency' => 'IDR',
+                'shipping_cost' => 18500000.0,
                 'status' => 'CREATED',
-                'expected_departure' => $now->copy()->addDays(3),
-                'expected_arrival' => $now->copy()->addDays(6),
+                'expected_departure' => $now->copy()->addDays(2),
+                'expected_arrival' => $now->copy()->addDays(5),
                 'actual_arrival' => null,
-                'estimated_arrival' => $now->copy()->addDays(6),
+                'estimated_arrival' => $now->copy()->addDays(5),
                 'is_delayed' => false,
                 'delay_hours' => 0.0,
                 'delay_severity' => 'NONE',
                 'delay_reason' => null,
-                'notes' => 'Automotive electronic control units awaiting pre-shipment inspection.',
+                'notes' => 'North Sumatra highland spices overland transit to Tanjung Priok seaport.',
                 'items' => [
-                    ['desc' => '40ft Dry Container: Electronic Engine Control Modules (ECU)', 'qty' => 600, 'val' => 7000.0, 'cur' => 'THB', 'wt' => 20500.0, 'cbm' => 53.0],
+                    ['desc' => 'Overland Pallets: Whole Banda Nutmeg & Mace (HS 0908.11)', 'qty' => 170, 'val' => 2235294.0, 'cur' => 'IDR', 'wt' => 8500.0, 'cbm' => 22.0, 'hs_code' => '0908.11', 'packaging' => 'Jute Sacks'],
                 ],
             ],
         ];
@@ -1474,10 +1479,33 @@ class ShipmentSeeder extends Seeder
                 ];
             }
 
+            $mode = $data['transport_mode'] ?? 'SEA';
+            $containerNum = null;
+            $blNum = null;
+            $awbNum = null;
+            $plate = null;
+            $cmrNum = null;
+
+            if ($mode === 'SEA') {
+                $containerNum = Iso6346::generate($carrier->code, $serialCounter);
+                $blNum = $data['reference_number'] ?? ('B/L-'.$carrier->code.'-'.rand(100000, 999999));
+            } elseif ($mode === 'AIR') {
+                $awbNum = $data['awb_number'] ?? '12612345675';
+            } elseif ($mode === 'ROAD') {
+                $plate = $data['vehicle_plate'] ?? 'B 9123 TX';
+                $cmrNum = $data['cmr_number'] ?? 'CMR-2026-0044';
+            }
+
             $shipment = Shipment::firstOrCreate(
                 ['tracking_number' => $data['tracking_number']],
                 [
+                    'transport_mode' => $mode,
                     'reference_number' => $data['reference_number'],
+                    'container_number' => $containerNum,
+                    'bill_of_lading_number' => $blNum,
+                    'awb_number' => $awbNum,
+                    'vehicle_plate' => $plate,
+                    'cmr_number' => $cmrNum,
                     'customer_id' => $customer->id,
                     'carrier_id' => $carrier->id,
                     'origin_location_id' => $origin->id,
@@ -1519,19 +1547,29 @@ class ShipmentSeeder extends Seeder
             $shipment->updated_at = $updatedAt;
             $shipment->saveQuietly();
 
-            // Seed items with ISO 6346 compliant container numbers
+            // Seed items with ISO 6346 compliant container numbers for SEA or appropriate identifiers
             foreach ($data['items'] as $item) {
-                // Generate ISO 6346 container number using carrier code
-                $containerNumber = Iso6346::generate($carrier->code, $serialCounter++);
+                if ($mode === 'SEA') {
+                    $itemContainer = Iso6346::generate($carrier->code, $serialCounter++);
+                    $itemSku = $itemContainer;
+                } elseif ($mode === 'AIR') {
+                    $itemContainer = null;
+                    $itemSku = 'AIR-'.($carrier->code).'-'.sprintf('%06d', $serialCounter++);
+                } else {
+                    $itemContainer = null;
+                    $itemSku = 'ROAD-'.sprintf('%06d', $serialCounter++);
+                }
 
                 ShipmentItem::firstOrCreate(
                     [
                         'shipment_id' => $shipment->id,
-                        'sku' => $containerNumber,
+                        'sku' => $itemSku,
                     ],
                     [
-                        'container_number' => $containerNumber,
+                        'container_number' => $itemContainer,
                         'description' => $item['desc'],
+                        'hs_code' => $item['hs_code'] ?? null,
+                        'packaging' => $item['packaging'] ?? null,
                         'quantity' => $item['qty'],
                         'unit_value' => $item['val'],
                         'currency_code' => $item['cur'],

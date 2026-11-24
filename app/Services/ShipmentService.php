@@ -94,12 +94,19 @@ class ShipmentService
             $rateToUsd = (float) ($conversion['rate_to_usd'] ?? 1.0);
             $ratesSnapshot = $conversion['rates_snapshot'] ?? null;
 
+            $mode = strtoupper($data['transport_mode'] ?? 'SEA');
             // Generate tracking number if absent
-            $trackingNumber = $data['tracking_number'] ?? $this->generateTrackingNumber($data['cargo_type'] ?? 'SEA');
+            $trackingNumber = $data['tracking_number'] ?? $this->generateTrackingNumber($mode);
 
             $shipment = Shipment::create([
                 'tracking_number' => $trackingNumber,
+                'transport_mode' => $mode,
                 'reference_number' => $data['reference_number'] ?? null,
+                'container_number' => $data['container_number'] ?? null,
+                'bill_of_lading_number' => $data['bill_of_lading_number'] ?? null,
+                'awb_number' => $data['awb_number'] ?? null,
+                'vehicle_plate' => $data['vehicle_plate'] ?? null,
+                'cmr_number' => $data['cmr_number'] ?? null,
                 'customer_id' => $data['customer_id'],
                 'carrier_id' => $data['carrier_id'],
                 'origin_location_id' => $data['origin_location_id'],
@@ -140,6 +147,8 @@ class ShipmentService
                     'shipment_id' => $shipment->id,
                     'container_number' => $containerNumber ? Iso6346::normalize($containerNumber) : null,
                     'sku' => $sku,
+                    'hs_code' => $itemData['hs_code'] ?? null,
+                    'packaging' => $itemData['packaging'] ?? null,
                     'description' => $itemData['description'] ?? 'Cargo item',
                     'quantity' => (int) ($itemData['quantity'] ?? 1),
                     'unit_value' => (float) ($itemData['unit_value'] ?? 0),
@@ -200,6 +209,7 @@ class ShipmentService
     {
         return DB::transaction(function () use ($shipment, $data) {
             $oldValues = $shipment->only([
+                'transport_mode', 'container_number', 'bill_of_lading_number', 'awb_number', 'vehicle_plate', 'cmr_number',
                 'carrier_id', 'origin_location_id', 'destination_location_id', 'current_location_id',
                 'expected_departure_at', 'expected_arrival_at', 'estimated_arrival_at',
                 'declared_value', 'currency_code', 'cargo_type', 'reference_number', 'notes',

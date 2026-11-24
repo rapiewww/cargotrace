@@ -103,6 +103,24 @@ class CarrierSeeder extends Seeder
                 'website' => 'https://www.zim.com',
                 'is_active' => true,
             ],
+            [
+                'code' => 'GIA',
+                'name' => 'Garuda Indonesia Cargo',
+                'mode' => 'AIR',
+                'headquarters_country' => 'Indonesia',
+                'contact_email' => 'cargo@garuda-indonesia.com',
+                'website' => 'https://cargo.garuda-indonesia.com',
+                'is_active' => true,
+            ],
+            [
+                'code' => 'LOGIS',
+                'name' => 'Trans-Java Logistics',
+                'mode' => 'ROAD',
+                'headquarters_country' => 'Indonesia',
+                'contact_email' => 'dispatch@transjava-logistics.test',
+                'website' => 'https://transjava-logistics.test',
+                'is_active' => true,
+            ],
         ];
 
         foreach ($carriers as $carrier) {
@@ -110,4 +128,3 @@ class CarrierSeeder extends Seeder
         }
     }
 }
-

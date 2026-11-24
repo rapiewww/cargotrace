@@ -24,12 +24,57 @@ class EtaService
     ];
 
     /**
+     * Get delay thresholds (low_hours, medium_hours) for a given mode or default.
+     *
+     * @return array{low: float, medium: float}
+     */
+    public function getThresholdsForMode(?string $mode = 'SEA'): array
+    {
+        $modeKey = strtolower($mode ?? 'sea');
+
+        // Check mode-specific settings first: delay.{mode}.low_hours
+        $modeSettingLow = Setting::get("delay.{$modeKey}.low_hours")
+            ?? Setting::get("delay_{$modeKey}_low_hours");
+        $modeSettingMedium = Setting::get("delay.{$modeKey}.medium_hours")
+            ?? Setting::get("delay_{$modeKey}_medium_hours");
+
+        if ($modeSettingLow !== null && $modeSettingMedium !== null) {
+            return [
+                'low' => (float) $modeSettingLow,
+                'medium' => (float) $modeSettingMedium,
+            ];
+        }
+
+        // Check if legacy global settings exist
+        $globalSettingLow = Setting::get('delay_low_hours');
+        $globalSettingMedium = Setting::get('delay_medium_hours');
+        if ($globalSettingLow !== null && $globalSettingMedium !== null && $modeSettingLow === null && $modeSettingMedium === null) {
+            return [
+                'low' => (float) $globalSettingLow,
+                'medium' => (float) $globalSettingMedium,
+            ];
+        }
+
+        // Fallback to config/cargotrace.php mode defaults
+        $configLow = config("cargotrace.delay.{$modeKey}.low_hours")
+            ?? ($modeKey === 'air' ? 3.0 : ($modeKey === 'road' ? 6.0 : 12.0));
+        $configMedium = config("cargotrace.delay.{$modeKey}.medium_hours")
+            ?? ($modeKey === 'air' ? 12.0 : ($modeKey === 'road' ? 24.0 : 48.0));
+
+        return [
+            'low' => (float) ($modeSettingLow ?? $globalSettingLow ?? $configLow),
+            'medium' => (float) ($modeSettingMedium ?? $globalSettingMedium ?? $configMedium),
+        ];
+    }
+
+    /**
      * Evaluate and update delay metrics for a given shipment.
      */
     public function evaluateDelay(Shipment $shipment): Shipment
     {
-        $lowThreshold = (float) (Setting::get('delay_low_hours') ?? config('cargotrace.delay.low_hours', 6));
-        $mediumThreshold = (float) (Setting::get('delay_medium_hours') ?? config('cargotrace.delay.medium_hours', 24));
+        $thresholds = $this->getThresholdsForMode($shipment->transport_mode ?? 'SEA');
+        $lowThreshold = $thresholds['low'];
+        $mediumThreshold = $thresholds['medium'];
 
         $wasDelayed = (bool) $shipment->is_delayed;
         $previousSeverity = $shipment->delay_severity ?? 'NONE';

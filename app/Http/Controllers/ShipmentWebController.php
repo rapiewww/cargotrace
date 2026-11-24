@@ -413,7 +413,7 @@ class ShipmentWebController extends Controller
         $this->authorize('reportException', $shipment);
 
         $validated = $request->validate([
-            'exception_code' => 'required|string|in:CUSTOMS_HOLD,WEATHER_DELAY,PORT_CONGESTION,DAMAGED,MISROUTED,DOCUMENTATION_ISSUE',
+            'exception_code' => 'required|string|in:CUSTOMS_HOLD,WEATHER_DELAY,PORT_CONGESTION,DAMAGED,MISROUTED,DOCUMENTATION_ISSUE,FLIGHT_OFFLOAD,BORDER_QUEUE,VEHICLE_BREAKDOWN',
             'severity' => 'required|string|in:LOW,MEDIUM,HIGH',
             'title' => 'required|string|max:255',
             'description' => 'required|string',

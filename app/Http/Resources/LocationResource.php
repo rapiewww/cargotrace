@@ -17,6 +17,7 @@ class LocationResource extends JsonResource
         return [
             'id' => $this->id,
             'unlocode' => $this->unlocode,
+            'iata_code' => $this->iata_code,
             'name' => $this->name,
             'city' => $this->city,
             'country' => $this->country,

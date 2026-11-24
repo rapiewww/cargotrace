@@ -17,6 +17,7 @@ class Location extends Model
      */
     protected $fillable = [
         'unlocode',
+        'iata_code',
         'name',
         'city',
         'country',

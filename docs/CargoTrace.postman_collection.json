@@ -306,6 +306,12 @@
 							],
 							"query": [
 								{
+									"key": "mode",
+									"value": "SEA",
+									"disabled": true,
+									"description": "Filter by transport mode: SEA, AIR, ROAD"
+								},
+								{
 									"key": "status",
 									"value": "IN_TRANSIT",
 									"description": "Filter by status: CREATED, BOOKED, PICKED_UP, IN_TRANSIT, DELIVERED"
@@ -371,7 +377,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"carrier_id\": 1,\n    \"origin_location_id\": 1,\n    \"destination_location_id\": 3,\n    \"cargo_type\": \"FCL\",\n    \"currency_code\": \"EUR\",\n    \"declared_value\": 145000.00,\n    \"shipping_cost\": 6200.00,\n    \"expected_departure_at\": \"2026-11-15 08:00:00\",\n    \"expected_arrival_at\": \"2026-11-28 16:00:00\",\n    \"estimated_arrival_at\": \"2026-11-28 16:00:00\",\n    \"reference_number\": \"REF-MARITIME-9901\",\n    \"notes\": \"Temperature-controlled reefer containers holding pharmaceutical goods.\",\n    \"items\": [\n        {\n            \"sku\": \"MED-CONT-01\",\n            \"description\": \"Vaccines & Bio-Pharmaceuticals (Cold Chain)\",\n            \"quantity\": 2,\n            \"unit_value\": 72500.00,\n            \"weight_kg\": 12400.00,\n            \"volume_cbm\": 67.50,\n            \"is_hazardous\": false\n        }\n    ]\n}"
+							"raw": "{\n    \"transport_mode\": \"SEA\",\n    \"container_number\": \"MSKU1234565\",\n    \"bill_of_lading_number\": \"B/L-MAEU-9901\",\n    \"carrier_id\": 1,\n    \"origin_location_id\": 1,\n    \"destination_location_id\": 3,\n    \"cargo_type\": \"FCL\",\n    \"currency_code\": \"EUR\",\n    \"declared_value\": 145000.00,\n    \"shipping_cost\": 6200.00,\n    \"expected_departure_at\": \"2026-11-15 08:00:00\",\n    \"expected_arrival_at\": \"2026-11-28 16:00:00\",\n    \"estimated_arrival_at\": \"2026-11-28 16:00:00\",\n    \"reference_number\": \"REF-MARITIME-9901\",\n    \"notes\": \"Temperature-controlled reefer containers holding pharmaceutical goods.\",\n    \"items\": [\n        {\n            \"sku\": \"MSKU1234565\",\n            \"container_number\": \"MSKU1234565\",\n            \"description\": \"Vaccines & Bio-Pharmaceuticals (Cold Chain)\",\n            \"quantity\": 2,\n            \"unit_value\": 72500.00,\n            \"weight_kg\": 12400.00,\n            \"volume_cbm\": 67.50,\n            \"is_hazardous\": false\n        }\n    ]\n}"
 						},
 						"url": {
 							"raw": "{{base_url}}/api/shipments",
@@ -613,7 +619,7 @@
 								"exceptions"
 							]
 						},
-						"description": "Files an operational exception (CUSTOMS_HOLD, WEATHER_DELAY, PORT_CONGESTION, DAMAGED, MISROUTED, DOCUMENTATION_ISSUE)."
+						"description": "Files an operational exception (CUSTOMS_HOLD, WEATHER_DELAY, PORT_CONGESTION, DAMAGED, MISROUTED, DOCUMENTATION_ISSUE, FLIGHT_OFFLOAD, BORDER_QUEUE, VEHICLE_BREAKDOWN)."
 					},
 					"response": []
 				},

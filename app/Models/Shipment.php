@@ -19,7 +19,13 @@ class Shipment extends Model
      */
     protected $fillable = [
         'tracking_number',
+        'transport_mode',
         'reference_number',
+        'container_number',
+        'bill_of_lading_number',
+        'awb_number',
+        'vehicle_plate',
+        'cmr_number',
         'customer_id',
         'carrier_id',
         'origin_location_id',
@@ -180,5 +186,48 @@ class Shipment extends Model
         $distanceKm = $earthRadiusKm * $c;
 
         return (int) round($distanceKm * 0.539957);
+    }
+
+    /**
+     * Human-readable display label for status per transport mode.
+     */
+    public function getStatusDisplayLabelAttribute(): string
+    {
+        return self::statusDisplayLabel($this->status, $this->transport_mode ?? 'SEA');
+    }
+
+    /**
+     * Get display label for status and mode.
+     */
+    public static function statusDisplayLabel(?string $status, ?string $mode = 'SEA'): string
+    {
+        $status = strtoupper($status ?? 'CREATED');
+        $mode = strtoupper($mode ?? 'SEA');
+
+        $labels = [
+            'SEA' => [
+                'CREATED' => 'Created',
+                'BOOKED' => 'Vessel Space Booked',
+                'PICKED_UP' => 'Gated in at Origin Terminal',
+                'IN_TRANSIT' => 'At Sea / In Transit',
+                'DELIVERED' => 'Discharged & Delivered',
+            ],
+            'AIR' => [
+                'CREATED' => 'Created',
+                'BOOKED' => 'Flight Space Booked',
+                'PICKED_UP' => 'Received at Origin Airport',
+                'IN_TRANSIT' => 'In Flight / In Transit',
+                'DELIVERED' => 'Arrived & Delivered',
+            ],
+            'ROAD' => [
+                'CREATED' => 'Created',
+                'BOOKED' => 'Truck / Haulier Dispatched',
+                'PICKED_UP' => 'Loaded at Depot / Warehouse',
+                'IN_TRANSIT' => 'On Road / In Transit',
+                'DELIVERED' => 'Delivered to Consignee',
+            ],
+        ];
+
+        return $labels[$mode][$status] ?? ucfirst(strtolower(str_replace('_', ' ', $status)));
     }
 }

@@ -27,14 +27,18 @@ test('seed dataset contains exactly 45 shipments across realistic status distrib
         ->and($deliveredCount)->toBe(19);
 });
 
-test('seed dataset contains 20+ global container ports and 8-10 carriers', function () {
+test('seed dataset contains 20+ global container ports and carriers across multimodal transport', function () {
     expect(Location::count())->toBeGreaterThanOrEqual(20)
         ->and(Carrier::count())->toBeGreaterThanOrEqual(8)
-        ->and(Carrier::count())->toBeLessThanOrEqual(10);
+        ->and(Carrier::count())->toBeLessThanOrEqual(15);
 
-    // Verify all carriers operate in SEA mode
-    $nonSeaCarriers = Carrier::where('mode', '!=', 'SEA')->count();
-    expect($nonSeaCarriers)->toBe(0);
+    // Verify carriers operate across multimodal scope (SEA, AIR, ROAD)
+    $seaCarriers = Carrier::where('mode', 'SEA')->count();
+    $airCarriers = Carrier::where('mode', 'AIR')->count();
+    $roadCarriers = Carrier::where('mode', 'ROAD')->count();
+    expect($seaCarriers)->toBeGreaterThanOrEqual(8)
+        ->and($airCarriers)->toBeGreaterThanOrEqual(1)
+        ->and($roadCarriers)->toBeGreaterThanOrEqual(1);
 
     // Verify locations have valid UN/LOCODE, coordinates and timezone
     foreach (Location::all() as $loc) {
@@ -150,8 +154,11 @@ test('canonical sample shipments retain expected exception and delay profiles', 
 });
 
 test('all container numbers comply with ISO 6346 standard and check digits', function () {
-    $items = ShipmentItem::all();
-    expect($items->count())->toBeGreaterThanOrEqual(45);
+    // Only verify items for SEA shipments or items having container numbers
+    $items = ShipmentItem::whereHas('shipment', function ($q) {
+        $q->where('transport_mode', 'SEA');
+    })->get();
+    expect($items->count())->toBeGreaterThanOrEqual(40);
 
     foreach ($items as $item) {
         expect(Iso6346::isValid($item->sku))->toBeTrue(

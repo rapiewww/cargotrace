@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->string('code')->unique();
             $table->string('name');
-            $table->enum('mode', ['SEA', 'AIR', 'LAND', 'MULTIMODAL'])->index();
+            $table->string('mode', 20)->default('SEA')->index();
             $table->string('headquarters_country')->nullable();
             $table->string('contact_email')->nullable();
             $table->string('website')->nullable();

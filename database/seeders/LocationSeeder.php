@@ -782,6 +782,44 @@ class LocationSeeder extends Seeder
                     'url' => 'https://africanshipping.co.za/durban-pier2',
                 ],
             ],
+            'IDCGK' => [
+                'unlocode' => 'IDCGK',
+                'iata_code' => 'CGK',
+                'name' => 'Soekarno-Hatta International Airport Cargo Terminal',
+                'city' => 'Jakarta',
+                'country' => 'Indonesia',
+                'country_code' => 'ID',
+                'currency_code' => 'IDR',
+                'type' => 'AIRPORT',
+                'latitude' => -6.1275,
+                'longitude' => 106.6537,
+                'timezone' => 'Asia/Jakarta',
+            ],
+            'NLAMS' => [
+                'unlocode' => 'NLAMS',
+                'iata_code' => 'AMS',
+                'name' => 'Amsterdam Airport Schiphol Cargo',
+                'city' => 'Amsterdam',
+                'country' => 'Netherlands',
+                'country_code' => 'NL',
+                'currency_code' => 'EUR',
+                'type' => 'AIRPORT',
+                'latitude' => 52.3105,
+                'longitude' => 4.7683,
+                'timezone' => 'Europe/Amsterdam',
+            ],
+            'IDMES' => [
+                'unlocode' => 'IDMES',
+                'name' => 'Medan Inland Freight Depot',
+                'city' => 'Medan',
+                'country' => 'Indonesia',
+                'country_code' => 'ID',
+                'currency_code' => 'IDR',
+                'type' => 'DEPOT',
+                'latitude' => 3.5952,
+                'longitude' => 98.6722,
+                'timezone' => 'Asia/Jakarta',
+            ],
         ];
 
         foreach ($ports as $code => $data) {
@@ -789,4 +827,3 @@ class LocationSeeder extends Seeder
         }
     }
 }
-

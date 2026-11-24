@@ -13,7 +13,7 @@
             Platform Operations Settings
         </h1>
         <p class="text-xs sm:text-sm text-slate-400">
-            Configure dynamic delay severity thresholds and trigger fleet-wide ETA re-evaluation.
+            Configure dynamic per-mode delay severity thresholds and trigger fleet-wide ETA re-evaluation.
         </p>
     </div>
 
@@ -33,42 +33,94 @@
         <div class="md:col-span-2 space-y-6">
             <x-card class="space-y-6">
                 <div>
-                    <h2 class="text-base font-bold text-white">ETA Delay Severity Thresholds</h2>
+                    <h2 class="text-base font-bold text-white">ETA Delay Severity Thresholds (Per Mode)</h2>
                     <p class="text-xs text-slate-400 mt-0.5">
-                        Define hour variances that classify a shipment into LOW, MEDIUM, or HIGH delay risk.
+                        Define hour variances that classify consignments into LOW, MEDIUM, or HIGH delay risk by transport mode.
                     </p>
                 </div>
 
-                <form action="{{ route('admin.settings.update') }}" method="POST" class="space-y-5 text-xs">
+                <form action="{{ route('admin.settings.update') }}" method="POST" class="space-y-6 text-xs">
                     @csrf
 
-                    <div class="space-y-1.5">
-                        <label class="uppercase text-[10px] tracking-wider text-slate-400 font-semibold block">
-                            LOW Severity Boundary (Hours) *
-                        </label>
-                        <input type="number" step="0.5" name="delay_low_hours" value="{{ old('delay_low_hours', $lowThreshold) }}" required class="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-white font-mono focus:ring-1 focus:ring-amber-500">
-                        <span class="text-[11px] text-slate-500 block">
-                            Delays &gt; 0h up to this threshold will be tagged as <strong>LOW</strong> severity.
-                        </span>
+                    <!-- AIR THRESHOLDS -->
+                    <div class="p-4 rounded-xl bg-slate-950/40 border border-slate-800 space-y-3">
+                        <div class="flex items-center justify-between">
+                            <span class="font-bold text-white uppercase tracking-wider text-[11px] flex items-center gap-2">
+                                <span>✈️</span> Air Freight (AIR)
+                            </span>
+                            <span class="text-[10px] text-slate-400 font-mono">Default: 3h / 12h</span>
+                        </div>
+                        <div class="grid grid-cols-2 gap-3">
+                            <div class="space-y-1">
+                                <label class="uppercase text-[10px] tracking-wider text-slate-400 font-semibold block">
+                                    LOW Threshold (Hours) *
+                                </label>
+                                <input type="number" step="0.5" name="delay_air_low_hours" value="{{ old('delay_air_low_hours', $airThresholds['low']) }}" required class="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-white font-mono focus:ring-1 focus:ring-cyan-500">
+                            </div>
+                            <div class="space-y-1">
+                                <label class="uppercase text-[10px] tracking-wider text-slate-400 font-semibold block">
+                                    MEDIUM Threshold (Hours) *
+                                </label>
+                                <input type="number" step="0.5" name="delay_air_medium_hours" value="{{ old('delay_air_medium_hours', $airThresholds['medium']) }}" required class="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-white font-mono focus:ring-1 focus:ring-cyan-500">
+                            </div>
+                        </div>
                     </div>
 
-                    <div class="space-y-1.5">
-                        <label class="uppercase text-[10px] tracking-wider text-slate-400 font-semibold block">
-                            MEDIUM Severity Boundary (Hours) *
-                        </label>
-                        <input type="number" step="0.5" name="delay_medium_hours" value="{{ old('delay_medium_hours', $mediumThreshold) }}" required class="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-white font-mono focus:ring-1 focus:ring-amber-500">
-                        <span class="text-[11px] text-slate-500 block">
-                            Delays above LOW up to this threshold will be tagged as <strong>MEDIUM</strong>. Beyond this is <strong>HIGH</strong>.
-                        </span>
+                    <!-- ROAD THRESHOLDS -->
+                    <div class="p-4 rounded-xl bg-slate-950/40 border border-slate-800 space-y-3">
+                        <div class="flex items-center justify-between">
+                            <span class="font-bold text-white uppercase tracking-wider text-[11px] flex items-center gap-2">
+                                <span>🚚</span> Road Freight (ROAD)
+                            </span>
+                            <span class="text-[10px] text-slate-400 font-mono">Default: 6h / 24h</span>
+                        </div>
+                        <div class="grid grid-cols-2 gap-3">
+                            <div class="space-y-1">
+                                <label class="uppercase text-[10px] tracking-wider text-slate-400 font-semibold block">
+                                    LOW Threshold (Hours) *
+                                </label>
+                                <input type="number" step="0.5" name="delay_road_low_hours" value="{{ old('delay_road_low_hours', $roadThresholds['low']) }}" required class="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-white font-mono focus:ring-1 focus:ring-cyan-500">
+                            </div>
+                            <div class="space-y-1">
+                                <label class="uppercase text-[10px] tracking-wider text-slate-400 font-semibold block">
+                                    MEDIUM Threshold (Hours) *
+                                </label>
+                                <input type="number" step="0.5" name="delay_road_medium_hours" value="{{ old('delay_road_medium_hours', $roadThresholds['medium']) }}" required class="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-white font-mono focus:ring-1 focus:ring-cyan-500">
+                            </div>
+                        </div>
                     </div>
 
-                    <div class="space-y-1.5">
+                    <!-- SEA THRESHOLDS -->
+                    <div class="p-4 rounded-xl bg-slate-950/40 border border-slate-800 space-y-3">
+                        <div class="flex items-center justify-between">
+                            <span class="font-bold text-white uppercase tracking-wider text-[11px] flex items-center gap-2">
+                                <span>🚢</span> Ocean Freight (SEA)
+                            </span>
+                            <span class="text-[10px] text-slate-400 font-mono">Default: 12h / 48h</span>
+                        </div>
+                        <div class="grid grid-cols-2 gap-3">
+                            <div class="space-y-1">
+                                <label class="uppercase text-[10px] tracking-wider text-slate-400 font-semibold block">
+                                    LOW Threshold (Hours) *
+                                </label>
+                                <input type="number" step="0.5" name="delay_sea_low_hours" value="{{ old('delay_sea_low_hours', $seaThresholds['low']) }}" required class="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-white font-mono focus:ring-1 focus:ring-cyan-500">
+                            </div>
+                            <div class="space-y-1">
+                                <label class="uppercase text-[10px] tracking-wider text-slate-400 font-semibold block">
+                                    MEDIUM Threshold (Hours) *
+                                </label>
+                                <input type="number" step="0.5" name="delay_sea_medium_hours" value="{{ old('delay_sea_medium_hours', $seaThresholds['medium']) }}" required class="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-white font-mono focus:ring-1 focus:ring-cyan-500">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="space-y-1.5 pt-2 border-t border-slate-800">
                         <label class="uppercase text-[10px] tracking-wider text-slate-400 font-semibold block">
                             Terminal Free Time Allowance (Days After Arrival) *
                         </label>
                         <input type="number" min="0" step="1" name="free_days_after_arrival" value="{{ old('free_days_after_arrival', $freeDays) }}" required class="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-white font-mono focus:ring-1 focus:ring-blue-500">
                         <span class="text-[11px] text-slate-500 block">
-                            Standard calendar days granted after port arrival before container is flagged as exceeding free-time limit (default: 5 days).
+                            Standard calendar days granted after arrival before container/cargo is flagged as exceeding free-time limit (default: 5 days).
                         </span>
                     </div>
 
@@ -114,4 +166,3 @@
     </div>
 </div>
 @endsection
-

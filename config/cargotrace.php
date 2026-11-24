@@ -28,8 +28,20 @@ return [
     ],
 
     'delay' => [
-        'low_hours' => (float) env('CARGOTRACE_DELAY_LOW_HOURS', 6),
-        'medium_hours' => (float) env('CARGOTRACE_DELAY_MEDIUM_HOURS', 24),
+        'low_hours' => (float) env('CARGOTRACE_DELAY_LOW_HOURS', 12),
+        'medium_hours' => (float) env('CARGOTRACE_DELAY_MEDIUM_HOURS', 48),
+        'air' => [
+            'low_hours' => (float) env('CARGOTRACE_DELAY_AIR_LOW_HOURS', 3),
+            'medium_hours' => (float) env('CARGOTRACE_DELAY_AIR_MEDIUM_HOURS', 12),
+        ],
+        'road' => [
+            'low_hours' => (float) env('CARGOTRACE_DELAY_ROAD_LOW_HOURS', 6),
+            'medium_hours' => (float) env('CARGOTRACE_DELAY_ROAD_MEDIUM_HOURS', 24),
+        ],
+        'sea' => [
+            'low_hours' => (float) env('CARGOTRACE_DELAY_SEA_LOW_HOURS', 12),
+            'medium_hours' => (float) env('CARGOTRACE_DELAY_SEA_MEDIUM_HOURS', 48),
+        ],
     ],
 
     'free_time' => [

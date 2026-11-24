@@ -14,14 +14,7 @@ return new class extends Migration
         Schema::create('shipment_exceptions', function (Blueprint $table) {
             $table->id();
             $table->foreignId('shipment_id')->constrained('shipments')->cascadeOnDelete();
-            $table->enum('exception_code', [
-                'CUSTOMS_HOLD',
-                'WEATHER_DELAY',
-                'PORT_CONGESTION',
-                'DAMAGED',
-                'MISROUTED',
-                'DOCUMENTATION_ISSUE',
-            ])->index();
+            $table->string('exception_code', 50)->index();
             $table->enum('severity', ['LOW', 'MEDIUM', 'HIGH'])->index();
             $table->enum('status', ['OPEN', 'INVESTIGATING', 'RESOLVED'])->default('OPEN')->index();
             $table->string('title');

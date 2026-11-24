@@ -17,8 +17,11 @@ class ShipmentItemResource extends JsonResource
         return [
             'id' => $this->id,
             'shipment_id' => $this->shipment_id,
+            'container_number' => $this->container_number,
             'sku' => $this->sku,
+            'hs_code' => $this->hs_code,
             'description' => $this->description,
+            'packaging' => $this->packaging,
             'quantity' => (int) $this->quantity,
             'unit_value' => (float) $this->unit_value,
             'currency_code' => $this->currency_code,

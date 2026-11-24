@@ -19,7 +19,7 @@ class StoreCarrierRequest extends FormRequest
         return [
             'code' => ['required', 'string', 'max:20', 'unique:carriers,code'],
             'name' => ['required', 'string', 'max:255'],
-            'mode' => ['required', 'string', 'in:SEA,AIR,LAND,MULTIMODAL'],
+            'mode' => ['required', 'string', 'in:SEA,AIR,ROAD,LAND,MULTIMODAL'],
             'headquarters_country' => ['nullable', 'string', 'max:100'],
             'contact_email' => ['nullable', 'email', 'max:255'],
             'website' => ['nullable', 'url', 'max:255'],

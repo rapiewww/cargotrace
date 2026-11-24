@@ -40,6 +40,11 @@ class ShipmentApiController extends Controller
         }
 
         // Filters
+        if ($request->filled('mode') || $request->filled('transport_mode')) {
+            $mode = strtoupper($request->query('mode', $request->query('transport_mode')));
+            $query->where('transport_mode', $mode);
+        }
+
         if ($request->filled('search')) {
             $search = trim($request->query('search'));
             $cleanContainer = strtoupper(preg_replace('/\s+/', '', $search));

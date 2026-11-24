@@ -19,7 +19,7 @@ return new class extends Migration
             $table->string('country');
             $table->string('country_code', 2)->index();
             $table->string('currency_code', 3)->index();
-            $table->enum('type', ['PORT', 'AIRPORT', 'HUB', 'WAREHOUSE'])->index();
+            $table->string('type', 20)->default('SEAPORT')->index();
             $table->decimal('latitude', 10, 7);
             $table->decimal('longitude', 10, 7);
             $table->string('timezone')->nullable();
