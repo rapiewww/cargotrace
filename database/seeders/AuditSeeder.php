@@ -24,13 +24,13 @@ class AuditSeeder extends Seeder
         $s189 = Shipment::where('tracking_number', 'CTG-SEA-2026-00189')->first();
         $s244 = Shipment::where('tracking_number', 'CTG-SEA-2026-00244')->first();
         $s678 = Shipment::where('tracking_number', 'CTG-AIR-2026-00678')->first();
-        $s408 = Shipment::where('tracking_number', 'CTG-ROAD-2026-00408')->first();
+        $s638 = Shipment::where('tracking_number', 'CTG-ROAD-2026-00638')->first();
         $belawan = Location::where('unlocode', 'IDBLW')->first();
 
         $exCustoms244 = $s244 ? ShipmentException::where('shipment_id', $s244->id)->first() : null;
         $exWeather189 = $s189 ? ShipmentException::where('shipment_id', $s189->id)->first() : null;
         $exWeather678 = $s678 ? ShipmentException::where('shipment_id', $s678->id)->first() : null;
-        $exBorder408 = $s408 ? ShipmentException::where('shipment_id', $s408->id)->first() : null;
+        $exBorder638 = $s638 ? ShipmentException::where('shipment_id', $s638->id)->first() : null;
 
         $logs = [];
 
@@ -110,8 +110,8 @@ class AuditSeeder extends Seeder
                 'new_values' => [
                     'tracking_number' => $s678->tracking_number,
                     'transport_mode' => 'AIR',
-                    'origin' => 'IDKNO',
-                    'destination' => 'FRCDG',
+                    'origin' => 'KNO',
+                    'destination' => 'CDG',
                     'awb_number' => $s678->awb_number,
                 ],
                 'ip_address' => '192.168.10.22',
@@ -119,22 +119,22 @@ class AuditSeeder extends Seeder
             ];
         }
 
-        if ($s408) {
+        if ($s638) {
             $logs[] = [
                 'user_id' => $operator?->id,
                 'action' => 'SHIPMENT_CREATED',
                 'auditable_type' => Shipment::class,
-                'auditable_id' => $s408->id,
+                'auditable_id' => $s638->id,
                 'old_values' => null,
                 'new_values' => [
-                    'tracking_number' => $s408->tracking_number,
+                    'tracking_number' => $s638->tracking_number,
                     'transport_mode' => 'ROAD',
-                    'origin' => 'NLRDD',
+                    'origin' => 'DEP-RTM',
                     'destination' => 'DEHAM',
-                    'cmr_number' => $s408->cmr_number,
+                    'cmr_number' => $s638->cmr_number,
                 ],
                 'ip_address' => '192.168.10.22',
-                'created_at' => $s408->created_at ?? $now->copy()->subDays(4),
+                'created_at' => $s638->created_at ?? $now->copy()->subDays(4),
             ];
         }
 
@@ -190,21 +190,21 @@ class AuditSeeder extends Seeder
             ];
         }
 
-        if ($exBorder408) {
+        if ($exBorder638) {
             $logs[] = [
                 'user_id' => $operator?->id,
                 'action' => 'EXCEPTION_REPORTED',
                 'auditable_type' => ShipmentException::class,
-                'auditable_id' => $exBorder408->id,
+                'auditable_id' => $exBorder638->id,
                 'old_values' => null,
                 'new_values' => [
-                    'shipment_tracking' => 'CTG-ROAD-2026-00408',
-                    'exception_code' => $exBorder408->exception_code,
-                    'severity' => $exBorder408->severity,
-                    'status' => $exBorder408->status,
+                    'shipment_tracking' => 'CTG-ROAD-2026-00638',
+                    'exception_code' => $exBorder638->exception_code,
+                    'severity' => $exBorder638->severity,
+                    'status' => $exBorder638->status,
                 ],
                 'ip_address' => '192.168.10.22',
-                'created_at' => $exBorder408->detected_at,
+                'created_at' => $exBorder638->detected_at,
             ];
         }
 

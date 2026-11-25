@@ -97,6 +97,7 @@ class ShipmentCsvImportService
         $carriersByCode = Carrier::where('is_active', true)->get()->keyBy(fn ($c) => strtoupper(trim($c->code)));
         $carriersById = Carrier::where('is_active', true)->get()->keyBy('id');
         $locationsByUnlocode = Location::all()->keyBy(fn ($l) => strtoupper(trim($l->unlocode)));
+        $locationsByIata = Location::whereNotNull('iata_code')->get()->keyBy(fn ($l) => strtoupper(trim($l->iata_code)));
         $locationsById = Location::all()->keyBy('id');
         $customersByEmail = User::where('role', 'customer')->get()->keyBy(fn ($u) => strtolower(trim($u->email)));
         $customersById = User::where('role', 'customer')->get()->keyBy('id');
@@ -195,12 +196,17 @@ class ShipmentCsvImportService
                     $l = $locationsByUnlocode[$originUpper];
                     $originId = $l->id;
                     $originName = $l->name;
-                    $originUnlocode = $l->unlocode;
+                    $originUnlocode = $l->display_code;
+                } elseif (isset($locationsByIata[$originUpper])) {
+                    $l = $locationsByIata[$originUpper];
+                    $originId = $l->id;
+                    $originName = $l->name;
+                    $originUnlocode = $l->display_code;
                 } elseif (is_numeric($rawOrigin) && isset($locationsById[(int) $rawOrigin])) {
                     $l = $locationsById[(int) $rawOrigin];
                     $originId = $l->id;
                     $originName = $l->name;
-                    $originUnlocode = $l->unlocode;
+                    $originUnlocode = $l->display_code;
                 } else {
                     $errors[] = "Unknown origin location: '{$rawOrigin}'.";
                 }
@@ -220,12 +226,17 @@ class ShipmentCsvImportService
                     $l = $locationsByUnlocode[$destUpper];
                     $destId = $l->id;
                     $destName = $l->name;
-                    $destUnlocode = $l->unlocode;
+                    $destUnlocode = $l->display_code;
+                } elseif (isset($locationsByIata[$destUpper])) {
+                    $l = $locationsByIata[$destUpper];
+                    $destId = $l->id;
+                    $destName = $l->name;
+                    $destUnlocode = $l->display_code;
                 } elseif (is_numeric($rawDest) && isset($locationsById[(int) $rawDest])) {
                     $l = $locationsById[(int) $rawDest];
                     $destId = $l->id;
                     $destName = $l->name;
-                    $destUnlocode = $l->unlocode;
+                    $destUnlocode = $l->display_code;
                 } else {
                     $errors[] = "Unknown destination location: '{$rawDest}'.";
                 }

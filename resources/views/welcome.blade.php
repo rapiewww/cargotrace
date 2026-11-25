@@ -514,7 +514,7 @@
                         </div>
                         <h3 class="text-lg font-bold theme-heading tracking-tight">Shipment tracking & visibility</h3>
                         <p class="text-xs sm:text-sm theme-text-secondary leading-relaxed">
-                            Track container consignments by waybill number, review verified milestone progression, check destination seaport weather, and view arrival estimates.
+                            Track consignments by tracking number, review verified milestone progression, check destination seaport weather, and view arrival estimates.
                         </p>
                         <div class="flex flex-wrap gap-1.5 pt-1">
                             <span class="text-[11px] px-2 py-0.5 rounded theme-card-elevated border theme-border theme-text-secondary font-mono">Consignment tracking</span>

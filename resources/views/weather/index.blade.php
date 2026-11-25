@@ -51,7 +51,7 @@
                         <optgroup label="Ports on active routes">
                             @foreach($activeRoutePorts as $p)
                                 <option value="{{ $p->id }}" {{ (string)$p->id === (string)$selectedPort['id'] ? 'selected' : '' }}>
-                                    ★ {{ $p->name }} ({{ $p->unlocode }})
+                                    ★ {{ $p->name }} ({{ $p->display_code }})
                                 </option>
                             @endforeach
                         </optgroup>
@@ -60,7 +60,7 @@
                     <optgroup label="All locations">
                         @foreach($otherPorts as $p)
                             <option value="{{ $p->id }}" {{ (string)$p->id === (string)$selectedPort['id'] ? 'selected' : '' }}>
-                                {{ $p->name }} ({{ $p->unlocode }})
+                                {{ $p->name }} ({{ $p->display_code }})
                             </option>
                         @endforeach
                     </optgroup>
@@ -78,7 +78,7 @@
                 <div>
                     <div class="flex items-center gap-2">
                         <span class="text-xs font-medium text-cyan-600 dark:text-cyan-400">
-                            Terminal location &bull; UN/LOCODE: <span class="font-mono">{{ $selectedPort['unlocode'] }}</span>
+                            Terminal location &bull; {{ $selectedPort['code_type'] ?? 'Code' }}: <span class="font-mono">{{ $selectedPort['code'] ?? $selectedPort['unlocode'] }}</span>
                         </span>
                         @if($selectedPort['is_active_route'])
                             <span class="text-[10px] font-medium px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30">
@@ -331,7 +331,7 @@
                 <thead>
                     <tr class="border-b theme-border text-[11px] font-mono uppercase tracking-wider theme-text-secondary">
                         <th class="py-3 px-4">Seaport Terminal</th>
-                        <th class="py-3 px-4">UN/LOCODE</th>
+                        <th class="py-3 px-4">Code</th>
                         <th class="py-3 px-4">Condition</th>
                         <th class="py-3 px-4">Temp</th>
                         <th class="py-3 px-4">Wind Speed</th>

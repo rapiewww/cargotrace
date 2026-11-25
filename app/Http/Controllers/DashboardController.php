@@ -222,10 +222,8 @@ class DashboardController extends Controller
         $freeDaysAllowed = (int) (Setting::get('free_days_after_arrival') ?? config('cargotrace.free_time.days', 5));
 
         $arrivedShipments = (clone $shipmentQuery)
-            ->where(function ($q) {
-                $q->whereNotNull('actual_arrival_at')
-                    ->orWhere('status', 'DELIVERED');
-            })
+            ->where('status', '!=', 'DELIVERED')
+            ->whereNotNull('actual_arrival_at')
             ->with(['originLocation', 'destinationLocation', 'carrier', 'items', 'trackingEvents'])
             ->get();
 
@@ -282,7 +280,9 @@ class DashboardController extends Controller
             $weatherPorts[] = [
                 'name' => $loc->name,
                 'city' => $loc->city,
-                'unlocode' => $loc->unlocode,
+                'code' => $loc->display_code,
+                'code_type' => $loc->code_type_label,
+                'unlocode' => $loc->display_code,
                 'weather' => $weather,
                 'data_source' => $weather['data_source'] ?? 'live',
             ];
@@ -292,6 +292,8 @@ class DashboardController extends Controller
         $selectedPort = $weatherPorts[0] ?? [
             'name' => 'Port of Tanjung Priok',
             'city' => 'Jakarta',
+            'code' => 'IDJKT',
+            'code_type' => 'UN/LOCODE',
             'unlocode' => 'IDJKT',
             'weather' => $this->weatherService->getPortWeather(WeatherService::DEFAULT_LATITUDE, WeatherService::DEFAULT_LONGITUDE, WeatherService::DEFAULT_PORT_NAME),
             'data_source' => 'live',
@@ -318,18 +320,30 @@ class DashboardController extends Controller
                 'carrier_mode' => $s->carrier?->mode ?? $s->transport_mode ?? 'SEA',
                 'origin' => [
                     'name' => $s->originLocation?->name ?? 'Origin',
+                    'short_name' => $s->originLocation?->short_name ?? 'Origin',
+                    'code' => $s->originLocation?->display_code ?? 'ORI',
+                    'code_type' => $s->originLocation?->code_type_label ?? 'Code',
+                    'unlocode' => $s->originLocation?->display_code ?? 'ORI',
                     'city' => $s->originLocation?->city ?? '',
                     'lat' => (float) ($s->originLocation?->latitude ?? 0),
                     'lng' => (float) ($s->originLocation?->longitude ?? 0),
                 ],
                 'destination' => [
                     'name' => $s->destinationLocation?->name ?? 'Destination',
+                    'short_name' => $s->destinationLocation?->short_name ?? 'Destination',
+                    'code' => $s->destinationLocation?->display_code ?? 'DST',
+                    'code_type' => $s->destinationLocation?->code_type_label ?? 'Code',
+                    'unlocode' => $s->destinationLocation?->display_code ?? 'DST',
                     'city' => $s->destinationLocation?->city ?? '',
                     'lat' => (float) ($s->destinationLocation?->latitude ?? 0),
                     'lng' => (float) ($s->destinationLocation?->longitude ?? 0),
                 ],
                 'current' => $s->currentLocation ? [
                     'name' => $s->currentLocation->name,
+                    'short_name' => $s->currentLocation->short_name,
+                    'code' => $s->currentLocation->display_code,
+                    'code_type' => $s->currentLocation->code_type_label,
+                    'unlocode' => $s->currentLocation->display_code,
                     'lat' => (float) $s->currentLocation->latitude,
                     'lng' => (float) $s->currentLocation->longitude,
                 ] : null,

@@ -355,9 +355,9 @@ class LocationSeeder extends Seeder
             // AIRPORTS (10 IATA cargo hubs, type = AIRPORT)
             // =================================================================
             [
-                'unlocode' => 'IDKNO',
+                'unlocode' => 'KNO',
                 'iata_code' => 'KNO',
-                'name' => 'Kualanamu International Airport Cargo Terminal (KNO)',
+                'name' => 'Kualanamu International Airport Cargo Terminal',
                 'city' => 'Medan',
                 'country' => 'Indonesia',
                 'country_code' => 'ID',
@@ -385,9 +385,9 @@ class LocationSeeder extends Seeder
                 ],
             ],
             [
-                'unlocode' => 'IDCGK',
+                'unlocode' => 'CGK',
                 'iata_code' => 'CGK',
-                'name' => 'Soekarno-Hatta International Airport Cargo Terminal (CGK)',
+                'name' => 'Soekarno-Hatta International Airport Cargo Terminal',
                 'city' => 'Jakarta',
                 'country' => 'Indonesia',
                 'country_code' => 'ID',
@@ -415,9 +415,9 @@ class LocationSeeder extends Seeder
                 ],
             ],
             [
-                'unlocode' => 'SGCHG',
+                'unlocode' => 'SIN',
                 'iata_code' => 'SIN',
-                'name' => 'Singapore Changi Airport Airfreight Centre (SIN)',
+                'name' => 'Singapore Changi Airport Airfreight Centre',
                 'city' => 'Singapore',
                 'country' => 'Singapore',
                 'country_code' => 'SG',
@@ -445,9 +445,9 @@ class LocationSeeder extends Seeder
                 ],
             ],
             [
-                'unlocode' => 'AEDXB',
+                'unlocode' => 'DXB',
                 'iata_code' => 'DXB',
-                'name' => 'Dubai International Airport Cargo Mega Terminal (DXB)',
+                'name' => 'Dubai International Airport Cargo Mega Terminal',
                 'city' => 'Dubai',
                 'country' => 'United Arab Emirates',
                 'country_code' => 'AE',
@@ -475,9 +475,9 @@ class LocationSeeder extends Seeder
                 ],
             ],
             [
-                'unlocode' => 'NLAMS',
+                'unlocode' => 'AMS',
                 'iata_code' => 'AMS',
-                'name' => 'Amsterdam Airport Schiphol Cargo (AMS)',
+                'name' => 'Amsterdam Airport Schiphol Cargo',
                 'city' => 'Amsterdam',
                 'country' => 'Netherlands',
                 'country_code' => 'NL',
@@ -505,9 +505,9 @@ class LocationSeeder extends Seeder
                 ],
             ],
             [
-                'unlocode' => 'FRCDG',
+                'unlocode' => 'CDG',
                 'iata_code' => 'CDG',
-                'name' => 'Paris Charles de Gaulle Airport Cargo City (CDG)',
+                'name' => 'Paris Charles de Gaulle Airport Cargo City',
                 'city' => 'Paris',
                 'country' => 'France',
                 'country_code' => 'FR',
@@ -535,9 +535,9 @@ class LocationSeeder extends Seeder
                 ],
             ],
             [
-                'unlocode' => 'DEFRA',
+                'unlocode' => 'FRA',
                 'iata_code' => 'FRA',
-                'name' => 'Frankfurt Airport CargoCity South (FRA)',
+                'name' => 'Frankfurt Airport CargoCity South',
                 'city' => 'Frankfurt',
                 'country' => 'Germany',
                 'country_code' => 'DE',
@@ -565,9 +565,9 @@ class LocationSeeder extends Seeder
                 ],
             ],
             [
-                'unlocode' => 'INBOM',
+                'unlocode' => 'BOM',
                 'iata_code' => 'BOM',
-                'name' => 'Chhatrapati Shivaji Maharaj International Airport Cargo (BOM)',
+                'name' => 'Chhatrapati Shivaji Maharaj International Airport Cargo',
                 'city' => 'Mumbai',
                 'country' => 'India',
                 'country_code' => 'IN',
@@ -595,9 +595,9 @@ class LocationSeeder extends Seeder
                 ],
             ],
             [
-                'unlocode' => 'USJFK',
+                'unlocode' => 'JFK',
                 'iata_code' => 'JFK',
-                'name' => 'John F. Kennedy International Airport Cargo Center (JFK)',
+                'name' => 'John F. Kennedy International Airport Cargo Center',
                 'city' => 'New York',
                 'country' => 'United States',
                 'country_code' => 'US',
@@ -625,9 +625,9 @@ class LocationSeeder extends Seeder
                 ],
             ],
             [
-                'unlocode' => 'IDBTJ',
+                'unlocode' => 'BTJ',
                 'iata_code' => 'BTJ',
-                'name' => 'Sultan Iskandar Muda International Airport Cargo (BTJ)',
+                'name' => 'Sultan Iskandar Muda International Airport Cargo',
                 'city' => 'Banda Aceh',
                 'country' => 'Indonesia',
                 'country_code' => 'ID',
@@ -656,10 +656,10 @@ class LocationSeeder extends Seeder
             ],
 
             // =================================================================
-            // DEPOTS, WAREHOUSES & BORDERS (7 ROAD handover locations)
+            // DEPOTS, WAREHOUSES & BORDERS (7 ROAD internal facility codes)
             // =================================================================
             [
-                'unlocode' => 'IDLSW',
+                'unlocode' => 'DEP-LSW',
                 'iata_code' => null,
                 'name' => 'Lhokseumawe Spice & Patchouli Warehouse',
                 'city' => 'Lhokseumawe',
@@ -689,7 +689,7 @@ class LocationSeeder extends Seeder
                 ],
             ],
             [
-                'unlocode' => 'IDMES',
+                'unlocode' => 'DEP-MES',
                 'iata_code' => null,
                 'name' => 'Medan Consolidation Depot',
                 'city' => 'Medan',
@@ -719,7 +719,7 @@ class LocationSeeder extends Seeder
                 ],
             ],
             [
-                'unlocode' => 'IDACE',
+                'unlocode' => 'DEP-ACE',
                 'iata_code' => null,
                 'name' => 'Banda Aceh Spice Collection Depot',
                 'city' => 'Banda Aceh',
@@ -749,7 +749,7 @@ class LocationSeeder extends Seeder
                 ],
             ],
             [
-                'unlocode' => 'INNSC',
+                'unlocode' => 'DEP-NSC',
                 'iata_code' => null,
                 'name' => 'Nhava Sheva Container Freight Station (CFS)',
                 'city' => 'Navi Mumbai',
@@ -779,7 +779,7 @@ class LocationSeeder extends Seeder
                 ],
             ],
             [
-                'unlocode' => 'FRGRS',
+                'unlocode' => 'DEP-GRS',
                 'iata_code' => null,
                 'name' => 'Grasse Aromatics & Fragrance Depot',
                 'city' => 'Grasse',
@@ -809,7 +809,7 @@ class LocationSeeder extends Seeder
                 ],
             ],
             [
-                'unlocode' => 'NLRDD',
+                'unlocode' => 'DEP-RTM',
                 'iata_code' => null,
                 'name' => 'Rotterdam South Spice Distribution Depot',
                 'city' => 'Rotterdam',
@@ -839,7 +839,7 @@ class LocationSeeder extends Seeder
                 ],
             ],
             [
-                'unlocode' => 'NLVEN',
+                'unlocode' => 'BRD-VEN',
                 'iata_code' => null,
                 'name' => 'Venlo NL/DE Freight Border Crossing',
                 'city' => 'Venlo',

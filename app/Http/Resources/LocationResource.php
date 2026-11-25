@@ -14,9 +14,14 @@ class LocationResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
+        $isSeaport = in_array(strtoupper((string) $this->type), ['PORT', 'SEAPORT'], true);
+
         return [
             'id' => $this->id,
-            'unlocode' => $this->unlocode,
+            'code' => $this->display_code,
+            'code_type' => $this->code_type_label,
+            'short_name' => $this->short_name,
+            'unlocode' => $isSeaport ? $this->unlocode : null,
             'iata_code' => $this->iata_code,
             'name' => $this->name,
             'city' => $this->city,

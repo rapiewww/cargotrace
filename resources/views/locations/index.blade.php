@@ -9,11 +9,11 @@
                     Global Ports & Checkpoints
                 </h1>
                 <span class="text-xs px-2.5 py-0.5 rounded-full bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 border border-cyan-500/20 font-mono">
-                    UN/LOCODE Network ({{ count($locations) }})
+                    Location Network ({{ count($locations) }})
                 </span>
             </div>
             <p class="text-xs sm:text-sm theme-text-secondary mt-1">
-                Primary container terminals and deepwater port calls with live telematics and local weather.
+                Seaports (UN/LOCODE), airports (IATA), and depots or borders (internal codes) with coordinates and local weather.
             </p>
         </div>
 
@@ -32,7 +32,10 @@
                 <div class="space-y-3">
                     <div class="flex items-start justify-between">
                         <div>
-                            <span class="text-xs font-mono font-bold text-amber-500 dark:text-amber-400 block">{{ $loc->unlocode }}</span>
+                            <div class="flex items-center gap-2">
+                                <span class="text-xs font-mono font-bold text-amber-500 dark:text-amber-400">{{ $loc->display_code }}</span>
+                                <span class="text-[10px] theme-text-muted font-sans">{{ $loc->code_type_label }}</span>
+                            </div>
                             <h3 class="text-base font-bold theme-heading leading-tight mt-0.5 tracking-tight">{{ $loc->name }}</h3>
                             <span class="text-xs theme-text-secondary">{{ $loc->city }}, {{ $loc->country }}</span>
                         </div>
@@ -75,14 +78,17 @@
             @csrf
             <div class="grid grid-cols-2 gap-3">
                 <div class="space-y-1.5">
-                    <label class="uppercase text-[10px] tracking-wider theme-text-muted font-semibold block">UN/LOCODE *</label>
-                    <input type="text" name="unlocode" required placeholder="IDJKT" class="w-full px-3.5 py-2.5 rounded-xl theme-input border font-mono uppercase focus:ring-1 focus:ring-cyan-500">
+                    <label class="uppercase text-[10px] tracking-wider theme-text-muted font-semibold block">Location Code *</label>
+                    <input type="text" name="unlocode" required placeholder="IDJKT / CGK / DEP-MES" class="w-full px-3.5 py-2.5 rounded-xl theme-input border font-mono uppercase focus:ring-1 focus:ring-cyan-500">
                 </div>
                 <div class="space-y-1.5">
                     <label class="uppercase text-[10px] tracking-wider theme-text-muted font-semibold block">Location Type *</label>
                     <select name="type" required class="w-full px-3.5 py-2.5 rounded-xl theme-input border focus:ring-1 focus:ring-cyan-500 font-mono">
                         <option value="PORT" selected>PORT (Seaport)</option>
                         <option value="AIRPORT">AIRPORT</option>
+                        <option value="DEPOT">DEPOT</option>
+                        <option value="WAREHOUSE">WAREHOUSE</option>
+                        <option value="BORDER">BORDER</option>
                         <option value="HUB">HUB (Distribution)</option>
                         <option value="CUSTOMS">CUSTOMS</option>
                     </select>

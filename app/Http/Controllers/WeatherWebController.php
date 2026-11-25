@@ -48,7 +48,8 @@ class WeatherWebController extends Controller
         if ($selectedParam) {
             $selectedLocation = $allLocations->first(function ($loc) use ($selectedParam) {
                 return (string) $loc->id === (string) $selectedParam
-                    || strtoupper($loc->unlocode ?? '') === strtoupper($selectedParam);
+                    || strtoupper($loc->unlocode ?? '') === strtoupper($selectedParam)
+                    || strtoupper($loc->iata_code ?? '') === strtoupper($selectedParam);
             });
         }
 
@@ -62,7 +63,9 @@ class WeatherWebController extends Controller
                 'name' => $selectedLocation->name,
                 'city' => $selectedLocation->city ?? '',
                 'country' => $selectedLocation->country ?? '',
-                'unlocode' => $selectedLocation->unlocode ?: 'PORT',
+                'code' => $selectedLocation->display_code ?: 'PORT',
+                'code_type' => $selectedLocation->code_type_label,
+                'unlocode' => $selectedLocation->display_code ?: 'PORT',
                 'latitude' => (float) $selectedLocation->latitude,
                 'longitude' => (float) $selectedLocation->longitude,
                 'is_active_route' => in_array($selectedLocation->id, $activePortIds),
@@ -73,6 +76,8 @@ class WeatherWebController extends Controller
                 'name' => 'Port of Tanjung Priok',
                 'city' => 'Jakarta',
                 'country' => 'Indonesia',
+                'code' => 'IDJKT',
+                'code_type' => 'UN/LOCODE',
                 'unlocode' => 'IDJKT',
                 'latitude' => -6.1038,
                 'longitude' => 106.8824,
@@ -122,7 +127,9 @@ class WeatherWebController extends Controller
             $compareData[] = [
                 'id' => $loc->id,
                 'name' => $loc->name,
-                'unlocode' => $loc->unlocode ?? 'PORT',
+                'code' => $loc->display_code ?: 'PORT',
+                'code_type' => $loc->code_type_label,
+                'unlocode' => $loc->display_code ?: 'PORT',
                 'city' => $loc->city ?? '',
                 'country' => $loc->country ?? '',
                 'temp_c' => $cWeather['temperature_c'] ?? null,

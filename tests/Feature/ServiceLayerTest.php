@@ -215,7 +215,7 @@ test('ShipmentService enforces strict status transitions and handles currency co
 test('TrackingService validates chronological timestamps and attaches live weather', function () {
     $trackingService = app(TrackingService::class);
     $shipment = Shipment::where('status', 'CREATED')->first();
-    $location = Location::where('unlocode', 'AEDXB')->first();
+    $location = Location::where('unlocode', 'DXB')->first();
 
     // 1. Valid event
     $event1 = $trackingService->addTrackingEvent($shipment, [

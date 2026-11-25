@@ -84,7 +84,7 @@
             <table class="w-full text-left text-xs">
                 <thead class="theme-card-elevated theme-text-muted uppercase tracking-wider text-[10px] border-b theme-border font-mono">
                     <tr>
-                        <th class="py-3.5 px-4">Shipment Resi</th>
+                        <th class="py-3.5 px-4">Tracking no.</th>
                         <th class="py-3.5 px-4">Code & Severity</th>
                         <th class="py-3.5 px-4">Incident Title</th>
                         <th class="py-3.5 px-4">Status</th>
@@ -100,7 +100,7 @@
                                     {{ $exc->shipment->tracking_number }}
                                 </a>
                                 <span class="text-[10px] theme-text-muted block font-sans mt-0.5">
-                                    {{ $exc->shipment->originLocation->unlocode }} &rarr; {{ $exc->shipment->destinationLocation->unlocode }}
+                                    {{ $exc->shipment->originLocation->short_name }} to {{ $exc->shipment->destinationLocation->short_name }} ({{ $exc->shipment->originLocation->display_code }} &rarr; {{ $exc->shipment->destinationLocation->display_code }})
                                 </span>
                             </td>
                             <td class="py-4 px-4 font-mono">

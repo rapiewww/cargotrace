@@ -46,6 +46,20 @@ export function updateMaritimeGlobeTheme(theme) {
         .labelColor(() => cfg.labelColor);
 }
 
+function getLocCode(loc) {
+    return loc?.display_code || loc?.code || loc?.unlocode || '';
+}
+
+function getLocCodeType(loc) {
+    if (loc?.code_type_label || loc?.code_type) {
+        return loc.code_type_label || loc.code_type;
+    }
+    const type = (loc?.type || '').toUpperCase();
+    if (type === 'AIRPORT') return 'IATA';
+    if (type === 'PORT' || type === 'SEAPORT') return 'UN/LOCODE';
+    return 'Internal code';
+}
+
 /**
  * Initialize 3D Earth Globe with Ocean Container Routes & Seaports
  */
@@ -129,16 +143,18 @@ export function initMaritimeGlobe(containerId, options = {}) {
                 status: s.status,
                 isDelayed,
                 color: hasException ? '#F43F5E' : (isDelayed ? '#F59E0B' : (mode === 'AIR' ? '#38BDF8' : (mode === 'ROAD' ? '#34D399' : '#60A5FA'))),
-                name: `${modeIcon} ${s.tracking_number} [${modeLabel}] (${orig?.unlocode || 'ORI'} → ${dest?.unlocode || 'DST'})`,
+                name: `${modeIcon} ${s.tracking_number} [${modeLabel}] (${getLocCode(orig) || 'ORI'} → ${getLocCode(dest) || 'DST'})`,
             });
         }
     });
 
-    // Format Seaport points
+    // Format location points
     const pointsData = currentLocations.map(loc => ({
         id: loc.id,
         name: loc.name,
-        unlocode: loc.unlocode,
+        code: getLocCode(loc),
+        codeType: getLocCodeType(loc),
+        unlocode: getLocCode(loc),
         country: loc.country,
         lat: parseFloat(loc.latitude),
         lng: parseFloat(loc.longitude),
@@ -146,11 +162,11 @@ export function initMaritimeGlobe(containerId, options = {}) {
         color: '#2DD4BF',
     }));
 
-    // Format Seaport labels
+    // Format location labels
     const labelsData = currentLocations.map(loc => ({
         lat: parseFloat(loc.latitude),
         lng: parseFloat(loc.longitude),
-        text: loc.unlocode,
+        text: getLocCode(loc),
         size: 1.1,
     }));
 
@@ -188,7 +204,7 @@ export function initMaritimeGlobe(containerId, options = {}) {
         .pointLabel(d => `
             <div style="font-family: 'Inter', sans-serif; background: var(--bg-surface, #0B101E); border: 1px solid var(--border-color, #1E293B); border-radius: 8px; padding: 6px 10px; color: var(--text-primary, #fff); font-size: 11px; box-shadow: 0 4px 12px rgba(0,0,0,0.3);">
                 <div style="font-weight: 700; color: #2DD4BF;">${d.name}</div>
-                <div style="color: var(--text-secondary, #94A3B8); margin-top: 2px;">UN/LOCODE: <b>${d.unlocode}</b> &bull; ${d.country}</div>
+                <div style="color: var(--text-secondary, #94A3B8); margin-top: 2px;">${d.codeType}: <b>${d.code}</b> &bull; ${d.country}</div>
             </div>
         `)
         // Labels
@@ -346,7 +362,7 @@ export function initMaritime2DMap(containerId, options = {}) {
         marker.bindPopup(`
             <div style="font-family: 'Inter', sans-serif; font-size: 11px;">
                 <div style="font-weight: 700; color: #0D9488;">${loc.name}</div>
-                <div style="color: #64748B; margin-top: 2px;">UN/LOCODE: <b>${loc.unlocode}</b> &bull; ${loc.country}</div>
+                <div style="color: #64748B; margin-top: 2px;">${getLocCodeType(loc)}: <b>${getLocCode(loc)}</b> &bull; ${loc.country}</div>
             </div>
         `);
     });

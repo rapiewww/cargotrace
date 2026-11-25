@@ -195,7 +195,7 @@
                             <option value="">No Checkpoint Selected</option>
                             @foreach($locations as $loc)
                                 <option value="{{ $loc->id }}" {{ old('current_location_id', $shipment->current_location_id) == $loc->id ? 'selected' : '' }}>
-                                    {{ $loc->city }} ({{ $loc->unlocode }})
+                                    {{ $loc->name }} ({{ $loc->display_code }})
                                 </option>
                             @endforeach
                         </select>
@@ -337,7 +337,7 @@
         matchingLocs.forEach(l => {
             const opt = document.createElement('option');
             opt.value = l.id;
-            opt.textContent = `${l.city} (${l.unlocode}) • [${l.type}]`;
+            opt.textContent = `${l.name} (${l.display_code || l.unlocode}) [${l.type}]`;
             if (String(l.id) === String(currentOrigin)) {
                 opt.selected = true;
             }
@@ -350,7 +350,7 @@
         matchingLocs.forEach(l => {
             const opt = document.createElement('option');
             opt.value = l.id;
-            opt.textContent = `${l.city} (${l.unlocode}) • [${l.type}]`;
+            opt.textContent = `${l.name} (${l.display_code || l.unlocode}) [${l.type}]`;
             if (String(l.id) === String(currentDest)) {
                 opt.selected = true;
             }

@@ -68,30 +68,34 @@ Every customer account is strictly scoped to its own 8 consignments via `Shipmen
 
 ### Airports (10 IATA Cargo Hubs, `type = AIRPORT`)
 
-| Locode / IATA | Name | Country | Coordinates (Lat, Lng) | Timezone |
+Airports store and display their 3-letter IATA code alone (`CGK`, `DXB`, `JFK`, `SIN`, `KNO`, `BTJ`, `AMS`, `CDG`, `FRA`, `BOM`). Country-prefixed pseudo-codes (`IDCGK`, `SGCHG`, and similar) are not used.
+
+| IATA Code | Name | Country | Coordinates (Lat, Lng) | Timezone |
 |:---:|:---|:---:|:---:|:---|
-| `IDKNO` / `KNO` | Kualanamu International Airport Cargo | ID | `3.6422220, 98.8852780` | `Asia/Jakarta` |
-| `IDCGK` / `CGK` | Soekarno-Hatta International Airport Cargo | ID | `-6.1255670, 106.6558970` | `Asia/Jakarta` |
-| `SGCHG` / `SIN` | Singapore Changi Airport Airfreight Centre | SG | `1.3644200, 103.9915310` | `Asia/Singapore` |
-| `AEDXB` / `DXB` | Dubai International Airport Cargo | AE | `25.2527780, 55.3644440` | `Asia/Dubai` |
-| `NLAMS` / `AMS` | Amsterdam Airport Schiphol Cargo | NL | `52.3086130, 4.7638890` | `Europe/Amsterdam` |
-| `FRCDG` / `CDG` | Paris Charles de Gaulle Cargo City | FR | `49.0096910, 2.5479250` | `Europe/Paris` |
-| `DEFRA` / `FRA` | Frankfurt Airport CargoCity South | DE | `50.0379330, 8.5621520` | `Europe/Berlin` |
-| `INBOM` / `BOM` | Chhatrapati Shivaji Maharaj Cargo | IN | `19.0895590, 72.8656140` | `Asia/Kolkata` |
-| `USJFK` / `JFK` | John F. Kennedy Cargo Center | US | `40.6413110, -73.7781390` | `America/New_York` |
-| `IDBTJ` / `BTJ` | Sultan Iskandar Muda Cargo | ID | `5.5235220, 95.4203720` | `Asia/Jakarta` |
+| `KNO` | Kualanamu International Airport Cargo Terminal | ID | `3.6422220, 98.8852780` | `Asia/Jakarta` |
+| `CGK` | Soekarno-Hatta International Airport Cargo Terminal | ID | `-6.1255670, 106.6558970` | `Asia/Jakarta` |
+| `SIN` | Singapore Changi Airport Airfreight Centre | SG | `1.3644200, 103.9915310` | `Asia/Singapore` |
+| `DXB` | Dubai International Airport Cargo Mega Terminal | AE | `25.2527780, 55.3644440` | `Asia/Dubai` |
+| `AMS` | Amsterdam Airport Schiphol Cargo | NL | `52.3086130, 4.7638890` | `Europe/Amsterdam` |
+| `CDG` | Paris Charles de Gaulle Airport Cargo City | FR | `49.0096910, 2.5479250` | `Europe/Paris` |
+| `FRA` | Frankfurt Airport CargoCity South | DE | `50.0379330, 8.5621520` | `Europe/Berlin` |
+| `BOM` | Chhatrapati Shivaji Maharaj International Airport Cargo | IN | `19.0895590, 72.8656140` | `Asia/Kolkata` |
+| `JFK` | John F. Kennedy International Airport Cargo Center | US | `40.6413110, -73.7781390` | `America/New_York` |
+| `BTJ` | Sultan Iskandar Muda International Airport Cargo | ID | `5.5235220, 95.4203720` | `Asia/Jakarta` |
 
 ### Depots, Warehouses & Border Crossing (7 ROAD Locations)
 
-| Code | Type | Name | Country | Coordinates (Lat, Lng) | Timezone |
+These `DEP-*` and `BRD-*` identifiers are **internal CargoTrace facility codes**, not UN/LOCODEs, and are formatted so they cannot be mistaken for UN/LOCODE entries.
+
+| Internal Code | Type | Name | Country | Coordinates (Lat, Lng) | Timezone |
 |:---:|:---:|:---|:---:|:---:|:---|
-| `IDLSW` | `WAREHOUSE` | Lhokseumawe Spice & Patchouli Warehouse | ID | `5.1801000, 97.1507000` | `Asia/Jakarta` |
-| `IDMES` | `DEPOT` | Medan Consolidation Depot | ID | `3.5951960, 98.6722230` | `Asia/Jakarta` |
-| `IDACE` | `DEPOT` | Banda Aceh Spice Collection Depot | ID | `5.5482900, 95.3237530` | `Asia/Jakarta` |
-| `INNSC` | `DEPOT` | Nhava Sheva Container Freight Station | IN | `18.9632000, 72.9765000` | `Asia/Kolkata` |
-| `FRGRS` | `DEPOT` | Grasse Aromatics & Fragrance Depot | FR | `43.6584000, 6.9224000` | `Europe/Paris` |
-| `NLRDD` | `DEPOT` | Rotterdam South Spice Distribution Depot | NL | `51.8742000, 4.4628000` | `Europe/Amsterdam` |
-| `NLVEN` | `BORDER` | Venlo NL/DE Freight Border Crossing | NL | `51.3703750, 6.1724030` | `Europe/Amsterdam` |
+| `DEP-LSW` | `WAREHOUSE` | Lhokseumawe Spice & Patchouli Warehouse | ID | `5.1801000, 97.1507000` | `Asia/Jakarta` |
+| `DEP-MES` | `DEPOT` | Medan Consolidation Depot | ID | `3.5951960, 98.6722230` | `Asia/Jakarta` |
+| `DEP-ACE` | `DEPOT` | Banda Aceh Spice Collection Depot | ID | `5.5482900, 95.3237530` | `Asia/Jakarta` |
+| `DEP-NSC` | `DEPOT` | Nhava Sheva Container Freight Station (CFS) | IN | `18.9632000, 72.9765000` | `Asia/Kolkata` |
+| `DEP-GRS` | `DEPOT` | Grasse Aromatics & Fragrance Depot | FR | `43.6584000, 6.9224000` | `Europe/Paris` |
+| `DEP-RTM` | `DEPOT` | Rotterdam South Spice Distribution Depot | NL | `51.8742000, 4.4628000` | `Europe/Amsterdam` |
+| `BRD-VEN` | `BORDER` | Venlo NL/DE Freight Border Crossing | NL | `51.3703750, 6.1724030` | `Europe/Amsterdam` |
 
 ---
 
@@ -120,8 +124,9 @@ Every customer account is strictly scoped to its own 8 consignments via `Shipmen
 ## 6. Shipments (48 Consignments Across 10 Weeks)
 
 - **Mode Split:** 22 `SEA`, 14 `AIR`, 12 `ROAD` (Total = 48).
-- **Status Split:** 6 `CREATED`/`BOOKED` (3 `CREATED`, 3 `BOOKED`), 24 `IN_TRANSIT`, 18 `DELIVERED`.
-- **Tracking Numbers:** `CTG-{SEA|AIR|ROAD}-2026-NNNNN`.
+- **Status Split:** 6 `CREATED`/`BOOKED` (3 `CREATED`, 3 `BOOKED`), 22 `IN_TRANSIT`, 20 `DELIVERED`.
+- **Free-Time Dwell Tail:** Shipments whose arrival or discharge milestone is older than the 5-day free-time limit are `DELIVERED`, except for 3 active `IN_TRANSIT` shipments awaiting customs or terminal gate-out that exceed the 5-day limit by 1 to 4 days (`CTG-SEA-2026-00244` at +2d, `CTG-SEA-2026-00509` at +4d, `CTG-AIR-2026-00593` at +1d). Four additional `IN_TRANSIT` shipments arrived within the last 1 to 4 days and remain active within the free-time allowance.
+- **Tracking Numbers:** `CTG-{SEA|AIR|ROAD}-2026-NNNNN` with irregular, non-sequential suffixes per mode (preserving the three canonical sample tracking numbers).
 - **Commodities:** Nutmeg, cloves, cinnamon (cassia), black pepper, ginger, and patchouli essential oil, billed in `USD`, `EUR`, `INR`, and `IDR` with Incoterms (`FOB`, `CIF`, `CFR`, `CIP`, `DAP`, `FCA`, `EXW`).
 - **Reference Generators:**
   - `SEA`: ISO 6346 container numbers (`App\Support\Iso6346`) and Ocean B/L (`App\Support\RoadReference::billOfLading`).
@@ -134,7 +139,7 @@ Every customer account is strictly scoped to its own 8 consignments via `Shipmen
 |:---|:---:|:---|:---:|:---:|:---|
 | `CTG-SEA-2026-00189` | `SEA` | `IDJKT` to `NLRTM` | `DELIVERED` | `LOW` (+10.0h) | `WEATHER_DELAY` (`RESOLVED`) |
 | `CTG-SEA-2026-00244` | `SEA` | `IDBLW` to `USNYC` | `IN_TRANSIT` | `HIGH` (+56.0h) | `CUSTOMS_HOLD` (`INVESTIGATING`) |
-| `CTG-AIR-2026-00678` | `AIR` | `IDKNO` to `FRCDG` | `IN_TRANSIT` | `LOW` (+2.5h) | `WEATHER_DELAY` (`OPEN`) |
+| `CTG-AIR-2026-00678` | `AIR` | `KNO` to `CDG` | `IN_TRANSIT` | `LOW` (+2.5h) | `WEATHER_DELAY` (`OPEN`) |
 
 ### Per-Mode Delay Thresholds
 
@@ -148,26 +153,26 @@ Delays follow the deterministic per-mode thresholds in `config/cargotrace.php` a
 
 ---
 
-## 7. Exceptions (14 Across All 9 Codes)
+## 7. Exceptions (14 Across All 9 Codes: 6 Open/Investigating, 8 Resolved)
 
-Every exception is valid for its shipment's transport mode (`ExceptionService::MODE_ALLOWED_EXCEPTIONS`), and every `OPEN` or `INVESTIGATING` exception belongs to an `IN_TRANSIT` shipment.
+Every exception is valid for its shipment's transport mode (`ExceptionService::MODE_ALLOWED_EXCEPTIONS`), and all 6 active (`OPEN` or `INVESTIGATING`) exceptions belong to `IN_TRANSIT` shipments.
 
 | Tracking Number | Mode | Code | Severity | Status | Detected / Resolved |
 |:---|:---:|:---|:---:|:---:|:---|
 | `CTG-SEA-2026-00244` | `SEA` | `CUSTOMS_HOLD` | `HIGH` | `INVESTIGATING` | `-14h` / open |
-| `CTG-SEA-2026-00104` | `SEA` | `CUSTOMS_HOLD` | `MEDIUM` | `RESOLVED` | `-12d` / `-10d` |
+| `CTG-SEA-2026-00218` | `SEA` | `CUSTOMS_HOLD` | `MEDIUM` | `RESOLVED` | `-12d` / `-10d` |
 | `CTG-SEA-2026-00189` | `SEA` | `WEATHER_DELAY` | `LOW` | `RESOLVED` | `-6d` / `-5d 14h` |
 | `CTG-AIR-2026-00678` | `AIR` | `WEATHER_DELAY` | `LOW` | `OPEN` | `-4h` / open |
-| `CTG-SEA-2026-00203` | `SEA` | `PORT_CONGESTION` | `MEDIUM` | `OPEN` | `-20h` / open |
-| `CTG-AIR-2026-00308` | `AIR` | `PORT_CONGESTION` | `LOW` | `INVESTIGATING` | `-8h` / open |
-| `CTG-SEA-2026-00102` | `SEA` | `DAMAGED` | `LOW` | `RESOLVED` | `-35d` / `-34d` |
-| `CTG-ROAD-2026-00406` | `ROAD` | `DAMAGED` | `MEDIUM` | `INVESTIGATING` | `-5h` / open |
-| `CTG-SEA-2026-00205` | `SEA` | `MISROUTED` | `HIGH` | `OPEN` | `-18h` / open |
-| `CTG-AIR-2026-00307` | `AIR` | `DOCUMENTATION_ISSUE` | `HIGH` | `OPEN` | `-10h` / open |
-| `CTG-SEA-2026-00105` | `SEA` | `DOCUMENTATION_ISSUE` | `MEDIUM` | `RESOLVED` | `-22d` / `-21d` |
-| `CTG-AIR-2026-00306` | `AIR` | `FLIGHT_OFFLOAD` | `HIGH` | `INVESTIGATING` | `-11h` / open |
-| `CTG-ROAD-2026-00408` | `ROAD` | `BORDER_QUEUE` | `HIGH` | `OPEN` | `-16h` / open |
-| `CTG-ROAD-2026-00407` | `ROAD` | `VEHICLE_BREAKDOWN` | `MEDIUM` | `INVESTIGATING` | `-7h` / open |
+| `CTG-SEA-2026-00509` | `SEA` | `PORT_CONGESTION` | `MEDIUM` | `OPEN` | `-20h` / open |
+| `CTG-AIR-2026-00642` | `AIR` | `PORT_CONGESTION` | `LOW` | `RESOLVED` | `-9d` / `-8d 16h` |
+| `CTG-SEA-2026-00137` | `SEA` | `DAMAGED` | `LOW` | `RESOLVED` | `-35d` / `-34d` |
+| `CTG-ROAD-2026-00356` | `ROAD` | `DAMAGED` | `MEDIUM` | `RESOLVED` | `-13d` / `-12d 10h` |
+| `CTG-SEA-2026-00582` | `SEA` | `MISROUTED` | `HIGH` | `RESOLVED` | `-18d` / `-16d` |
+| `CTG-AIR-2026-00195` | `AIR` | `DOCUMENTATION_ISSUE` | `HIGH` | `RESOLVED` | `-34d` / `-33d` |
+| `CTG-SEA-2026-00279` | `SEA` | `DOCUMENTATION_ISSUE` | `MEDIUM` | `RESOLVED` | `-22d` / `-21d` |
+| `CTG-AIR-2026-00451` | `AIR` | `FLIGHT_OFFLOAD` | `HIGH` | `INVESTIGATING` | `-11h` / open |
+| `CTG-ROAD-2026-00638` | `ROAD` | `BORDER_QUEUE` | `HIGH` | `OPEN` | `-16h` / open |
+| `CTG-ROAD-2026-00562` | `ROAD` | `VEHICLE_BREAKDOWN` | `MEDIUM` | `INVESTIGATING` | `-7h` / open |
 
 ---
 
@@ -198,9 +203,8 @@ The following reference codes, HS tariff subheadings, airline prefixes, and depo
 
 ### Location Codes & Coordinates to Double-Check (Verify)
 
-- `SGCHG`: synthetic unique `unlocode` used so Changi Airport `SIN` does not collide with `SGSIN` Seaport in the unique `unlocode` column (**Verify**).
-- `IDACE` (Banda Aceh Spice Collection Depot), `IDLSW` (Lhokseumawe Warehouse), `INNSC` (Nhava Sheva CFS), `FRGRS` (Grasse Depot), `NLRDD` (Rotterdam South Depot), `NLVEN` (Venlo Border Crossing): synthetic facility sub-codes and approximate city-level coordinates (**Verify** exact warehouse/CFS gate coordinates).
-- `IDBLW` (`3.7889, 98.6869`), `FRMRS` (`43.4139, 4.8556`), `AEJEA` (`25.0112, 55.0612`), `IDKNO` (`3.642222, 98.885278`), `IDBTJ` (`5.523522, 95.420372`): **Verify** exact terminal coordinates against UN/LOCODE and AIP publications.
+- `DEP-ACE` (Banda Aceh Spice Collection Depot), `DEP-LSW` (Lhokseumawe Warehouse), `DEP-MES` (Medan Consolidation Depot), `DEP-NSC` (Nhava Sheva CFS), `DEP-GRS` (Grasse Depot), `DEP-RTM` (Rotterdam South Depot), `BRD-VEN` (Venlo Border Crossing): internal CargoTrace facility codes (not UN/LOCODE) with approximate city-level coordinates (**Verify** exact warehouse/CFS gate coordinates).
+- `IDBLW` (`3.7889, 98.6869`), `FRMRS` (`43.4139, 4.8556`), `AEJEA` (`25.0112, 55.0612`), `KNO` (`3.642222, 98.885278`), `BTJ` (`5.523522, 95.420372`): **Verify** exact terminal coordinates against UN/LOCODE and AIP publications.
 
 ---
 

@@ -13,7 +13,7 @@
             Create Freight Consignment
         </h1>
         <p class="text-xs sm:text-sm theme-text-secondary">
-            Register freight waybill, schedule departure/arrival windows, and initialize milestone tracking.
+            Register shipment, schedule departure and arrival windows, and initialize milestone tracking.
         </p>
     </div>
 
@@ -343,7 +343,7 @@
         matchingLocs.forEach(l => {
             const opt = document.createElement('option');
             opt.value = l.id;
-            opt.textContent = `${l.city} (${l.unlocode}) • [${l.type}]`;
+            opt.textContent = `${l.name} (${l.display_code || l.unlocode}) [${l.type}]`;
             if (String(l.id) === String(currentOrigin)) {
                 opt.selected = true;
             }
@@ -356,7 +356,7 @@
         matchingLocs.forEach((l, idx) => {
             const opt = document.createElement('option');
             opt.value = l.id;
-            opt.textContent = `${l.city} (${l.unlocode}) • [${l.type}]`;
+            opt.textContent = `${l.name} (${l.display_code || l.unlocode}) [${l.type}]`;
             if (String(l.id) === String(currentDest) || (!currentDest && idx === 1)) {
                 opt.selected = true;
             }

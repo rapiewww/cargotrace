@@ -396,7 +396,7 @@
                                             {{ $ofs->tracking_number }}
                                         </a>
                                         <span class="text-[11px] theme-text-muted block font-sans">
-                                            {{ $ofs->carrier->name ?? 'Carrier' }} &bull; {{ $ofs->originLocation->unlocode ?? 'ORI' }} &rarr; {{ $ofs->destinationLocation->unlocode ?? 'DST' }}
+                                            {{ $ofs->carrier->name ?? 'Carrier' }} &bull; {{ $ofs->originLocation->short_name ?? 'Origin' }} to {{ $ofs->destinationLocation->short_name ?? 'Destination' }} ({{ $ofs->originLocation->display_code ?? 'ORI' }} &rarr; {{ $ofs->destinationLocation->display_code ?? 'DST' }})
                                         </span>
                                     </div>
                                     <span class="px-2 py-0.5 rounded-full text-[10px] font-bold font-mono bg-rose-500/15 text-rose-600 dark:text-rose-400 border border-rose-500/30 whitespace-nowrap">
@@ -436,7 +436,7 @@
                     <input
                         type="text"
                         id="activities-search-input"
-                        placeholder="Search waybill, reference, hub..."
+                        placeholder="Search tracking no., reference, hub..."
                         onkeyup="filterActivitiesTable()"
                         class="w-64 pl-9 pr-3 py-1.5 rounded-xl theme-input border text-xs focus:outline-none focus:border-cyan-500"
                     >
@@ -499,11 +499,11 @@
                                 <td class="py-3.5 px-4">
                                     <div class="space-y-1 max-w-xs">
                                         <div class="flex items-center justify-between text-[11px] font-mono">
-                                            <span class="font-bold theme-text-primary">{{ $orig->unlocode ?? 'ORI' }}</span>
+                                            <span class="font-bold theme-text-primary">{{ $orig->display_code ?? 'ORI' }}</span>
                                             <span class="text-[10px] theme-text-muted font-mono" title="Great-circle distance between locations">
                                                 {{ $s->status === 'DELIVERED' ? 'Arrived' : ($s->great_circle_distance_nm ? number_format($s->great_circle_distance_nm) . ' nm' : ($sMode === 'ROAD' ? 'Road Leg' : 'Direct Corridor')) }}
                                             </span>
-                                            <span class="font-bold theme-text-primary">{{ $dest->unlocode ?? 'DST' }}</span>
+                                            <span class="font-bold theme-text-primary">{{ $dest->display_code ?? 'DST' }}</span>
                                         </div>
                                         <!-- Visual Progress Line -->
                                         <div class="w-full h-1.5 rounded-full bg-slate-200 dark:bg-slate-800 overflow-hidden">
@@ -511,6 +511,9 @@
                                                 class="h-full rounded-full transition-all duration-500 {{ $hasExceptions ? 'bg-rose-500' : ($s->is_delayed ? 'bg-amber-500' : ($sMode === 'AIR' ? 'bg-sky-400' : ($sMode === 'ROAD' ? 'bg-emerald-400' : 'bg-cyan-500'))) }}"
                                                 style="width: {{ $s->status === 'DELIVERED' ? '100%' : ($s->status === 'IN_TRANSIT' ? '65%' : '15%') }}"
                                             ></div>
+                                        </div>
+                                        <div class="text-[10px] theme-text-muted truncate font-sans">
+                                            {{ $orig->short_name ?? 'Origin' }} to {{ $dest->short_name ?? 'Destination' }}
                                         </div>
                                     </div>
                                 </td>
@@ -523,7 +526,7 @@
                                 <!-- Status Pill -->
                                 <td class="py-3.5 px-3">
                                     @php
-                                        $ftEval = ($s->actual_arrival_at || $s->status === 'DELIVERED') ? app(\App\Services\FreeTimeService::class)->calculate($s) : null;
+                                        $ftEval = ($s->status !== 'DELIVERED' && $s->actual_arrival_at) ? app(\App\Services\FreeTimeService::class)->calculate($s) : null;
                                     @endphp
                                     @if($ftEval && $ftEval['is_over_limit'])
                                         <span class="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase font-mono bg-rose-500/15 text-rose-600 dark:text-rose-400 border border-rose-500/30" title="{{ $ftEval['badge_label'] }}">
@@ -578,6 +581,8 @@
             @php
                 $selectedPort = $weatherPorts[0] ?? [
                     'city' => 'Singapore',
+                    'code' => 'SGSIN',
+                    'code_type' => 'UN/LOCODE',
                     'unlocode' => 'SGSIN',
                     'weather' => [
                         'temperature_c' => 31.5,
@@ -608,7 +613,7 @@
                     <div class="flex items-center justify-between">
                         <div>
                             <h3 class="text-base font-extrabold theme-heading font-sans">{{ $selectedPort['city'] ?? 'Singapore' }}</h3>
-                            <span class="text-[11px] theme-text-muted font-mono" title="{{ $selectedPort['unlocode'] ?? 'SGSIN' }} Container Terminal">{{ $selectedPort['unlocode'] ?? 'SGSIN' }} container terminal</span>
+                            <span class="text-[11px] theme-text-muted font-mono" title="{{ $selectedPort['code_type'] ?? 'UN/LOCODE' }}: {{ $selectedPort['code'] ?? $selectedPort['unlocode'] ?? 'SGSIN' }}">{{ $selectedPort['code'] ?? $selectedPort['unlocode'] ?? 'SGSIN' }} &bull; {{ $selectedPort['code_type'] ?? 'UN/LOCODE' }}</span>
                         </div>
                         <div class="text-right">
                             <span class="text-3xl font-black theme-heading tabular-nums font-mono">

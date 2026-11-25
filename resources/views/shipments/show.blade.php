@@ -61,7 +61,7 @@
             @if(in_array(auth()->user()->role, ['admin', 'operator']))
                 <a href="{{ route('shipments.edit', $shipment) }}" class="px-3.5 py-1.5 rounded-xl bg-blue-500/15 hover:bg-blue-500/25 border border-blue-500/30 text-blue-600 dark:text-cyan-400 text-xs font-semibold flex items-center gap-1.5 transition">
                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
-                    Edit Waybill
+                    Edit Shipment
                 </a>
             @endif
 
@@ -94,7 +94,7 @@
             <x-card :padded="false" class="overflow-hidden relative">
                 <div id="shipment-route-map" class="w-full h-80 sm:h-96 z-10 theme-page"></div>
                 <div class="absolute top-3 left-3 z-20 px-3 py-1.5 rounded-xl theme-card-elevated border theme-border text-xs theme-heading font-mono shadow-md">
-                    {{ $shipment->originLocation->unlocode ?? 'ORIG' }} &rarr; {{ $shipment->destinationLocation->unlocode ?? 'DEST' }} &bull; {{ $shipment->cargo_type }}
+                    {{ $shipment->originLocation->short_name ?? 'Origin' }} ({{ $shipment->originLocation->display_code ?? 'ORIG' }}) &rarr; {{ $shipment->destinationLocation->short_name ?? 'Destination' }} ({{ $shipment->destinationLocation->display_code ?? 'DEST' }}) &bull; {{ $shipment->cargo_type }}
                 </div>
             </x-card>
 
@@ -140,7 +140,7 @@
                             <span class="font-bold text-emerald-600 dark:text-emerald-400 text-sm">{{ $shipment->vehicle_plate ?? 'Not assigned' }}</span>
                         </div>
                         <div class="p-3 rounded-xl theme-card-elevated border theme-border">
-                            <span class="uppercase text-[10px] tracking-wider theme-text-muted font-semibold block">CMR / Waybill Number</span>
+                            <span class="uppercase text-[10px] tracking-wider theme-text-muted font-semibold block">CMR / Consignment Note</span>
                             <span class="font-bold theme-heading text-sm">{{ $shipment->cmr_number ?? 'Pending' }}</span>
                         </div>
                         <div class="p-3 rounded-xl theme-card-elevated border theme-border">
@@ -217,7 +217,7 @@
                                 </span>
                             </div>
                             <h3 class="text-sm font-bold theme-heading mt-0.5">
-                                {{ $latestLocation->name }} <span class="font-mono text-xs theme-text-muted">({{ $latestLocation->unlocode }})</span>
+                                {{ $latestLocation->name }} <span class="font-mono text-xs theme-text-muted">({{ $latestLocation->display_code }})</span>
                             </h3>
                         </div>
                         <div class="flex items-center gap-2 self-start sm:self-auto">
@@ -409,7 +409,7 @@
                                 </div>
 
                                 <div class="flex items-center justify-between text-[11px] theme-text-muted font-mono pt-1">
-                                    <span class="text-blue-600 dark:text-cyan-400">@ {{ $evt->location->name ?? 'Port Gateway' }} ({{ $evt->location->unlocode ?? 'N/A' }})</span>
+                                    <span class="text-blue-600 dark:text-cyan-400">@ {{ $evt->location->name ?? 'Transit waypoint' }}@if($evt->location) ({{ $evt->location->display_code }})@endif</span>
                                     @if($evt->weather_snapshot)
                                         <span class="theme-text-muted">{{ $evt->weather_snapshot['temperature_c'] ?? '' }}°C {{ $evt->weather_snapshot['condition'] ?? '' }}</span>
                                     @endif
@@ -438,7 +438,7 @@
                                 <select name="location_id" required class="px-3 py-2 rounded-xl theme-input border theme-border text-xs focus:ring-1 focus:ring-blue-500">
                                     @foreach($locations as $loc)
                                         <option value="{{ $loc->id }}" {{ $shipment->current_location_id == $loc->id ? 'selected' : '' }}>
-                                            {{ $loc->city }} ({{ $loc->unlocode }})
+                                            {{ $loc->name }} ({{ $loc->display_code }})
                                         </option>
                                     @endforeach
                                 </select>
@@ -531,20 +531,29 @@
         'is_delayed' => (bool) $shipment->is_delayed,
         'originLocation' => [
             'name' => $shipment->originLocation->name,
-            'unlocode' => $shipment->originLocation->unlocode,
+            'short_name' => $shipment->originLocation->short_name,
+            'code' => $shipment->originLocation->display_code,
+            'code_type' => $shipment->originLocation->code_type_label,
+            'unlocode' => $shipment->originLocation->display_code,
             'latitude' => $shipment->originLocation->latitude,
             'longitude' => $shipment->originLocation->longitude,
         ],
         'destinationLocation' => [
             'name' => $shipment->destinationLocation->name,
-            'unlocode' => $shipment->destinationLocation->unlocode,
+            'short_name' => $shipment->destinationLocation->short_name,
+            'code' => $shipment->destinationLocation->display_code,
+            'code_type' => $shipment->destinationLocation->code_type_label,
+            'unlocode' => $shipment->destinationLocation->display_code,
             'latitude' => $shipment->destinationLocation->latitude,
             'longitude' => $shipment->destinationLocation->longitude,
         ],
         'currentLocation' => $shipment->currentLocation ? [
             'id' => $shipment->currentLocation->id,
             'name' => $shipment->currentLocation->name,
-            'unlocode' => $shipment->currentLocation->unlocode,
+            'short_name' => $shipment->currentLocation->short_name,
+            'code' => $shipment->currentLocation->display_code,
+            'code_type' => $shipment->currentLocation->code_type_label,
+            'unlocode' => $shipment->currentLocation->display_code,
             'latitude' => $shipment->currentLocation->latitude,
             'longitude' => $shipment->currentLocation->longitude,
         ] : null,

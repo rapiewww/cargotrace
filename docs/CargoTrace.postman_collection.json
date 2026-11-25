@@ -2,7 +2,7 @@
 	"info": {
 		"_postman_id": "c7a84092-261e-4ee2-bb20-cargotrace2026",
 		"name": "CargoTrace REST API Collection",
-		"description": "Comprehensive Postman API Collection for CargoTrace: Global Maritime Container Visibility & Tracking Platform.\n\nFeatures:\n- Laravel Sanctum Bearer Token Authentication\n- Role-Based Access Control (Admin, Operator, Customer)\n- Waybill & Container Lifecycle (CREATED -> BOOKED -> PICKED_UP -> IN_TRANSIT -> DELIVERED)\n- Milestones & Tracking Checkpoints with Weather Telemetry\n- Operational Exceptions & Escalations\n- Port Locations (UN/LOCODE) & Ocean Shipping Carriers\n- External Integrations (OpenWeatherMap, Open Exchange Rates, NewsData.io)",
+		"description": "Comprehensive Postman API Collection for CargoTrace: Global Multimodal Freight Visibility & Tracking Platform.\n\nFeatures:\n- Laravel Sanctum Bearer Token Authentication\n- Role-Based Access Control (Admin, Operator, Customer)\n- Shipment & Container Lifecycle (CREATED -> BOOKED -> PICKED_UP -> IN_TRANSIT -> DELIVERED)\n- Milestones & Tracking Checkpoints with Weather Telemetry\n- Operational Exceptions & Escalations\n- Locations: Seaports (UN/LOCODE), Airports (IATA), and Depots/Borders (Internal codes)\n- External Integrations (OpenWeatherMap, Open Exchange Rates, NewsData.io)",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
 	},
 	"auth": {
@@ -176,7 +176,7 @@
 								"login"
 							]
 						},
-						"description": "Authenticates as Port Operator. Can create waybills, record milestones, and report exceptions."
+						"description": "Authenticates as Port Operator. Can create shipments, record milestones, and report exceptions."
 					},
 					"response": []
 				},
@@ -737,7 +737,7 @@
 								"locations"
 							]
 						},
-						"description": "Lists port terminals with UN/LOCODE, coordinates, and local weather."
+						"description": "Lists locations with display code (`code`), standard (`code_type`: UN/LOCODE, IATA, or Internal code), coordinates, and local weather. Airports return `iata_code` (e.g. SIN, CGK) and null `unlocode`; depots/borders use internal codes (e.g. DEP-MES, BRD-VEN)."
 					},
 					"response": []
 				},
@@ -769,7 +769,7 @@
 								"locations"
 							]
 						},
-						"description": "Creates a port location. Automatically geocodes coordinates if omitted and snapshots live weather & news."
+						"description": "Creates a location (UN/LOCODE like `DEHAM` for seaports, IATA like `SIN` for airports, or internal code like `DEP-MES` for depots). Automatically geocodes coordinates if omitted and snapshots live weather & news."
 					},
 					"response": []
 				}

@@ -70,7 +70,7 @@
                             <span>{{ $notif->created_at?->diffForHumans() }}</span>
                             @if($notif->shipment)
                                 <a href="{{ route('shipments.show', $notif->shipment) }}" class="text-blue-600 dark:text-cyan-400 hover:underline">
-                                    Waybill: {{ $notif->shipment->tracking_number }} &rarr;
+                                    Tracking no.: {{ $notif->shipment->tracking_number }} &rarr;
                                 </a>
                             @endif
                         </div>

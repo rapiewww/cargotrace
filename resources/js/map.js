@@ -165,10 +165,14 @@ export function initWorldMap(containerId, options = {}) {
             fillOpacity: 0.9,
         }).addTo(map);
 
+        const locCode = loc.display_code || loc.code || loc.unlocode || '';
+        const locType = (loc.type || '').toUpperCase();
+        const locCodeType = loc.code_type_label || loc.code_type || (locType === 'AIRPORT' ? 'IATA' : ((locType === 'PORT' || locType === 'SEAPORT') ? 'UN/LOCODE' : 'Internal code'));
+
         marker.bindPopup(`
             <div style="font-family: 'Inter', sans-serif; font-size: 11px;">
                 <div style="font-weight: 700; color: #0D9488;">${loc.name}</div>
-                <div style="color: #64748B; margin-top: 2px;">UN/LOCODE: <b>${loc.unlocode}</b> &bull; ${loc.country}</div>
+                <div style="color: #64748B; margin-top: 2px;">${locCodeType}: <b>${locCode}</b> &bull; ${loc.country}</div>
             </div>
         `);
     });
@@ -283,7 +287,7 @@ export function initShipmentRouteMap(containerId, shipment) {
         color: '#059669',
         weight: 2,
         fillOpacity: 1,
-    }).addTo(map).bindPopup(`<b>Origin:</b> ${orig.name} (${orig.unlocode})`);
+    }).addTo(map).bindPopup(`<b>Origin:</b> ${orig.name} (${orig.code || orig.display_code || orig.unlocode})`);
 
     // Destination marker (Blue)
     L.circleMarker([destLat, destLng], {
@@ -292,7 +296,7 @@ export function initShipmentRouteMap(containerId, shipment) {
         color: '#1D4ED8',
         weight: 2,
         fillOpacity: 1,
-    }).addTo(map).bindPopup(`<b>Destination:</b> ${dest.name} (${dest.unlocode})`);
+    }).addTo(map).bindPopup(`<b>Destination:</b> ${dest.name} (${dest.code || dest.display_code || dest.unlocode})`);
 
     // Current position marker if available (Amber pulse)
     if (curr?.latitude && curr?.longitude) {
@@ -302,7 +306,7 @@ export function initShipmentRouteMap(containerId, shipment) {
             color: '#B45309',
             weight: 2,
             fillOpacity: 1,
-        }).addTo(map).bindPopup(`<b>Current Location:</b> ${curr.name} (${curr.unlocode})`).openPopup();
+        }).addTo(map).bindPopup(`<b>Current Location:</b> ${curr.name} (${curr.code || curr.display_code || curr.unlocode})`).openPopup();
     }
 
     // Route polyline per mode:

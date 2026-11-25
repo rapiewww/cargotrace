@@ -96,16 +96,37 @@ class TrackingEventSeeder extends Seeder
         Carbon $now
     ): void {
         $depTime = $shipment->expected_departure_at->copy();
-        $elapsedMinutes = max(120, $depTime->diffInMinutes($now, false));
+        $hasArrived = $shipment->actual_arrival_at !== null;
+        $endTime = $hasArrived ? $shipment->actual_arrival_at->copy() : $now;
+        $elapsedMinutes = max(120, $depTime->diffInMinutes($endTime, false));
         $currentLoc = $shipment->currentLocation ?? $origin;
 
-        $t1 = $depTime->copy();
-        $t2 = $depTime->copy()->addMinutes(max(30, (int) ($elapsedMinutes * 0.20)));
-        $t3 = $depTime->copy()->addMinutes(max(60, (int) ($elapsedMinutes * 0.60)));
-        $t4 = $depTime->copy()->addMinutes(max(90, (int) ($elapsedMinutes * 0.88)));
+        $jitter2 = (($shipment->id * 11 + 3) % 19) + 1;
+        $jitter3 = (($shipment->id * 17 + 5) % 23) + 1;
+        $jitter4 = (($shipment->id * 23 + 7) % 17) + 1;
 
-        if ($t4->greaterThanOrEqualTo($now)) {
-            $t4 = $now->copy()->subMinutes(5);
+        $t1 = $depTime->copy();
+        $t2 = $depTime->copy()->addMinutes(max(25, (int) ($elapsedMinutes * 0.18) + $jitter2));
+        $t3 = $depTime->copy()->addMinutes(max(55, (int) ($elapsedMinutes * 0.58) + $jitter3));
+        $t4 = $hasArrived
+            ? $shipment->actual_arrival_at->copy()
+            : $depTime->copy()->addMinutes(max(85, (int) ($elapsedMinutes * 0.86) + $jitter4));
+
+        if (! $hasArrived && $t4->greaterThanOrEqualTo($now)) {
+            $t4 = $now->copy()->subMinutes(5 + ($shipment->id % 41));
+        }
+
+        if ($t3->greaterThan($t4)) {
+            $t3 = $t4->copy()->subMinutes(max(10, $jitter3));
+        }
+        if ($t2->greaterThan($t3)) {
+            $t2 = $t3->copy()->subMinutes(max(10, $jitter2));
+        }
+        if ($t2->lessThan($t1)) {
+            $t2 = $t1->copy();
+        }
+        if ($t3->lessThan($t2)) {
+            $t3 = $t2->copy();
         }
 
         if ($mode === 'SEA') {
@@ -130,36 +151,51 @@ class TrackingEventSeeder extends Seeder
                     ]);
             }
 
-            $loc4 = $this->isLocationValidForMode($currentLoc, 'SEA') ? $currentLoc : null;
-            $this->createEvent(
-                $shipment,
-                $loc4,
-                'IN_TRANSIT',
-                $shipment->is_delayed ? 'EXCEPTION' : 'NORMAL',
-                $shipment->is_delayed ? 'Maritime Advisory: '.$this->shortReason($shipment) : 'Vessel En Route to '.$dest->name,
-                $shipment->is_delayed ? ($shipment->delay_reason ?? 'Schedule variance logged at port control.') : 'Container vessel tracking normally toward discharge port.',
-                $t4,
-                $shipment->is_delayed ? $operatorId : null,
-                $loc4 ? null : $this->interpolate($origin, $dest, 0.85)
-            );
+            if ($hasArrived) {
+                $this->createEvent(
+                    $shipment,
+                    $dest,
+                    'IN_TRANSIT',
+                    $shipment->is_delayed ? 'EXCEPTION' : 'NORMAL',
+                    'Vessel Arrived & Discharged at '.$dest->name,
+                    $shipment->is_delayed
+                        ? ($shipment->delay_reason ?? 'Container discharged at destination terminal; awaiting customs release.')
+                        : 'Container discharged at destination terminal and staged for customs clearance.',
+                    $t4,
+                    $operatorId
+                );
+            } else {
+                $loc4 = $this->isLocationValidForMode($currentLoc, 'SEA') ? $currentLoc : null;
+                $this->createEvent(
+                    $shipment,
+                    $loc4,
+                    'IN_TRANSIT',
+                    $shipment->is_delayed ? 'EXCEPTION' : 'NORMAL',
+                    $shipment->is_delayed ? 'Maritime Advisory: '.$this->shortReason($shipment) : 'Vessel En Route to '.$dest->name,
+                    $shipment->is_delayed ? ($shipment->delay_reason ?? 'Schedule variance logged at port control.') : 'Container vessel tracking normally toward discharge port.',
+                    $t4,
+                    $shipment->is_delayed ? $operatorId : null,
+                    $loc4 ? null : $this->interpolate($origin, $dest, 0.85)
+                );
+            }
 
             return;
         }
 
         if ($mode === 'AIR') {
-            $this->createEvent($shipment, $origin, 'PICKED_UP', 'NORMAL', 'Received at Origin Airport '.$origin->iata_code,
+            $this->createEvent($shipment, $origin, 'PICKED_UP', 'NORMAL', 'Received at Origin Airport '.$origin->display_code,
                 'Essential oil flasks and spice air parcels weighed, security screened, and built into ULD.', $t1, $operatorId);
 
-            $this->createEvent($shipment, $origin, 'IN_TRANSIT', 'NORMAL', 'Departed on Cargo Flight from '.$origin->iata_code,
+            $this->createEvent($shipment, $origin, 'IN_TRANSIT', 'NORMAL', 'Departed on Cargo Flight from '.$origin->display_code,
                 'Air cargo freighter departed origin runway under validated AWB manifest.', $t2, $operatorId);
 
-            $hub = $this->pickHub($origin, $dest, $currentLoc, $locations, ['SGCHG', 'AEDXB', 'DEFRA'], 'AIRPORT');
+            $hub = $this->pickHub($origin, $dest, $currentLoc, $locations, ['SIN', 'DXB', 'FRA'], 'AIRPORT');
             if ($hub) {
-                $this->createEvent($shipment, $hub, 'IN_TRANSIT', 'NORMAL', 'Air Transit Hub Screening at '.$hub->iata_code,
+                $this->createEvent($shipment, $hub, 'IN_TRANSIT', 'NORMAL', 'Air Transit Hub Screening at '.$hub->display_code,
                     'ULD transferred at airfreight transit mega-hub awaiting onward widebody uplift.', $t3, $operatorId);
             } else {
                 [$lat, $lng] = $this->interpolate($origin, $dest, 0.50);
-                $this->createWaypoint($shipment, 'IN_TRANSIT', 'NORMAL', 'Airway Transit Cruise Toward '.$dest->iata_code,
+                $this->createWaypoint($shipment, 'IN_TRANSIT', 'NORMAL', 'Airway Transit Cruise Toward '.$dest->display_code,
                     'Flight operating along high-altitude international cargo corridor.', $lat, $lng, $t3, [
                         'temperature_c' => 18.0,
                         'condition' => 'Pressurized Cargo Hold',
@@ -168,18 +204,33 @@ class TrackingEventSeeder extends Seeder
                     ]);
             }
 
-            $loc4 = $this->isLocationValidForMode($currentLoc, 'AIR') ? $currentLoc : null;
-            $this->createEvent(
-                $shipment,
-                $loc4,
-                'IN_TRANSIT',
-                $shipment->is_delayed ? 'EXCEPTION' : 'NORMAL',
-                $shipment->is_delayed ? 'Flight Hold Advisory: '.$this->shortReason($shipment) : 'Onward Flight Segment to '.$dest->iata_code,
-                $shipment->is_delayed ? ($shipment->delay_reason ?? 'Airfreight connection variance logged.') : 'Cargo ULD confirmed on connecting flight segment.',
-                $t4,
-                $shipment->is_delayed ? $operatorId : null,
-                $loc4 ? null : $this->interpolate($origin, $dest, 0.85)
-            );
+            if ($hasArrived) {
+                $this->createEvent(
+                    $shipment,
+                    $dest,
+                    'IN_TRANSIT',
+                    $shipment->is_delayed ? 'EXCEPTION' : 'NORMAL',
+                    'Arrived at Destination Airport '.$dest->display_code,
+                    $shipment->is_delayed
+                        ? ($shipment->delay_reason ?? 'ULD offloaded at destination airport; awaiting customs release.')
+                        : 'Cargo aircraft landed and ULD transferred to import airfreight warehouse.',
+                    $t4,
+                    $operatorId
+                );
+            } else {
+                $loc4 = $this->isLocationValidForMode($currentLoc, 'AIR') ? $currentLoc : null;
+                $this->createEvent(
+                    $shipment,
+                    $loc4,
+                    'IN_TRANSIT',
+                    $shipment->is_delayed ? 'EXCEPTION' : 'NORMAL',
+                    $shipment->is_delayed ? 'Flight Hold Advisory: '.$this->shortReason($shipment) : 'Onward Flight Segment to '.$dest->display_code,
+                    $shipment->is_delayed ? ($shipment->delay_reason ?? 'Airfreight connection variance logged.') : 'Cargo ULD confirmed on connecting flight segment.',
+                    $t4,
+                    $shipment->is_delayed ? $operatorId : null,
+                    $loc4 ? null : $this->interpolate($origin, $dest, 0.85)
+                );
+            }
 
             return;
         }
@@ -191,7 +242,7 @@ class TrackingEventSeeder extends Seeder
         $this->createEvent($shipment, $origin, 'IN_TRANSIT', 'NORMAL', 'Departed by Road from '.$origin->city,
             'Vehicle departed origin facility with security seal and data logger active.', $t2, $operatorId);
 
-        $borderLoc = ($origin->country_code === 'NL' && $dest->country_code === 'DE') ? ($locations['NLVEN'] ?? null) : null;
+        $borderLoc = ($origin->country_code === 'NL' && $dest->country_code === 'DE') ? ($locations['BRD-VEN'] ?? null) : null;
         if ($borderLoc) {
             $this->createEvent($shipment, $borderLoc, 'IN_TRANSIT', $shipment->is_delayed ? 'EXCEPTION' : 'NORMAL',
                 'Border Crossing Inspection at '.$borderLoc->name,
@@ -208,18 +259,31 @@ class TrackingEventSeeder extends Seeder
                 ]);
         }
 
-        $loc4 = $this->isLocationValidForMode($currentLoc, 'ROAD') ? $currentLoc : null;
-        $this->createEvent(
-            $shipment,
-            $loc4,
-            'IN_TRANSIT',
-            $shipment->is_delayed ? 'EXCEPTION' : 'NORMAL',
-            $shipment->is_delayed ? 'Road Delay Advisory: '.$this->shortReason($shipment) : 'Approaching Destination '.$dest->city,
-            $shipment->is_delayed ? ($shipment->delay_reason ?? 'Road transport delay logged.') : 'Truck approaching destination warehouse gate.',
-            $t4,
-            $shipment->is_delayed ? $operatorId : null,
-            $loc4 ? null : $this->interpolate($origin, $dest, 0.82)
-        );
+        if ($hasArrived) {
+            $this->createEvent(
+                $shipment,
+                $dest,
+                'IN_TRANSIT',
+                'NORMAL',
+                'Arrived at '.$dest->name,
+                'Vehicle arrived at destination gate; staged for terminal handover and customs gate-out.',
+                $t4,
+                $operatorId
+            );
+        } else {
+            $loc4 = $this->isLocationValidForMode($currentLoc, 'ROAD') ? $currentLoc : null;
+            $this->createEvent(
+                $shipment,
+                $loc4,
+                'IN_TRANSIT',
+                $shipment->is_delayed ? 'EXCEPTION' : 'NORMAL',
+                $shipment->is_delayed ? 'Road Delay Advisory: '.$this->shortReason($shipment) : 'Approaching Destination '.$dest->city,
+                $shipment->is_delayed ? ($shipment->delay_reason ?? 'Road transport delay logged.') : 'Truck approaching destination warehouse gate.',
+                $t4,
+                $shipment->is_delayed ? $operatorId : null,
+                $loc4 ? null : $this->interpolate($origin, $dest, 0.82)
+            );
+        }
     }
 
     protected function seedDeliveredEvents(
@@ -234,12 +298,33 @@ class TrackingEventSeeder extends Seeder
         $arrTime = $shipment->actual_arrival_at->copy();
         $totalMinutes = max(240, $depTime->diffInMinutes($arrTime, false));
 
+        $j2 = (($shipment->id * 7 + 5) % 19) + 1;
+        $j3 = (($shipment->id * 13 + 11) % 23) + 1;
+        $j4 = (($shipment->id * 19 + 3) % 17) + 1;
+        $j5 = (($shipment->id * 29 + 7) % 13) + 1;
+
         $t1 = $depTime->copy();
-        $t2 = $depTime->copy()->addMinutes(max(30, (int) ($totalMinutes * 0.10)));
-        $t3 = $depTime->copy()->addMinutes(max(60, (int) ($totalMinutes * 0.50)));
-        $t4 = $depTime->copy()->addMinutes(max(90, (int) ($totalMinutes * 0.85)));
-        $t5 = $depTime->copy()->addMinutes(max(120, (int) ($totalMinutes * 0.94)));
+        $t2 = $depTime->copy()->addMinutes(max(30, (int) ($totalMinutes * 0.10) + $j2));
+        $t3 = $depTime->copy()->addMinutes(max(60, (int) ($totalMinutes * 0.50) + $j3));
+        $t4 = $depTime->copy()->addMinutes(max(90, (int) ($totalMinutes * 0.85) + $j4));
+        $t5 = $depTime->copy()->addMinutes(max(120, (int) ($totalMinutes * 0.94) + $j5));
         $t6 = $arrTime->copy();
+
+        if ($t5->greaterThan($t6)) {
+            $t5 = $t6->copy()->subMinutes(10);
+        }
+        if ($t4->greaterThan($t5)) {
+            $t4 = $t5->copy()->subMinutes(10);
+        }
+        if ($t3->greaterThan($t4)) {
+            $t3 = $t4->copy()->subMinutes(10);
+        }
+        if ($t2->greaterThan($t3)) {
+            $t2 = $t3->copy()->subMinutes(10);
+        }
+        if ($t2->lessThan($t1)) {
+            $t2 = $t1->copy();
+        }
 
         if ($mode === 'SEA') {
             $this->createEvent($shipment, $origin, 'PICKED_UP', 'NORMAL', 'Gate-In & Loaded on Vessel at '.$origin->name,
@@ -275,16 +360,16 @@ class TrackingEventSeeder extends Seeder
         }
 
         if ($mode === 'AIR') {
-            $this->createEvent($shipment, $origin, 'PICKED_UP', 'NORMAL', 'Received at Origin Airport '.$origin->iata_code,
+            $this->createEvent($shipment, $origin, 'PICKED_UP', 'NORMAL', 'Received at Origin Airport '.$origin->display_code,
                 'Essential oil cargo accepted at origin airfreight terminal after security screening.', $t1, $operatorId);
 
-            $this->createEvent($shipment, $origin, 'IN_TRANSIT', 'NORMAL', 'Departed on Flight from '.$origin->iata_code,
+            $this->createEvent($shipment, $origin, 'IN_TRANSIT', 'NORMAL', 'Departed on Flight from '.$origin->display_code,
                 'Cargo aircraft departed origin airport.', $t2, $operatorId);
 
-            $hub = $this->pickHub($origin, $dest, null, $locations, ['SGCHG', 'AEDXB', 'DEFRA'], 'AIRPORT');
+            $hub = $this->pickHub($origin, $dest, null, $locations, ['SIN', 'DXB', 'FRA'], 'AIRPORT');
             if ($hub) {
-                $this->createEvent($shipment, $hub, 'IN_TRANSIT', 'NORMAL', 'Transit Flight Connection at '.$hub->iata_code,
-                    'ULD transferred seamlessly to connecting widebody cargo flight.', $t3, $operatorId);
+                $this->createEvent($shipment, $hub, 'IN_TRANSIT', 'NORMAL', 'Transit Flight Connection at '.$hub->display_code,
+                    'ULD transferred to connecting widebody cargo flight.', $t3, $operatorId);
             } else {
                 [$lat, $lng] = $this->interpolate($origin, $dest, 0.50);
                 $this->createWaypoint($shipment, 'IN_TRANSIT', 'NORMAL', 'International Airway Transit',
@@ -295,10 +380,10 @@ class TrackingEventSeeder extends Seeder
                     ]);
             }
 
-            $this->createEvent($shipment, $dest, 'IN_TRANSIT', 'NORMAL', 'Arrived at Destination Airport '.$dest->iata_code,
+            $this->createEvent($shipment, $dest, 'IN_TRANSIT', 'NORMAL', 'Arrived at Destination Airport '.$dest->display_code,
                 'Cargo aircraft landed and ULD transferred to import airfreight warehouse.', $t4, $operatorId);
 
-            $this->createEvent($shipment, $dest, 'IN_TRANSIT', 'NORMAL', 'Customs Cleared at '.$dest->iata_code,
+            $this->createEvent($shipment, $dest, 'IN_TRANSIT', 'NORMAL', 'Customs Cleared at '.$dest->display_code,
                 'Import customs and botanical entry clearance completed.', $t5, $operatorId);
 
             $this->createEvent($shipment, $dest, 'DELIVERED', 'NORMAL', 'Air Cargo Delivered at '.$dest->name,

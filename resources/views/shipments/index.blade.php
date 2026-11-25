@@ -10,7 +10,7 @@
                     Shipments Manifest
                 </h1>
                 <span class="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 border border-cyan-500/20 font-mono">
-                    {{ $shipments->total() }} Waybills
+                    {{ $shipments->total() }} Shipments
                 </span>
             </div>
             <p class="text-xs sm:text-sm theme-text-secondary mt-1">
@@ -113,7 +113,7 @@
                     <select name="origin_location_id" class="w-full px-3.5 py-2 rounded-xl theme-input border text-xs focus:ring-1 focus:ring-cyan-500 focus:outline-none transition">
                         <option value="">All Origins</option>
                         @foreach($locations as $loc)
-                            <option value="{{ $loc->id }}" {{ request('origin_location_id') == $loc->id ? 'selected' : '' }}>{{ $loc->city }} ({{ $loc->unlocode }})</option>
+                            <option value="{{ $loc->id }}" {{ request('origin_location_id') == $loc->id ? 'selected' : '' }}>{{ $loc->short_name }} ({{ $loc->display_code }})</option>
                         @endforeach
                     </select>
                 </div>
@@ -141,7 +141,7 @@
             <table class="w-full text-left text-xs border-collapse">
                 <thead>
                     <tr class="theme-card-elevated border-b theme-border theme-text-muted font-mono uppercase text-[10px] tracking-wider">
-                        <th class="py-3.5 px-4 font-semibold">Waybill / Resi</th>
+                        <th class="py-3.5 px-4 font-semibold">Tracking no.</th>
                         <th class="py-3.5 px-4 font-semibold">Mode</th>
                         <th class="py-3.5 px-4 font-semibold">Reference</th>
                         <th class="py-3.5 px-4 font-semibold">Carrier</th>
@@ -213,12 +213,12 @@
                             <!-- Route -->
                             <td class="py-4 px-4 font-mono text-xs">
                                 <div class="flex items-center space-x-2 theme-text-primary">
-                                    <span class="font-bold theme-heading">{{ $s->originLocation->unlocode }}</span>
+                                    <span class="font-bold theme-heading">{{ $s->originLocation->display_code }}</span>
                                     <span class="text-cyan-500">&rarr;</span>
-                                    <span class="font-bold theme-heading">{{ $s->destinationLocation->unlocode }}</span>
+                                    <span class="font-bold theme-heading">{{ $s->destinationLocation->display_code }}</span>
                                 </div>
-                                <span class="text-[10px] theme-text-muted block truncate max-w-[180px]">
-                                    {{ $s->originLocation->city }} to {{ $s->destinationLocation->city }}
+                                <span class="text-[10px] theme-text-muted block truncate max-w-[200px] font-sans">
+                                    {{ $s->originLocation->short_name }} to {{ $s->destinationLocation->short_name }}
                                 </span>
                             </td>
 

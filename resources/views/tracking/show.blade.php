@@ -41,7 +41,7 @@
 
     <!-- Main Content -->
     <main class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-8">
-        <!-- Waybill Card Header -->
+        <!-- Shipment Card Header -->
         <div class="p-6 sm:p-8 rounded-2xl theme-card backdrop-blur-xl border theme-border shadow-2xl space-y-6">
             <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b theme-border">
                 <div>
@@ -62,9 +62,9 @@
                         @endif
                     @endif
                     <div class="text-xs theme-text-secondary flex items-center gap-2 mt-2 font-mono">
-                        <span>{{ $shipment->originLocation->name }} ({{ $shipment->originLocation->unlocode }})</span>
+                        <span>{{ $shipment->originLocation->name }} ({{ $shipment->originLocation->display_code }})</span>
                         <span class="text-blue-600 dark:text-cyan-400">&rarr;</span>
-                        <span>{{ $shipment->destinationLocation->name }} ({{ $shipment->destinationLocation->unlocode }})</span>
+                        <span>{{ $shipment->destinationLocation->name }} ({{ $shipment->destinationLocation->display_code }})</span>
                     </div>
                 </div>
 
@@ -128,7 +128,7 @@
         <div class="rounded-2xl overflow-hidden border theme-border shadow-2xl theme-card space-y-2 p-2">
             <div id="public-tracking-map" class="w-full h-80 sm:h-96 rounded-xl bg-slate-900"></div>
             <div class="px-3 py-2 flex items-center justify-between text-[11px] theme-text-muted font-mono">
-                <span>{{ $shipment->originLocation->unlocode }} &rarr; {{ $shipment->destinationLocation->unlocode }} Route Corridor</span>
+                <span>{{ $shipment->originLocation->short_name }} to {{ $shipment->destinationLocation->short_name }} ({{ $shipment->originLocation->display_code }} &rarr; {{ $shipment->destinationLocation->display_code }})</span>
                 <span>Milestone Geodesic Plot</span>
             </div>
         </div>
@@ -154,7 +154,7 @@
                             </div>
                             <p class="text-xs theme-text-secondary">{{ $evt->description }}</p>
                             <div class="flex items-center justify-between text-[11px] theme-text-muted font-mono pt-1">
-                                <span class="text-blue-600 dark:text-cyan-400">@ {{ $evt->location->name ?? 'Port Gateway' }} ({{ $evt->location->unlocode ?? 'N/A' }})</span>
+                                <span class="text-blue-600 dark:text-cyan-400">@ {{ $evt->location->name ?? 'Transit waypoint' }}@if($evt->location) ({{ $evt->location->display_code }})@endif</span>
                                 @if($evt->weather_snapshot)
                                     <span>🌡️ {{ $evt->weather_snapshot['temperature_c'] ?? '' }}°C {{ $evt->weather_snapshot['condition'] ?? '' }}</span>
                                 @endif
@@ -163,15 +163,15 @@
                     </div>
                 @empty
                     <div class="text-center py-8 theme-text-muted text-xs">
-                        No milestone events recorded yet for this waybill.
+                        No milestone events recorded yet for this shipment.
                     </div>
                 @endforelse
             </div>
         </div>
 
-        <!-- Quick Track Another Waybill Box -->
+        <!-- Quick Track Another Shipment Box -->
         <div class="p-6 rounded-2xl theme-card-elevated border theme-border text-center space-y-3">
-            <span class="text-xs theme-text-muted">Need to track another container or waybill?</span>
+            <span class="text-xs theme-text-muted">Need to track another container or tracking no.?</span>
             <div class="max-w-md mx-auto flex items-center gap-2">
                 <input type="text" id="public-track-input" placeholder="Enter tracking number..." class="flex-1 px-4 py-2 rounded-xl theme-input border theme-border font-mono text-xs focus:ring-1 focus:ring-blue-500 focus:outline-none">
                 <button type="button" onclick="CargoTraceTracking.search()" class="px-5 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs uppercase tracking-wider transition">
