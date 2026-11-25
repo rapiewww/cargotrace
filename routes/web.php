@@ -44,6 +44,7 @@ Route::middleware('auth')->group(function () {
 
     // Dashboard
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    Route::get('/dashboard/map-data', [DashboardController::class, 'mapData'])->name('dashboard.map-data');
 
     // Fleet & Consignment Performance Analytics
     Route::get('/analytics', [AnalyticsWebController::class, 'index'])->name('analytics.index');

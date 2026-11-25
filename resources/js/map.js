@@ -6,55 +6,149 @@ import L from 'leaflet';
 const activeMaps = new Set();
 
 /**
- * Get OpenStreetMap tile layer configuration with theme adaptability and configurable tile source
+ * Get OpenStreetMap tile layer configuration with configurable tile source and attribution.
  */
-export function getTileLayerConfig(theme = 'dark') {
+export function getTileLayerConfig(theme = 'dark', overrides = {}) {
     const metaUrl = typeof document !== 'undefined' ? document.querySelector('meta[name="map-tile-url"]')?.getAttribute('content') : null;
     const metaAttribution = typeof document !== 'undefined' ? document.querySelector('meta[name="map-tile-attribution"]')?.getAttribute('content') : null;
 
     return {
-        url: metaUrl || 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+        url: overrides.tileUrl || metaUrl || 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
         options: {
-            attribution: metaAttribution || '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> contributors',
+            attribution: overrides.attribution || metaAttribution || '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> contributors',
             maxZoom: 18,
+            noWrap: false,
         }
     };
 }
 
 /**
- * Calculate a quadratic Bezier curve between two coordinates.
- * Generates an array of [lat, lng] points creating an elegant great-circle style arc.
+ * Unwrap a longitude relative to a reference longitude so shortest-path routes
+ * across the +/-180 antimeridian stay continuous instead of wrapping across the whole map.
  */
-export function getBezierCurve(start, end, numPoints = 50) {
-    const lat1 = start[0];
-    const lon1 = start[1];
-    const lat2 = end[0];
-    const lon2 = end[1];
+export function unwrapLongitudeNear(lng, refLng) {
+    let adjusted = Number(lng);
+    const ref = Number(refLng);
+    if (!Number.isFinite(adjusted) || !Number.isFinite(ref)) {
+        return adjusted;
+    }
+    while (adjusted - ref > 180) adjusted -= 360;
+    while (adjusted - ref < -180) adjusted += 360;
+    return adjusted;
+}
 
-    const midLat = (lat1 + lat2) / 2;
-    const midLon = (lon1 + lon2) / 2;
+/**
+ * Compute a great-circle style arc (SEA, AIR) or straight unwrapped segment (ROAD)
+ * with continuous longitude unwrapping at the antimeridian.
+ */
+export function getGreatCircleArc(start, end, options = {}) {
+    const lat1 = Number(start[0]);
+    const lng1 = Number(start[1]);
+    const lat2 = Number(end[0]);
+    const rawLng2 = Number(end[1]);
+    const mode = (options.mode || 'SEA').toUpperCase();
+    const numPoints = options.numPoints || 64;
 
-    const dLat = lat2 - lat1;
-    const dLon = lon2 - lon1;
-    const distance = Math.sqrt(dLat * dLat + dLon * dLon);
+    const unwrappedEndLng = unwrapLongitudeNear(rawLng2, lng1);
 
-    // Dynamic curve apex displacement based on chord length
-    const curvature = Math.min(0.25, Math.max(0.12, distance * 0.003));
-    const controlLat = midLat + (-dLon * curvature);
-    const controlLon = midLon + (dLat * curvature);
+    if (mode === 'ROAD') {
+        return [
+            [lat1, lng1],
+            [lat2, unwrappedEndLng],
+        ];
+    }
+
+    const toRad = (deg) => (deg * Math.PI) / 180;
+    const toDeg = (rad) => (rad * 180) / Math.PI;
+
+    const phi1 = toRad(lat1);
+    const lam1 = toRad(lng1);
+    const phi2 = toRad(lat2);
+    const lam2 = toRad(unwrappedEndLng);
+
+    const x1 = Math.cos(phi1) * Math.cos(lam1);
+    const y1 = Math.cos(phi1) * Math.sin(lam1);
+    const z1 = Math.sin(phi1);
+
+    const x2 = Math.cos(phi2) * Math.cos(lam2);
+    const y2 = Math.cos(phi2) * Math.sin(lam2);
+    const z2 = Math.sin(phi2);
+
+    const dot = Math.max(-1, Math.min(1, x1 * x2 + y1 * y2 + z1 * z2));
+    const omega = Math.acos(dot);
+    const sinOmega = Math.sin(omega);
+
+    const chordDeg = Math.hypot(lat2 - lat1, unwrappedEndLng - lng1);
+    const loftDeg = mode === 'AIR'
+        ? Math.min(18, Math.max(4, chordDeg * 0.14))
+        : Math.min(7, Math.max(1.5, chordDeg * 0.05));
 
     const points = [];
+    let prevLng = lng1;
+
     for (let i = 0; i <= numPoints; i++) {
         const t = i / numPoints;
-        const lat = (1 - t) * (1 - t) * lat1 + 2 * (1 - t) * t * controlLat + t * t * lat2;
-        const lon = (1 - t) * (1 - t) * lon1 + 2 * (1 - t) * t * controlLon + t * t * lon2;
-        points.push([lat, lon]);
+        let lat;
+        let lng;
+
+        if (sinOmega < 1e-6) {
+            lat = lat1 + (lat2 - lat1) * t;
+            lng = lng1 + (unwrappedEndLng - lng1) * t;
+        } else {
+            const a = Math.sin((1 - t) * omega) / sinOmega;
+            const b = Math.sin(t * omega) / sinOmega;
+            const x = a * x1 + b * x2;
+            const y = a * y1 + b * y2;
+            const z = a * z1 + b * z2;
+
+            lat = toDeg(Math.atan2(z, Math.sqrt(x * x + y * y)));
+            lng = toDeg(Math.atan2(y, x));
+        }
+
+        lng = unwrapLongitudeNear(lng, prevLng);
+        prevLng = lng;
+
+        // Add subtle mode-specific arc loft while anchoring endpoints
+        const liftedLat = Math.max(-82, Math.min(82, lat + Math.sin(Math.PI * t) * loftDeg));
+        points.push([liftedLat, lng]);
     }
+
     return points;
 }
 
 /**
- * Shared map factory using CartoDB Positron / Dark Matter tiles matching active theme.
+ * Calculate a curved great-circle style arc between two coordinates.
+ * Preserved for existing callers (worldMap and shipment detail routeMap).
+ */
+export function getBezierCurve(start, end, numPoints = 50, mode = 'SEA') {
+    return getGreatCircleArc(start, end, { numPoints, mode });
+}
+
+/**
+ * Map delay severity and active exception status to DESIGN.md semantic colors.
+ */
+export function getSeverityColor(delaySeverity, hasException = false) {
+    const sev = String(delaySeverity || 'NONE').toUpperCase();
+    if (hasException || sev === 'HIGH') return '#F43F5E';
+    if (sev === 'MEDIUM') return '#F97316';
+    if (sev === 'LOW') return '#F59E0B';
+    return '#10B981';
+}
+
+/**
+ * Human-readable severity label for popups and screen-reader descriptions.
+ */
+export function getSeverityLabel(delaySeverity, hasException = false) {
+    const sev = String(delaySeverity || 'NONE').toUpperCase();
+    if (hasException) return 'Exception alert';
+    if (sev === 'HIGH') return 'High delay';
+    if (sev === 'MEDIUM') return 'Medium delay';
+    if (sev === 'LOW') return 'Low delay';
+    return 'On time';
+}
+
+/**
+ * Shared map factory using config-driven OpenStreetMap tiles.
  */
 export function createMap(elementId, options = {}) {
     const el = document.getElementById(elementId);
@@ -70,15 +164,18 @@ export function createMap(elementId, options = {}) {
         }
     }
 
+    const { tileOverrides, ...leafletOptions } = options;
+
     const map = L.map(elementId, {
-        center: options.center || [22, 18],
-        zoom: options.zoom || 2,
-        minZoom: options.minZoom || 2,
-        maxZoom: options.maxZoom || 18,
-        zoomControl: options.zoomControl !== false,
-        attributionControl: options.attributionControl !== false,
-        scrollWheelZoom: options.scrollWheelZoom !== undefined ? options.scrollWheelZoom : false,
-        ...options,
+        center: leafletOptions.center || [22, 18],
+        zoom: leafletOptions.zoom || 2,
+        minZoom: leafletOptions.minZoom || 2,
+        maxZoom: leafletOptions.maxZoom || 18,
+        zoomControl: leafletOptions.zoomControl !== false,
+        attributionControl: leafletOptions.attributionControl !== false,
+        worldCopyJump: leafletOptions.worldCopyJump !== undefined ? leafletOptions.worldCopyJump : false,
+        scrollWheelZoom: leafletOptions.scrollWheelZoom !== undefined ? leafletOptions.scrollWheelZoom : false,
+        ...leafletOptions,
     });
 
     el._leaflet_map = map;
@@ -87,10 +184,11 @@ export function createMap(elementId, options = {}) {
     const currentTheme = document.documentElement.getAttribute('data-theme')
         || (document.documentElement.classList.contains('light') ? 'light' : 'dark');
 
-    const tileConfig = getTileLayerConfig(currentTheme);
+    const tileConfig = getTileLayerConfig(currentTheme, tileOverrides);
     const tileLayer = L.tileLayer(tileConfig.url, tileConfig.options).addTo(map);
 
     map._activeTileLayer = tileLayer;
+    map._tileOverrides = tileOverrides || {};
     activeMaps.add(map);
 
     return map;
@@ -100,14 +198,16 @@ export function createMap(elementId, options = {}) {
  * Update all active Leaflet maps to match the newly switched theme
  */
 export function updateAllMapsTheme(theme) {
-    const tileConfig = getTileLayerConfig(theme);
-
     activeMaps.forEach(map => {
         try {
+            const tileConfig = getTileLayerConfig(theme, map._tileOverrides || {});
             if (map && map._activeTileLayer) {
                 map.removeLayer(map._activeTileLayer);
                 const newLayer = L.tileLayer(tileConfig.url, tileConfig.options).addTo(map);
                 map._activeTileLayer = newLayer;
+            }
+            if (map && typeof map._onThemeChange === 'function') {
+                map._onThemeChange(theme);
             }
         } catch (e) {
             // In case map was unmounted

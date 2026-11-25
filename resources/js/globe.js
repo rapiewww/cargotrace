@@ -1,15 +1,160 @@
 import Globe from 'globe.gl';
 import L from 'leaflet';
-import { getBezierCurve, createMap } from './map';
+import {
+    createMap,
+    getGreatCircleArc,
+    getSeverityColor,
+    getSeverityLabel,
+    unwrapLongitudeNear,
+} from './map';
 
 /**
- * Global State for Maritime 3D Globe & 2D Leaflet Map
+ * Shared State for 3D Globe & 2D Leaflet Map
  */
 let globeInstance = null;
+let globeContainerEl = null;
 let leafletMapInstance = null;
+let leafletContainerEl = null;
+let leafletRouteLayer = null;
 let currentMode = '3D'; // '3D' or '2D'
-let currentShipments = [];
-let currentLocations = [];
+let activeFilter = 'ALL';
+let mapDataUrl = null;
+let initialDataset = { shipments: [], locations: [], meta: {} };
+let currentDataset = { shipments: [], locations: [], meta: {} };
+let routeRegistry = new Map();
+let pendingFocusTracking = null;
+let activeFetchController = null;
+let windowListenersAttached = false;
+let resizeTimer = null;
+
+function isFiniteCoord(value) {
+    return value !== null && value !== undefined && value !== '' && Number.isFinite(Number(value));
+}
+
+function escapeHtml(value) {
+    return String(value ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
+
+function prefersReducedMotion() {
+    return typeof window !== 'undefined'
+        && window.matchMedia
+        && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+}
+
+function getCurrentTheme() {
+    if (typeof document === 'undefined') return 'dark';
+    return document.documentElement.getAttribute('data-theme')
+        || (document.documentElement.classList.contains('light') ? 'light' : 'dark');
+}
+
+function normalizeDataset(options = {}) {
+    if (options.initialData && Array.isArray(options.initialData.shipments)) {
+        return {
+            shipments: options.initialData.shipments || [],
+            locations: options.initialData.locations || [],
+            meta: options.initialData.meta || {},
+        };
+    }
+
+    return {
+        shipments: options.shipments || [],
+        locations: options.locations || [],
+        meta: options.meta || {},
+    };
+}
+
+function getModeDisplay(mode) {
+    const normalized = String(mode || 'SEA').toUpperCase();
+    if (normalized === 'AIR') return { code: 'AIR', icon: '✈️', label: 'Air' };
+    if (normalized === 'ROAD') return { code: 'ROAD', icon: '🚚', label: 'Road' };
+    return { code: 'SEA', icon: '🚢', label: 'Sea' };
+}
+
+function getLocCode(loc) {
+    return loc?.display_code || loc?.code || loc?.unlocode || '';
+}
+
+function getLocCodeType(loc) {
+    if (loc?.code_type_label || loc?.code_type) {
+        return loc.code_type_label || loc.code_type;
+    }
+    const type = (loc?.type || '').toUpperCase();
+    if (type === 'AIRPORT') return 'IATA';
+    if (type === 'PORT' || type === 'SEAPORT') return 'UN/LOCODE';
+    return 'Internal code';
+}
+
+function updateEmptyState(isEmpty) {
+    const emptyEl = document.getElementById('map-empty-state');
+    if (!emptyEl) return;
+    if (isEmpty) {
+        emptyEl.classList.remove('hidden');
+    } else {
+        emptyEl.classList.add('hidden');
+    }
+}
+
+function setLoadingState(isLoading) {
+    const loadingEl = document.getElementById('map-loading-state');
+    if (!loadingEl) return;
+    if (isLoading) {
+        loadingEl.classList.remove('hidden');
+    } else {
+        loadingEl.classList.add('hidden');
+    }
+}
+
+function setErrorState(hasError) {
+    const errorEl = document.getElementById('map-error-state');
+    if (!errorEl) return;
+    if (hasError) {
+        errorEl.classList.remove('hidden');
+    } else {
+        errorEl.classList.add('hidden');
+    }
+}
+
+function buildShipmentPopupHtml(shipment, pointRole, locationName, locationCode = '') {
+    const modeInfo = getModeDisplay(shipment.mode || shipment.transport_mode);
+    const hasException = Boolean(shipment.has_exception || (shipment.exceptions && shipment.exceptions.length > 0));
+    const severityColor = getSeverityColor(shipment.delay_severity, hasException);
+    const severityText = getSeverityLabel(shipment.delay_severity, hasException);
+    const statusLabel = shipment.status_label || shipment.status || 'IN_TRANSIT';
+    const lastEvent = shipment.latest_tracking;
+    const lastEventTime = lastEvent?.occurred_at_formatted || lastEvent?.occurred_at || 'No events recorded';
+    const lastEventLocation = lastEvent?.location_name || shipment.current?.name || '';
+    const codeSuffix = locationCode ? ` (${escapeHtml(locationCode)})` : '';
+    const detailUrl = shipment.url ? escapeHtml(shipment.url) : '#';
+
+    return `
+        <div style="font-family: 'Inter', sans-serif; font-size: 11px; min-width: 210px; max-width: 260px; line-height: 1.45;">
+            <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 6px;">
+                <a href="${detailUrl}" style="font-family: 'JetBrains Mono', monospace; font-weight: 700; color: #38BDF8; text-decoration: none;">
+                    ${escapeHtml(shipment.tracking_number)}
+                </a>
+                <span style="font-size: 10px; font-weight: 600; padding: 2px 7px; border-radius: 9999px; background: rgba(37, 99, 235, 0.16); border: 1px solid rgba(56, 189, 248, 0.25); white-space: nowrap;">
+                    ${modeInfo.icon} ${modeInfo.label}
+                </span>
+            </div>
+            <div style="font-weight: 600; margin-bottom: 4px;">
+                <span style="opacity: 0.72;">${escapeHtml(pointRole)}:</span> ${escapeHtml(locationName)}${codeSuffix}
+            </div>
+            <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin-bottom: 4px;">
+                <span style="font-weight: 600;">Status: ${escapeHtml(statusLabel)}</span>
+                <span style="font-size: 10px; font-weight: 700; color: ${severityColor};">(${escapeHtml(severityText)})</span>
+            </div>
+            <div style="font-size: 10px; opacity: 0.8;">
+                Last event: <span style="font-family: 'JetBrains Mono', monospace;">${escapeHtml(lastEventTime)}</span>
+                ${lastEventLocation && pointRole !== 'Current location' ? `<div style="margin-top: 2px;">Checkpoint: ${escapeHtml(lastEventLocation)}</div>` : ''}
+            </div>
+        </div>
+    `;
+}
 
 /**
  * Get image textures and atmosphere colors according to theme
@@ -46,138 +191,133 @@ export function updateMaritimeGlobeTheme(theme) {
         .labelColor(() => cfg.labelColor);
 }
 
-function getLocCode(loc) {
-    return loc?.display_code || loc?.code || loc?.unlocode || '';
-}
+/**
+ * Render dataset onto the 3D Globe
+ */
+function renderGlobeData(dataset) {
+    if (!globeInstance) return;
 
-function getLocCodeType(loc) {
-    if (loc?.code_type_label || loc?.code_type) {
-        return loc.code_type_label || loc.code_type;
-    }
-    const type = (loc?.type || '').toUpperCase();
-    if (type === 'AIRPORT') return 'IATA';
-    if (type === 'PORT' || type === 'SEAPORT') return 'UN/LOCODE';
-    return 'Internal code';
+    const shipments = dataset.shipments || [];
+    const locations = dataset.locations || [];
+
+    const arcsData = [];
+    const vesselMarkers = [];
+
+    shipments.forEach(s => {
+        const orig = s.origin_location || s.originLocation || s.origin;
+        const dest = s.destination_location || s.destinationLocation || s.destination;
+
+        const startLat = orig?.latitude ?? orig?.lat;
+        const startLng = orig?.longitude ?? orig?.lng;
+        const endLat = dest?.latitude ?? dest?.lat;
+        const endLng = dest?.longitude ?? dest?.lng;
+
+        if (!isFiniteCoord(startLat) || !isFiniteCoord(startLng) || !isFiniteCoord(endLat) || !isFiniteCoord(endLng)) {
+            return;
+        }
+
+        const sLat = Number(startLat);
+        const sLng = Number(startLng);
+        const eLat = Number(endLat);
+        const eLng = Number(endLng);
+
+        const isDelayed = Boolean(s.is_delayed);
+        const hasException = Boolean(s.has_exception || (s.exceptions && s.exceptions.length > 0));
+        const modeInfo = getModeDisplay(s.mode || s.transport_mode || s.carrier_mode);
+        const severityColor = getSeverityColor(s.delay_severity, hasException);
+
+        const arcAltitude = modeInfo.code === 'AIR' ? 0.45 : (modeInfo.code === 'ROAD' ? 0.05 : 0.22);
+        const arcDashLength = modeInfo.code === 'AIR' ? 0.3 : 1.0;
+        const arcDashGap = modeInfo.code === 'AIR' ? 0.15 : 0;
+
+        arcsData.push({
+            shipmentId: s.id,
+            trackingNumber: s.tracking_number,
+            transportMode: modeInfo.code,
+            carrier: s.carrier || 'Carrier',
+            startLat: sLat,
+            startLng: sLng,
+            endLat: eLat,
+            endLng: eLng,
+            color: [severityColor, severityColor],
+            altitude: arcAltitude,
+            dashLength: arcDashLength,
+            dashGap: arcDashGap,
+            status: s.status_label || s.status,
+            isDelayed,
+            hasException,
+        });
+
+        const trackingPoint = s.latest_tracking || s.current;
+        const markerLat = isFiniteCoord(trackingPoint?.lat) ? Number(trackingPoint.lat) : (sLat + eLat) / 2;
+        const markerLng = isFiniteCoord(trackingPoint?.lng) ? Number(trackingPoint.lng) : (sLng + eLng) / 2;
+
+        vesselMarkers.push({
+            shipmentId: s.id,
+            trackingNumber: s.tracking_number,
+            transportMode: modeInfo.code,
+            lat: markerLat,
+            lng: markerLng,
+            carrier: s.carrier || 'Freight',
+            status: s.status_label || s.status,
+            isDelayed,
+            color: severityColor,
+            name: `${modeInfo.icon} ${s.tracking_number} [${modeInfo.label}] (${getLocCode(orig) || 'ORI'} -> ${getLocCode(dest) || 'DST'})`,
+        });
+    });
+
+    const pointsData = locations
+        .filter(loc => isFiniteCoord(loc.latitude) && isFiniteCoord(loc.longitude))
+        .map(loc => ({
+            id: loc.id,
+            name: loc.name,
+            code: getLocCode(loc),
+            codeType: getLocCodeType(loc),
+            unlocode: getLocCode(loc),
+            country: loc.country,
+            lat: Number(loc.latitude),
+            lng: Number(loc.longitude),
+            size: 0.8,
+            color: '#2DD4BF',
+        }));
+
+    const labelsData = pointsData.map(p => ({
+        lat: p.lat,
+        lng: p.lng,
+        text: p.code,
+        size: 1.1,
+    }));
+
+    globeInstance
+        .arcsData(arcsData)
+        .pointsData(pointsData)
+        .labelsData(labelsData)
+        .ringsData(vesselMarkers);
+
+    updateEmptyState(shipments.length === 0);
 }
 
 /**
- * Initialize 3D Earth Globe with Ocean Container Routes & Seaports
+ * Initialize 3D Earth Globe with Multimodal Routes & Locations
  */
 export function initMaritimeGlobe(containerId, options = {}) {
     const el = document.getElementById(containerId);
     if (!el) return null;
 
-    currentShipments = options.shipments || [];
-    currentLocations = options.locations || [];
+    globeContainerEl = el;
 
-    // Format arcs from shipments
-    const arcsData = [];
-    const vesselMarkers = [];
+    const shellEl = document.getElementById('dashboard-map-shell');
+    mapDataUrl = options.dataUrl
+        || shellEl?.getAttribute('data-map-data-url')
+        || mapDataUrl;
 
-    currentShipments.forEach(s => {
-        const orig = s.origin_location || s.originLocation || s.origin;
-        const dest = s.destination_location || s.destinationLocation || s.destination;
+    initialDataset = normalizeDataset(options);
+    currentDataset = initialDataset;
 
-        const startLat = parseFloat(orig?.latitude || orig?.lat || 0);
-        const startLng = parseFloat(orig?.longitude || orig?.lng || 0);
-        const endLat = parseFloat(dest?.latitude || dest?.lat || 0);
-        const endLng = parseFloat(dest?.longitude || dest?.lng || 0);
-
-        if (startLat && endLat) {
-            const isDelayed = Boolean(s.is_delayed);
-            const hasException = Boolean(s.exceptions && s.exceptions.length > 0);
-            const mode = (s.transport_mode || s.carrier_mode || 'SEA').toUpperCase();
-
-            // Mode icon & label for tooltips / popups
-            const modeIcon = mode === 'AIR' ? '✈️' : (mode === 'ROAD' ? '🚚' : '🚢');
-            const modeLabel = mode === 'AIR' ? 'Air' : (mode === 'ROAD' ? 'Road' : 'Sea');
-
-            // Arc colors
-            let arcColor;
-            if (hasException) {
-                arcColor = ['#F43F5E', '#FB7185'];
-            } else if (isDelayed) {
-                arcColor = ['#F59E0B', '#FBBF24'];
-            } else {
-                arcColor = mode === 'AIR'
-                    ? ['#0284C7', '#38BDF8']
-                    : (mode === 'ROAD' ? ['#059669', '#34D399'] : ['#2563EB', '#60A5FA']);
-            }
-
-            // Styling per mode:
-            // Sea: solid arc (arcAltitude 0.22, dashLength 1.0)
-            // Air: dashed higher arc (arcAltitude 0.45, dashLength 0.3)
-            // Road: straight low line (arcAltitude 0.05, dashLength 1.0)
-            const arcAltitude = mode === 'AIR' ? 0.45 : (mode === 'ROAD' ? 0.05 : 0.22);
-            const arcDashLength = mode === 'AIR' ? 0.3 : 1.0;
-            const arcDashGap = mode === 'AIR' ? 0.15 : 0;
-
-            arcsData.push({
-                shipmentId: s.id,
-                trackingNumber: s.tracking_number,
-                transportMode: mode,
-                carrier: s.carrier || 'Carrier',
-                startLat,
-                startLng,
-                endLat,
-                endLng,
-                color: arcColor,
-                altitude: arcAltitude,
-                dashLength: arcDashLength,
-                dashGap: arcDashGap,
-                status: s.status,
-                isDelayed,
-                hasException,
-            });
-
-            // Midpoint or current vessel position for vessel ring marker
-            const midLat = (startLat + endLat) / 2;
-            const midLng = (startLng + endLng) / 2;
-            vesselMarkers.push({
-                shipmentId: s.id,
-                trackingNumber: s.tracking_number,
-                transportMode: mode,
-                lat: s.current ? parseFloat(s.current.lat) : midLat,
-                lng: s.current ? parseFloat(s.current.lng) : midLng,
-                carrier: s.carrier || 'Freight',
-                status: s.status,
-                isDelayed,
-                color: hasException ? '#F43F5E' : (isDelayed ? '#F59E0B' : (mode === 'AIR' ? '#38BDF8' : (mode === 'ROAD' ? '#34D399' : '#60A5FA'))),
-                name: `${modeIcon} ${s.tracking_number} [${modeLabel}] (${getLocCode(orig) || 'ORI'} → ${getLocCode(dest) || 'DST'})`,
-            });
-        }
-    });
-
-    // Format location points
-    const pointsData = currentLocations.map(loc => ({
-        id: loc.id,
-        name: loc.name,
-        code: getLocCode(loc),
-        codeType: getLocCodeType(loc),
-        unlocode: getLocCode(loc),
-        country: loc.country,
-        lat: parseFloat(loc.latitude),
-        lng: parseFloat(loc.longitude),
-        size: 0.8,
-        color: '#2DD4BF',
-    }));
-
-    // Format location labels
-    const labelsData = currentLocations.map(loc => ({
-        lat: parseFloat(loc.latitude),
-        lng: parseFloat(loc.longitude),
-        text: getLocCode(loc),
-        size: 1.1,
-    }));
-
-    // Clear previous canvas if any
     el.innerHTML = '';
 
-    const currentTheme = document.documentElement.getAttribute('data-theme')
-        || (document.documentElement.classList.contains('light') ? 'light' : 'dark');
-    const themeCfg = getGlobeThemeConfig(currentTheme);
+    const themeCfg = getGlobeThemeConfig(getCurrentTheme());
 
-    // Create Globe instance
     globeInstance = Globe()(el)
         .globeImageUrl(themeCfg.globeImage)
         .bumpImageUrl(themeCfg.bumpImage)
@@ -185,30 +325,24 @@ export function initMaritimeGlobe(containerId, options = {}) {
         .atmosphereColor(themeCfg.atmosphereColor)
         .atmosphereAltitude(themeCfg.atmosphereAltitude)
         .showAtmosphere(true)
-        // Arcs (Trade lanes per mode)
-        .arcsData(arcsData)
         .arcColor('color')
         .arcAltitude('altitude')
         .arcStroke(1.8)
         .arcDashLength('dashLength')
         .arcDashGap('dashGap')
         .arcDashInitialGap(() => Math.random())
-        .arcDashAnimateTime(2200)
-        // Seaports (Points)
-        .pointsData(pointsData)
+        .arcDashAnimateTime(prefersReducedMotion() ? 0 : 2200)
         .pointLat('lat')
         .pointLng('lng')
         .pointColor('color')
         .pointAltitude(0.015)
         .pointRadius(0.65)
         .pointLabel(d => `
-            <div style="font-family: 'Inter', sans-serif; background: var(--bg-surface, #0B101E); border: 1px solid var(--border-color, #1E293B); border-radius: 8px; padding: 6px 10px; color: var(--text-primary, #fff); font-size: 11px; box-shadow: 0 4px 12px rgba(0,0,0,0.3);">
-                <div style="font-weight: 700; color: #2DD4BF;">${d.name}</div>
-                <div style="color: var(--text-secondary, #94A3B8); margin-top: 2px;">${d.codeType}: <b>${d.code}</b> &bull; ${d.country}</div>
+            <div style="font-family: 'Inter', sans-serif; background: var(--bg-surface, #0B1728); border: 1px solid var(--border-color, rgba(255,255,255,0.1)); border-radius: 8px; padding: 6px 10px; color: var(--text-primary, #E6EEF8); font-size: 11px; box-shadow: 0 4px 12px rgba(0,0,0,0.3);">
+                <div style="font-weight: 700; color: #2DD4BF;">${escapeHtml(d.name)}</div>
+                <div style="color: var(--text-secondary, #8FA3BC); margin-top: 2px;">${escapeHtml(d.codeType)}: <b>${escapeHtml(d.code)}</b> &bull; ${escapeHtml(d.country)}</div>
             </div>
         `)
-        // Labels
-        .labelsData(labelsData)
         .labelLat('lat')
         .labelLng('lng')
         .labelText('text')
@@ -216,33 +350,31 @@ export function initMaritimeGlobe(containerId, options = {}) {
         .labelDotRadius(0.3)
         .labelColor(() => themeCfg.labelColor)
         .labelResolution(2)
-        // Rings / Vessel markers
-        .ringsData(vesselMarkers)
         .ringLat('lat')
         .ringLng('lng')
         .ringColor('color')
         .ringMaxRadius(2.2)
-        .ringPropagationSpeed(1.2)
+        .ringPropagationSpeed(prefersReducedMotion() ? 0 : 1.2)
         .ringRepeatPeriod(1800);
 
-    // Initial camera view (Centered near Singapore / South China Sea gateway)
+    renderGlobeData(currentDataset);
+
     globeInstance.pointOfView({ lat: 18.0, lng: 110.0, altitude: 2.2 }, 1000);
 
-    // Auto-rotation
     const controls = globeInstance.controls();
     if (controls) {
-        controls.autoRotate = true;
+        controls.autoRotate = !prefersReducedMotion();
         controls.autoRotateSpeed = 0.45;
         controls.enableZoom = true;
 
-        // When user interacts, update map center coordinates display
         controls.addEventListener('change', () => {
-            const pov = globeInstance.pointOfView();
-            updateMapCoordinates(pov.lat, pov.lng);
+            if (currentMode === '3D') {
+                const pov = globeInstance.pointOfView();
+                updateMapCoordinates(pov.lat, pov.lng);
+            }
         });
     }
 
-    // On point / seaport click: flyTo seaport
     globeInstance.onPointClick(point => {
         if (controls) controls.autoRotate = false;
         globeInstance.pointOfView({ lat: point.lat, lng: point.lng, altitude: 1.5 }, 1200);
@@ -250,23 +382,242 @@ export function initMaritimeGlobe(containerId, options = {}) {
         highlightActivityRow(null, point.unlocode);
     });
 
-    // Resize handler
-    window.addEventListener('resize', () => {
-        if (globeInstance && el.clientWidth) {
-            globeInstance.width(el.clientWidth);
-            globeInstance.height(el.clientHeight || 460);
-        }
-    });
+    attachSharedListeners();
 
-    // Initial size trigger
     setTimeout(() => {
         if (globeInstance && el.clientWidth) {
             globeInstance.width(el.clientWidth);
-            globeInstance.height(el.clientHeight || 460);
+            globeInstance.height(el.clientHeight || 520);
         }
     }, 200);
 
     return globeInstance;
+}
+
+/**
+ * Render dataset onto the 2D Leaflet map: unwrapped great-circle/road routes + origin, current, destination markers.
+ */
+function renderLeaflet2DData(dataset) {
+    if (!leafletMapInstance || !leafletRouteLayer) return;
+
+    leafletRouteLayer.clearLayers();
+    routeRegistry.clear();
+
+    const shipments = dataset.shipments || [];
+    const isDark = getCurrentTheme() === 'dark';
+    const markerRingColor = isDark ? '#0B1728' : '#FFFFFF';
+
+    shipments.forEach(s => {
+        const orig = s.origin_location || s.originLocation || s.origin;
+        const dest = s.destination_location || s.destinationLocation || s.destination;
+
+        const origLatRaw = orig?.latitude ?? orig?.lat;
+        const origLngRaw = orig?.longitude ?? orig?.lng;
+        const destLatRaw = dest?.latitude ?? dest?.lat;
+        const destLngRaw = dest?.longitude ?? dest?.lng;
+
+        if (!isFiniteCoord(origLatRaw) || !isFiniteCoord(origLngRaw) || !isFiniteCoord(destLatRaw) || !isFiniteCoord(destLngRaw)) {
+            return;
+        }
+
+        const origLat = Number(origLatRaw);
+        const origLng = Number(origLngRaw);
+        const destLat = Number(destLatRaw);
+        const destLng = unwrapLongitudeNear(Number(destLngRaw), origLng);
+
+        const modeInfo = getModeDisplay(s.mode || s.transport_mode || s.carrier_mode);
+        const hasException = Boolean(s.has_exception || (s.exceptions && s.exceptions.length > 0));
+        const strokeColor = getSeverityColor(s.delay_severity, hasException);
+
+        const points = getGreatCircleArc([origLat, origLng], [destLat, destLng], {
+            mode: modeInfo.code,
+            numPoints: 64,
+        });
+
+        // Route line styling per mode:
+        // SEA: solid curved great-circle arc
+        // AIR: dashed higher arc
+        // ROAD: straight line
+        const dashArray = modeInfo.code === 'AIR' ? '8, 6' : null;
+        const weight = modeInfo.code === 'ROAD' ? 3.0 : (modeInfo.code === 'AIR' ? 2.4 : 2.6);
+
+        const polyline = L.polyline(points, {
+            color: strokeColor,
+            weight,
+            dashArray,
+            opacity: 0.9,
+        }).addTo(leafletRouteLayer);
+
+        const routeLabel = `${orig?.short_name || orig?.name || 'Origin'} -> ${dest?.short_name || dest?.name || 'Destination'}`;
+        polyline.bindPopup(buildShipmentPopupHtml(s, 'Route', routeLabel));
+
+        const originMarker = L.circleMarker([origLat, origLng], {
+            radius: 5,
+            fillColor: '#2563EB',
+            color: markerRingColor,
+            weight: 2,
+            opacity: 1,
+            fillOpacity: 0.95,
+        }).addTo(leafletRouteLayer);
+        originMarker.bindPopup(buildShipmentPopupHtml(s, 'Origin', orig?.name || 'Origin', getLocCode(orig)));
+
+        const destinationMarker = L.circleMarker([destLat, destLng], {
+            radius: 5,
+            fillColor: '#0891B2',
+            color: markerRingColor,
+            weight: 2,
+            opacity: 1,
+            fillOpacity: 0.95,
+        }).addTo(leafletRouteLayer);
+        destinationMarker.bindPopup(buildShipmentPopupHtml(s, 'Destination', dest?.name || 'Destination', getLocCode(dest)));
+
+        let currentMarker = null;
+        const trackingPoint = s.latest_tracking || s.current;
+        if (isFiniteCoord(trackingPoint?.lat) && isFiniteCoord(trackingPoint?.lng)) {
+            const currLat = Number(trackingPoint.lat);
+            const midLng = (origLng + destLng) / 2;
+            const currLng = unwrapLongitudeNear(Number(trackingPoint.lng), midLng);
+
+            currentMarker = L.circleMarker([currLat, currLng], {
+                radius: 7,
+                fillColor: strokeColor,
+                color: markerRingColor,
+                weight: 2.5,
+                opacity: 1,
+                fillOpacity: 1,
+            }).addTo(leafletRouteLayer);
+
+            const currName = trackingPoint.location_name || trackingPoint.name || 'Latest checkpoint';
+            const currCode = trackingPoint.code || trackingPoint.unlocode || '';
+            currentMarker.bindPopup(buildShipmentPopupHtml(s, 'Current location', currName, currCode));
+        }
+
+        const bounds = L.latLngBounds(points);
+        if (currentMarker) {
+            bounds.extend(currentMarker.getLatLng());
+        }
+
+        routeRegistry.set(s.tracking_number, {
+            shipment: s,
+            polyline,
+            originMarker,
+            destinationMarker,
+            currentMarker,
+            bounds,
+        });
+    });
+
+    updateEmptyState(shipments.length === 0);
+}
+
+/**
+ * Fit Leaflet bounds to all visible routes when container is visible.
+ */
+function fitLeafletBounds() {
+    if (!leafletMapInstance || !leafletContainerEl) return;
+    if (leafletContainerEl.offsetWidth === 0 || leafletContainerEl.offsetHeight === 0) return;
+
+    const entries = Array.from(routeRegistry.values());
+    if (entries.length === 0) {
+        leafletMapInstance.setView([15, 95], 2, { animate: false });
+        return;
+    }
+
+    const combinedBounds = entries.reduce((acc, entry) => {
+        return acc ? acc.extend(entry.bounds) : L.latLngBounds(entry.bounds.getSouthWest(), entry.bounds.getNorthEast());
+    }, null);
+
+    if (combinedBounds && combinedBounds.isValid()) {
+        leafletMapInstance.fitBounds(combinedBounds, {
+            padding: [48, 48],
+            maxZoom: 6,
+            animate: false,
+        });
+    }
+}
+
+/**
+ * Initialize 2D Leaflet Map inside the same container bounds
+ */
+export function initMaritime2DMap(containerId, options = {}) {
+    const el = document.getElementById(containerId);
+    if (!el) return null;
+
+    leafletContainerEl = el;
+
+    const shellEl = document.getElementById('dashboard-map-shell');
+    mapDataUrl = options.dataUrl
+        || el.getAttribute('data-map-data-url')
+        || shellEl?.getAttribute('data-map-data-url')
+        || mapDataUrl;
+
+    const dataset = options.initialData || options.shipments ? normalizeDataset(options) : currentDataset;
+    if (initialDataset.shipments.length === 0 && dataset.shipments.length > 0) {
+        initialDataset = dataset;
+    }
+    currentDataset = dataset;
+
+    const map = createMap(containerId, {
+        center: [15, 95],
+        zoom: 2,
+        minZoom: 2,
+        maxZoom: 18,
+        zoomControl: false,
+        worldCopyJump: false,
+        tileOverrides: {
+            tileUrl: dataset.meta?.tile_url,
+            attribution: dataset.meta?.tile_attribution,
+        },
+    });
+
+    if (!map) return null;
+
+    leafletMapInstance = map;
+    window.CargoTraceLeafletMap = map;
+    leafletRouteLayer = L.layerGroup().addTo(map);
+
+    map.on('moveend', () => {
+        if (currentMode === '2D') {
+            const center = map.getCenter();
+            updateMapCoordinates(center.lat, center.lng);
+        }
+    });
+
+    map._onThemeChange = () => {
+        renderLeaflet2DData(currentDataset);
+        if (currentMode === '2D') {
+            map.invalidateSize({ animate: false });
+        }
+    };
+
+    renderLeaflet2DData(currentDataset);
+    attachSharedListeners();
+
+    return map;
+}
+
+function handleViewportResize() {
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(() => {
+        if (globeInstance && globeContainerEl && globeContainerEl.clientWidth) {
+            globeInstance.width(globeContainerEl.clientWidth);
+            globeInstance.height(globeContainerEl.clientHeight || 520);
+        }
+        if (currentMode === '2D' && leafletMapInstance && leafletContainerEl && leafletContainerEl.offsetWidth > 0) {
+            leafletMapInstance.invalidateSize({ animate: false });
+            fitLeafletBounds();
+        }
+    }, 120);
+}
+
+function attachSharedListeners() {
+    if (windowListenersAttached || typeof window === 'undefined') return;
+    windowListenersAttached = true;
+
+    window.addEventListener('resize', handleViewportResize);
+    window.addEventListener('cargotrace:sidebar-collapse', () => {
+        setTimeout(handleViewportResize, 320);
+    });
 }
 
 /**
@@ -275,212 +626,269 @@ export function initMaritimeGlobe(containerId, options = {}) {
 export function updateMapCoordinates(lat, lng) {
     const latEl = document.getElementById('map-coord-lat');
     const lngEl = document.getElementById('map-coord-lng');
-    if (latEl) latEl.textContent = Number(lat).toFixed(6);
-    if (lngEl) lngEl.textContent = Number(lng).toFixed(6);
+    if (latEl && isFiniteCoord(lat)) latEl.textContent = Number(lat).toFixed(6);
+    if (lngEl && isFiniteCoord(lng)) lngEl.textContent = Number(lng).toFixed(6);
+}
+
+function flyAndOpenLeafletEntry(entry) {
+    if (!leafletMapInstance || !entry) return;
+
+    leafletMapInstance.invalidateSize({ animate: false });
+    const targetLayer = entry.currentMarker || entry.originMarker || entry.polyline;
+    const animate = !prefersReducedMotion();
+
+    let opened = false;
+    const openTargetPopup = () => {
+        if (opened) return;
+        opened = true;
+        if (targetLayer && typeof targetLayer.openPopup === 'function') {
+            targetLayer.openPopup();
+        }
+    };
+
+    leafletMapInstance.once('moveend', openTargetPopup);
+    leafletMapInstance.flyToBounds(entry.bounds, {
+        padding: [64, 64],
+        maxZoom: 6,
+        duration: animate ? 0.75 : 0,
+        animate,
+    });
+    setTimeout(openTargetPopup, animate ? 850 : 50);
 }
 
 /**
- * Fly camera to a specific shipment route or seaport on 3D Globe and 2D Map
+ * Fly camera to a specific shipment route on 3D Globe and 2D Leaflet Map and open its popup
  */
-export function focusMaritimeEntity(lat, lng, trackingNumber = null) {
-    updateMapCoordinates(lat, lng);
+export async function focusMaritimeEntity(lat, lng, trackingNumber = null) {
+    highlightActivityRow(trackingNumber);
 
-    // 1. Focus 3D Globe
-    if (globeInstance) {
+    if (isFiniteCoord(lat) && isFiniteCoord(lng)) {
+        updateMapCoordinates(lat, lng);
+    }
+
+    if (globeInstance && isFiniteCoord(lat) && isFiniteCoord(lng)) {
         const controls = globeInstance.controls();
         if (controls) controls.autoRotate = false;
-        globeInstance.pointOfView({ lat: Number(lat), lng: Number(lng), altitude: 1.6 }, 1000);
+        globeInstance.pointOfView({ lat: Number(lat), lng: Number(lng), altitude: 1.6 }, prefersReducedMotion() ? 0 : 1000);
     }
 
-    // 2. Focus 2D Leaflet Map
-    if (leafletMapInstance) {
-        leafletMapInstance.setView([Number(lat), Number(lng)], 4, { animate: true });
+    if (!leafletMapInstance) return;
+
+    if (trackingNumber && !routeRegistry.has(trackingNumber)) {
+        const existsInInitial = initialDataset.shipments.some(s => s.tracking_number === trackingNumber);
+        if (existsInInitial && activeFilter !== 'ALL') {
+            await setMapFilter('ALL');
+        }
     }
 
-    // 3. Highlight row in activities table
-    highlightActivityRow(trackingNumber);
+    if (trackingNumber && routeRegistry.has(trackingNumber)) {
+        const entry = routeRegistry.get(trackingNumber);
+        if (currentMode === '2D') {
+            flyAndOpenLeafletEntry(entry);
+        } else {
+            pendingFocusTracking = trackingNumber;
+        }
+        return;
+    }
+
+    if (currentMode === '2D' && isFiniteCoord(lat) && isFiniteCoord(lng)) {
+        leafletMapInstance.invalidateSize({ animate: false });
+        leafletMapInstance.flyTo([Number(lat), Number(lng)], 5, { animate: !prefersReducedMotion() });
+    }
 }
 
 /**
- * Highlight corresponding row in Maritime Activities table
+ * Highlight corresponding row in Freight Activities table
  */
-function highlightActivityRow(trackingNumber = null, portUnlocode = null) {
+function highlightActivityRow(trackingNumber = null) {
     const rows = document.querySelectorAll('.activity-row');
     rows.forEach(r => {
         r.classList.remove('bg-blue-600/15', 'border-blue-500/40');
         if (trackingNumber && r.getAttribute('data-tracking') === trackingNumber) {
             r.classList.add('bg-blue-600/15', 'border-blue-500/40');
-            r.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            r.scrollIntoView({ behavior: prefersReducedMotion() ? 'auto' : 'smooth', block: 'nearest' });
         }
     });
 }
 
-/**
- * Initialize 2D Leaflet Map inside the same container bounds
- */
-export function initMaritime2DMap(containerId, options = {}) {
-    const map = createMap(containerId, {
-        center: [20, 10],
-        zoom: 2,
-        minZoom: 2,
-        maxZoom: 18,
-        zoomControl: false, // Custom zoom buttons in UI
+function updateFilterTabButtons(activeKey) {
+    document.querySelectorAll('.map-filter-tab').forEach(btn => {
+        btn.className = 'px-2.5 py-1 rounded-xl font-semibold transition map-filter-tab theme-text-muted hover:theme-heading cursor-pointer';
+        btn.setAttribute('aria-pressed', 'false');
     });
 
-    if (!map) return null;
-    leafletMapInstance = map;
-    window.CargoTraceLeafletMap = map;
+    const activeBtn = document.getElementById(`tab-filter-${activeKey.toLowerCase()}`);
+    if (activeBtn) {
+        activeBtn.className = 'px-2.5 py-1 rounded-xl font-semibold transition map-filter-tab bg-blue-600 text-white shadow-sm cursor-pointer';
+        activeBtn.setAttribute('aria-pressed', 'true');
+    }
+}
 
-    const layerAll = L.layerGroup().addTo(map);
-    const layerSea = L.layerGroup();
-    const layerAir = L.layerGroup();
-    const layerRoad = L.layerGroup();
-    const layerDelayed = L.layerGroup();
-    const layerExceptions = L.layerGroup();
+function filterDatasetClientSide(dataset, key) {
+    const shipments = (dataset.shipments || []).filter(s => {
+        const mode = String(s.mode || s.transport_mode || 'SEA').toUpperCase();
+        const hasException = Boolean(s.has_exception || (s.exceptions && s.exceptions.length > 0));
+        if (key === 'SEA' || key === 'AIR' || key === 'ROAD') return mode === key;
+        if (key === 'DELAYED') return Boolean(s.is_delayed);
+        if (key === 'EXCEPTIONS') return hasException;
+        return true;
+    });
 
-    map._modeLayers = {
-        ALL: layerAll,
-        SEA: layerSea,
-        AIR: layerAir,
-        ROAD: layerRoad,
-        DELAYED: layerDelayed,
-        EXCEPTIONS: layerExceptions,
+    return {
+        shipments,
+        locations: dataset.locations || [],
+        meta: dataset.meta || {},
     };
+}
 
-    // Plot Seaports
-    locations.forEach(loc => {
-        if (!loc.latitude || !loc.longitude) return;
-        const marker = L.circleMarker([parseFloat(loc.latitude), parseFloat(loc.longitude)], {
-            radius: 5,
-            fillColor: '#2DD4BF',
-            color: '#0D9488',
-            weight: 2,
-            opacity: 1,
-            fillOpacity: 0.9,
-        }).addTo(map);
+/**
+ * Filter both 3D Globe and 2D Leaflet Map via the role-scoped map-data endpoint.
+ */
+export async function setMapFilter(filterKey) {
+    const key = String(filterKey || 'ALL').toUpperCase();
+    activeFilter = key;
+    updateFilterTabButtons(key);
+    setErrorState(false);
 
-        marker.bindPopup(`
-            <div style="font-family: 'Inter', sans-serif; font-size: 11px;">
-                <div style="font-weight: 700; color: #0D9488;">${loc.name}</div>
-                <div style="color: #64748B; margin-top: 2px;">${getLocCodeType(loc)}: <b>${getLocCode(loc)}</b> &bull; ${loc.country}</div>
-            </div>
-        `);
-    });
-
-    // Plot Ocean / Multimodal Arcs
-    shipments.forEach(s => {
-        const orig = s.origin_location || s.originLocation || s.origin;
-        const dest = s.destination_location || s.destinationLocation || s.destination;
-
-        const origLat = orig?.latitude || orig?.lat;
-        const origLng = orig?.longitude || orig?.lng;
-        const destLat = dest?.latitude || dest?.lat;
-        const destLng = dest?.longitude || dest?.lng;
-
-        if (origLat && destLat) {
-            const start = [parseFloat(origLat), parseFloat(origLng)];
-            const end = [parseFloat(destLat), parseFloat(destLng)];
-            const mode = (s.transport_mode || s.carrier_mode || 'SEA').toUpperCase();
-
-            // Route styling per mode:
-            // Sea: solid arc
-            // Air: dashed higher curve
-            // Road: straight line (direct polyline without curve)
-            const isDelayed = Boolean(s.is_delayed);
-            const hasException = Boolean(s.exceptions && s.exceptions.length > 0);
-
-            let strokeColor;
-            if (hasException) {
-                strokeColor = '#F43F5E';
-            } else if (isDelayed) {
-                strokeColor = '#F59E0B';
-            } else {
-                strokeColor = mode === 'AIR' ? '#0284C7' : (mode === 'ROAD' ? '#059669' : '#2563EB');
-            }
-
-            const points = mode === 'ROAD' ? [start, end] : getBezierCurve(start, end);
-            const dashArray = mode === 'AIR'
-                ? '6, 6'
-                : (mode === 'ROAD' ? null : (isDelayed ? '8, 6' : null));
-
-            const polyline = L.polyline(points, {
-                color: strokeColor,
-                weight: mode === 'ROAD' ? 2.8 : 2.4,
-                dashArray: dashArray,
-                opacity: 0.88,
-            });
-
-            const modeBadgeText = mode === 'AIR' ? '✈️ Air' : (mode === 'ROAD' ? '🚚 Road' : '🚢 Sea');
-
-            polyline.bindPopup(`
-                <div style="font-family: 'Inter', sans-serif; font-size: 11px;">
-                    <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px;">
-                        <span style="font-weight: 700; color: #0284C7;">${s.tracking_number}</span>
-                        <span style="font-size: 10px; font-weight: 600; padding: 2px 6px; border-radius: 9999px; background: rgba(2, 132, 199, 0.15);">${modeBadgeText}</span>
-                    </div>
-                    <div style="color: #64748B; margin-top: 4px;">${orig?.name || 'Origin'} &rarr; ${dest?.name || 'Destination'}</div>
-                    <div style="margin-top: 4px; font-weight: 600; color: ${strokeColor};">
-                        Status: ${s.status} ${isDelayed ? '(DELAYED)' : ''}
-                    </div>
-                </div>
-            `);
-
-            polyline.addTo(layerAll);
-            if (isDelayed) polyline.addTo(layerDelayed);
-            if (hasException) polyline.addTo(layerExceptions);
-            if (mode === 'SEA') polyline.addTo(layerSea);
-            if (mode === 'AIR') polyline.addTo(layerAir);
-            if (mode === 'ROAD') polyline.addTo(layerRoad);
+    if (!mapDataUrl) {
+        currentDataset = filterDatasetClientSide(initialDataset, key);
+        renderGlobeData(currentDataset);
+        renderLeaflet2DData(currentDataset);
+        if (currentMode === '2D' && leafletMapInstance) {
+            leafletMapInstance.invalidateSize({ animate: false });
+            fitLeafletBounds();
         }
-    });
+        return currentDataset;
+    }
 
-    return map;
+    if (activeFetchController) {
+        activeFetchController.abort();
+    }
+    activeFetchController = new AbortController();
+
+    const params = new URLSearchParams();
+    if (key === 'SEA' || key === 'AIR' || key === 'ROAD') {
+        params.set('mode', key);
+    } else if (key === 'DELAYED' || key === 'EXCEPTIONS') {
+        params.set('filter', key);
+    }
+
+    const queryString = params.toString();
+    const url = queryString ? `${mapDataUrl}?${queryString}` : mapDataUrl;
+
+    setLoadingState(true);
+
+    try {
+        const res = await fetch(url, {
+            method: 'GET',
+            headers: {
+                Accept: 'application/json',
+                'X-Requested-With': 'XMLHttpRequest',
+            },
+            signal: activeFetchController.signal,
+        });
+
+        if (!res.ok) {
+            throw new Error(`Map data request failed (${res.status})`);
+        }
+
+        const json = await res.json();
+        const payload = json && json.data ? json.data : json;
+        currentDataset = normalizeDataset({ initialData: payload });
+
+        renderGlobeData(currentDataset);
+        renderLeaflet2DData(currentDataset);
+
+        if (currentMode === '2D' && leafletMapInstance) {
+            leafletMapInstance.invalidateSize({ animate: false });
+            fitLeafletBounds();
+        }
+    } catch (err) {
+        if (err && err.name === 'AbortError') {
+            return currentDataset;
+        }
+        setErrorState(true);
+        currentDataset = filterDatasetClientSide(initialDataset, key);
+        renderGlobeData(currentDataset);
+        renderLeaflet2DData(currentDataset);
+        if (currentMode === '2D' && leafletMapInstance) {
+            leafletMapInstance.invalidateSize({ animate: false });
+            fitLeafletBounds();
+        }
+    } finally {
+        setLoadingState(false);
+    }
+
+    return currentDataset;
 }
 
 /**
  * Switch between 3D Globe and 2D Leaflet Map
  */
 export function setMapMode(mode) {
-    currentMode = mode;
+    currentMode = mode === '2D' ? '2D' : '3D';
     const globe3dEl = document.getElementById('globe-3d-canvas');
     const map2dEl = document.getElementById('globe-2d-canvas');
     const btn3d = document.getElementById('btn-mode-3d');
     const btn2d = document.getElementById('btn-mode-2d');
 
-    if (mode === '3D') {
+    if (currentMode === '3D') {
         if (globe3dEl) globe3dEl.classList.remove('hidden');
         if (map2dEl) map2dEl.classList.add('hidden');
 
         if (btn3d) {
-            btn3d.className = 'px-3.5 py-1 rounded-full text-xs font-semibold bg-blue-600 text-white shadow-md transition-all flex items-center gap-1.5';
+            btn3d.className = 'px-3.5 py-1 rounded-full text-xs font-semibold bg-blue-600 text-white shadow-md transition-all flex items-center gap-1.5 cursor-pointer';
+            btn3d.setAttribute('aria-pressed', 'true');
         }
         if (btn2d) {
-            btn2d.className = 'px-3.5 py-1 rounded-full text-xs font-semibold text-slate-400 hover:text-white transition-all flex items-center gap-1.5';
+            btn2d.className = 'px-3.5 py-1 rounded-full text-xs font-semibold theme-text-muted hover:text-cyan-400 transition-all flex items-center gap-1.5 cursor-pointer';
+            btn2d.setAttribute('aria-pressed', 'false');
         }
 
         if (globeInstance) {
             const controls = globeInstance.controls();
-            if (controls) controls.autoRotate = true;
+            if (controls) controls.autoRotate = !prefersReducedMotion();
+            const pov = globeInstance.pointOfView();
+            updateMapCoordinates(pov.lat, pov.lng);
         }
     } else {
         if (globe3dEl) globe3dEl.classList.add('hidden');
-        if (map2dEl) {
-            map2dEl.classList.remove('hidden');
-            if (leafletMapInstance) {
-                setTimeout(() => leafletMapInstance.invalidateSize(), 100);
-            }
-        }
+        if (map2dEl) map2dEl.classList.remove('hidden');
 
         if (btn3d) {
-            btn3d.className = 'px-3.5 py-1 rounded-full text-xs font-semibold text-slate-400 hover:text-white transition-all flex items-center gap-1.5';
+            btn3d.className = 'px-3.5 py-1 rounded-full text-xs font-semibold theme-text-muted hover:text-cyan-400 transition-all flex items-center gap-1.5 cursor-pointer';
+            btn3d.setAttribute('aria-pressed', 'false');
         }
         if (btn2d) {
-            btn2d.className = 'px-3.5 py-1 rounded-full text-xs font-semibold bg-blue-600 text-white shadow-md transition-all flex items-center gap-1.5';
+            btn2d.className = 'px-3.5 py-1 rounded-full text-xs font-semibold bg-blue-600 text-white shadow-md transition-all flex items-center gap-1.5 cursor-pointer';
+            btn2d.setAttribute('aria-pressed', 'true');
         }
 
         if (globeInstance) {
             const controls = globeInstance.controls();
             if (controls) controls.autoRotate = false;
+        }
+
+        if (leafletMapInstance) {
+            const refreshVisibleMap = () => {
+                leafletMapInstance.invalidateSize({ animate: false });
+                if (pendingFocusTracking && routeRegistry.has(pendingFocusTracking)) {
+                    const entry = routeRegistry.get(pendingFocusTracking);
+                    pendingFocusTracking = null;
+                    flyAndOpenLeafletEntry(entry);
+                } else {
+                    fitLeafletBounds();
+                }
+                const center = leafletMapInstance.getCenter();
+                updateMapCoordinates(center.lat, center.lng);
+            };
+
+            requestAnimationFrame(refreshVisibleMap);
+            setTimeout(() => {
+                if (currentMode === '2D' && leafletMapInstance) {
+                    leafletMapInstance.invalidateSize({ animate: false });
+                }
+            }, 120);
         }
     }
 }
@@ -493,7 +901,7 @@ export function zoomMap(direction) {
         const pov = globeInstance.pointOfView();
         const delta = direction === 'in' ? -0.4 : 0.4;
         const newAltitude = Math.max(0.6, Math.min(3.5, pov.altitude + delta));
-        globeInstance.pointOfView({ altitude: newAltitude }, 400);
+        globeInstance.pointOfView({ altitude: newAltitude }, prefersReducedMotion() ? 0 : 400);
     } else if (leafletMapInstance) {
         if (direction === 'in') {
             leafletMapInstance.zoomIn();

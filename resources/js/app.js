@@ -3,6 +3,7 @@ import {
     initMaritimeGlobe,
     initMaritime2DMap,
     setMapMode,
+    setMapFilter,
     zoomMap,
     focusMaritimeEntity,
     updateMaritimeGlobeTheme
@@ -114,6 +115,7 @@ window.CargoTrace = {
     initMaritimeGlobe,
     initMaritime2DMap,
     setMapMode,
+    setMapFilter,
     zoomMap,
     focusMaritimeEntity,
     toggleTheme,

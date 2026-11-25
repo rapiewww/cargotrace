@@ -68,7 +68,7 @@
     <!-- TOP SECTION: Global View (3D Earth Globe / 2D Map) + Main Statistics -->
     <div class="grid grid-cols-1 xl:grid-cols-12 gap-6">
         <!-- LEFT 9 COLS: "Global View" Canvas Container -->
-        <div class="xl:col-span-9 relative rounded-3xl theme-card border overflow-hidden flex flex-col justify-between min-h-[520px]">
+        <div id="dashboard-map-shell" data-map-data-url="{{ route('dashboard.map-data') }}" class="xl:col-span-9 relative rounded-3xl theme-card border overflow-hidden flex flex-col justify-between min-h-[520px]">
             <!-- Top Controls Overlay: Title, Status, Delay Popover, Coordinates -->
             <div class="relative z-20 p-6 sm:p-8 flex flex-col sm:flex-row sm:items-start justify-between gap-6 pointer-events-none">
                 <!-- Left Title & Compact Delay Popover (Globe is the single focal point) -->
@@ -142,17 +142,38 @@
             <div id="globe-3d-canvas" class="absolute inset-0 w-full h-full z-10 cursor-grab active:cursor-grabbing"></div>
 
             <!-- 2D Leaflet Map Canvas (Alternative) -->
-            <div id="globe-2d-canvas" class="absolute inset-0 w-full h-full z-10 hidden theme-page"></div>
+            <div id="globe-2d-canvas" data-map-data-url="{{ route('dashboard.map-data') }}" role="region" aria-label="2D Leaflet shipment route map" class="absolute inset-0 w-full h-full z-10 hidden theme-page"></div>
+
+            <!-- Empty / Loading / Error States Inside Map -->
+            <div id="map-empty-state" role="status" aria-live="polite" class="{{ count($mapData['shipments'] ?? []) === 0 ? '' : 'hidden ' }}absolute inset-0 z-20 flex items-center justify-center p-6 pointer-events-none">
+                <div class="px-5 py-4 rounded-2xl theme-card-elevated border theme-border shadow-xl backdrop-blur-md text-center max-w-xs space-y-1 pointer-events-auto">
+                    <p class="text-sm font-semibold theme-heading">No routes match this filter</p>
+                    <p class="text-xs theme-text-secondary">Select another mode or clear the active filter.</p>
+                </div>
+            </div>
+
+            <div id="map-loading-state" aria-live="polite" class="hidden absolute bottom-20 left-6 z-20 pointer-events-none">
+                <div class="px-3 py-1.5 rounded-xl theme-card-elevated border theme-border shadow-lg backdrop-blur-md text-[11px] font-medium theme-text-secondary">
+                    Updating routes...
+                </div>
+            </div>
+
+            <div id="map-error-state" role="alert" class="hidden absolute bottom-20 right-6 z-20 pointer-events-none">
+                <div class="px-3 py-1.5 rounded-xl theme-card-elevated border border-rose-500/40 shadow-lg backdrop-blur-md text-[11px] font-medium text-rose-500">
+                    Could not refresh live map routes. Showing cached routes.
+                </div>
+            </div>
 
             <!-- Map Mode & Filter Tabs Overlay (Top Right of Map) -->
-            <div class="absolute top-6 right-6 z-20 pointer-events-auto flex flex-col items-end gap-2">
+            <div class="absolute top-6 right-6 z-20 pointer-events-auto flex flex-col items-end gap-2 max-w-[calc(100%-3rem)]">
                 <!-- Mode & Filter Tabs -->
                 <div class="flex items-center p-1 rounded-2xl theme-card-elevated border theme-border shadow-xl backdrop-blur-md overflow-x-auto max-w-full text-xs">
                     <button
                         type="button"
                         onclick="setMapFilter('ALL')"
                         id="tab-filter-all"
-                        class="px-2.5 py-1 rounded-xl font-semibold transition map-filter-tab bg-blue-600 text-white"
+                        aria-pressed="true"
+                        class="px-2.5 py-1 rounded-xl font-semibold transition map-filter-tab bg-blue-600 text-white cursor-pointer"
                     >
                         All
                     </button>
@@ -160,7 +181,8 @@
                         type="button"
                         onclick="setMapFilter('SEA')"
                         id="tab-filter-sea"
-                        class="px-2.5 py-1 rounded-xl font-semibold transition map-filter-tab theme-text-muted hover:theme-heading"
+                        aria-pressed="false"
+                        class="px-2.5 py-1 rounded-xl font-semibold transition map-filter-tab theme-text-muted hover:theme-heading cursor-pointer"
                     >
                         🚢 Sea
                     </button>
@@ -168,7 +190,8 @@
                         type="button"
                         onclick="setMapFilter('AIR')"
                         id="tab-filter-air"
-                        class="px-2.5 py-1 rounded-xl font-semibold transition map-filter-tab theme-text-muted hover:theme-heading"
+                        aria-pressed="false"
+                        class="px-2.5 py-1 rounded-xl font-semibold transition map-filter-tab theme-text-muted hover:theme-heading cursor-pointer"
                     >
                         ✈️ Air
                     </button>
@@ -176,7 +199,8 @@
                         type="button"
                         onclick="setMapFilter('ROAD')"
                         id="tab-filter-road"
-                        class="px-2.5 py-1 rounded-xl font-semibold transition map-filter-tab theme-text-muted hover:theme-heading"
+                        aria-pressed="false"
+                        class="px-2.5 py-1 rounded-xl font-semibold transition map-filter-tab theme-text-muted hover:theme-heading cursor-pointer"
                     >
                         🚚 Road
                     </button>
@@ -185,7 +209,8 @@
                         type="button"
                         onclick="setMapFilter('DELAYED')"
                         id="tab-filter-delayed"
-                        class="px-2.5 py-1 rounded-xl font-semibold transition map-filter-tab theme-text-muted hover:text-amber-500"
+                        aria-pressed="false"
+                        class="px-2.5 py-1 rounded-xl font-semibold transition map-filter-tab theme-text-muted hover:text-amber-500 cursor-pointer"
                     >
                         Delayed
                     </button>
@@ -193,22 +218,43 @@
                         type="button"
                         onclick="setMapFilter('EXCEPTIONS')"
                         id="tab-filter-exceptions"
-                        class="px-2.5 py-1 rounded-xl font-semibold transition map-filter-tab theme-text-muted hover:text-rose-500"
+                        aria-pressed="false"
+                        class="px-2.5 py-1 rounded-xl font-semibold transition map-filter-tab theme-text-muted hover:text-rose-500 cursor-pointer"
                     >
                         Exceptions
                     </button>
                 </div>
 
-                <!-- Legend Pill -->
-                <div class="px-3 py-1.5 rounded-xl theme-card-elevated border theme-border shadow-lg backdrop-blur-md text-[10px] flex items-center gap-3 font-mono">
+                <!-- Legend Pill (Mode geometry + Delay severity + Markers) -->
+                <div class="px-3 py-1.5 rounded-xl theme-card-elevated border theme-border shadow-lg backdrop-blur-md text-[10px] flex flex-wrap items-center justify-end gap-x-3 gap-y-1">
                     <span class="flex items-center gap-1 theme-text-secondary">
-                        <span class="w-2.5 h-0.5 bg-blue-500 rounded"></span> Sea (Solid)
+                        <span class="w-3 h-0.5 bg-blue-500 rounded inline-block"></span> 🚢 Sea (Solid arc)
                     </span>
                     <span class="flex items-center gap-1 theme-text-secondary">
-                        <span class="w-2.5 h-0.5 border-b border-dashed border-sky-400"></span> Air (Dashed arc)
+                        <span class="w-3 h-0.5 border-b-2 border-dashed border-sky-400 inline-block"></span> ✈️ Air (Dashed high arc)
                     </span>
                     <span class="flex items-center gap-1 theme-text-secondary">
-                        <span class="w-2.5 h-0.5 bg-emerald-500 rounded"></span> Road (Direct line)
+                        <span class="w-3 h-0.5 bg-emerald-500 rounded inline-block"></span> 🚚 Road (Straight line)
+                    </span>
+                    <span class="w-px h-3 bg-slate-300 dark:bg-slate-700 hidden sm:inline-block"></span>
+                    <span class="flex items-center gap-1 theme-text-secondary">
+                        <span class="w-2 h-2 rounded-full bg-emerald-500 inline-block"></span> On time
+                    </span>
+                    <span class="flex items-center gap-1 theme-text-secondary">
+                        <span class="w-2 h-2 rounded-full bg-amber-500 inline-block"></span> Low
+                    </span>
+                    <span class="flex items-center gap-1 theme-text-secondary">
+                        <span class="w-2 h-2 rounded-full bg-orange-500 inline-block"></span> Medium
+                    </span>
+                    <span class="flex items-center gap-1 theme-text-secondary">
+                        <span class="w-2 h-2 rounded-full bg-rose-500 inline-block"></span> High / Exception
+                    </span>
+                    <span class="w-px h-3 bg-slate-300 dark:bg-slate-700 hidden sm:inline-block"></span>
+                    <span class="flex items-center gap-1 theme-text-secondary">
+                        <span class="w-2 h-2 rounded-full bg-blue-600 inline-block"></span> Origin
+                    </span>
+                    <span class="flex items-center gap-1 theme-text-secondary">
+                        <span class="w-2 h-2 rounded-full bg-cyan-600 inline-block"></span> Destination
                     </span>
                 </div>
             </div>
@@ -221,16 +267,18 @@
                         <button
                             id="btn-mode-3d"
                             type="button"
+                            aria-pressed="true"
                             onclick="window.CargoTrace && window.CargoTrace.setMapMode ? window.CargoTrace.setMapMode('3D') : null"
-                            class="px-3.5 py-1 rounded-full text-xs font-semibold bg-blue-600 text-white shadow-md transition-all flex items-center gap-1.5"
+                            class="px-3.5 py-1 rounded-full text-xs font-semibold bg-blue-600 text-white shadow-md transition-all flex items-center gap-1.5 cursor-pointer"
                         >
                             <span>🌐 3D</span>
                         </button>
                         <button
                             id="btn-mode-2d"
                             type="button"
+                            aria-pressed="false"
                             onclick="window.CargoTrace && window.CargoTrace.setMapMode ? window.CargoTrace.setMapMode('2D') : null"
-                            class="px-3.5 py-1 rounded-full text-xs font-semibold theme-text-muted hover:text-cyan-400 transition-all flex items-center gap-1.5"
+                            class="px-3.5 py-1 rounded-full text-xs font-semibold theme-text-muted hover:text-cyan-400 transition-all flex items-center gap-1.5 cursor-pointer"
                         >
                             <span>🗺️ 2D</span>
                         </button>
@@ -242,16 +290,18 @@
                     <span class="text-[11px] font-semibold theme-text-muted pl-2">Zoom</span>
                     <button
                         type="button"
+                        aria-label="Zoom out"
                         onclick="window.CargoTrace && window.CargoTrace.zoomMap ? window.CargoTrace.zoomMap('out') : null"
-                        class="w-7 h-7 rounded-full bg-slate-200 dark:bg-slate-800 text-slate-800 dark:text-white flex items-center justify-center font-bold text-xs hover:bg-slate-300 dark:hover:bg-slate-700 transition"
+                        class="w-7 h-7 rounded-full bg-slate-200 dark:bg-slate-800 text-slate-800 dark:text-white flex items-center justify-center font-bold text-xs hover:bg-slate-300 dark:hover:bg-slate-700 transition cursor-pointer"
                         title="Zoom out"
                     >
                         &minus;
                     </button>
                     <button
                         type="button"
+                        aria-label="Zoom in"
                         onclick="window.CargoTrace && window.CargoTrace.zoomMap ? window.CargoTrace.zoomMap('in') : null"
-                        class="w-7 h-7 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold text-xs hover:bg-blue-500 shadow-md transition"
+                        class="w-7 h-7 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold text-xs hover:bg-blue-500 shadow-md transition cursor-pointer"
                         title="Zoom in"
                     >
                         &#43;
@@ -470,8 +520,10 @@
                             @endphp
                             <tr
                                 class="activity-row cursor-pointer hover:bg-blue-600/10 transition-colors duration-150 border-l-2 border-transparent"
+                                tabindex="0"
                                 data-tracking="{{ $s->tracking_number }}"
-                                onclick="window.CargoTrace && window.CargoTrace.focusMaritimeEntity ? window.CargoTrace.focusMaritimeEntity({{ $curr->latitude ?? $orig->latitude ?? 0 }}, {{ $curr->longitude ?? $orig->longitude ?? 0 }}, '{{ $s->tracking_number }}') : null"
+                                onclick="if (event.target.closest('a, button')) return; window.CargoTrace && window.CargoTrace.focusMaritimeEntity ? window.CargoTrace.focusMaritimeEntity({{ $curr->latitude ?? $orig->latitude ?? 0 }}, {{ $curr->longitude ?? $orig->longitude ?? 0 }}, '{{ $s->tracking_number }}') : null"
+                                onkeydown="if ((event.key === 'Enter' || event.key === ' ') && !event.target.closest('a, button')) { event.preventDefault(); window.CargoTrace && window.CargoTrace.focusMaritimeEntity ? window.CargoTrace.focusMaritimeEntity({{ $curr->latitude ?? $orig->latitude ?? 0 }}, {{ $curr->longitude ?? $orig->longitude ?? 0 }}, '{{ $s->tracking_number }}') : null; }"
                             >
                                 <!-- Cargo ID & Carrier Icon -->
                                 <td class="py-3.5 px-3">
@@ -764,8 +816,10 @@
             globe3dId: 'globe-3d-canvas',
             map2dId: 'globe-2d-canvas',
             options: {
-                shipments: @json($mapShipments),
-                locations: @json($locations)
+                dataUrl: '{{ route('dashboard.map-data') }}',
+                initialData: @json($mapData),
+                shipments: @json($mapData['shipments']),
+                locations: @json($mapData['locations'])
             }
         },
         dashboardCharts: {
@@ -847,22 +901,10 @@
 
     // Map Filter Tabs (All, Sea, Air, Road, Delayed, Exceptions)
     function setMapFilter(filterKey) {
-        document.querySelectorAll('.map-filter-tab').forEach(btn => {
-            btn.className = 'px-2.5 py-1 rounded-xl font-semibold transition map-filter-tab theme-text-muted hover:theme-heading';
-        });
-        const activeBtn = document.getElementById(`tab-filter-${filterKey.toLowerCase()}`);
-        if (activeBtn) {
-            activeBtn.className = 'px-2.5 py-1 rounded-xl font-semibold transition map-filter-tab bg-blue-600 text-white shadow-sm';
+        if (window.CargoTrace && window.CargoTrace.setMapFilter) {
+            return window.CargoTrace.setMapFilter(filterKey);
         }
-
-        const mapObj = window.CargoTraceLeafletMap;
-        if (mapObj && mapObj._modeLayers) {
-            Object.values(mapObj._modeLayers).forEach(layer => mapObj.removeLayer(layer));
-            const target = mapObj._modeLayers[filterKey];
-            if (target) {
-                mapObj.addLayer(target);
-            }
-        }
+        return null;
     }
 </script>
 @endsection

@@ -8,11 +8,14 @@ use App\Models\Notification;
 use App\Models\Setting;
 use App\Models\Shipment;
 use App\Models\ShipmentException;
+use App\Models\User;
 use App\Services\CurrencyService;
 use App\Services\ExternalIntegrationService;
 use App\Services\FreeTimeService;
 use App\Services\MaritimeNewsService;
 use App\Services\WeatherService;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
@@ -306,55 +309,9 @@ class DashboardController extends Controller
             'ROAD' => (clone $shipmentQuery)->whereIn('status', ['IN_TRANSIT', 'PICKED_UP', 'BOOKED'])->where('transport_mode', 'ROAD')->count(),
         ];
 
-        // Map payload formatting for client-side Leaflet
-        $mapShipments = $activeShipments->map(function ($s) {
-            return [
-                'id' => $s->id,
-                'tracking_number' => $s->tracking_number,
-                'transport_mode' => $s->transport_mode ?? 'SEA',
-                'primary_reference' => $s->primary_reference,
-                'status' => $s->status,
-                'is_delayed' => (bool) $s->is_delayed,
-                'delay_hours' => (int) $s->delay_hours,
-                'carrier' => $s->carrier?->name ?? 'Carrier',
-                'carrier_mode' => $s->carrier?->mode ?? $s->transport_mode ?? 'SEA',
-                'origin' => [
-                    'name' => $s->originLocation?->name ?? 'Origin',
-                    'short_name' => $s->originLocation?->short_name ?? 'Origin',
-                    'code' => $s->originLocation?->display_code ?? 'ORI',
-                    'code_type' => $s->originLocation?->code_type_label ?? 'Code',
-                    'unlocode' => $s->originLocation?->display_code ?? 'ORI',
-                    'city' => $s->originLocation?->city ?? '',
-                    'lat' => (float) ($s->originLocation?->latitude ?? 0),
-                    'lng' => (float) ($s->originLocation?->longitude ?? 0),
-                ],
-                'destination' => [
-                    'name' => $s->destinationLocation?->name ?? 'Destination',
-                    'short_name' => $s->destinationLocation?->short_name ?? 'Destination',
-                    'code' => $s->destinationLocation?->display_code ?? 'DST',
-                    'code_type' => $s->destinationLocation?->code_type_label ?? 'Code',
-                    'unlocode' => $s->destinationLocation?->display_code ?? 'DST',
-                    'city' => $s->destinationLocation?->city ?? '',
-                    'lat' => (float) ($s->destinationLocation?->latitude ?? 0),
-                    'lng' => (float) ($s->destinationLocation?->longitude ?? 0),
-                ],
-                'current' => $s->currentLocation ? [
-                    'name' => $s->currentLocation->name,
-                    'short_name' => $s->currentLocation->short_name,
-                    'code' => $s->currentLocation->display_code,
-                    'code_type' => $s->currentLocation->code_type_label,
-                    'unlocode' => $s->currentLocation->display_code,
-                    'lat' => (float) $s->currentLocation->latitude,
-                    'lng' => (float) $s->currentLocation->longitude,
-                ] : null,
-                'exceptions' => $s->exceptions->map(fn ($e) => [
-                    'code' => $e->exception_code,
-                    'severity' => $e->severity,
-                    'description' => $e->description,
-                ])->toArray(),
-                'url' => route('shipments.show', $s),
-            ];
-        })->toArray();
+        // Unified role-scoped map payload for both 3D globe and 2D Leaflet
+        $mapData = $this->buildMapDataPayload($user);
+        $mapShipments = $mapData['shipments'];
 
         return view('dashboard', compact(
             'user',
@@ -383,6 +340,7 @@ class DashboardController extends Controller
             'rates',
             'weatherPorts',
             'selectedPort',
+            'mapData',
             'mapShipments',
             'activeShipmentsCount',
             'exceptionRate',
@@ -400,5 +358,203 @@ class DashboardController extends Controller
             'freeTimeService',
             'activeModesCount'
         ));
+    }
+
+    /**
+     * Role-scoped JSON endpoint consumed by both the 3D globe and 2D Leaflet map.
+     */
+    public function mapData(Request $request): JsonResponse
+    {
+        $user = Auth::user();
+        $payload = $this->buildMapDataPayload(
+            $user,
+            $request->query('mode'),
+            $request->query('filter')
+        );
+
+        return response()->json(['data' => $payload]);
+    }
+
+    /**
+     * Build the unified, role-scoped shipment route and location payload for map views.
+     *
+     * @return array<string, mixed>
+     */
+    protected function buildMapDataPayload(User $user, ?string $mode = null, ?string $filter = null): array
+    {
+        $rawMode = strtoupper(trim((string) $mode));
+        $normalizedMode = in_array($rawMode, ['SEA', 'AIR', 'ROAD'], true) ? $rawMode : 'ALL';
+
+        $rawFilter = strtoupper(trim((string) $filter));
+        $normalizedFilter = in_array($rawFilter, ['DELAYED', 'EXCEPTIONS', 'SEA', 'AIR', 'ROAD'], true) ? $rawFilter : 'ALL';
+
+        if ($normalizedMode === 'ALL' && in_array($normalizedFilter, ['SEA', 'AIR', 'ROAD'], true)) {
+            $normalizedMode = $normalizedFilter;
+            $normalizedFilter = 'ALL';
+        }
+
+        $query = Shipment::query()
+            ->whereIn('status', ['IN_TRANSIT', 'PICKED_UP', 'BOOKED'])
+            ->with([
+                'originLocation',
+                'destinationLocation',
+                'currentLocation',
+                'latestTrackingEvent.location',
+                'carrier',
+                'exceptions',
+            ]);
+
+        if ($user->role === 'customer') {
+            $query->where('customer_id', $user->id);
+        }
+
+        if (in_array($normalizedMode, ['SEA', 'AIR', 'ROAD'], true)) {
+            $query->where('transport_mode', $normalizedMode);
+        }
+
+        if ($normalizedFilter === 'DELAYED') {
+            $query->where('is_delayed', true);
+        } elseif ($normalizedFilter === 'EXCEPTIONS') {
+            $query->whereHas('exceptions', fn ($q) => $q->whereIn('status', ['OPEN', 'INVESTIGATING']));
+        }
+
+        $shipments = $query->latest()->get();
+
+        $locationsById = [];
+        $registerLocation = static function (?Location $loc) use (&$locationsById): void {
+            if (! $loc || isset($locationsById[$loc->id])) {
+                return;
+            }
+            if ($loc->latitude === null || $loc->longitude === null) {
+                return;
+            }
+
+            $locationsById[$loc->id] = [
+                'id' => (int) $loc->id,
+                'name' => $loc->name,
+                'short_name' => $loc->short_name,
+                'code' => $loc->display_code,
+                'display_code' => $loc->display_code,
+                'code_type' => $loc->code_type_label,
+                'code_type_label' => $loc->code_type_label,
+                'unlocode' => $loc->display_code,
+                'city' => $loc->city,
+                'country' => $loc->country,
+                'type' => $loc->type,
+                'latitude' => (float) $loc->latitude,
+                'longitude' => (float) $loc->longitude,
+            ];
+        };
+
+        $formatEndpoint = static function (?Location $loc, string $fallbackName, string $fallbackCode): array {
+            return [
+                'id' => $loc?->id ? (int) $loc->id : null,
+                'name' => $loc?->name ?? $fallbackName,
+                'short_name' => $loc?->short_name ?? $fallbackName,
+                'code' => $loc?->display_code ?? $fallbackCode,
+                'code_type' => $loc?->code_type_label ?? 'Code',
+                'unlocode' => $loc?->display_code ?? $fallbackCode,
+                'city' => $loc?->city ?? '',
+                'country' => $loc?->country ?? '',
+                'lat' => $loc?->latitude !== null ? (float) $loc->latitude : null,
+                'lng' => $loc?->longitude !== null ? (float) $loc->longitude : null,
+            ];
+        };
+
+        $mappedShipments = $shipments->map(function (Shipment $s) use ($registerLocation, $formatEndpoint): array {
+            $modeCode = strtoupper((string) ($s->transport_mode ?? 'SEA'));
+            $modeLabel = match ($modeCode) {
+                'AIR' => 'Air',
+                'ROAD' => 'Road',
+                default => 'Sea',
+            };
+
+            $registerLocation($s->originLocation);
+            $registerLocation($s->destinationLocation);
+            $registerLocation($s->currentLocation);
+            $registerLocation($s->latestTrackingEvent?->location);
+
+            $openExceptions = $s->exceptions
+                ->filter(fn (ShipmentException $e) => in_array($e->status, ['OPEN', 'INVESTIGATING'], true))
+                ->values();
+
+            $latestEvent = $s->latestTrackingEvent;
+            $eventLocation = $latestEvent?->location ?? $s->currentLocation;
+
+            $trackingLat = $latestEvent?->latitude !== null
+                ? (float) $latestEvent->latitude
+                : ($eventLocation?->latitude !== null ? (float) $eventLocation->latitude : null);
+            $trackingLng = $latestEvent?->longitude !== null
+                ? (float) $latestEvent->longitude
+                : ($eventLocation?->longitude !== null ? (float) $eventLocation->longitude : null);
+
+            $latestTracking = ($trackingLat !== null && $trackingLng !== null) ? [
+                'location_name' => $eventLocation?->name ?? $latestEvent?->title ?? 'Latest checkpoint',
+                'short_name' => $eventLocation?->short_name ?? $eventLocation?->name ?? 'Latest checkpoint',
+                'code' => $eventLocation?->display_code ?? '',
+                'code_type' => $eventLocation?->code_type_label ?? 'Code',
+                'lat' => $trackingLat,
+                'lng' => $trackingLng,
+                'occurred_at' => $latestEvent?->occurred_at?->toIso8601String(),
+                'occurred_at_formatted' => $latestEvent?->occurred_at?->format('M d, Y H:i'),
+                'title' => $latestEvent?->title ?? $s->status_display_label,
+                'status' => $latestEvent?->status ?? $s->status,
+                'event_type' => $latestEvent?->event_type,
+            ] : null;
+
+            $currentPoint = $latestTracking ? [
+                'name' => $latestTracking['location_name'],
+                'short_name' => $latestTracking['short_name'],
+                'code' => $latestTracking['code'],
+                'code_type' => $latestTracking['code_type'],
+                'unlocode' => $latestTracking['code'],
+                'lat' => $latestTracking['lat'],
+                'lng' => $latestTracking['lng'],
+            ] : null;
+
+            return [
+                'id' => (int) $s->id,
+                'tracking_number' => $s->tracking_number,
+                'mode' => $modeCode,
+                'mode_label' => $modeLabel,
+                'transport_mode' => $modeCode,
+                'primary_reference' => $s->primary_reference,
+                'status' => $s->status,
+                'status_label' => $s->status_display_label,
+                'is_delayed' => (bool) $s->is_delayed,
+                'delay_hours' => (float) $s->delay_hours,
+                'delay_severity' => strtoupper((string) ($s->delay_severity ?? 'NONE')),
+                'open_exceptions_count' => $openExceptions->count(),
+                'has_exception' => $openExceptions->isNotEmpty(),
+                'carrier' => $s->carrier?->name ?? 'Carrier',
+                'carrier_mode' => $s->carrier?->mode ?? $modeCode,
+                'origin' => $formatEndpoint($s->originLocation, 'Origin', 'ORI'),
+                'destination' => $formatEndpoint($s->destinationLocation, 'Destination', 'DST'),
+                'latest_tracking' => $latestTracking,
+                'current' => $currentPoint,
+                'exceptions' => $openExceptions->map(fn (ShipmentException $e) => [
+                    'code' => $e->exception_code,
+                    'severity' => $e->severity,
+                    'status' => $e->status,
+                    'description' => $e->description,
+                ])->toArray(),
+                'url' => route('shipments.show', $s),
+            ];
+        })->values()->toArray();
+
+        return [
+            'shipments' => $mappedShipments,
+            'locations' => array_values($locationsById),
+            'filters' => [
+                'mode' => $normalizedMode,
+                'filter' => $normalizedFilter,
+            ],
+            'meta' => [
+                'total' => count($mappedShipments),
+                'role' => $user->role,
+                'tile_url' => config('cargotrace.map.tile_url'),
+                'tile_attribution' => config('cargotrace.map.attribution'),
+            ],
+        ];
     }
 }
