@@ -9,6 +9,7 @@ use App\Models\Setting;
 use App\Models\Shipment;
 use App\Models\ShipmentException;
 use App\Models\User;
+use App\Services\AnalyticsService;
 use App\Services\CurrencyService;
 use App\Services\ExternalIntegrationService;
 use App\Services\FreeTimeService;
@@ -26,7 +27,8 @@ class DashboardController extends Controller
         protected ExternalIntegrationService $externalService,
         protected WeatherService $weatherService,
         protected CurrencyService $currencyService,
-        protected MaritimeNewsService $newsService
+        protected MaritimeNewsService $newsService,
+        protected AnalyticsService $analyticsService
     ) {}
 
     public function index(): View
@@ -39,22 +41,25 @@ class DashboardController extends Controller
             $shipmentQuery->where('customer_id', $user->id);
         }
 
-        // Stats
-        $totalShipments = (clone $shipmentQuery)->count();
-        $inTransit = (clone $shipmentQuery)->where('status', 'IN_TRANSIT')->count();
-        $delivered = (clone $shipmentQuery)->where('status', 'DELIVERED')->count();
-        $delayed = (clone $shipmentQuery)->where('is_delayed', true)->whereNotIn('status', ['DELIVERED'])->count();
-        $totalValueUsd = (clone $shipmentQuery)->sum('converted_value_usd');
+        // Core role-scoped KPIs and chart distributions from AnalyticsService
+        $kpis = $this->analyticsService->getDashboardKpis($user);
+        $statusDistribution = $this->analyticsService->getShipmentsByStatus($user);
+        $carrierStats = $this->analyticsService->getShipmentsByCarrier($user, 6);
 
-        $totalDelivered = (clone $shipmentQuery)->where('status', 'DELIVERED')->count();
-        $deliveredOnTime = (clone $shipmentQuery)->where('status', 'DELIVERED')->where('is_delayed', false)->count();
-        $onTimeRate = $totalDelivered > 0 ? round(($deliveredOnTime / $totalDelivered) * 100, 1) : 100.0;
+        $totalShipments = $kpis['total_shipments'];
+        $inTransit = $kpis['in_transit'];
+        $delivered = $kpis['delivered'];
+        $delayed = $kpis['delayed'];
+        $activeShipmentsCount = $kpis['active_shipments'];
+        $totalValueUsd = $kpis['total_value_usd'];
+        $totalVolumeCbm = $kpis['total_volume_cbm'];
+        $onTimeRate = $kpis['on_time_rate'];
+        $openExceptions = $kpis['open_exceptions'];
+        $delayRate = $kpis['delay_rate'];
+        $exceptionRate = $kpis['exception_rate'];
 
-        // Scoped open exceptions count and distribution
-        $openExceptions = ShipmentException::whereIn('status', ['OPEN', 'INVESTIGATING'])
-            ->when($user->role === 'customer', function ($q) use ($user) {
-                $q->whereHas('shipment', fn ($sq) => $sq->where('customer_id', $user->id));
-            })->count();
+        $statusCounts = $statusDistribution['counts'];
+        $statusBreakdown = $statusDistribution['rows'];
 
         $exceptionCounts = ShipmentException::whereIn('status', ['OPEN', 'INVESTIGATING'])
             ->when($user->role === 'customer', function ($q) use ($user) {
@@ -63,30 +68,6 @@ class DashboardController extends Controller
             ->select('exception_code', DB::raw('count(*) as count'))
             ->groupBy('exception_code')
             ->pluck('count', 'exception_code')
-            ->toArray();
-
-        // Shipments by status for doughnut chart
-        $statusCounts = (clone $shipmentQuery)
-            ->select('status', DB::raw('count(*) as count'))
-            ->groupBy('status')
-            ->pluck('count', 'status')
-            ->toArray();
-
-        // Carrier distribution for horizontal bar chart
-        $carrierStats = Carrier::where('is_active', true)
-            ->withCount(['shipments' => function ($q) use ($user) {
-                if ($user->role === 'customer') {
-                    $q->where('customer_id', $user->id);
-                }
-            }])
-            ->get()
-            ->filter(fn ($c) => $c->shipments_count > 0)
-            ->values()
-            ->map(fn ($c) => [
-                'name' => $c->name,
-                'code' => $c->code,
-                'count' => $c->shipments_count,
-            ])
             ->toArray();
 
         // 8-week trend data (On-Time vs Delayed)
@@ -106,11 +87,6 @@ class DashboardController extends Controller
                 'delayed' => $delayedCount,
             ];
         }
-
-        // Active shipments count and real exception rate (open exceptions / active shipments)
-        $activeShipmentsCount = (clone $shipmentQuery)->whereIn('status', ['IN_TRANSIT', 'PICKED_UP', 'BOOKED'])->count();
-        $exceptionRate = $activeShipmentsCount > 0 ? round(($openExceptions / $activeShipmentsCount) * 100, 1) : 0.0;
-        $totalVolumeCbm = (clone $shipmentQuery)->sum('total_volume_cbm');
 
         // Dynamic delay thresholds from database settings
         $delayLowHours = (float) (Setting::get('delay_low_hours') ?? config('cargotrace.delay.low_hours', 6));
@@ -324,6 +300,7 @@ class DashboardController extends Controller
             'openExceptions',
             'exceptionCounts',
             'statusCounts',
+            'statusBreakdown',
             'carrierStats',
             'trendData',
             'featuredShipment',
@@ -343,6 +320,7 @@ class DashboardController extends Controller
             'mapData',
             'mapShipments',
             'activeShipmentsCount',
+            'delayRate',
             'exceptionRate',
             'totalVolumeCbm',
             'sparkline1Path',

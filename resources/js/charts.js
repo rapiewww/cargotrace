@@ -34,6 +34,27 @@ function getCurrentTheme() {
         || (document.documentElement.classList.contains('light') ? 'light' : 'dark');
 }
 
+function getStatusColors(statusKeys, isLight) {
+    const palette = {
+        CREATED: isLight ? '#64748B' : '#8FA3BC',
+        BOOKED: '#38BDF8',
+        PICKED_UP: '#2563EB',
+        IN_TRANSIT: isLight ? '#0891B2' : '#22D3EE',
+        DELIVERED: '#10B981',
+    };
+
+    return (statusKeys || []).map((key) => palette[String(key).toUpperCase()] || (isLight ? '#52647A' : '#8FA3BC'));
+}
+
+function getCarrierColors(carrierItems, isLight) {
+    return (carrierItems || []).map((item) => {
+        if (item && item.is_others) {
+            return isLight ? '#64748B' : '#8FA3BC';
+        }
+        return isLight ? '#2563EB' : '#38BDF8';
+    });
+}
+
 export function updateAllChartsTheme(theme) {
     const isLight = theme === 'light';
     const gridColor = isLight ? 'rgba(0, 0, 0, 0.08)' : 'rgba(255, 255, 255, 0.05)';
@@ -42,9 +63,17 @@ export function updateAllChartsTheme(theme) {
     const mutedColor = isLight ? '#52647A' : '#8FA3BC';
     const tooltipBg = isLight ? '#FFFFFF' : '#0B1728';
     const tooltipBorder = isLight ? '#D5DEEA' : 'rgba(255, 255, 255, 0.1)';
+    const surfaceBg = isLight ? '#FFFFFF' : '#0B1728';
 
     activeCharts.forEach(chart => {
         try {
+            if (chart.$statusKeys && chart.data?.datasets?.[0]) {
+                chart.data.datasets[0].backgroundColor = getStatusColors(chart.$statusKeys, isLight);
+                chart.data.datasets[0].borderColor = surfaceBg;
+            }
+            if (chart.$carrierItems && chart.data?.datasets?.[0]) {
+                chart.data.datasets[0].backgroundColor = getCarrierColors(chart.$carrierItems, isLight);
+            }
             if (chart.options.scales) {
                 if (chart.options.scales.x) {
                     if (chart.options.scales.x.grid) chart.options.scales.x.grid.color = gridColor;
@@ -83,7 +112,10 @@ const centerTextPlugin = {
         const centerConfig = chart.config.options.plugins?.centerText;
         if (!centerConfig || !centerConfig.display) return;
 
-        const { ctx, width, height } = chart;
+        const { ctx, chartArea, width, height } = chart;
+        const cx = chartArea ? (chartArea.left + chartArea.right) / 2 : width / 2;
+        const cy = chartArea ? (chartArea.top + chartArea.bottom) / 2 : height / 2;
+
         ctx.save();
         const text = centerConfig.text || '';
         const subtext = centerConfig.subtext || '';
@@ -94,13 +126,13 @@ const centerTextPlugin = {
         // Main text (Total count)
         ctx.font = `700 ${centerConfig.fontSize || 24}px 'Inter', system-ui, sans-serif`;
         ctx.fillStyle = centerConfig.color || '#FFFFFF';
-        ctx.fillText(text, width / 2, height / 2 - 8);
+        ctx.fillText(text, cx, subtext ? cy - 8 : cy);
 
         // Subtext (Sentence case label)
         if (subtext) {
             ctx.font = `500 11px 'Inter', system-ui, sans-serif`;
-            ctx.fillStyle = '#64748B';
-            ctx.fillText(subtext, width / 2, height / 2 + 14);
+            ctx.fillStyle = centerConfig.subtextColor || '#8FA3BC';
+            ctx.fillText(subtext, cx, cy + 14);
         }
         ctx.restore();
     }
@@ -116,7 +148,14 @@ export function initStatusDoughnut(canvasId, statusCounts, totalCount) {
     if (!el) return null;
 
     const rawLabels = Object.keys(statusCounts || {});
-    const data = Object.values(statusCounts || {});
+    const data = Object.values(statusCounts || {}).map((v) => Number(v) || 0);
+    const computedTotal = Number.isFinite(Number(totalCount)) ? Number(totalCount) : data.reduce((a, b) => a + b, 0);
+
+    if (!rawLabels.length || computedTotal <= 0) {
+        return null;
+    }
+
+    const isLight = getCurrentTheme() === 'light';
 
     // Convert raw status codes into sentence case labels
     const labels = rawLabels.map(l => {
@@ -126,17 +165,12 @@ export function initStatusDoughnut(canvasId, statusCounts, totalCount) {
     const chart = new Chart(el, {
         type: 'doughnut',
         data: {
-            labels: labels.length ? labels : ['No shipments'],
+            labels,
             datasets: [{
-                data: data.length ? data : [1],
-                backgroundColor: [
-                    '#38BDF8', // Created / Booked - Sky
-                    '#818CF8', // Picked up - Indigo
-                    '#F59E0B', // In transit - Amber
-                    '#10B981', // Delivered - Emerald
-                    '#64748B'  // Other
-                ],
-                borderWidth: 0,
+                data,
+                backgroundColor: getStatusColors(rawLabels, isLight),
+                borderColor: isLight ? '#FFFFFF' : '#0B1728',
+                borderWidth: 2,
                 hoverOffset: 4
             }]
         },
@@ -146,34 +180,35 @@ export function initStatusDoughnut(canvasId, statusCounts, totalCount) {
             cutout: '72%',
             plugins: {
                 legend: {
-                    position: 'bottom',
-                    labels: {
-                        color: '#94A3B8',
-                        font: { size: 11, family: "'Inter', sans-serif" },
-                        boxWidth: 8,
-                        boxHeight: 8,
-                        padding: 12
-                    }
+                    display: false
                 },
                 centerText: {
                     display: true,
-                    text: String(totalCount || data.reduce((a, b) => a + b, 0)),
-                    subtext: 'Total'
+                    text: String(computedTotal),
+                    subtext: 'Shipments'
                 },
                 tooltip: {
                     backgroundColor: '#0B1728',
                     borderColor: '#1E293B',
                     borderWidth: 1,
                     titleColor: '#FFFFFF',
-                    bodyColor: '#94A3B8',
+                    bodyColor: '#8FA3BC',
                     padding: 8,
                     bodyFont: { family: "'Inter', sans-serif" },
-                    titleFont: { family: "'Inter', sans-serif" }
+                    titleFont: { family: "'Inter', sans-serif" },
+                    callbacks: {
+                        label(ctx) {
+                            const value = Number(ctx.parsed) || 0;
+                            const pct = computedTotal > 0 ? ((value / computedTotal) * 100).toFixed(1) : '0.0';
+                            return `${ctx.label}: ${value} (${pct}%)`;
+                        }
+                    }
                 }
             }
         }
     });
 
+    chart.$statusKeys = rawLabels;
     activeCharts.add(chart);
     updateAllChartsTheme(getCurrentTheme());
     return chart;
@@ -184,20 +219,24 @@ export function initStatusDoughnut(canvasId, statusCounts, totalCount) {
  */
 export function initCarrierBarChart(canvasId, carrierStats) {
     const el = document.getElementById(canvasId);
-    if (!el) return null;
+    if (!el || !Array.isArray(carrierStats) || !carrierStats.length) return null;
 
-    const fullNames = (carrierStats || []).map(c => c.name || c.code);
-    const labels = fullNames.map(name => name.length > 22 ? name.substring(0, 20) + '…' : name);
-    const counts = (carrierStats || []).map(c => c.shipments_count || c.count || 0);
+    const isLight = getCurrentTheme() === 'light';
+    const fullNames = carrierStats.map(c => c.is_others && c.carrier_count ? `${c.name} (${c.carrier_count} carriers)` : (c.name || c.code));
+    const labels = carrierStats.map(c => {
+        const name = String(c.name || c.code || '');
+        return name.length > 20 ? name.substring(0, 18) + '…' : name;
+    });
+    const counts = carrierStats.map(c => Number(c.shipments_count ?? c.count ?? 0));
 
     const chart = new Chart(el, {
         type: 'bar',
         data: {
-            labels: labels.length ? labels : ['None'],
+            labels,
             datasets: [{
                 label: 'Shipments',
-                data: counts.length ? counts : [0],
-                backgroundColor: '#2DD4BF',
+                data: counts,
+                backgroundColor: getCarrierColors(carrierStats, isLight),
                 borderRadius: 4,
                 borderSkipped: false
             }]
@@ -208,7 +247,7 @@ export function initCarrierBarChart(canvasId, carrierStats) {
             indexAxis: 'y',
             layout: {
                 padding: {
-                    left: 6,
+                    left: 4,
                     right: 12
                 }
             },
@@ -217,16 +256,16 @@ export function initCarrierBarChart(canvasId, carrierStats) {
                     beginAtZero: true,
                     grid: { color: 'rgba(255, 255, 255, 0.05)' },
                     ticks: {
-                        color: '#64748B',
-                        stepSize: 1,
+                        color: '#8FA3BC',
+                        precision: 0,
                         font: { size: 10, family: "'Inter', sans-serif" }
                     }
                 },
                 y: {
                     grid: { display: false },
                     ticks: {
-                        color: '#94A3B8',
-                        font: { size: 10, family: "'Inter', sans-serif" }
+                        color: '#8FA3BC',
+                        font: { size: 11, family: "'Inter', sans-serif" }
                     }
                 }
             },
@@ -237,14 +276,20 @@ export function initCarrierBarChart(canvasId, carrierStats) {
                     borderColor: '#1E293B',
                     borderWidth: 1,
                     titleColor: '#FFFFFF',
-                    bodyColor: '#2DD4BF',
+                    bodyColor: '#8FA3BC',
                     padding: 8,
                     bodyFont: { family: "'Inter', sans-serif" },
                     titleFont: { family: "'Inter', sans-serif" },
                     callbacks: {
-                        title: function(context) {
+                        title(context) {
                             const index = context[0]?.dataIndex;
                             return fullNames[index] || context[0]?.label;
+                        },
+                        label(context) {
+                            const count = Number(context.parsed.x) || 0;
+                            const item = carrierStats[context.dataIndex];
+                            const share = item && item.share !== undefined ? ` (${item.share}%)` : '';
+                            return `Shipments: ${count}${share}`;
                         }
                     }
                 }
@@ -252,6 +297,7 @@ export function initCarrierBarChart(canvasId, carrierStats) {
         }
     });
 
+    chart.$carrierItems = carrierStats;
     activeCharts.add(chart);
     updateAllChartsTheme(getCurrentTheme());
     return chart;

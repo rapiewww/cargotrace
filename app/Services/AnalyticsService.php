@@ -119,13 +119,189 @@ class AnalyticsService
     }
 
     /**
-     * 1. On-time performance per ocean container carrier.
+     * High-level operational KPIs for the main dashboard, scoped to the user role.
+     *
+     * @return array<string, mixed>
      */
-    public function getCarrierPerformance(User $user, Carbon $from, Carbon $to): Collection
+    public function getDashboardKpis(User $user): array
+    {
+        $shipmentQuery = DB::table('shipments');
+
+        if ($this->isCustomerScoped($user)) {
+            $shipmentQuery->where('customer_id', $user->id);
+        }
+
+        $stats = (clone $shipmentQuery)
+            ->selectRaw("
+                COUNT(*) as total_shipments,
+                SUM(CASE WHEN status = 'IN_TRANSIT' THEN 1 ELSE 0 END) as in_transit,
+                SUM(CASE WHEN status = 'DELIVERED' THEN 1 ELSE 0 END) as delivered,
+                SUM(CASE WHEN is_delayed = 1 AND status != 'DELIVERED' THEN 1 ELSE 0 END) as delayed_count,
+                SUM(CASE WHEN status IN ('BOOKED', 'PICKED_UP', 'IN_TRANSIT') THEN 1 ELSE 0 END) as active_shipments,
+                SUM(CASE WHEN status = 'DELIVERED' AND is_delayed = 0 THEN 1 ELSE 0 END) as delivered_on_time,
+                COALESCE(SUM(converted_value_usd), 0) as total_value_usd,
+                COALESCE(SUM(total_volume_cbm), 0) as total_volume_cbm
+            ")
+            ->first();
+
+        $totalShipments = (int) ($stats?->total_shipments ?? 0);
+        $inTransit = (int) ($stats?->in_transit ?? 0);
+        $delivered = (int) ($stats?->delivered ?? 0);
+        $delayed = (int) ($stats?->delayed_count ?? 0);
+        $activeShipments = (int) ($stats?->active_shipments ?? 0);
+        $deliveredOnTime = (int) ($stats?->delivered_on_time ?? 0);
+        $onTimeRate = $delivered > 0 ? round(($deliveredOnTime / $delivered) * 100, 1) : 100.0;
+        $totalValueUsd = (float) ($stats?->total_value_usd ?? 0);
+        $totalVolumeCbm = (float) ($stats?->total_volume_cbm ?? 0);
+
+        $exceptionQuery = DB::table('shipment_exceptions')
+            ->join('shipments', 'shipment_exceptions.shipment_id', '=', 'shipments.id')
+            ->whereIn('shipment_exceptions.status', ['OPEN', 'INVESTIGATING']);
+
+        if ($this->isCustomerScoped($user)) {
+            $exceptionQuery->where('shipments.customer_id', $user->id);
+        }
+
+        $openExceptions = (int) $exceptionQuery->count();
+        $delayRate = $activeShipments > 0 ? round(($delayed / $activeShipments) * 100, 1) : 0.0;
+        $exceptionRate = $activeShipments > 0 ? round(($openExceptions / $activeShipments) * 100, 1) : 0.0;
+
+        return [
+            'total_shipments' => $totalShipments,
+            'in_transit' => $inTransit,
+            'delivered' => $delivered,
+            'delayed' => $delayed,
+            'active_shipments' => $activeShipments,
+            'delivered_on_time' => $deliveredOnTime,
+            'on_time_rate' => $onTimeRate,
+            'total_value_usd' => $totalValueUsd,
+            'total_volume_cbm' => $totalVolumeCbm,
+            'open_exceptions' => $openExceptions,
+            'delay_rate' => $delayRate,
+            'exception_rate' => $exceptionRate,
+        ];
+    }
+
+    /**
+     * Shipments grouped by lifecycle status, ordered canonically and role-scoped.
+     *
+     * @return array{counts: array<string, int>, total: int, rows: list<array{status: string, label: string, count: int, share: float}>}
+     */
+    public function getShipmentsByStatus(User $user, ?Carbon $from = null, ?Carbon $to = null): array
+    {
+        $query = DB::table('shipments');
+
+        if ($from !== null && $to !== null) {
+            $query->whereBetween('created_at', [$from, $to]);
+        }
+
+        if ($this->isCustomerScoped($user)) {
+            $query->where('customer_id', $user->id);
+        }
+
+        $rawCounts = $query->groupBy('status')
+            ->selectRaw('status, COUNT(*) as count')
+            ->pluck('count', 'status')
+            ->map(fn ($c) => (int) $c)
+            ->toArray();
+
+        $canonicalOrder = ['CREATED', 'BOOKED', 'PICKED_UP', 'IN_TRANSIT', 'DELIVERED'];
+        $labels = [
+            'CREATED' => 'Created',
+            'BOOKED' => 'Booked',
+            'PICKED_UP' => 'Picked up',
+            'IN_TRANSIT' => 'In transit',
+            'DELIVERED' => 'Delivered',
+        ];
+
+        $orderedCounts = [];
+        foreach ($canonicalOrder as $statusKey) {
+            if (($rawCounts[$statusKey] ?? 0) > 0) {
+                $orderedCounts[$statusKey] = (int) $rawCounts[$statusKey];
+            }
+        }
+        foreach ($rawCounts as $statusKey => $cnt) {
+            if (! isset($orderedCounts[$statusKey]) && (int) $cnt > 0) {
+                $orderedCounts[$statusKey] = (int) $cnt;
+            }
+        }
+
+        $total = array_sum($orderedCounts);
+        $rows = [];
+        foreach ($orderedCounts as $statusKey => $cnt) {
+            $rows[] = [
+                'status' => $statusKey,
+                'label' => $labels[$statusKey] ?? ucfirst(strtolower(str_replace('_', ' ', (string) $statusKey))),
+                'count' => $cnt,
+                'share' => $total > 0 ? round(($cnt / $total) * 100, 1) : 0.0,
+            ];
+        }
+
+        return [
+            'counts' => $orderedCounts,
+            'total' => $total,
+            'rows' => $rows,
+        ];
+    }
+
+    /**
+     * Shipments grouped by carrier (top N plus an aggregated "Others" row), reusing getCarrierPerformance.
+     *
+     * @return list<array<string, mixed>>
+     */
+    public function getShipmentsByCarrier(User $user, int $topLimit = 6, ?Carbon $from = null, ?Carbon $to = null): array
+    {
+        $rows = $this->getCarrierPerformance($user, $from, $to);
+        if ($rows->isEmpty()) {
+            return [];
+        }
+
+        $total = (int) $rows->sum('total_shipments');
+        $topRows = $rows->take($topLimit);
+
+        $result = $topRows->map(function ($row) use ($total): array {
+            $count = (int) $row->total_shipments;
+
+            return [
+                'id' => (int) $row->carrier_id,
+                'name' => (string) $row->carrier_name,
+                'code' => (string) $row->carrier_code,
+                'count' => $count,
+                'share' => $total > 0 ? round(($count / $total) * 100, 1) : 0.0,
+                'is_others' => false,
+            ];
+        })->values()->all();
+
+        if ($rows->count() > $topLimit) {
+            $others = $rows->slice($topLimit);
+            $othersCount = (int) $others->sum('total_shipments');
+            if ($othersCount > 0) {
+                $result[] = [
+                    'id' => null,
+                    'name' => 'Others',
+                    'code' => 'OTH',
+                    'count' => $othersCount,
+                    'carrier_count' => $others->count(),
+                    'share' => $total > 0 ? round(($othersCount / $total) * 100, 1) : 0.0,
+                    'is_others' => true,
+                ];
+            }
+        }
+
+        return $result;
+    }
+
+    /**
+     * 1. On-time performance per carrier.
+     */
+    public function getCarrierPerformance(User $user, ?Carbon $from = null, ?Carbon $to = null): Collection
     {
         $query = DB::table('shipments')
-            ->join('carriers', 'shipments.carrier_id', '=', 'carriers.id')
-            ->whereBetween('shipments.created_at', [$from, $to]);
+            ->join('carriers', 'shipments.carrier_id', '=', 'carriers.id');
+
+        if ($from !== null && $to !== null) {
+            $query->whereBetween('shipments.created_at', [$from, $to]);
+        }
 
         if ($this->isCustomerScoped($user)) {
             $query->where('shipments.customer_id', $user->id);
@@ -144,6 +320,7 @@ class AnalyticsService
             ')
             ->orderByDesc('total_shipments')
             ->orderByDesc('on_time_rate')
+            ->orderBy('carriers.name')
             ->get();
     }
 

@@ -68,6 +68,9 @@
     <!-- Search & Multi-Filter Bar -->
     <x-card class="space-y-4">
         <form method="GET" action="{{ route('shipments.index') }}" class="space-y-4">
+            @if(request()->boolean('has_open_exceptions'))
+                <input type="hidden" name="has_open_exceptions" value="1">
+            @endif
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 text-xs">
                 <!-- Search -->
                 <div class="space-y-1.5">
@@ -119,10 +122,18 @@
                 </div>
             </div>
 
-            <div class="flex items-center justify-between pt-3 border-t theme-border">
-                <span class="text-xs theme-text-muted font-mono">
-                    Showing {{ $shipments->firstItem() ?? 0 }} - {{ $shipments->lastItem() ?? 0 }} of {{ $shipments->total() }} shipments
-                </span>
+            <div class="flex flex-wrap items-center justify-between gap-2 pt-3 border-t theme-border">
+                <div class="flex flex-wrap items-center gap-2">
+                    <span class="text-xs theme-text-muted font-mono">
+                        Showing {{ $shipments->firstItem() ?? 0 }} - {{ $shipments->lastItem() ?? 0 }} of {{ $shipments->total() }} shipments
+                    </span>
+                    @if(request()->boolean('has_open_exceptions'))
+                        <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-medium bg-rose-500/15 text-rose-600 dark:text-rose-400 border border-rose-500/25">
+                            <span>Open exceptions filter active</span>
+                            <a href="{{ request()->fullUrlWithQuery(['has_open_exceptions' => null, 'page' => null]) }}" class="underline hover:no-underline">Clear</a>
+                        </span>
+                    @endif
+                </div>
                 <div class="flex items-center space-x-2">
                     <a href="{{ route('shipments.index') }}" class="px-3 py-1.5 rounded-lg text-xs font-semibold theme-text-muted hover:theme-heading hover:bg-slate-200 dark:hover:bg-slate-800 transition">
                         Reset Filters

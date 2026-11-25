@@ -100,6 +100,11 @@ class ShipmentWebController extends Controller
         if ($request->has('is_delayed') && $request->query('is_delayed') !== '') {
             $query->where('is_delayed', filter_var($request->query('is_delayed'), FILTER_VALIDATE_BOOLEAN));
         }
+        if ($request->boolean('has_open_exceptions')) {
+            $query->whereHas('exceptions', function ($eq) {
+                $eq->whereIn('status', ['OPEN', 'INVESTIGATING']);
+            });
+        }
         if ($request->filled('date_from')) {
             $query->whereDate('expected_departure_at', '>=', $request->query('date_from'));
         }
@@ -151,6 +156,11 @@ class ShipmentWebController extends Controller
         }
         if ($request->has('is_delayed') && $request->query('is_delayed') !== '') {
             $query->where('is_delayed', filter_var($request->query('is_delayed'), FILTER_VALIDATE_BOOLEAN));
+        }
+        if ($request->boolean('has_open_exceptions')) {
+            $query->whereHas('exceptions', function ($eq) {
+                $eq->whereIn('status', ['OPEN', 'INVESTIGATING']);
+            });
         }
 
         $shipments = $query->orderByDesc('created_at')->get();

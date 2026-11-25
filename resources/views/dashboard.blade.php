@@ -65,6 +65,82 @@
         </a>
     </div>
 
+    <!-- Row 2: Compact Role-Scoped KPI Row -->
+    <section aria-label="Key shipment metrics">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+            <!-- KPI 1: Total Shipments -->
+            <a href="{{ route('shipments.index') }}" data-kpi="total" class="p-4 rounded-2xl theme-card border hover:border-blue-500/50 transition-colors flex flex-col justify-between gap-1.5 min-h-[44px] cursor-pointer">
+                <div class="flex items-center justify-between gap-2">
+                    <span class="text-xs font-medium theme-text-secondary">Total shipments</span>
+                </div>
+                <div class="text-2xl font-extrabold theme-heading font-mono tabular-nums">
+                    {{ number_format($totalShipments) }}
+                </div>
+                <p class="text-[11px] theme-text-muted truncate">
+                    {{ $totalShipments > 0 ? $activeShipmentsCount.' active across all modes' : 'No consignments recorded yet' }}
+                </p>
+            </a>
+
+            <!-- KPI 2: In Transit -->
+            <a href="{{ route('shipments.index', ['status' => 'IN_TRANSIT']) }}" data-kpi="in_transit" class="p-4 rounded-2xl theme-card border hover:border-blue-500/50 transition-colors flex flex-col justify-between gap-1.5 min-h-[44px] cursor-pointer">
+                <div class="flex items-center justify-between gap-2">
+                    <span class="text-xs font-medium theme-text-secondary">In transit</span>
+                </div>
+                <div class="text-2xl font-extrabold theme-heading font-mono tabular-nums">
+                    {{ number_format($inTransit) }}
+                </div>
+                <p class="text-[11px] theme-text-muted truncate">
+                    Shipments currently moving on route
+                </p>
+            </a>
+
+            <!-- KPI 3: Delivered -->
+            <a href="{{ route('shipments.index', ['status' => 'DELIVERED']) }}" data-kpi="delivered" class="p-4 rounded-2xl theme-card border hover:border-blue-500/50 transition-colors flex flex-col justify-between gap-1.5 min-h-[44px] cursor-pointer">
+                <div class="flex items-center justify-between gap-2">
+                    <span class="text-xs font-medium theme-text-secondary">Delivered</span>
+                </div>
+                <div class="text-2xl font-extrabold theme-heading font-mono tabular-nums">
+                    {{ number_format($delivered) }}
+                </div>
+                <p class="text-[11px] theme-text-muted truncate">
+                    {{ $delivered > 0 ? number_format($onTimeRate, 1).'% delivered on schedule' : 'Completed consignments' }}
+                </p>
+            </a>
+
+            <!-- KPI 4: Delayed + Delay Rate -->
+            <a href="{{ route('shipments.index', ['is_delayed' => '1']) }}" data-kpi="delayed" class="p-4 rounded-2xl theme-card border hover:border-amber-500/50 transition-colors flex flex-col justify-between gap-1.5 min-h-[44px] cursor-pointer">
+                <div class="flex items-center justify-between gap-2">
+                    <span class="text-xs font-medium theme-text-secondary">Delayed</span>
+                    <span class="px-2 py-0.5 rounded-full text-[10px] font-semibold font-mono tabular-nums {{ $delayRate > 0 ? 'bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/25' : 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/25' }}">
+                        {{ number_format($delayRate, 1) }}%
+                    </span>
+                </div>
+                <div class="text-2xl font-extrabold theme-heading font-mono tabular-nums">
+                    {{ number_format($delayed) }}
+                </div>
+                <p class="text-[11px] theme-text-muted truncate">
+                    Delay rate: {{ number_format($delayRate, 1) }}% of {{ $activeShipmentsCount }} active
+                </p>
+            </a>
+
+            <!-- KPI 5: Open Exceptions + Exception Rate -->
+            <a href="{{ route('shipments.index', ['has_open_exceptions' => '1']) }}" data-kpi="open_exceptions" class="p-4 rounded-2xl theme-card border hover:border-rose-500/50 transition-colors flex flex-col justify-between gap-1.5 min-h-[44px] cursor-pointer">
+                <div class="flex items-center justify-between gap-2">
+                    <span class="text-xs font-medium theme-text-secondary">Open exceptions</span>
+                    <span class="px-2 py-0.5 rounded-full text-[10px] font-semibold font-mono tabular-nums {{ $exceptionRate > 0 ? 'bg-rose-500/15 text-rose-600 dark:text-rose-400 border border-rose-500/25' : 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/25' }}">
+                        {{ number_format($exceptionRate, 1) }}%
+                    </span>
+                </div>
+                <div class="text-2xl font-extrabold theme-heading font-mono tabular-nums">
+                    {{ number_format($openExceptions) }}
+                </div>
+                <p class="text-[11px] theme-text-muted truncate">
+                    Exception rate: {{ number_format($exceptionRate, 1) }}% of {{ $activeShipmentsCount }} active
+                </p>
+            </a>
+        </div>
+    </section>
+
     <!-- TOP SECTION: Global View (3D Earth Globe / 2D Map) + Main Statistics -->
     <div class="grid grid-cols-1 xl:grid-cols-12 gap-6">
         <!-- LEFT 9 COLS: "Global View" Canvas Container -->
@@ -414,396 +490,531 @@
         </div>
     </div>
 
-    <!-- BOTTOM SECTION: Maritime Activities Table (Left) + Utility Panel (Right) -->
-    <div class="grid grid-cols-1 xl:grid-cols-12 gap-6 items-start">
-        <!-- LEFT 8 COLS: "Maritime Activities" Table with Vessel Icon, Visual Route & FlyTo -->
-        <div class="xl:col-span-8 space-y-6">
-            @if(isset($overFreeTimeShipments) && $overFreeTimeShipments->isNotEmpty())
-                <!-- Attention List: Shipments Exceeding Terminal Free-Time Dwell Limit -->
-                <div class="p-5 rounded-3xl bg-rose-500/10 border border-rose-500/25 space-y-3 font-sans transition-colors duration-200">
-                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2.5 border-b border-rose-500/20">
-                        <div class="flex items-center gap-2">
-                            <span class="w-2.5 h-2.5 rounded-full bg-rose-500 animate-pulse"></span>
-                            <h2 class="text-sm font-bold theme-heading tracking-tight font-sans">
-                                Terminal dwell attention &bull; {{ $overFreeTimeShipments->count() }} {{ $overFreeTimeShipments->count() === 1 ? 'consignment exceeds' : 'consignments exceed' }} free-time limit
-                            </h2>
-                        </div>
-                        <span class="text-[11px] font-mono text-rose-600 dark:text-rose-400">
-                            Standard free time: {{ (int) (\App\Models\Setting::get('free_days_after_arrival') ?? 5) }} days
-                        </span>
+    <!-- Row 4: Shipments by Status & Shipments by Carrier (Single Card) -->
+    <section aria-labelledby="dashboard-charts-heading" class="p-6 rounded-3xl theme-card border space-y-5 transition-colors duration-200">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b theme-border">
+            <div>
+                <h2 id="dashboard-charts-heading" class="text-lg font-bold theme-heading tracking-tight font-sans">
+                    Shipment distribution
+                </h2>
+                <p class="text-xs theme-text-secondary mt-0.5">
+                    {{ $user->role === 'customer' ? 'Your shipments grouped by lifecycle status and carrier' : 'All shipments grouped by lifecycle status and carrier' }}
+                </p>
+            </div>
+            <a href="{{ route('analytics.index') }}" class="text-xs font-semibold text-blue-600 dark:text-cyan-400 hover:underline inline-flex items-center gap-1 min-h-[44px] self-start sm:self-auto">
+                <span>Full analytics</span>
+                <span>&rarr;</span>
+            </a>
+        </div>
+
+        @if($totalShipments === 0)
+            <div id="dashboard-charts-empty-state" class="py-10 px-4 rounded-2xl theme-card-elevated border border-dashed theme-border text-center space-y-2">
+                <p class="text-sm font-semibold theme-heading">No shipments recorded yet</p>
+                <p class="text-xs theme-text-secondary max-w-md mx-auto">
+                    Status and carrier breakdowns appear automatically once consignments are added to the database.
+                </p>
+                @if(in_array($user->role, ['admin', 'operator'], true))
+                    <div class="pt-2">
+                        <a href="{{ route('shipments.create') }}" class="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-semibold text-xs transition min-h-[44px]">
+                            <span>New shipment</span>
+                        </a>
+                    </div>
+                @endif
+            </div>
+        @else
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+                <!-- Chart 1: Shipments by Status (Doughnut + Accessible Table Legend) -->
+                <div class="lg:col-span-5 space-y-4">
+                    <div class="flex items-center justify-between">
+                        <h3 class="text-sm font-bold theme-heading font-sans">Shipments by status</h3>
+                        <span class="text-xs font-mono theme-text-muted tabular-nums">{{ number_format($totalShipments) }} total</span>
                     </div>
 
-                    <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
-                        @foreach($overFreeTimeShipments as $ofs)
-                            @php
-                                $eval = $ofs->free_time_eval ?? app(\App\Services\FreeTimeService::class)->calculate($ofs);
-                                $containers = $ofs->items->map(fn($it) => $it->formatted_container_number)->filter()->unique()->values();
-                            @endphp
-                            <div class="p-3.5 rounded-2xl theme-card border theme-border flex flex-col justify-between space-y-2">
-                                <div class="flex items-start justify-between gap-2">
-                                    <div>
-                                        <a href="{{ route('shipments.show', $ofs) }}" class="font-mono font-bold text-xs theme-heading hover:text-blue-600 dark:hover:text-cyan-400 transition-colors">
-                                            {{ $ofs->tracking_number }}
-                                        </a>
-                                        <span class="text-[11px] theme-text-muted block font-sans">
-                                            {{ $ofs->carrier->name ?? 'Carrier' }} &bull; {{ $ofs->originLocation->short_name ?? 'Origin' }} to {{ $ofs->destinationLocation->short_name ?? 'Destination' }} ({{ $ofs->originLocation->display_code ?? 'ORI' }} &rarr; {{ $ofs->destinationLocation->display_code ?? 'DST' }})
-                                        </span>
-                                    </div>
-                                    <span class="px-2 py-0.5 rounded-full text-[10px] font-bold font-mono bg-rose-500/15 text-rose-600 dark:text-rose-400 border border-rose-500/30 whitespace-nowrap">
-                                        +{{ $eval['days_over'] }}d over limit
-                                    </span>
-                                </div>
+                    <div class="h-52 w-full max-w-[240px] mx-auto">
+                        <canvas id="shipmentsStatusChart" role="img" aria-label="Doughnut chart of shipments by lifecycle status"></canvas>
+                    </div>
 
-                                @if($containers->isNotEmpty())
-                                    <div class="text-[11px] font-mono theme-text-secondary">
-                                        <span class="theme-text-muted">Container:</span> {{ $containers->implode(', ') }}
-                                    </div>
-                                @endif
-
-                                <div class="flex items-center justify-between pt-1 border-t theme-border text-[10px] font-mono theme-text-muted">
-                                    <span>Arrived {{ $eval['arrival_at']?->format('M d, Y') }}</span>
-                                    <a href="{{ route('shipments.show', $ofs) }}" class="text-blue-600 dark:text-cyan-400 hover:underline font-sans">
-                                        Details &rarr;
-                                    </a>
-                                </div>
-                            </div>
-                        @endforeach
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-xs border-collapse" aria-label="Shipments by status legend">
+                            <caption class="sr-only">Shipments by status breakdown</caption>
+                            <thead>
+                                <tr class="border-b theme-border theme-text-muted uppercase text-[10px] tracking-wider">
+                                    <th scope="col" class="py-2 pr-2 text-left font-semibold">Status</th>
+                                    <th scope="col" class="py-2 px-2 text-right font-semibold">Count</th>
+                                    <th scope="col" class="py-2 pl-2 text-right font-semibold">Share</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y theme-border">
+                                @foreach($statusBreakdown as $row)
+                                    @php
+                                        $dotClass = match($row['status']) {
+                                            'CREATED' => 'bg-slate-400',
+                                            'BOOKED' => 'bg-sky-400',
+                                            'PICKED_UP' => 'bg-blue-600',
+                                            'IN_TRANSIT' => 'bg-cyan-500',
+                                            'DELIVERED' => 'bg-emerald-500',
+                                            default => 'bg-slate-400',
+                                        };
+                                    @endphp
+                                    <tr>
+                                        <th scope="row" class="py-2 pr-2 font-medium text-left">
+                                            <a href="{{ route('shipments.index', ['status' => $row['status']]) }}" class="inline-flex items-center gap-2 theme-text-primary hover:text-blue-600 dark:hover:text-cyan-400 transition-colors">
+                                                <span class="w-2.5 h-2.5 rounded-full shrink-0 {{ $dotClass }}" aria-hidden="true"></span>
+                                                <span>{{ $row['label'] }}</span>
+                                            </a>
+                                        </th>
+                                        <td class="py-2 px-2 text-right font-mono font-semibold theme-heading tabular-nums">{{ number_format($row['count']) }}</td>
+                                        <td class="py-2 pl-2 text-right font-mono theme-text-muted tabular-nums">{{ number_format($row['share'], 1) }}%</td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
                     </div>
                 </div>
-            @endif
 
-            <div class="p-6 rounded-3xl theme-card border space-y-4 transition-colors duration-200">
-                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-3 border-b theme-border">
-                <div>
-                    <h2 class="text-lg font-bold theme-heading tracking-tight font-sans">
-                        Freight activities
-                    </h2>
-                    <p class="text-xs theme-text-secondary mt-0.5">Click any consignment row to focus camera on the 3D globe or 2D map</p>
-                </div>
+                <!-- Chart 2: Shipments by Carrier (Horizontal Bar Top 6 + Others + Accessible Table Legend) -->
+                <div class="lg:col-span-7 lg:border-l theme-border lg:pl-6 space-y-4">
+                    <div class="flex items-center justify-between">
+                        <h3 class="text-sm font-bold theme-heading font-sans">Shipments by carrier</h3>
+                        <span class="text-xs theme-text-muted">Top 6 carriers plus others</span>
+                    </div>
 
-                <!-- Search Input in Header -->
-                <div class="relative">
-                    <input
-                        type="text"
-                        id="activities-search-input"
-                        placeholder="Search tracking no., reference, hub..."
-                        onkeyup="filterActivitiesTable()"
-                        class="w-64 pl-9 pr-3 py-1.5 rounded-xl theme-input border text-xs focus:outline-none focus:border-cyan-500"
-                    >
-                    <svg class="w-4 h-4 theme-text-muted absolute left-3 top-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
-                    </svg>
+                    <div class="h-52 w-full">
+                        <canvas id="carrierBarChart" role="img" aria-label="Horizontal bar chart of shipments by carrier"></canvas>
+                    </div>
+
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-xs border-collapse" aria-label="Shipments by carrier legend">
+                            <caption class="sr-only">Shipments by carrier breakdown</caption>
+                            <thead>
+                                <tr class="border-b theme-border theme-text-muted uppercase text-[10px] tracking-wider">
+                                    <th scope="col" class="py-2 pr-2 text-left font-semibold">Carrier</th>
+                                    <th scope="col" class="py-2 px-2 text-right font-semibold">Count</th>
+                                    <th scope="col" class="py-2 pl-2 text-right font-semibold">Share</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y theme-border">
+                                @foreach($carrierStats as $c)
+                                    <tr>
+                                        <th scope="row" class="py-2 pr-2 font-medium text-left">
+                                            @if(empty($c['is_others']) && !empty($c['id']))
+                                                <a href="{{ route('shipments.index', ['carrier_id' => $c['id']]) }}" class="inline-flex items-center gap-2 theme-text-primary hover:text-blue-600 dark:hover:text-cyan-400 transition-colors">
+                                                    <span class="w-2.5 h-2.5 rounded-sm shrink-0 bg-blue-600 dark:bg-sky-400" aria-hidden="true"></span>
+                                                    <span>{{ $c['name'] }}</span>
+                                                    <span class="text-[10px] font-mono theme-text-muted">({{ $c['code'] }})</span>
+                                                </a>
+                                            @else
+                                                <span class="inline-flex items-center gap-2 theme-text-secondary">
+                                                    <span class="w-2.5 h-2.5 rounded-sm shrink-0 bg-slate-500 dark:bg-slate-400" aria-hidden="true"></span>
+                                                    <span>Others ({{ $c['carrier_count'] ?? 0 }} carriers)</span>
+                                                </span>
+                                            @endif
+                                        </th>
+                                        <td class="py-2 px-2 text-right font-mono font-semibold theme-heading tabular-nums">{{ number_format($c['count']) }}</td>
+                                        <td class="py-2 pl-2 text-right font-mono theme-text-muted tabular-nums">{{ number_format($c['share'], 1) }}%</td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
+        @endif
+    </section>
 
-            <!-- Table Rows with Visual Route and FlyTo Click -->
-            <div class="overflow-x-auto">
-                <table class="w-full min-w-[700px] text-left text-xs border-collapse" id="activities-table">
-                    <thead>
-                        <tr class="theme-text-muted uppercase text-[10px] font-semibold tracking-wider border-b theme-border">
-                            <th class="py-3 px-3">Cargo ID & Mode</th>
-                            <th class="py-3 px-4">Freight Route & Corridor</th>
-                            <th class="py-3 px-3">ETA Date</th>
-                            <th class="py-3 px-3">Status</th>
-                            <th class="py-3 px-2 text-right">Action</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y theme-border">
-                        @forelse($recentShipments as $s)
-                            @php
-                                $orig = $s->originLocation;
-                                $dest = $s->destinationLocation;
-                                $curr = $s->currentLocation;
-                                $hasExceptions = $s->exceptions->isNotEmpty();
-                                $sMode = strtoupper($s->transport_mode ?? 'SEA');
-                                $modeIcon = $sMode === 'AIR' ? '✈️' : ($sMode === 'ROAD' ? '🚚' : '🚢');
-                            @endphp
-                            <tr
-                                class="activity-row cursor-pointer hover:bg-blue-600/10 transition-colors duration-150 border-l-2 border-transparent"
-                                tabindex="0"
-                                data-tracking="{{ $s->tracking_number }}"
-                                onclick="if (event.target.closest('a, button')) return; window.CargoTrace && window.CargoTrace.focusMaritimeEntity ? window.CargoTrace.focusMaritimeEntity({{ $curr->latitude ?? $orig->latitude ?? 0 }}, {{ $curr->longitude ?? $orig->longitude ?? 0 }}, '{{ $s->tracking_number }}') : null"
-                                onkeydown="if ((event.key === 'Enter' || event.key === ' ') && !event.target.closest('a, button')) { event.preventDefault(); window.CargoTrace && window.CargoTrace.focusMaritimeEntity ? window.CargoTrace.focusMaritimeEntity({{ $curr->latitude ?? $orig->latitude ?? 0 }}, {{ $curr->longitude ?? $orig->longitude ?? 0 }}, '{{ $s->tracking_number }}') : null; }"
-                            >
-                                <!-- Cargo ID & Carrier Icon -->
-                                <td class="py-3.5 px-3">
-                                    <div class="flex items-center space-x-3">
-                                        <!-- Carrier/Mode Icon Capsule -->
-                                        <div class="w-8 h-8 rounded-xl {{ $s->is_delayed ? 'bg-amber-500/15 text-amber-500' : ($sMode === 'AIR' ? 'bg-sky-500/15 text-sky-500' : ($sMode === 'ROAD' ? 'bg-emerald-500/15 text-emerald-500' : 'bg-blue-500/15 text-blue-500')) }} flex items-center justify-center font-bold text-xs shrink-0" title="Mode: {{ $sMode }}">
-                                            {{ $modeIcon }}
-                                        </div>
-                                        <div>
-                                            <div class="flex items-center gap-1.5">
-                                                <a href="{{ route('shipments.show', $s) }}" class="font-mono font-bold theme-heading hover:text-cyan-500 block">
-                                                    {{ $s->tracking_number }}
-                                                </a>
-                                                <x-mode-badge :mode="$sMode" size="xs" />
-                                            </div>
-                                            <span class="text-[11px] theme-text-muted block font-sans">
-                                                {{ $s->carrier->name ?? 'Freight Carrier' }}
-                                                &bull; <span class="font-mono text-cyan-600 dark:text-cyan-400 font-semibold">{{ $s->primary_reference }}</span>
-                                            </span>
-                                        </div>
+    <!-- Row 5: Freight Activities Table (Full Width) -->
+    <div class="p-6 rounded-3xl theme-card border space-y-4 transition-colors duration-200">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-3 border-b theme-border">
+            <div>
+                <h2 class="text-lg font-bold theme-heading tracking-tight font-sans">
+                    Freight activities
+                </h2>
+                <p class="text-xs theme-text-secondary mt-0.5">Click any consignment row to focus camera on the 3D globe or 2D map</p>
+            </div>
+
+            <!-- Search Input in Header -->
+            <div class="relative w-full sm:w-64">
+                <input
+                    type="text"
+                    id="activities-search-input"
+                    aria-label="Search freight activities"
+                    placeholder="Search tracking no., reference, hub..."
+                    onkeyup="filterActivitiesTable()"
+                    class="w-full pl-9 pr-3 py-2 rounded-xl theme-input border text-xs focus:outline-none focus:border-cyan-500"
+                >
+                <svg class="w-4 h-4 theme-text-muted absolute left-3 top-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                </svg>
+            </div>
+        </div>
+
+        <!-- Table Rows with Visual Route and FlyTo Click -->
+        <div class="overflow-x-auto">
+            <table class="w-full min-w-[700px] text-left text-xs border-collapse" id="activities-table">
+                <thead>
+                    <tr class="theme-text-muted uppercase text-[10px] font-semibold tracking-wider border-b theme-border">
+                        <th class="py-3 px-3">Cargo ID & Mode</th>
+                        <th class="py-3 px-4">Freight Route & Corridor</th>
+                        <th class="py-3 px-3">ETA Date</th>
+                        <th class="py-3 px-3">Status</th>
+                        <th class="py-3 px-2 text-right">Action</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y theme-border">
+                    @forelse($recentShipments as $s)
+                        @php
+                            $orig = $s->originLocation;
+                            $dest = $s->destinationLocation;
+                            $curr = $s->currentLocation;
+                            $hasExceptions = $s->exceptions->isNotEmpty();
+                            $sMode = strtoupper($s->transport_mode ?? 'SEA');
+                            $modeIcon = $sMode === 'AIR' ? '✈️' : ($sMode === 'ROAD' ? '🚚' : '🚢');
+                        @endphp
+                        <tr
+                            class="activity-row cursor-pointer hover:bg-blue-600/10 transition-colors duration-150 border-l-2 border-transparent"
+                            tabindex="0"
+                            data-tracking="{{ $s->tracking_number }}"
+                            onclick="if (event.target.closest('a, button')) return; window.CargoTrace && window.CargoTrace.focusMaritimeEntity ? window.CargoTrace.focusMaritimeEntity({{ $curr->latitude ?? $orig->latitude ?? 0 }}, {{ $curr->longitude ?? $orig->longitude ?? 0 }}, '{{ $s->tracking_number }}') : null"
+                            onkeydown="if ((event.key === 'Enter' || event.key === ' ') && !event.target.closest('a, button')) { event.preventDefault(); window.CargoTrace && window.CargoTrace.focusMaritimeEntity ? window.CargoTrace.focusMaritimeEntity({{ $curr->latitude ?? $orig->latitude ?? 0 }}, {{ $curr->longitude ?? $orig->longitude ?? 0 }}, '{{ $s->tracking_number }}') : null; }"
+                        >
+                            <!-- Cargo ID & Carrier Icon -->
+                            <td class="py-3.5 px-3">
+                                <div class="flex items-center space-x-3">
+                                    <!-- Carrier/Mode Icon Capsule -->
+                                    <div class="w-8 h-8 rounded-xl {{ $s->is_delayed ? 'bg-amber-500/15 text-amber-500' : ($sMode === 'AIR' ? 'bg-sky-500/15 text-sky-500' : ($sMode === 'ROAD' ? 'bg-emerald-500/15 text-emerald-500' : 'bg-blue-500/15 text-blue-500')) }} flex items-center justify-center font-bold text-xs shrink-0" title="Mode: {{ $sMode }}">
+                                        {{ $modeIcon }}
                                     </div>
-                                </td>
-
-                                <!-- Visual Route: ORIGIN ───[Icon]───> DESTINATION -->
-                                <td class="py-3.5 px-4">
-                                    <div class="space-y-1 max-w-xs">
-                                        <div class="flex items-center justify-between text-[11px] font-mono">
-                                            <span class="font-bold theme-text-primary">{{ $orig->display_code ?? 'ORI' }}</span>
-                                            <span class="text-[10px] theme-text-muted font-mono" title="Great-circle distance between locations">
-                                                {{ $s->status === 'DELIVERED' ? 'Arrived' : ($s->great_circle_distance_nm ? number_format($s->great_circle_distance_nm) . ' nm' : ($sMode === 'ROAD' ? 'Road Leg' : 'Direct Corridor')) }}
-                                            </span>
-                                            <span class="font-bold theme-text-primary">{{ $dest->display_code ?? 'DST' }}</span>
+                                    <div>
+                                        <div class="flex items-center gap-1.5">
+                                            <a href="{{ route('shipments.show', $s) }}" class="font-mono font-bold theme-heading hover:text-cyan-500 block">
+                                                {{ $s->tracking_number }}
+                                            </a>
+                                            <x-mode-badge :mode="$sMode" size="xs" />
                                         </div>
-                                        <!-- Visual Progress Line -->
-                                        <div class="w-full h-1.5 rounded-full bg-slate-200 dark:bg-slate-800 overflow-hidden">
-                                            <div
-                                                class="h-full rounded-full transition-all duration-500 {{ $hasExceptions ? 'bg-rose-500' : ($s->is_delayed ? 'bg-amber-500' : ($sMode === 'AIR' ? 'bg-sky-400' : ($sMode === 'ROAD' ? 'bg-emerald-400' : 'bg-cyan-500'))) }}"
-                                                style="width: {{ $s->status === 'DELIVERED' ? '100%' : ($s->status === 'IN_TRANSIT' ? '65%' : '15%') }}"
-                                            ></div>
-                                        </div>
-                                        <div class="text-[10px] theme-text-muted truncate font-sans">
-                                            {{ $orig->short_name ?? 'Origin' }} to {{ $dest->short_name ?? 'Destination' }}
-                                        </div>
+                                        <span class="text-[11px] theme-text-muted block font-sans">
+                                            {{ $s->carrier->name ?? 'Freight Carrier' }}
+                                            &bull; <span class="font-mono text-cyan-600 dark:text-cyan-400 font-semibold">{{ $s->primary_reference }}</span>
+                                        </span>
                                     </div>
-                                </td>
+                                </div>
+                            </td>
 
-                                <!-- Arrival Date -->
-                                <td class="py-3.5 px-3 font-mono text-xs theme-text-secondary whitespace-nowrap">
-                                    {{ $s->estimated_arrival_at ? $s->estimated_arrival_at->format('M d, Y') : 'Confirmed' }}
-                                </td>
+                            <!-- Visual Route: ORIGIN ───[Icon]───> DESTINATION -->
+                            <td class="py-3.5 px-4">
+                                <div class="space-y-1 max-w-xs">
+                                    <div class="flex items-center justify-between text-[11px] font-mono">
+                                        <span class="font-bold theme-text-primary">{{ $orig->display_code ?? 'ORI' }}</span>
+                                        <span class="text-[10px] theme-text-muted font-mono" title="Great-circle distance between locations">
+                                            {{ $s->status === 'DELIVERED' ? 'Arrived' : ($s->great_circle_distance_nm ? number_format($s->great_circle_distance_nm) . ' nm' : ($sMode === 'ROAD' ? 'Road Leg' : 'Direct Corridor')) }}
+                                        </span>
+                                        <span class="font-bold theme-text-primary">{{ $dest->display_code ?? 'DST' }}</span>
+                                    </div>
+                                    <!-- Visual Progress Line -->
+                                    <div class="w-full h-1.5 rounded-full bg-slate-200 dark:bg-slate-800 overflow-hidden">
+                                        <div
+                                            class="h-full rounded-full transition-all duration-500 {{ $hasExceptions ? 'bg-rose-500' : ($s->is_delayed ? 'bg-amber-500' : ($sMode === 'AIR' ? 'bg-sky-400' : ($sMode === 'ROAD' ? 'bg-emerald-400' : 'bg-cyan-500'))) }}"
+                                            style="width: {{ $s->status === 'DELIVERED' ? '100%' : ($s->status === 'IN_TRANSIT' ? '65%' : '15%') }}"
+                                        ></div>
+                                    </div>
+                                    <div class="text-[10px] theme-text-muted truncate font-sans">
+                                        {{ $orig->short_name ?? 'Origin' }} to {{ $dest->short_name ?? 'Destination' }}
+                                    </div>
+                                </div>
+                            </td>
 
-                                <!-- Status Pill -->
-                                <td class="py-3.5 px-3">
-                                    @php
-                                        $ftEval = ($s->status !== 'DELIVERED' && $s->actual_arrival_at) ? app(\App\Services\FreeTimeService::class)->calculate($s) : null;
-                                    @endphp
-                                    @if($ftEval && $ftEval['is_over_limit'])
-                                        <span class="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase font-mono bg-rose-500/15 text-rose-600 dark:text-rose-400 border border-rose-500/30" title="{{ $ftEval['badge_label'] }}">
-                                            Over free time (+{{ $ftEval['days_over'] }}d)
-                                        </span>
-                                    @elseif($hasExceptions)
-                                        <span class="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase font-mono bg-rose-500/15 text-rose-600 dark:text-rose-400 border border-rose-500/30">
-                                            Alert
-                                        </span>
-                                    @elseif($s->is_delayed)
-                                        @if($s->status === 'DELIVERED')
-                                            <span class="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase font-mono bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30">
-                                                Delivered late (+{{ (int)$s->delay_hours }}h)
-                                            </span>
-                                        @else
-                                            <span class="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase font-mono bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30">
-                                                Delayed (+{{ (int)$s->delay_hours }}h)
-                                            </span>
-                                        @endif
-                                    @elseif($s->status === 'DELIVERED')
-                                        <span class="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase font-mono bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30">
-                                            Delivered
+                            <!-- Arrival Date -->
+                            <td class="py-3.5 px-3 font-mono text-xs theme-text-secondary whitespace-nowrap">
+                                {{ $s->estimated_arrival_at ? $s->estimated_arrival_at->format('M d, Y') : 'Confirmed' }}
+                            </td>
+
+                            <!-- Status Pill -->
+                            <td class="py-3.5 px-3">
+                                @php
+                                    $ftEval = ($s->status !== 'DELIVERED' && $s->actual_arrival_at) ? app(\App\Services\FreeTimeService::class)->calculate($s) : null;
+                                @endphp
+                                @if($ftEval && $ftEval['is_over_limit'])
+                                    <span class="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase font-mono bg-rose-500/15 text-rose-600 dark:text-rose-400 border border-rose-500/30" title="{{ $ftEval['badge_label'] }}">
+                                        Over free time (+{{ $ftEval['days_over'] }}d)
+                                    </span>
+                                @elseif($hasExceptions)
+                                    <span class="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase font-mono bg-rose-500/15 text-rose-600 dark:text-rose-400 border border-rose-500/30">
+                                        Alert
+                                    </span>
+                                @elseif($s->is_delayed)
+                                    @if($s->status === 'DELIVERED')
+                                        <span class="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase font-mono bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30">
+                                            Delivered late (+{{ (int)$s->delay_hours }}h)
                                         </span>
                                     @else
-                                        <span class="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase font-mono bg-blue-500/15 text-blue-600 dark:text-cyan-400 border border-blue-500/30">
-                                            {{ $s->status }}
+                                        <span class="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase font-mono bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30">
+                                            Delayed (+{{ (int)$s->delay_hours }}h)
                                         </span>
                                     @endif
-                                </td>
+                                @elseif($s->status === 'DELIVERED')
+                                    <span class="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase font-mono bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30">
+                                        Delivered
+                                    </span>
+                                @else
+                                    <span class="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase font-mono bg-blue-500/15 text-blue-600 dark:text-cyan-400 border border-blue-500/30">
+                                        {{ $s->status }}
+                                    </span>
+                                @endif
+                            </td>
 
-                                <!-- Action Quick Link -->
-                                <td class="py-3.5 px-2 text-right">
-                                    <a href="{{ route('shipments.show', $s) }}" class="p-1.5 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-800 theme-text-muted hover:theme-heading inline-block" title="Inspect Vessel">
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
-                                    </a>
-                                </td>
-                            </tr>
-                        @empty
-                            <tr>
-                                <td colspan="5" class="py-8 text-center theme-text-muted">No maritime activities found.</td>
-                            </tr>
-                        @endforelse
-                    </tbody>
-                </table>
-            </div>
+                            <!-- Action Quick Link -->
+                            <td class="py-3.5 px-2 text-right">
+                                <a href="{{ route('shipments.show', $s) }}" class="p-2 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-800 theme-text-muted hover:theme-heading inline-flex items-center justify-center min-w-[44px] min-h-[44px]" aria-label="View shipment {{ $s->tracking_number }}" title="Inspect consignment">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                                </a>
+                            </td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="5" class="py-8 text-center theme-text-muted">No freight activities found.</td>
+                        </tr>
+                    @endforelse
+                </tbody>
+            </table>
         </div>
     </div>
 
-        <!-- RIGHT 4 COLS: Weather & Currency Utility Panel (Global View Style) -->
-        <div class="xl:col-span-4 space-y-6 font-sans">
-            <!-- 1. Port Weather Widget -->
-            @php
-                $selectedPort = $weatherPorts[0] ?? [
-                    'city' => 'Singapore',
-                    'code' => 'SGSIN',
-                    'code_type' => 'UN/LOCODE',
-                    'unlocode' => 'SGSIN',
-                    'weather' => [
-                        'temperature_c' => 31.5,
-                        'condition' => 'Clear & Sunny',
-                        'wind_kph' => 14.5,
-                        'humidity' => 68,
-                    ],
-                ];
-            @endphp
-            <div class="p-6 rounded-3xl theme-card border theme-border shadow-xl space-y-4 transition-colors duration-200">
-                <div class="flex items-center justify-between pb-2 border-b theme-border">
-                    <span class="text-xs font-semibold theme-heading font-sans">Port weather</span>
-                    <div class="flex items-center gap-1.5">
-                        <x-data-source-badge :source="$selectedPort['data_source'] ?? 'live'" />
-                        @if(isset($selectedPort['weather']['timestamp']) && $selectedPort['weather']['timestamp'])
-                            <span class="text-[10px] theme-text-muted font-sans">
-                                Updated {{ \Carbon\Carbon::parse($selectedPort['weather']['timestamp'])->format('H:i') }}
-                            </span>
-                        @endif
-                        <a href="{{ route('weather.index') }}" class="text-[10px] font-semibold px-2 py-0.5 rounded theme-card-elevated border theme-border hover:border-blue-500 theme-heading font-sans transition inline-flex items-center gap-1" title="Open full weather hub">
-                            <span>Hub</span>
-                            <span>&rarr;</span>
-                        </a>
-                    </div>
+    <!-- Row 6: Lower Secondary Context (Free-Time Attention, Weather, Currency, News) -->
+    @if(isset($overFreeTimeShipments) && $overFreeTimeShipments->isNotEmpty())
+        <!-- Attention List: Shipments Exceeding Terminal Free-Time Dwell Limit -->
+        <div class="p-5 rounded-3xl bg-rose-500/10 border border-rose-500/25 space-y-3 font-sans transition-colors duration-200">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2.5 border-b border-rose-500/20">
+                <div class="flex items-center gap-2">
+                    <span class="w-2.5 h-2.5 rounded-full bg-rose-500 animate-pulse"></span>
+                    <h2 class="text-sm font-bold theme-heading tracking-tight font-sans">
+                        Terminal dwell attention &bull; {{ $overFreeTimeShipments->count() }} {{ $overFreeTimeShipments->count() === 1 ? 'consignment exceeds' : 'consignments exceed' }} free-time limit
+                    </h2>
                 </div>
-
-                <div class="space-y-3">
-                    <div class="flex items-center justify-between">
-                        <div>
-                            <h3 class="text-base font-extrabold theme-heading font-sans">{{ $selectedPort['city'] ?? 'Singapore' }}</h3>
-                            <span class="text-[11px] theme-text-muted font-mono" title="{{ $selectedPort['code_type'] ?? 'UN/LOCODE' }}: {{ $selectedPort['code'] ?? $selectedPort['unlocode'] ?? 'SGSIN' }}">{{ $selectedPort['code'] ?? $selectedPort['unlocode'] ?? 'SGSIN' }} &bull; {{ $selectedPort['code_type'] ?? 'UN/LOCODE' }}</span>
-                        </div>
-                        <div class="text-right">
-                            <span class="text-3xl font-black theme-heading tabular-nums font-mono">
-                                {{ $selectedPort['weather']['temperature_c'] ?? '31.5' }}°C
-                            </span>
-                            <span class="text-xs font-semibold theme-text-secondary block font-sans">
-                                {{ $selectedPort['weather']['condition'] ?? 'Clear & Sunny' }}
-                            </span>
-                        </div>
-                    </div>
-
-                    <div class="grid grid-cols-2 gap-2 text-xs theme-text-secondary pt-3 border-t theme-border font-sans">
-                        <div>Wind speed: <b class="theme-heading font-mono">{{ $selectedPort['weather']['wind_kph'] ?? '14.5' }} km/h</b></div>
-                        <div>Relative humidity: <b class="theme-heading font-mono">{{ $selectedPort['weather']['humidity'] ?? '68' }}%</b></div>
-                    </div>
-                </div>
+                <span class="text-[11px] font-mono text-rose-600 dark:text-rose-400">
+                    Standard free time: {{ (int) (\App\Models\Setting::get('free_days_after_arrival') ?? 5) }} days
+                </span>
             </div>
 
-            <!-- 2. Two-Way Global Currency Converter Widget -->
-            <div class="p-5 rounded-3xl theme-card border space-y-3 transition-colors duration-200">
-                <div class="flex items-center justify-between pb-2 border-b theme-border">
-                    <span class="text-xs font-semibold theme-heading font-sans">Currency converter</span>
-                    <div class="flex items-center gap-1.5">
-                        <x-data-source-badge :source="$currencyData['data_source'] ?? 'live'" />
-                        @if(isset($currencyData['time_last_update_utc']) && $currencyData['time_last_update_utc'])
-                            <span class="text-[10px] theme-text-muted font-sans">
-                                Updated {{ \Carbon\Carbon::parse($currencyData['time_last_update_utc'])->format('H:i') }}
-                            </span>
-                        @endif
-                        <a href="{{ route('currency.index') }}" class="text-[10px] text-cyan-600 dark:text-cyan-400 hover:underline font-sans" title="Open full currency converter">
-                            Full rates &rarr;
-                        </a>
-                    </div>
-                </div>
-
-                <div class="grid grid-cols-5 gap-2 items-center">
-                    <input
-                        type="number"
-                        id="two-way-amount"
-                        value="1000"
-                        oninput="calculateTwoWayCurrency()"
-                        class="col-span-2 px-3 py-1.5 rounded-xl theme-input border text-xs tabular-nums focus:outline-none focus:border-cyan-500 font-mono"
-                    >
-                    <select
-                        id="two-way-from"
-                        onchange="calculateTwoWayCurrency()"
-                        class="col-span-1 px-1 py-1.5 rounded-xl theme-input border text-xs font-mono focus:outline-none"
-                    >
-                        <option value="USD" selected>USD</option>
-                        <option value="EUR">EUR</option>
-                        <option value="IDR">IDR</option>
-                        <option value="CNY">CNY</option>
-                        <option value="SGD">SGD</option>
-                        <option value="AUD">AUD</option>
-                    </select>
-
-                    <button
-                        type="button"
-                        onclick="swapCurrencies()"
-                        class="col-span-1 p-1.5 rounded-xl bg-blue-600/15 hover:bg-blue-600 text-blue-600 dark:text-cyan-400 hover:text-white transition flex items-center justify-center font-bold"
-                        title="Swap currencies"
-                    >
-                        &rlarr;
-                    </button>
-
-                    <select
-                        id="two-way-to"
-                        onchange="calculateTwoWayCurrency()"
-                        class="col-span-1 px-1 py-1.5 rounded-xl theme-input border text-xs font-mono focus:outline-none"
-                    >
-                        <option value="IDR" selected>IDR</option>
-                        <option value="USD">USD</option>
-                        <option value="EUR">EUR</option>
-                        <option value="CNY">CNY</option>
-                        <option value="SGD">SGD</option>
-                        <option value="AUD">AUD</option>
-                    </select>
-                </div>
-
-                <div class="p-3 rounded-2xl theme-card-elevated border theme-border flex items-center justify-between font-sans">
-                    <span class="text-xs theme-text-secondary">Converted amount:</span>
-                    <span id="two-way-result" class="text-sm font-bold font-mono text-cyan-600 dark:text-cyan-400">
-                        Rp 15,873,000 IDR
-                    </span>
-                </div>
-            </div>
-
-            <!-- 3. Live Maritime News Feed -->
-            <div class="p-5 rounded-3xl theme-card border space-y-3 transition-colors duration-200 font-sans">
-                <div class="flex items-center justify-between pb-2 border-b theme-border">
-                    <span class="text-xs font-semibold theme-heading font-sans">Maritime news wire</span>
-                    <div class="flex items-center gap-1.5">
-                        <x-data-source-badge :source="$news[0]['data_source'] ?? 'live'" />
-                        @if(isset($news[0]['published_at']) && $news[0]['published_at'])
-                            <span class="text-[10px] theme-text-muted font-sans">
-                                Updated {{ \Carbon\Carbon::parse($news[0]['published_at'])->format('H:i') }}
-                            </span>
-                        @endif
-                        <a href="{{ route('news.index') }}" class="text-[10px] text-cyan-600 dark:text-cyan-400 hover:underline font-sans" title="Open all maritime news">
-                            All news &rarr;
-                        </a>
-                    </div>
-                </div>
-                <div class="space-y-2.5 max-h-56 overflow-y-auto pr-1">
-                    @forelse(array_slice($news, 0, 4) as $n)
-                        <div class="p-2.5 rounded-xl theme-card-elevated border theme-border flex items-center gap-3 group">
-                            <img
-                                src="{{ $n['thumbnail'] ?? asset('images/news-placeholder.svg') }}"
-                                alt=""
-                                class="w-16 h-14 sm:w-20 sm:h-16 rounded-lg object-cover flex-shrink-0 bg-slate-800 border border-white/5 group-hover:opacity-90 transition"
-                                loading="lazy"
-                                onerror="this.onerror=null;this.src='{{ asset('images/news-placeholder.svg') }}';"
-                            >
-                            <div class="min-w-0 flex-1 space-y-1">
-                                <div class="flex items-center justify-between gap-1">
-                                    <div class="flex items-center gap-1.5 min-w-0">
-                                        <span class="text-[10px] font-semibold text-cyan-600 dark:text-cyan-400 font-sans truncate max-w-[110px]" title="{{ $n['source'] ?? 'Maritime Wire' }}">
-                                            {{ $n['source'] ?? 'Maritime Wire' }}
-                                        </span>
-                                        @if(!empty($n['is_relevant']))
-                                            <span class="px-1.5 py-0.5 rounded text-[9px] font-sans font-medium bg-blue-500/20 text-cyan-400 border border-blue-400/30">
-                                                Related
-                                            </span>
-                                        @endif
-                                    </div>
-                                    <span class="text-[10px] theme-text-muted flex-shrink-0 font-sans">
-                                        {{ \Carbon\Carbon::parse($n['published_at'])->diffForHumans(null, true) }}
-                                    </span>
-                                </div>
-                                <a href="{{ $n['url'] ?? '#' }}" target="_blank" rel="noopener noreferrer" class="text-xs font-semibold theme-heading hover:text-cyan-500 transition line-clamp-2 block leading-snug" title="{{ $n['headline'] }}">
-                                    {{ $n['headline'] }}
+            <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
+                @foreach($overFreeTimeShipments as $ofs)
+                    @php
+                        $eval = $ofs->free_time_eval ?? app(\App\Services\FreeTimeService::class)->calculate($ofs);
+                        $containers = $ofs->items->map(fn($it) => $it->formatted_container_number)->filter()->unique()->values();
+                    @endphp
+                    <div class="p-3.5 rounded-2xl theme-card border theme-border flex flex-col justify-between space-y-2">
+                        <div class="flex items-start justify-between gap-2">
+                            <div>
+                                <a href="{{ route('shipments.show', $ofs) }}" class="font-mono font-bold text-xs theme-heading hover:text-blue-600 dark:hover:text-cyan-400 transition-colors">
+                                    {{ $ofs->tracking_number }}
                                 </a>
+                                <span class="text-[11px] theme-text-muted block font-sans">
+                                    {{ $ofs->carrier->name ?? 'Carrier' }} &bull; {{ $ofs->originLocation->short_name ?? 'Origin' }} to {{ $ofs->destinationLocation->short_name ?? 'Destination' }} ({{ $ofs->originLocation->display_code ?? 'ORI' }} &rarr; {{ $ofs->destinationLocation->display_code ?? 'DST' }})
+                                </span>
                             </div>
+                            <span class="px-2 py-0.5 rounded-full text-[10px] font-bold font-mono bg-rose-500/15 text-rose-600 dark:text-rose-400 border border-rose-500/30 whitespace-nowrap">
+                                +{{ $eval['days_over'] }}d over limit
+                            </span>
                         </div>
-                    @empty
-                        <div class="text-center py-4 text-xs theme-text-muted">No news feeds available</div>
-                    @endforelse
+
+                        @if($containers->isNotEmpty())
+                            <div class="text-[11px] font-mono theme-text-secondary">
+                                <span class="theme-text-muted">Container:</span> {{ $containers->implode(', ') }}
+                            </div>
+                        @endif
+
+                        <div class="flex items-center justify-between pt-1 border-t theme-border text-[10px] font-mono theme-text-muted">
+                            <span>Arrived {{ $eval['arrival_at']?->format('M d, Y') }}</span>
+                            <a href="{{ route('shipments.show', $ofs) }}" class="text-blue-600 dark:text-cyan-400 hover:underline font-sans">
+                                Details &rarr;
+                            </a>
+                        </div>
+                    </div>
+                @endforeach
+            </div>
+        </div>
+    @endif
+
+    <!-- Secondary Utility Strip: Port Weather, Currency Converter, Maritime News -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start font-sans">
+        <!-- 1. Port Weather Widget -->
+        @php
+            $selectedPort = $weatherPorts[0] ?? [
+                'city' => 'Singapore',
+                'code' => 'SGSIN',
+                'code_type' => 'UN/LOCODE',
+                'unlocode' => 'SGSIN',
+                'weather' => [
+                    'temperature_c' => 31.5,
+                    'condition' => 'Clear & Sunny',
+                    'wind_kph' => 14.5,
+                    'humidity' => 68,
+                ],
+            ];
+        @endphp
+        <div class="p-6 rounded-3xl theme-card border theme-border shadow-xl space-y-4 transition-colors duration-200">
+            <div class="flex items-center justify-between pb-2 border-b theme-border">
+                <span class="text-xs font-semibold theme-heading font-sans">Port weather</span>
+                <div class="flex items-center gap-1.5">
+                    <x-data-source-badge :source="$selectedPort['data_source'] ?? 'live'" />
+                    @if(isset($selectedPort['weather']['timestamp']) && $selectedPort['weather']['timestamp'])
+                        <span class="text-[10px] theme-text-muted font-sans">
+                            Updated {{ \Carbon\Carbon::parse($selectedPort['weather']['timestamp'])->format('H:i') }}
+                        </span>
+                    @endif
+                    <a href="{{ route('weather.index') }}" class="text-[10px] font-semibold px-2 py-0.5 rounded theme-card-elevated border theme-border hover:border-blue-500 theme-heading font-sans transition inline-flex items-center gap-1" title="Open full weather hub">
+                        <span>Hub</span>
+                        <span>&rarr;</span>
+                    </a>
                 </div>
+            </div>
+
+            <div class="space-y-3">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h3 class="text-base font-extrabold theme-heading font-sans">{{ $selectedPort['city'] ?? 'Singapore' }}</h3>
+                        <span class="text-[11px] theme-text-muted font-mono" title="{{ $selectedPort['code_type'] ?? 'UN/LOCODE' }}: {{ $selectedPort['code'] ?? $selectedPort['unlocode'] ?? 'SGSIN' }}">{{ $selectedPort['code'] ?? $selectedPort['unlocode'] ?? 'SGSIN' }} &bull; {{ $selectedPort['code_type'] ?? 'UN/LOCODE' }}</span>
+                    </div>
+                    <div class="text-right">
+                        <span class="text-3xl font-black theme-heading tabular-nums font-mono">
+                            {{ $selectedPort['weather']['temperature_c'] ?? '31.5' }}°C
+                        </span>
+                        <span class="text-xs font-semibold theme-text-secondary block font-sans">
+                            {{ $selectedPort['weather']['condition'] ?? 'Clear & Sunny' }}
+                        </span>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-2 text-xs theme-text-secondary pt-3 border-t theme-border font-sans">
+                    <div>Wind speed: <b class="theme-heading font-mono">{{ $selectedPort['weather']['wind_kph'] ?? '14.5' }} km/h</b></div>
+                    <div>Relative humidity: <b class="theme-heading font-mono">{{ $selectedPort['weather']['humidity'] ?? '68' }}%</b></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 2. Two-Way Global Currency Converter Widget -->
+        <div class="p-5 rounded-3xl theme-card border space-y-3 transition-colors duration-200">
+            <div class="flex items-center justify-between pb-2 border-b theme-border">
+                <span class="text-xs font-semibold theme-heading font-sans">Currency converter</span>
+                <div class="flex items-center gap-1.5">
+                    <x-data-source-badge :source="$currencyData['data_source'] ?? 'live'" />
+                    @if(isset($currencyData['time_last_update_utc']) && $currencyData['time_last_update_utc'])
+                        <span class="text-[10px] theme-text-muted font-sans">
+                            Updated {{ \Carbon\Carbon::parse($currencyData['time_last_update_utc'])->format('H:i') }}
+                        </span>
+                    @endif
+                    <a href="{{ route('currency.index') }}" class="text-[10px] text-cyan-600 dark:text-cyan-400 hover:underline font-sans" title="Open full currency converter">
+                        Full rates &rarr;
+                    </a>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-5 gap-2 items-center">
+                <input
+                    type="number"
+                    id="two-way-amount"
+                    aria-label="Currency amount"
+                    value="1000"
+                    oninput="calculateTwoWayCurrency()"
+                    class="col-span-2 px-3 py-2 rounded-xl theme-input border text-xs tabular-nums focus:outline-none focus:border-cyan-500 font-mono min-h-[44px]"
+                >
+                <select
+                    id="two-way-from"
+                    aria-label="From currency"
+                    onchange="calculateTwoWayCurrency()"
+                    class="col-span-1 px-1 py-2 rounded-xl theme-input border text-xs font-mono focus:outline-none min-h-[44px]"
+                >
+                    <option value="USD" selected>USD</option>
+                    <option value="EUR">EUR</option>
+                    <option value="IDR">IDR</option>
+                    <option value="CNY">CNY</option>
+                    <option value="SGD">SGD</option>
+                    <option value="AUD">AUD</option>
+                </select>
+
+                <button
+                    type="button"
+                    aria-label="Swap currencies"
+                    onclick="swapCurrencies()"
+                    class="col-span-1 p-2 rounded-xl bg-blue-600/15 hover:bg-blue-600 text-blue-600 dark:text-cyan-400 hover:text-white transition flex items-center justify-center font-bold min-h-[44px] cursor-pointer"
+                    title="Swap currencies"
+                >
+                    &rlarr;
+                </button>
+
+                <select
+                    id="two-way-to"
+                    aria-label="To currency"
+                    onchange="calculateTwoWayCurrency()"
+                    class="col-span-1 px-1 py-2 rounded-xl theme-input border text-xs font-mono focus:outline-none min-h-[44px]"
+                >
+                    <option value="IDR" selected>IDR</option>
+                    <option value="USD">USD</option>
+                    <option value="EUR">EUR</option>
+                    <option value="CNY">CNY</option>
+                    <option value="SGD">SGD</option>
+                    <option value="AUD">AUD</option>
+                </select>
+            </div>
+
+            <div class="p-3 rounded-2xl theme-card-elevated border theme-border flex items-center justify-between font-sans">
+                <span class="text-xs theme-text-secondary">Converted amount:</span>
+                <span id="two-way-result" class="text-sm font-bold font-mono text-cyan-600 dark:text-cyan-400">
+                    Rp 15,873,000 IDR
+                </span>
+            </div>
+        </div>
+
+        <!-- 3. Live Maritime News Feed -->
+        <div class="p-5 rounded-3xl theme-card border space-y-3 transition-colors duration-200 font-sans">
+            <div class="flex items-center justify-between pb-2 border-b theme-border">
+                <span class="text-xs font-semibold theme-heading font-sans">Maritime news wire</span>
+                <div class="flex items-center gap-1.5">
+                    <x-data-source-badge :source="$news[0]['data_source'] ?? 'live'" />
+                    @if(isset($news[0]['published_at']) && $news[0]['published_at'])
+                        <span class="text-[10px] theme-text-muted font-sans">
+                            Updated {{ \Carbon\Carbon::parse($news[0]['published_at'])->format('H:i') }}
+                        </span>
+                    @endif
+                    <a href="{{ route('news.index') }}" class="text-[10px] text-cyan-600 dark:text-cyan-400 hover:underline font-sans" title="Open all maritime news">
+                        All news &rarr;
+                    </a>
+                </div>
+            </div>
+            <div class="space-y-2.5 max-h-56 overflow-y-auto pr-1">
+                @forelse(array_slice($news, 0, 4) as $n)
+                    <div class="p-2.5 rounded-xl theme-card-elevated border theme-border flex items-center gap-3 group">
+                        <img
+                            src="{{ $n['thumbnail'] ?? asset('images/news-placeholder.svg') }}"
+                            alt=""
+                            width="80"
+                            height="64"
+                            class="w-16 h-14 sm:w-20 sm:h-16 rounded-lg object-cover flex-shrink-0 bg-slate-800 border border-white/5 group-hover:opacity-90 transition"
+                            loading="lazy"
+                            onerror="this.onerror=null;this.src='{{ asset('images/news-placeholder.svg') }}';"
+                        >
+                        <div class="min-w-0 flex-1 space-y-1">
+                            <div class="flex items-center justify-between gap-1">
+                                <div class="flex items-center gap-1.5 min-w-0">
+                                    <span class="text-[10px] font-semibold text-cyan-600 dark:text-cyan-400 font-sans truncate max-w-[110px]" title="{{ $n['source'] ?? 'Maritime Wire' }}">
+                                        {{ $n['source'] ?? 'Maritime Wire' }}
+                                    </span>
+                                    @if(!empty($n['is_relevant']))
+                                        <span class="px-1.5 py-0.5 rounded text-[9px] font-sans font-medium bg-blue-500/20 text-cyan-400 border border-blue-400/30">
+                                            Related
+                                        </span>
+                                    @endif
+                                </div>
+                                <span class="text-[10px] theme-text-muted flex-shrink-0 font-sans">
+                                    {{ \Carbon\Carbon::parse($n['published_at'])->diffForHumans(null, true) }}
+                                </span>
+                            </div>
+                            <a href="{{ $n['url'] ?? '#' }}" target="_blank" rel="noopener noreferrer" class="text-xs font-semibold theme-heading hover:text-cyan-500 transition line-clamp-2 block leading-snug" title="{{ $n['headline'] }}">
+                                {{ $n['headline'] }}
+                            </a>
+                        </div>
+                    </div>
+                @empty
+                    <div class="text-center py-4 text-xs theme-text-muted">No news feeds available</div>
+                @endforelse
             </div>
         </div>
     </div>
