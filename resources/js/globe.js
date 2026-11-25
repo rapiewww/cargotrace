@@ -31,6 +31,15 @@ function isFiniteCoord(value) {
     return value !== null && value !== undefined && value !== '' && Number.isFinite(Number(value));
 }
 
+function runLayerSafely(layerLabel, fn) {
+    try {
+        return fn();
+    } catch (err) {
+        console.error(`[CargoTrace Map] Failed to render ${layerLabel}:`, err);
+        return null;
+    }
+}
+
 function escapeHtml(value) {
     return String(value ?? '')
         .replace(/&/g, '&amp;')
@@ -204,82 +213,88 @@ function renderGlobeData(dataset) {
     const vesselMarkers = [];
 
     shipments.forEach(s => {
-        const orig = s.origin_location || s.originLocation || s.origin;
-        const dest = s.destination_location || s.destinationLocation || s.destination;
+        runLayerSafely(`3D route ${s?.tracking_number || s?.id || 'unknown'}`, () => {
+            const orig = s.origin_location || s.originLocation || s.origin;
+            const dest = s.destination_location || s.destinationLocation || s.destination;
 
-        const startLat = orig?.latitude ?? orig?.lat;
-        const startLng = orig?.longitude ?? orig?.lng;
-        const endLat = dest?.latitude ?? dest?.lat;
-        const endLng = dest?.longitude ?? dest?.lng;
+            const startLat = orig?.latitude ?? orig?.lat;
+            const startLng = orig?.longitude ?? orig?.lng;
+            const endLat = dest?.latitude ?? dest?.lat;
+            const endLng = dest?.longitude ?? dest?.lng;
 
-        if (!isFiniteCoord(startLat) || !isFiniteCoord(startLng) || !isFiniteCoord(endLat) || !isFiniteCoord(endLng)) {
-            return;
-        }
+            if (!isFiniteCoord(startLat) || !isFiniteCoord(startLng) || !isFiniteCoord(endLat) || !isFiniteCoord(endLng)) {
+                return;
+            }
 
-        const sLat = Number(startLat);
-        const sLng = Number(startLng);
-        const eLat = Number(endLat);
-        const eLng = Number(endLng);
+            const sLat = Number(startLat);
+            const sLng = Number(startLng);
+            const eLat = Number(endLat);
+            const eLng = Number(endLng);
 
-        const isDelayed = Boolean(s.is_delayed);
-        const hasException = Boolean(s.has_exception || (s.exceptions && s.exceptions.length > 0));
-        const modeInfo = getModeDisplay(s.mode || s.transport_mode || s.carrier_mode);
-        const severityColor = getSeverityColor(s.delay_severity, hasException);
+            const isDelayed = Boolean(s.is_delayed);
+            const hasException = Boolean(s.has_exception || (s.exceptions && s.exceptions.length > 0));
+            const modeInfo = getModeDisplay(s.mode || s.transport_mode || s.carrier_mode);
+            const severityColor = getSeverityColor(s.delay_severity, hasException);
 
-        const arcAltitude = modeInfo.code === 'AIR' ? 0.45 : (modeInfo.code === 'ROAD' ? 0.05 : 0.22);
-        const arcDashLength = modeInfo.code === 'AIR' ? 0.3 : 1.0;
-        const arcDashGap = modeInfo.code === 'AIR' ? 0.15 : 0;
+            const arcAltitude = modeInfo.code === 'AIR' ? 0.45 : (modeInfo.code === 'ROAD' ? 0.05 : 0.22);
+            const arcDashLength = modeInfo.code === 'AIR' ? 0.3 : 1.0;
+            const arcDashGap = modeInfo.code === 'AIR' ? 0.15 : 0;
 
-        arcsData.push({
-            shipmentId: s.id,
-            trackingNumber: s.tracking_number,
-            transportMode: modeInfo.code,
-            carrier: s.carrier || 'Carrier',
-            startLat: sLat,
-            startLng: sLng,
-            endLat: eLat,
-            endLng: eLng,
-            color: [severityColor, severityColor],
-            altitude: arcAltitude,
-            dashLength: arcDashLength,
-            dashGap: arcDashGap,
-            status: s.status_label || s.status,
-            isDelayed,
-            hasException,
-        });
+            arcsData.push({
+                shipmentId: s.id,
+                trackingNumber: s.tracking_number,
+                transportMode: modeInfo.code,
+                carrier: s.carrier || 'Carrier',
+                startLat: sLat,
+                startLng: sLng,
+                endLat: eLat,
+                endLng: eLng,
+                color: [severityColor, severityColor],
+                altitude: arcAltitude,
+                dashLength: arcDashLength,
+                dashGap: arcDashGap,
+                status: s.status_label || s.status,
+                isDelayed,
+                hasException,
+            });
 
-        const trackingPoint = s.latest_tracking || s.current;
-        const markerLat = isFiniteCoord(trackingPoint?.lat) ? Number(trackingPoint.lat) : (sLat + eLat) / 2;
-        const markerLng = isFiniteCoord(trackingPoint?.lng) ? Number(trackingPoint.lng) : (sLng + eLng) / 2;
+            const trackingPoint = s.latest_tracking || s.current;
+            const markerLat = isFiniteCoord(trackingPoint?.lat) ? Number(trackingPoint.lat) : (sLat + eLat) / 2;
+            const markerLng = isFiniteCoord(trackingPoint?.lng) ? Number(trackingPoint.lng) : (sLng + eLng) / 2;
 
-        vesselMarkers.push({
-            shipmentId: s.id,
-            trackingNumber: s.tracking_number,
-            transportMode: modeInfo.code,
-            lat: markerLat,
-            lng: markerLng,
-            carrier: s.carrier || 'Freight',
-            status: s.status_label || s.status,
-            isDelayed,
-            color: severityColor,
-            name: `${modeInfo.icon} ${s.tracking_number} [${modeInfo.label}] (${getLocCode(orig) || 'ORI'} -> ${getLocCode(dest) || 'DST'})`,
+            vesselMarkers.push({
+                shipmentId: s.id,
+                trackingNumber: s.tracking_number,
+                transportMode: modeInfo.code,
+                lat: markerLat,
+                lng: markerLng,
+                carrier: s.carrier || 'Freight',
+                status: s.status_label || s.status,
+                isDelayed,
+                color: severityColor,
+                name: `${modeInfo.icon} ${s.tracking_number} [${modeInfo.label}] (${getLocCode(orig) || 'ORI'} -> ${getLocCode(dest) || 'DST'})`,
+            });
         });
     });
 
-    const pointsData = locations
-        .filter(loc => isFiniteCoord(loc.latitude) && isFiniteCoord(loc.longitude))
-        .map(loc => ({
-            id: loc.id,
-            name: loc.name,
-            code: getLocCode(loc),
-            codeType: getLocCodeType(loc),
-            unlocode: getLocCode(loc),
-            country: loc.country,
-            lat: Number(loc.latitude),
-            lng: Number(loc.longitude),
-            size: 0.8,
-            color: '#2DD4BF',
-        }));
+    const pointsData = [];
+    locations.forEach(loc => {
+        runLayerSafely(`3D location ${loc?.code || loc?.name || 'unknown'}`, () => {
+            if (!isFiniteCoord(loc.latitude) || !isFiniteCoord(loc.longitude)) return;
+            pointsData.push({
+                id: loc.id,
+                name: loc.name,
+                code: getLocCode(loc),
+                codeType: getLocCodeType(loc),
+                unlocode: getLocCode(loc),
+                country: loc.country,
+                lat: Number(loc.latitude),
+                lng: Number(loc.longitude),
+                size: 0.8,
+                color: '#2DD4BF',
+            });
+        });
+    });
 
     const labelsData = pointsData.map(p => ({
         lat: p.lat,
@@ -288,11 +303,13 @@ function renderGlobeData(dataset) {
         size: 1.1,
     }));
 
-    globeInstance
-        .arcsData(arcsData)
-        .pointsData(pointsData)
-        .labelsData(labelsData)
-        .ringsData(vesselMarkers);
+    runLayerSafely('3D globe layer commit', () => {
+        globeInstance
+            .arcsData(arcsData)
+            .pointsData(pointsData)
+            .labelsData(labelsData)
+            .ringsData(vesselMarkers);
+    });
 
     updateEmptyState(shipments.length === 0);
 }
@@ -408,102 +425,115 @@ function renderLeaflet2DData(dataset) {
     const markerRingColor = isDark ? '#0B1728' : '#FFFFFF';
 
     shipments.forEach(s => {
-        const orig = s.origin_location || s.originLocation || s.origin;
-        const dest = s.destination_location || s.destinationLocation || s.destination;
+        runLayerSafely(`2D route ${s?.tracking_number || s?.id || 'unknown'}`, () => {
+            const orig = s.origin_location || s.originLocation || s.origin;
+            const dest = s.destination_location || s.destinationLocation || s.destination;
 
-        const origLatRaw = orig?.latitude ?? orig?.lat;
-        const origLngRaw = orig?.longitude ?? orig?.lng;
-        const destLatRaw = dest?.latitude ?? dest?.lat;
-        const destLngRaw = dest?.longitude ?? dest?.lng;
+            const origLatRaw = orig?.latitude ?? orig?.lat;
+            const origLngRaw = orig?.longitude ?? orig?.lng;
+            const destLatRaw = dest?.latitude ?? dest?.lat;
+            const destLngRaw = dest?.longitude ?? dest?.lng;
 
-        if (!isFiniteCoord(origLatRaw) || !isFiniteCoord(origLngRaw) || !isFiniteCoord(destLatRaw) || !isFiniteCoord(destLngRaw)) {
-            return;
-        }
+            if (!isFiniteCoord(origLatRaw) || !isFiniteCoord(origLngRaw) || !isFiniteCoord(destLatRaw) || !isFiniteCoord(destLngRaw)) {
+                return;
+            }
 
-        const origLat = Number(origLatRaw);
-        const origLng = Number(origLngRaw);
-        const destLat = Number(destLatRaw);
-        const destLng = unwrapLongitudeNear(Number(destLngRaw), origLng);
+            const origLat = Number(origLatRaw);
+            const origLng = Number(origLngRaw);
+            const destLat = Number(destLatRaw);
+            const destLng = unwrapLongitudeNear(Number(destLngRaw), origLng);
 
-        const modeInfo = getModeDisplay(s.mode || s.transport_mode || s.carrier_mode);
-        const hasException = Boolean(s.has_exception || (s.exceptions && s.exceptions.length > 0));
-        const strokeColor = getSeverityColor(s.delay_severity, hasException);
+            const modeInfo = getModeDisplay(s.mode || s.transport_mode || s.carrier_mode);
+            const hasException = Boolean(s.has_exception || (s.exceptions && s.exceptions.length > 0));
+            const strokeColor = getSeverityColor(s.delay_severity, hasException);
 
-        const points = getGreatCircleArc([origLat, origLng], [destLat, destLng], {
-            mode: modeInfo.code,
-            numPoints: 64,
-        });
+            const points = getGreatCircleArc([origLat, origLng], [destLat, destLng], {
+                mode: modeInfo.code,
+                numPoints: 64,
+            });
 
-        // Route line styling per mode:
-        // SEA: solid curved great-circle arc
-        // AIR: dashed higher arc
-        // ROAD: straight line
-        const dashArray = modeInfo.code === 'AIR' ? '8, 6' : null;
-        const weight = modeInfo.code === 'ROAD' ? 3.0 : (modeInfo.code === 'AIR' ? 2.4 : 2.6);
+            // Route line styling per mode:
+            // SEA: solid curved great-circle arc
+            // AIR: dashed higher arc
+            // ROAD: straight line
+            const dashArray = modeInfo.code === 'AIR' ? '8, 6' : null;
+            const weight = modeInfo.code === 'ROAD' ? 3.0 : (modeInfo.code === 'AIR' ? 2.4 : 2.6);
 
-        const polyline = L.polyline(points, {
-            color: strokeColor,
-            weight,
-            dashArray,
-            opacity: 0.9,
-        }).addTo(leafletRouteLayer);
+            const polyline = runLayerSafely(`polyline ${s.tracking_number}`, () => {
+                const line = L.polyline(points, {
+                    color: strokeColor,
+                    weight,
+                    dashArray,
+                    opacity: 0.9,
+                }).addTo(leafletRouteLayer);
+                const routeLabel = `${orig?.short_name || orig?.name || 'Origin'} -> ${dest?.short_name || dest?.name || 'Destination'}`;
+                line.bindPopup(buildShipmentPopupHtml(s, 'Route', routeLabel));
+                return line;
+            });
 
-        const routeLabel = `${orig?.short_name || orig?.name || 'Origin'} -> ${dest?.short_name || dest?.name || 'Destination'}`;
-        polyline.bindPopup(buildShipmentPopupHtml(s, 'Route', routeLabel));
+            const originMarker = runLayerSafely(`origin marker ${s.tracking_number}`, () => {
+                const marker = L.circleMarker([origLat, origLng], {
+                    radius: 5,
+                    fillColor: '#2563EB',
+                    color: markerRingColor,
+                    weight: 2,
+                    opacity: 1,
+                    fillOpacity: 0.95,
+                }).addTo(leafletRouteLayer);
+                marker.bindPopup(buildShipmentPopupHtml(s, 'Origin', orig?.name || 'Origin', getLocCode(orig)));
+                return marker;
+            });
 
-        const originMarker = L.circleMarker([origLat, origLng], {
-            radius: 5,
-            fillColor: '#2563EB',
-            color: markerRingColor,
-            weight: 2,
-            opacity: 1,
-            fillOpacity: 0.95,
-        }).addTo(leafletRouteLayer);
-        originMarker.bindPopup(buildShipmentPopupHtml(s, 'Origin', orig?.name || 'Origin', getLocCode(orig)));
+            const destinationMarker = runLayerSafely(`destination marker ${s.tracking_number}`, () => {
+                const marker = L.circleMarker([destLat, destLng], {
+                    radius: 5,
+                    fillColor: '#0891B2',
+                    color: markerRingColor,
+                    weight: 2,
+                    opacity: 1,
+                    fillOpacity: 0.95,
+                }).addTo(leafletRouteLayer);
+                marker.bindPopup(buildShipmentPopupHtml(s, 'Destination', dest?.name || 'Destination', getLocCode(dest)));
+                return marker;
+            });
 
-        const destinationMarker = L.circleMarker([destLat, destLng], {
-            radius: 5,
-            fillColor: '#0891B2',
-            color: markerRingColor,
-            weight: 2,
-            opacity: 1,
-            fillOpacity: 0.95,
-        }).addTo(leafletRouteLayer);
-        destinationMarker.bindPopup(buildShipmentPopupHtml(s, 'Destination', dest?.name || 'Destination', getLocCode(dest)));
+            let currentMarker = null;
+            const trackingPoint = s.latest_tracking || s.current;
+            if (isFiniteCoord(trackingPoint?.lat) && isFiniteCoord(trackingPoint?.lng)) {
+                currentMarker = runLayerSafely(`current marker ${s.tracking_number}`, () => {
+                    const currLat = Number(trackingPoint.lat);
+                    const midLng = (origLng + destLng) / 2;
+                    const currLng = unwrapLongitudeNear(Number(trackingPoint.lng), midLng);
 
-        let currentMarker = null;
-        const trackingPoint = s.latest_tracking || s.current;
-        if (isFiniteCoord(trackingPoint?.lat) && isFiniteCoord(trackingPoint?.lng)) {
-            const currLat = Number(trackingPoint.lat);
-            const midLng = (origLng + destLng) / 2;
-            const currLng = unwrapLongitudeNear(Number(trackingPoint.lng), midLng);
+                    const marker = L.circleMarker([currLat, currLng], {
+                        radius: 7,
+                        fillColor: strokeColor,
+                        color: markerRingColor,
+                        weight: 2.5,
+                        opacity: 1,
+                        fillOpacity: 1,
+                    }).addTo(leafletRouteLayer);
 
-            currentMarker = L.circleMarker([currLat, currLng], {
-                radius: 7,
-                fillColor: strokeColor,
-                color: markerRingColor,
-                weight: 2.5,
-                opacity: 1,
-                fillOpacity: 1,
-            }).addTo(leafletRouteLayer);
+                    const currName = trackingPoint.location_name || trackingPoint.name || 'Latest checkpoint';
+                    const currCode = trackingPoint.code || trackingPoint.unlocode || '';
+                    marker.bindPopup(buildShipmentPopupHtml(s, 'Current location', currName, currCode));
+                    return marker;
+                });
+            }
 
-            const currName = trackingPoint.location_name || trackingPoint.name || 'Latest checkpoint';
-            const currCode = trackingPoint.code || trackingPoint.unlocode || '';
-            currentMarker.bindPopup(buildShipmentPopupHtml(s, 'Current location', currName, currCode));
-        }
+            const bounds = L.latLngBounds(points);
+            if (currentMarker) {
+                bounds.extend(currentMarker.getLatLng());
+            }
 
-        const bounds = L.latLngBounds(points);
-        if (currentMarker) {
-            bounds.extend(currentMarker.getLatLng());
-        }
-
-        routeRegistry.set(s.tracking_number, {
-            shipment: s,
-            polyline,
-            originMarker,
-            destinationMarker,
-            currentMarker,
-            bounds,
+            routeRegistry.set(s.tracking_number, {
+                shipment: s,
+                polyline,
+                originMarker,
+                destinationMarker,
+                currentMarker,
+                bounds,
+            });
         });
     });
 
@@ -537,9 +567,9 @@ function fitLeafletBounds() {
 }
 
 /**
- * Initialize 2D Leaflet Map inside the same container bounds
+ * Initialize 2D Leaflet Routes Map inside the same container bounds
  */
-export function initMaritime2DMap(containerId, options = {}) {
+export function initRoutes2DMap(containerId, options = {}) {
     const el = document.getElementById(containerId);
     if (!el) return null;
 

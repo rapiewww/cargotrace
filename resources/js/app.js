@@ -1,7 +1,7 @@
 import { createMap, initWorldMap, initShipmentRouteMap, updateAllMapsTheme } from './map';
 import {
     initMaritimeGlobe,
-    initMaritime2DMap,
+    initRoutes2DMap,
     setMapMode,
     setMapFilter,
     zoomMap,
@@ -113,7 +113,7 @@ window.CargoTrace = {
     initWorldMap,
     initShipmentRouteMap,
     initMaritimeGlobe,
-    initMaritime2DMap,
+    initRoutes2DMap,
     setMapMode,
     setMapFilter,
     zoomMap,
@@ -145,10 +145,18 @@ document.addEventListener('DOMContentLoaded', () => {
     const payload = window.__CARGOTRACE__;
     if (!payload) return;
 
-    // Maritime 3D Globe + 2D Map initialization
+    // Maritime 3D Globe + 2D Routes Map initialization (isolated so one view error never blocks the other)
     if (payload.maritimeGlobe) {
-        initMaritimeGlobe(payload.maritimeGlobe.globe3dId, payload.maritimeGlobe.options);
-        initMaritime2DMap(payload.maritimeGlobe.map2dId, payload.maritimeGlobe.options);
+        try {
+            initMaritimeGlobe(payload.maritimeGlobe.globe3dId, payload.maritimeGlobe.options);
+        } catch (err) {
+            console.error('[CargoTrace Map] Failed to initialize 3D globe:', err);
+        }
+        try {
+            initRoutes2DMap(payload.maritimeGlobe.map2dId, payload.maritimeGlobe.options);
+        } catch (err) {
+            console.error('[CargoTrace Map] Failed to initialize 2D routes map:', err);
+        }
     }
 
     if (payload.worldMap) {

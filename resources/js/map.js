@@ -254,94 +254,102 @@ export function initWorldMap(containerId, options = {}) {
 
     // Plot locations with clean markers
     locations.forEach(loc => {
-        if (!loc.latitude || !loc.longitude) return;
+        try {
+            if (!loc.latitude || !loc.longitude) return;
 
-        const marker = L.circleMarker([parseFloat(loc.latitude), parseFloat(loc.longitude)], {
-            radius: 4.5,
-            fillColor: '#2DD4BF',
-            color: '#0D9488',
-            weight: 1.5,
-            opacity: 1,
-            fillOpacity: 0.9,
-        }).addTo(map);
+            const marker = L.circleMarker([parseFloat(loc.latitude), parseFloat(loc.longitude)], {
+                radius: 4.5,
+                fillColor: '#2DD4BF',
+                color: '#0D9488',
+                weight: 1.5,
+                opacity: 1,
+                fillOpacity: 0.9,
+            }).addTo(map);
 
-        const locCode = loc.display_code || loc.code || loc.unlocode || '';
-        const locType = (loc.type || '').toUpperCase();
-        const locCodeType = loc.code_type_label || loc.code_type || (locType === 'AIRPORT' ? 'IATA' : ((locType === 'PORT' || locType === 'SEAPORT') ? 'UN/LOCODE' : 'Internal code'));
+            const locCode = loc.display_code || loc.code || loc.unlocode || '';
+            const locType = (loc.type || '').toUpperCase();
+            const locCodeType = loc.code_type_label || loc.code_type || (locType === 'AIRPORT' ? 'IATA' : ((locType === 'PORT' || locType === 'SEAPORT') ? 'UN/LOCODE' : 'Internal code'));
 
-        marker.bindPopup(`
-            <div style="font-family: 'Inter', sans-serif; font-size: 11px;">
-                <div style="font-weight: 700; color: #0D9488;">${loc.name}</div>
-                <div style="color: #64748B; margin-top: 2px;">${locCodeType}: <b>${locCode}</b> &bull; ${loc.country}</div>
-            </div>
-        `);
+            marker.bindPopup(`
+                <div style="font-family: 'Inter', sans-serif; font-size: 11px;">
+                    <div style="font-weight: 700; color: #0D9488;">${loc.name}</div>
+                    <div style="color: #64748B; margin-top: 2px;">${locCodeType}: <b>${locCode}</b> &bull; ${loc.country}</div>
+                </div>
+            `);
+        } catch (err) {
+            console.error(`[CargoTrace Map] Failed to render world location ${loc?.name || 'unknown'}:`, err);
+        }
     });
 
     // Plot routes
     shipments.forEach(s => {
-        const orig = s.origin_location || s.originLocation || s.origin;
-        const dest = s.destination_location || s.destinationLocation || s.destination;
+        try {
+            const orig = s.origin_location || s.originLocation || s.origin;
+            const dest = s.destination_location || s.destinationLocation || s.destination;
 
-        const origLat = orig?.latitude || orig?.lat;
-        const origLng = orig?.longitude || orig?.lng;
-        const destLat = dest?.latitude || dest?.lat;
-        const destLng = dest?.longitude || dest?.lng;
+            const origLat = orig?.latitude || orig?.lat;
+            const origLng = orig?.longitude || orig?.lng;
+            const destLat = dest?.latitude || dest?.lat;
+            const destLng = dest?.longitude || dest?.lng;
 
-        if (origLat && destLat) {
-            const start = [parseFloat(origLat), parseFloat(origLng)];
-            const end = [parseFloat(destLat), parseFloat(destLng)];
-            const mode = (s.transport_mode || s.carrier_mode || 'SEA').toUpperCase();
+            if (origLat && destLat) {
+                const start = [parseFloat(origLat), parseFloat(origLng)];
+                const end = [parseFloat(destLat), parseFloat(destLng)];
+                const mode = (s.transport_mode || s.carrier_mode || 'SEA').toUpperCase();
 
-            // Route styling per mode:
-            // Sea: solid arc
-            // Air: dashed higher curve
-            // Road: straight line
-            const points = mode === 'ROAD' ? [start, end] : getBezierCurve(start, end);
+                // Route styling per mode:
+                // Sea: solid arc
+                // Air: dashed higher curve
+                // Road: straight line
+                const points = mode === 'ROAD' ? [start, end] : getBezierCurve(start, end);
 
-            const isDelayed = Boolean(s.is_delayed);
-            const hasException = Boolean(s.exceptions && s.exceptions.length > 0);
+                const isDelayed = Boolean(s.is_delayed);
+                const hasException = Boolean(s.exceptions && s.exceptions.length > 0);
 
-            let strokeColor;
-            if (hasException) {
-                strokeColor = '#F43F5E';
-            } else if (isDelayed) {
-                strokeColor = '#F59E0B';
-            } else {
-                strokeColor = mode === 'AIR' ? '#0284C7' : (mode === 'ROAD' ? '#059669' : '#2563EB');
+                let strokeColor;
+                if (hasException) {
+                    strokeColor = '#F43F5E';
+                } else if (isDelayed) {
+                    strokeColor = '#F59E0B';
+                } else {
+                    strokeColor = mode === 'AIR' ? '#0284C7' : (mode === 'ROAD' ? '#059669' : '#2563EB');
+                }
+
+                const dashArray = mode === 'AIR'
+                    ? '6, 6'
+                    : (mode === 'ROAD' ? null : (isDelayed ? '8, 6' : null));
+
+                const polyline = L.polyline(points, {
+                    color: strokeColor,
+                    weight: mode === 'ROAD' ? 2.8 : 2.4,
+                    dashArray: dashArray,
+                    opacity: 0.88,
+                });
+
+                const modeBadgeText = mode === 'AIR' ? '✈️ Air' : (mode === 'ROAD' ? '🚚 Road' : '🚢 Sea');
+
+                polyline.bindPopup(`
+                    <div style="font-family: 'Inter', sans-serif; font-size: 11px;">
+                        <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px;">
+                            <span style="font-weight: 700; color: #0284C7;">${s.tracking_number}</span>
+                            <span style="font-size: 10px; font-weight: 600; padding: 2px 6px; border-radius: 9999px; background: rgba(2, 132, 199, 0.15);">${modeBadgeText}</span>
+                        </div>
+                        <div style="color: #64748B; margin-top: 4px;">${orig.name} &rarr; ${dest.name}</div>
+                        <div style="margin-top: 4px; font-weight: 600; color: ${strokeColor};">
+                            Status: ${s.status} ${isDelayed ? '(DELAYED)' : ''}
+                        </div>
+                    </div>
+                `);
+
+                polyline.addTo(layerAll);
+                if (isDelayed) polyline.addTo(layerDelayed);
+                if (hasException) polyline.addTo(layerExceptions);
+                if (mode === 'SEA') polyline.addTo(layerSea);
+                if (mode === 'AIR') polyline.addTo(layerAir);
+                if (mode === 'ROAD') polyline.addTo(layerRoad);
             }
-
-            const dashArray = mode === 'AIR'
-                ? '6, 6'
-                : (mode === 'ROAD' ? null : (isDelayed ? '8, 6' : null));
-
-            const polyline = L.polyline(points, {
-                color: strokeColor,
-                weight: mode === 'ROAD' ? 2.8 : 2.4,
-                dashArray: dashArray,
-                opacity: 0.88,
-            });
-
-            const modeBadgeText = mode === 'AIR' ? '✈️ Air' : (mode === 'ROAD' ? '🚚 Road' : '🚢 Sea');
-
-            polyline.bindPopup(`
-                <div style="font-family: 'Inter', sans-serif; font-size: 11px;">
-                    <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px;">
-                        <span style="font-weight: 700; color: #0284C7;">${s.tracking_number}</span>
-                        <span style="font-size: 10px; font-weight: 600; padding: 2px 6px; border-radius: 9999px; background: rgba(2, 132, 199, 0.15);">${modeBadgeText}</span>
-                    </div>
-                    <div style="color: #64748B; margin-top: 4px;">${orig.name} &rarr; ${dest.name}</div>
-                    <div style="margin-top: 4px; font-weight: 600; color: ${strokeColor};">
-                        Status: ${s.status} ${isDelayed ? '(DELAYED)' : ''}
-                    </div>
-                </div>
-            `);
-
-            polyline.addTo(layerAll);
-            if (isDelayed) polyline.addTo(layerDelayed);
-            if (hasException) polyline.addTo(layerExceptions);
-            if (mode === 'SEA') polyline.addTo(layerSea);
-            if (mode === 'AIR') polyline.addTo(layerAir);
-            if (mode === 'ROAD') polyline.addTo(layerRoad);
+        } catch (err) {
+            console.error(`[CargoTrace Map] Failed to render world route ${s?.tracking_number || 'unknown'}:`, err);
         }
     });
 
@@ -381,63 +389,79 @@ export function initShipmentRouteMap(containerId, shipment) {
     if (!map) return null;
 
     // Origin marker (Green)
-    L.circleMarker([origLat, origLng], {
-        radius: 6,
-        fillColor: '#10B981',
-        color: '#059669',
-        weight: 2,
-        fillOpacity: 1,
-    }).addTo(map).bindPopup(`<b>Origin:</b> ${orig.name} (${orig.code || orig.display_code || orig.unlocode})`);
+    try {
+        L.circleMarker([origLat, origLng], {
+            radius: 6,
+            fillColor: '#10B981',
+            color: '#059669',
+            weight: 2,
+            fillOpacity: 1,
+        }).addTo(map).bindPopup(`<b>Origin:</b> ${orig.name} (${orig.code || orig.display_code || orig.unlocode})`);
+    } catch (err) {
+        console.error('[CargoTrace Map] Failed to render shipment origin marker:', err);
+    }
 
     // Destination marker (Blue)
-    L.circleMarker([destLat, destLng], {
-        radius: 6,
-        fillColor: '#3B82F6',
-        color: '#1D4ED8',
-        weight: 2,
-        fillOpacity: 1,
-    }).addTo(map).bindPopup(`<b>Destination:</b> ${dest.name} (${dest.code || dest.display_code || dest.unlocode})`);
+    try {
+        L.circleMarker([destLat, destLng], {
+            radius: 6,
+            fillColor: '#3B82F6',
+            color: '#1D4ED8',
+            weight: 2,
+            fillOpacity: 1,
+        }).addTo(map).bindPopup(`<b>Destination:</b> ${dest.name} (${dest.code || dest.display_code || dest.unlocode})`);
+    } catch (err) {
+        console.error('[CargoTrace Map] Failed to render shipment destination marker:', err);
+    }
 
     // Current position marker if available (Amber pulse)
     if (curr?.latitude && curr?.longitude) {
-        L.circleMarker([parseFloat(curr.latitude), parseFloat(curr.longitude)], {
-            radius: 7,
-            fillColor: '#F59E0B',
-            color: '#B45309',
-            weight: 2,
-            fillOpacity: 1,
-        }).addTo(map).bindPopup(`<b>Current Location:</b> ${curr.name} (${curr.code || curr.display_code || curr.unlocode})`).openPopup();
+        try {
+            L.circleMarker([parseFloat(curr.latitude), parseFloat(curr.longitude)], {
+                radius: 7,
+                fillColor: '#F59E0B',
+                color: '#B45309',
+                weight: 2,
+                fillOpacity: 1,
+            }).addTo(map).bindPopup(`<b>Current Location:</b> ${curr.name} (${curr.code || curr.display_code || curr.unlocode})`).openPopup();
+        } catch (err) {
+            console.error('[CargoTrace Map] Failed to render shipment current marker:', err);
+        }
     }
 
     // Route polyline per mode:
     // Sea: solid bezier arc
     // Air: dashed higher bezier arc
     // Road: straight direct line
-    const mode = (shipment.transport_mode || shipment.carrier_mode || 'SEA').toUpperCase();
-    const isRoad = mode === 'ROAD';
-    const isAir = mode === 'AIR';
+    try {
+        const mode = (shipment.transport_mode || shipment.carrier_mode || 'SEA').toUpperCase();
+        const isRoad = mode === 'ROAD';
+        const isAir = mode === 'AIR';
 
-    const curvePoints = isRoad ? [[origLat, origLng], [destLat, destLng]] : getBezierCurve([origLat, origLng], [destLat, destLng]);
-    const isDelayed = Boolean(shipment.is_delayed);
-    const hasException = Boolean(shipment.exceptions && shipment.exceptions.length > 0);
+        const curvePoints = isRoad ? [[origLat, origLng], [destLat, destLng]] : getBezierCurve([origLat, origLng], [destLat, destLng]);
+        const isDelayed = Boolean(shipment.is_delayed);
+        const hasException = Boolean(shipment.exceptions && shipment.exceptions.length > 0);
 
-    let strokeColor;
-    if (hasException) {
-        strokeColor = '#F43F5E';
-    } else if (isDelayed) {
-        strokeColor = '#F59E0B';
-    } else {
-        strokeColor = isAir ? '#0284C7' : (isRoad ? '#059669' : '#2563EB');
+        let strokeColor;
+        if (hasException) {
+            strokeColor = '#F43F5E';
+        } else if (isDelayed) {
+            strokeColor = '#F59E0B';
+        } else {
+            strokeColor = isAir ? '#0284C7' : (isRoad ? '#059669' : '#2563EB');
+        }
+
+        const dashArray = isAir ? '6, 6' : (isDelayed ? '8, 6' : null);
+
+        L.polyline(curvePoints, {
+            color: strokeColor,
+            weight: isRoad ? 3.2 : 2.8,
+            dashArray: dashArray,
+            opacity: 0.9,
+        }).addTo(map);
+    } catch (err) {
+        console.error('[CargoTrace Map] Failed to render shipment route polyline:', err);
     }
-
-    const dashArray = isAir ? '6, 6' : (isDelayed ? '8, 6' : null);
-
-    L.polyline(curvePoints, {
-        color: strokeColor,
-        weight: isRoad ? 3.2 : 2.8,
-        dashArray: dashArray,
-        opacity: 0.9,
-    }).addTo(map);
 
     // Fit map bounds to show full route
     map.fitBounds([[origLat, origLng], [destLat, destLng]], { padding: [50, 50] });
