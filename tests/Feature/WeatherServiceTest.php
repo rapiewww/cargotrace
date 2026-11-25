@@ -164,27 +164,79 @@ test('crane advisory and beaufort scale follow configuration thresholds', functi
     expect($b7['force'])->toBe(7);
 });
 
-test('weather page renders active route ports and comparison table', function () {
+test('weather page renders active route locations and comparison table', function () {
+    Http::fake([
+        'https://api.open-meteo.com/v1/forecast*' => Http::response([
+            'current' => [
+                'temperature_2m' => 29.5,
+                'relative_humidity_2m' => 78,
+                'rain' => 0.2,
+                'weather_code' => 1,
+                'wind_speed_10m' => 14.0,
+                'visibility' => 10000,
+            ],
+            'daily' => [
+                'time' => ['2026-11-25'],
+                'weather_code' => [1],
+                'temperature_2m_max' => [31.0],
+                'temperature_2m_min' => [24.0],
+                'wind_speed_10m_max' => [16.0],
+                'precipitation_probability_max' => [20],
+            ],
+        ], 200),
+        'https://marine-api.open-meteo.com/v1/marine*' => Http::response([
+            'current' => [
+                'wave_height' => 1.2,
+                'wave_direction' => 110,
+                'wave_period' => 5.5,
+                'swell_wave_height' => 0.6,
+            ],
+        ], 200),
+    ]);
+
     $user = User::where('role', 'admin')->first();
 
-    $response = $this->actingAs($user)->get(route('weather.index'));
+    $response = $this->actingAs($user)->get(route('weather.index', ['location' => 'IDJKT']));
 
     $response->assertOk()
-        ->assertSee('Seaport Weather')
+        ->assertSee('Location Weather')
         ->assertSee('Open-Meteo')
+        ->assertSee('context only, not a delay prediction')
         ->assertSee('Ship-to-Shore (STS) Quay Crane Advisory')
         ->assertSee('Derived from wind speed')
         ->assertSee('Rule-based advisory')
-        ->assertSee('Seaport Meteorological Comparison Matrix');
+        ->assertSee('Location Meteorological Comparison Matrix')
+        ->assertDontSee('container terminal');
 });
 
 test('shipment detail view displays weather at current location', function () {
+    Http::fake([
+        'https://api.open-meteo.com/v1/forecast*' => Http::response([
+            'current' => [
+                'temperature_2m' => 14.0,
+                'relative_humidity_2m' => 70,
+                'rain' => 0.0,
+                'weather_code' => 2,
+                'wind_speed_10m' => 18.0,
+                'visibility' => 12000,
+            ],
+        ], 200),
+        'https://marine-api.open-meteo.com/v1/marine*' => Http::response([
+            'current' => [
+                'wave_height' => 1.1,
+                'wave_direction' => 90,
+                'wave_period' => 5.0,
+                'swell_wave_height' => 0.5,
+            ],
+        ], 200),
+    ]);
+
     $user = User::where('role', 'admin')->first();
-    $shipment = Shipment::first();
+    $shipment = Shipment::where('transport_mode', 'SEA')->first();
 
     $response = $this->actingAs($user)->get(route('shipments.show', $shipment));
 
     $response->assertOk()
-        ->assertSee('Seaport Weather at Latest Location')
+        ->assertSee('Location weather at latest port')
         ->assertSee('STS Crane Advisory');
 });

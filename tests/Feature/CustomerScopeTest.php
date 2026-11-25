@@ -72,9 +72,9 @@ test('customer navigation only displays operations and intelligence groups witho
     $response->assertSee('Global View');
     $response->assertSee('Shipments');
     $response->assertSee('Intelligence');
-    $response->assertSee('Seaport Weather');
+    $response->assertSee('Location Weather');
     $response->assertSee('Currency FX');
-    $response->assertSee('Maritime News');
+    $response->assertSee('Freight News');
 
     // Master Data and Administration items should NOT be visible to customer
     $response->assertDontSee('Audit Logs');

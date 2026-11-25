@@ -7,7 +7,7 @@
     <meta name="map-tile-url" content="{{ config('cargotrace.map.tile_url') }}">
     <meta name="map-tile-attribution" content="{{ config('cargotrace.map.attribution') }}">
 
-    <title>{{ $title ?? 'CargoTrace: Global Logistics Intelligence' }}</title>
+    <title>{{ $title ?? 'CargoTrace: Global spice freight by sea, air and road' }}</title>
 
     <!-- Theme Initialization Script (Zero-Flicker, prefers-color-scheme fallback) -->
     <script>

@@ -159,7 +159,7 @@
 
                         <div id="notif-menu" class="hidden absolute right-0 mt-3 w-80 sm:w-96 rounded-2xl theme-card-elevated border theme-border shadow-2xl p-4 z-50">
                             <div class="flex items-center justify-between pb-3 border-b theme-border">
-                                <span class="text-xs font-semibold theme-heading">Maritime Alerts ({{ $unreadCount }})</span>
+                                <span class="text-xs font-semibold theme-heading">Freight Alerts ({{ $unreadCount }})</span>
                                 @if($unreadCount > 0)
                                     <form action="{{ route('notifications.read-all') }}" method="POST">
                                         @csrf

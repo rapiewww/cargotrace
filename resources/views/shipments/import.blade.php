@@ -14,7 +14,7 @@
                 </span>
             </div>
             <p class="text-xs sm:text-sm theme-text-secondary mt-1">
-                Upload a structured CSV file to validate and batch register ocean container consignments.
+                Upload a structured CSV file to validate and batch register freight consignments.
             </p>
         </div>
 

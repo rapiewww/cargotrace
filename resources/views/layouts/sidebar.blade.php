@@ -24,7 +24,7 @@
     <!-- 1. Brand Logo & Collapse Toggle -->
     <div class="space-y-5">
         <div class="flex items-center justify-between pb-3 border-b theme-border">
-            <a href="{{ route('dashboard') }}" class="flex items-center gap-3 group min-w-0" title="CargoTrace Maritime Intelligence">
+            <a href="{{ route('dashboard') }}" class="flex items-center gap-3 group min-w-0" title="CargoTrace Freight Operations">
                 <div class="flex items-center justify-center w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 via-blue-600 to-cyan-500 text-white shadow-md shadow-blue-500/25 group-hover:scale-105 transition-transform duration-200 flex-shrink-0">
                     <svg class="w-5 h-5 text-white" viewBox="0 0 24 24" fill="currentColor">
                         <path d="M12 22L2 5h20L12 22zm0-4.5l6.5-11h-13l6.5 11z"/>
@@ -156,13 +156,13 @@
                 <!-- Weather -->
                 <a
                     href="{{ route('weather.index') }}"
-                    title="Seaport Weather"
+                    title="Location Weather"
                     class="sidebar-link relative flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold transition-all duration-200 {{ request()->routeIs('weather.*') ? 'bg-blue-600/15 text-blue-600 dark:text-cyan-400 border-r-2 border-blue-500 dark:border-cyan-400 font-bold' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-500/10' }}"
                 >
                     <svg class="w-4 h-4 flex-shrink-0 {{ request()->routeIs('weather.*') ? 'text-blue-600 dark:text-cyan-400' : 'text-slate-400 dark:text-slate-500' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 00-9.78 2.096A4.001 4.001 0 003 15z"/>
                     </svg>
-                    <span class="sidebar-full-only">Seaport Weather</span>
+                    <span class="sidebar-full-only">Location Weather</span>
                 </a>
 
                 <!-- Currency -->

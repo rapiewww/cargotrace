@@ -212,7 +212,7 @@ test('currency web page displays portfolio value by currency and no fake bunker 
     $response = $this->actingAs($admin)->get(route('currency.index'));
 
     $response->assertOk();
-    $response->assertSee('Portfolio Value by Currency');
+    $response->assertSee('Portfolio value by currency');
     $response->assertDontSee('Vessel Bunker Fuel Index');
     $response->assertDontSee('Quick Freight Benchmarks');
     $response->assertDontSee('Transpacific Eastbound');

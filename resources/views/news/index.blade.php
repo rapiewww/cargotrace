@@ -7,9 +7,12 @@
         <div>
             <div class="flex flex-wrap items-center gap-2.5">
                 <span class="text-xs font-medium text-cyan-600 dark:text-cyan-400 px-2 py-0.5 rounded-md bg-cyan-500/10 border border-cyan-500/20">
-                    International maritime RSS wire
+                    Multimodal freight RSS wire
                 </span>
                 <x-data-source-badge :source="$dataSource" />
+                <span class="text-xs px-2 py-0.5 rounded-md bg-slate-500/10 theme-text-secondary border theme-border">
+                    context only, not a delay prediction
+                </span>
                 @if(isset($dataTimestamp) && $dataTimestamp)
                     <span class="text-xs theme-text-muted">
                         Updated {{ \Carbon\Carbon::parse($dataTimestamp)->format('M d, H:i') }}
@@ -17,15 +20,18 @@
                 @endif
             </div>
             <h1 class="text-2xl sm:text-3xl font-black theme-heading tracking-tight mt-1.5">
-                Maritime News Wire & Shipping Intelligence
+                Freight News
             </h1>
             <p class="text-xs sm:text-sm theme-text-secondary mt-1">
-                Global industry bulletins covering container shipping, port terminal congestion, decarbonization, and waterway corridors.
+                Global industry bulletins covering ocean shipping, air cargo capacity, road haulage corridors, and spice trade hubs.
             </p>
         </div>
 
         <!-- Search Bar & Source Filter Form -->
         <form method="GET" action="{{ route('news.index') }}" class="flex flex-wrap items-center gap-2">
+            @if(($selectedMode ?? 'ALL') !== 'ALL')
+                <input type="hidden" name="mode" value="{{ $selectedMode }}">
+            @endif
             @if($selectedCategory !== 'all')
                 <input type="hidden" name="category" value="{{ $selectedCategory }}">
             @endif
@@ -35,7 +41,7 @@
                     type="text"
                     name="q"
                     value="{{ $searchQuery }}"
-                    placeholder="Search maritime news..."
+                    placeholder="Search freight news..."
                     class="w-full pl-8 pr-3 py-2 rounded-xl theme-card-elevated border theme-border text-xs theme-heading focus:outline-none focus:border-cyan-500 placeholder:text-slate-500"
                 >
                 <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-2.5 text-slate-400">
@@ -63,7 +69,7 @@
             >
                 Filter
             </button>
-            @if(!empty($searchQuery) || $selectedSource !== 'all' || $selectedCategory !== 'all' || $onlyRelevant)
+            @if(!empty($searchQuery) || $selectedSource !== 'all' || $selectedCategory !== 'all' || $onlyRelevant || ($selectedMode ?? 'ALL') !== 'ALL')
                 <a
                     href="{{ route('news.index') }}"
                     class="px-2.5 py-2 rounded-xl theme-card-elevated border theme-border text-xs theme-text-secondary hover:theme-heading hover:border-blue-500 transition"
@@ -73,6 +79,35 @@
                 </a>
             @endif
         </form>
+    </div>
+
+    <!-- Mode Filter Chips (All, Sea, Air, Road) -->
+    <div class="flex flex-wrap items-center gap-2">
+        @php
+            $currentMode = $selectedMode ?? 'ALL';
+            $modeChips = [
+                'ALL' => ['label' => 'All', 'icon' => '🌐', 'count' => $modeCounts['ALL'] ?? count($allNews)],
+                'SEA' => ['label' => 'Sea', 'icon' => '🚢', 'count' => $modeCounts['SEA'] ?? 0],
+                'AIR' => ['label' => 'Air', 'icon' => '✈️', 'count' => $modeCounts['AIR'] ?? 0],
+                'ROAD' => ['label' => 'Road', 'icon' => '🚚', 'count' => $modeCounts['ROAD'] ?? 0],
+            ];
+        @endphp
+        @foreach($modeChips as $mKey => $mChip)
+            @php
+                $isActiveMode = $currentMode === $mKey;
+                $chipParams = array_merge(request()->except(['mode', 'page']), $mKey === 'ALL' ? [] : ['mode' => $mKey]);
+            @endphp
+            <a
+                href="{{ route('news.index', $chipParams) }}"
+                class="px-3.5 py-1.5 rounded-full text-xs font-semibold transition whitespace-nowrap border inline-flex items-center gap-2 {{ $isActiveMode ? 'bg-blue-600 text-white border-blue-600 shadow-sm shadow-blue-500/20' : 'theme-card-elevated theme-border theme-text-secondary hover:theme-heading hover:border-blue-500' }}"
+            >
+                <span>{{ $mChip['icon'] }}</span>
+                <span>{{ $mChip['label'] }}</span>
+                <span class="px-1.5 py-0.2 rounded-full text-[10px] font-mono {{ $isActiveMode ? 'bg-white/20 text-white' : 'bg-slate-200 dark:bg-slate-800 theme-text-muted' }}">
+                    {{ $mChip['count'] }}
+                </span>
+            </a>
+        @endforeach
     </div>
 
     <!-- Category Filter Pills & Relevant Switcher -->
@@ -92,7 +127,7 @@
             href="{{ route('news.index', array_merge(request()->except(['category', 'page']), ['category' => 'all'])) }}"
             class="px-3.5 py-1.5 rounded-full text-xs font-medium transition whitespace-nowrap border {{ $selectedCategory === 'all' && !$onlyRelevant ? 'bg-blue-600 text-white border-blue-600 shadow-md shadow-blue-500/20' : 'theme-card-elevated theme-border theme-text-secondary hover:theme-heading hover:border-blue-500' }}"
         >
-            <span class="sr-only">All Categories</span>All categories
+            All categories
         </a>
         @foreach($categories as $cat)
             <a
@@ -104,14 +139,14 @@
         @endforeach
     </div>
 
-    <!-- Grid of Maritime News Cards with Fixed Aspect Ratio & Lazy Loaded Thumbnails -->
+    <!-- Grid of Freight News Cards with Fixed Aspect Ratio & Lazy Loaded Thumbnails -->
     @if($paginatedNews->isEmpty())
         <div class="p-12 text-center rounded-3xl theme-card border space-y-4">
             <div class="w-12 h-12 rounded-full bg-slate-200 dark:bg-slate-800 flex items-center justify-center text-slate-500 dark:text-slate-400 mx-auto">
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z"/></svg>
             </div>
             <div>
-                <h3 class="text-base font-bold theme-heading">No maritime news articles found</h3>
+                <h3 class="text-base font-bold theme-heading">No freight news articles found</h3>
                 <p class="text-xs theme-text-secondary max-w-md mx-auto mt-1">
                     No bulletins match your current query or filter parameters. If external feeds are unreachable, try retrying.
                 </p>
@@ -128,6 +163,14 @@
     @else
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             @foreach($paginatedNews as $item)
+                @php
+                    $articleMode = strtoupper((string) ($item['mode'] ?? 'SEA'));
+                    $articleModeLabel = match($articleMode) {
+                        'AIR' => 'Air',
+                        'ROAD' => 'Road',
+                        default => 'Sea',
+                    };
+                @endphp
                 <article class="rounded-3xl theme-card border overflow-hidden flex flex-col justify-between hover:border-cyan-500/40 transition group">
                     <!-- Thumbnail with Fixed Aspect Ratio (16/9) preventing layout shift -->
                     <div class="relative aspect-video w-full bg-slate-200 dark:bg-slate-900 overflow-hidden">
@@ -139,11 +182,16 @@
                             referrerpolicy="no-referrer"
                             onerror="this.onerror=null;this.src='{{ asset('images/news-placeholder.svg') }}';"
                         >
-                        <!-- Category Overlay & Relevant Badge -->
+                        <!-- Mode, Category Overlay & Relevant Badge -->
                         <div class="absolute top-3 left-3 right-3 flex items-center justify-between gap-2 pointer-events-none">
-                            <span class="px-2.5 py-1 rounded-lg text-xs font-medium bg-slate-950/85 backdrop-blur-md text-cyan-400 border border-white/10 shadow-lg">
-                                {{ $item['category'] ?? 'Shipping & trade' }}
-                            </span>
+                            <div class="flex items-center gap-1.5">
+                                <span class="px-2 py-1 rounded-lg text-[11px] font-semibold bg-slate-950/85 backdrop-blur-md text-white border border-white/15 shadow-lg">
+                                    {{ $articleModeLabel }}
+                                </span>
+                                <span class="px-2.5 py-1 rounded-lg text-xs font-medium bg-slate-950/85 backdrop-blur-md text-cyan-400 border border-white/10 shadow-lg">
+                                    {{ $item['category'] ?? 'Freight & trade' }}
+                                </span>
+                            </div>
                             @if(!empty($item['is_relevant']))
                                 <span class="px-2.5 py-1 rounded-lg text-xs font-medium bg-blue-600/90 backdrop-blur-md text-white border border-blue-400/40 shadow-lg">
                                     ⭐ Relevant to your shipments
@@ -157,7 +205,7 @@
                         <div class="space-y-2">
                             <div class="flex items-center justify-between text-xs">
                                 <span class="font-semibold text-cyan-600 dark:text-cyan-400">
-                                    {{ $item['source'] ?? 'Maritime wire' }}
+                                    {{ $item['source'] ?? 'Freight wire' }}
                                 </span>
                                 <span class="theme-text-muted font-mono text-[11px]">
                                     {{ \Carbon\Carbon::parse($item['published_at'])->format('M d, Y') }}

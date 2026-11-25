@@ -6,14 +6,14 @@
         <div>
             <div class="flex items-center gap-3">
                 <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight theme-heading font-sans">
-                    Ocean Container Fleet
+                    Freight Carriers
                 </h1>
                 <span class="text-xs px-2.5 py-0.5 rounded-full bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 border border-cyan-500/20 font-mono">
-                    {{ count($carriers) }} Shipping Lines
+                    {{ count($carriers) }} Carriers
                 </span>
             </div>
             <p class="text-xs sm:text-sm theme-text-secondary mt-1">
-                Global container carriers, TEU capacity allocation, and maritime liner fleets across oceanic trade lanes.
+                Ocean shipping lines, air cargo carriers, and regional road hauliers operating across global spice trade lanes.
             </p>
         </div>
 
@@ -90,8 +90,9 @@
             <div class="space-y-1.5">
                 <label class="uppercase text-[10px] tracking-wider theme-text-muted font-semibold block">Transport Mode *</label>
                 <select name="mode" required class="w-full px-3.5 py-2.5 rounded-xl theme-input border focus:ring-1 focus:ring-cyan-500 font-mono">
-                    <option value="SEA" selected>SEA (Maritime Shipping)</option>
+                    <option value="SEA" selected>SEA (Ocean Shipping)</option>
                     <option value="AIR">AIR (Air Cargo Freight)</option>
+                    <option value="ROAD">ROAD (Road Haulage)</option>
                     <option value="LAND">LAND (Rail / Intermodal)</option>
                     <option value="MULTIMODAL">MULTIMODAL</option>
                 </select>

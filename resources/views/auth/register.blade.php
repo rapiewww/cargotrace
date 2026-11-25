@@ -11,7 +11,7 @@
     <div class="absolute top-6 inset-x-0 max-w-6xl mx-auto px-6 flex items-center justify-between z-20">
         <a href="{{ route('welcome') }}" class="inline-flex items-center gap-2 text-xs font-semibold theme-text-secondary hover:theme-heading transition px-3.5 py-2 rounded-xl theme-card-elevated border theme-border">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
-            <span>Back to Maritime Portal</span>
+            <span>Back to Portal</span>
         </a>
 
         <!-- Theme Toggle Switcher -->
@@ -49,11 +49,11 @@
                 </div>
                 <div class="text-left">
                     <span class="text-2xl font-extrabold tracking-tight theme-heading font-sans block leading-none">CargoTrace</span>
-                    <span class="text-[9px] uppercase tracking-widest text-cyan-500 dark:text-cyan-400 font-mono font-bold">Maritime Logistics Intelligence</span>
+                    <span class="text-[9px] uppercase tracking-widest text-cyan-500 dark:text-cyan-400 font-mono font-bold">Global spice freight by sea, air and road</span>
                 </div>
             </a>
             <h2 class="text-xl font-bold theme-heading tracking-tight pt-1">Create Shipper Account</h2>
-            <p class="text-xs theme-text-secondary">Join global ocean supply chains with end-to-end multi-currency visibility.</p>
+            <p class="text-xs theme-text-secondary">Track sea, air, and road spice consignments with multi-currency visibility.</p>
         </div>
 
         @if($errors->any())

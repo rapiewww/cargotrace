@@ -244,7 +244,7 @@ test('dashboard layout keeps globe as primary focus above charts and lower-prior
     $posCharts = strpos($html, 'id="dashboard-charts-heading"');
     $posActivities = strpos($html, 'Freight activities');
     $posDwell = strpos($html, 'Terminal dwell attention');
-    $posWeather = strpos($html, 'Port weather');
+    $posWeather = strpos($html, 'Location weather');
     $posCurrency = strpos($html, 'Currency converter');
 
     expect($posModeCards)->not->toBeFalse()

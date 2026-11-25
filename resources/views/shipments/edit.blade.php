@@ -243,7 +243,7 @@
                     <div class="space-y-1.5">
                         <label class="uppercase text-[10px] tracking-wider theme-text-secondary font-semibold block">Currency Code</label>
                         <select name="currency_code" class="w-full px-3.5 py-2.5 rounded-xl theme-input border theme-border font-mono text-xs focus:ring-1 focus:ring-blue-500">
-                            @foreach(['USD', 'EUR', 'IDR', 'SGD', 'CNY', 'GBP'] as $cur)
+                            @foreach(['USD', 'EUR', 'INR', 'IDR', 'SGD', 'AED', 'GBP'] as $cur)
                                 <option value="{{ $cur }}" {{ old('currency_code', $shipment->currency_code) === $cur ? 'selected' : '' }}>{{ $cur }}</option>
                             @endforeach
                         </select>

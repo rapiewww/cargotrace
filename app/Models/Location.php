@@ -99,6 +99,34 @@ class Location extends Model
     }
 
     /**
+     * Whether this location is a maritime seaport.
+     */
+    public function isSeaport(): bool
+    {
+        return in_array(strtoupper((string) $this->type), ['PORT', 'SEAPORT'], true);
+    }
+
+    /**
+     * Mode-accurate lowercase facility noun: port, airport, or depot.
+     */
+    public function getFacilityKindLabelAttribute(): string
+    {
+        return match (strtoupper((string) $this->type)) {
+            'PORT', 'SEAPORT' => 'port',
+            'AIRPORT' => 'airport',
+            default => 'depot',
+        };
+    }
+
+    /**
+     * Mode-accurate capitalized facility noun: Port, Airport, or Depot.
+     */
+    public function getFacilityKindTitleAttribute(): string
+    {
+        return ucfirst($this->facility_kind_label);
+    }
+
+    /**
      * Get the attributes that should be cast.
      *
      * @return array<string, string>

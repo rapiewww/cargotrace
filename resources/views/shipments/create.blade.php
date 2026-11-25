@@ -198,9 +198,10 @@
                         <select name="currency_code" id="currency_code" required class="w-full px-3.5 py-2.5 rounded-xl theme-input border theme-border font-mono text-xs focus:ring-1 focus:ring-blue-500 focus:outline-none transition">
                             <option value="USD">USD - US Dollar</option>
                             <option value="EUR">EUR - Euro</option>
+                            <option value="INR">INR - Indian Rupee</option>
                             <option value="IDR">IDR - Indonesian Rupiah</option>
                             <option value="SGD">SGD - Singapore Dollar</option>
-                            <option value="CNY">CNY - Chinese Yuan</option>
+                            <option value="AED">AED - UAE Dirham</option>
                             <option value="GBP">GBP - British Pound</option>
                         </select>
                     </div>

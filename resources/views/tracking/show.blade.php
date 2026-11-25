@@ -16,7 +16,7 @@
                             <span class="text-xl font-extrabold tracking-tight theme-heading block">CargoTrace</span>
                             <span class="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-600 dark:text-cyan-400 border border-blue-500/20 font-mono">Public Track</span>
                         </div>
-                        <span class="text-[10px] uppercase tracking-widest theme-text-muted font-semibold block leading-tight">Global Logistics Intelligence</span>
+                        <span class="text-[10px] uppercase tracking-widest theme-text-muted font-semibold block leading-tight">Global spice freight by sea, air and road</span>
                     </div>
                 </a>
 
@@ -51,16 +51,11 @@
                     <h1 class="text-3xl sm:text-4xl font-extrabold font-mono theme-heading tracking-tight mt-1">
                         {{ $shipment->tracking_number }}
                     </h1>
-                    @if($shipment->items->isNotEmpty())
-                        @php
-                            $containers = $shipment->items->map(fn($it) => $it->formatted_container_number)->filter()->unique()->values();
-                        @endphp
-                        @if($containers->isNotEmpty())
-                            <div class="text-xs font-mono text-cyan-600 dark:text-cyan-400 mt-1">
-                                Container: {{ $containers->implode(', ') }}
-                            </div>
-                        @endif
-                    @endif
+                    <div class="text-xs font-mono text-cyan-600 dark:text-cyan-400 mt-1 flex flex-wrap items-center gap-x-3 gap-y-1">
+                        @foreach($shipment->formatted_reference_parts as $part)
+                            <span><span class="theme-text-muted">{{ $part['label'] }}:</span> {{ $part['value'] }}</span>
+                        @endforeach
+                    </div>
                     <div class="text-xs theme-text-secondary flex items-center gap-2 mt-2 font-mono">
                         <span>{{ $shipment->originLocation->name }} ({{ $shipment->originLocation->display_code }})</span>
                         <span class="text-blue-600 dark:text-cyan-400">&rarr;</span>
@@ -102,7 +97,7 @@
             <!-- Stepper -->
             <div class="space-y-3">
                 <span class="uppercase text-[10px] tracking-wider theme-text-muted font-semibold block">Transit Progression</span>
-                <x-status-stepper :status="$shipment->status" :compact="false" />
+                <x-status-stepper :status="$shipment->status" :mode="$shipment->transport_mode ?? 'SEA'" :compact="false" />
             </div>
 
             <!-- Dates / ETA Grid -->
@@ -119,7 +114,7 @@
                 </div>
                 <div class="p-3 rounded-xl theme-card-elevated border theme-border col-span-2 sm:col-span-1">
                     <span class="text-[10px] theme-text-muted uppercase block">Transport Mode</span>
-                    <span class="font-bold theme-heading">{{ $shipment->cargo_type }} &bull; {{ $shipment->carrier->mode ?? 'SEA' }}</span>
+                    <span class="font-bold theme-heading">{{ $shipment->cargo_type }} &bull; {{ $shipment->transport_mode ?? $shipment->carrier->mode ?? 'SEA' }}</span>
                 </div>
             </div>
         </div>
@@ -171,7 +166,7 @@
 
         <!-- Quick Track Another Shipment Box -->
         <div class="p-6 rounded-2xl theme-card-elevated border theme-border text-center space-y-3">
-            <span class="text-xs theme-text-muted">Need to track another container or tracking no.?</span>
+            <span class="text-xs theme-text-muted">Need to track another shipment or reference?</span>
             <div class="max-w-md mx-auto flex items-center gap-2">
                 <input type="text" id="public-track-input" placeholder="Enter tracking number..." class="flex-1 px-4 py-2 rounded-xl theme-input border theme-border font-mono text-xs focus:ring-1 focus:ring-blue-500 focus:outline-none">
                 <button type="button" onclick="CargoTraceTracking.search()" class="px-5 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs uppercase tracking-wider transition">

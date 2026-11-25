@@ -32,11 +32,15 @@ class ShipmentItem extends Model
     ];
 
     /**
-     * Formatted ISO 6346 container number (e.g. "MSKU 123456 5").
+     * Formatted ISO 6346 container number (e.g. "MSKU 123456 5") for SEA shipments only.
      */
     public function getFormattedContainerNumberAttribute(): ?string
     {
-        $num = $this->container_number ?: $this->sku;
+        if ($this->relationLoaded('shipment') && $this->shipment && strtoupper((string) ($this->shipment->transport_mode ?? 'SEA')) !== 'SEA') {
+            return null;
+        }
+
+        $num = $this->container_number ?: (Iso6346::isValid((string) $this->sku) ? $this->sku : null);
 
         return $num ? Iso6346::format($num) : null;
     }

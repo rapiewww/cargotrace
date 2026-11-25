@@ -167,7 +167,7 @@ class DashboardController extends Controller
         // Active shipments for world map
         $activeShipments = (clone $shipmentQuery)
             ->whereIn('status', ['IN_TRANSIT', 'PICKED_UP', 'BOOKED'])
-            ->with(['originLocation', 'destinationLocation', 'currentLocation', 'carrier', 'exceptions'])
+            ->with(['originLocation', 'destinationLocation', 'currentLocation', 'carrier', 'exceptions', 'items'])
             ->get();
 
         // Active routes for schedule panel
@@ -247,7 +247,7 @@ class DashboardController extends Controller
         }
         $rates = $currencyData['rates_snapshot'] ?? [];
 
-        // 3. Live Seaport Atmospheric Weather (Open-Meteo with 30-min Cache)
+        // 3. Live Location Atmospheric Weather (Open-Meteo with 30-min Cache)
         $weatherPorts = [];
         foreach ($locations->take(4) as $loc) {
             $weather = $this->weatherService->getPortWeather(
@@ -259,6 +259,9 @@ class DashboardController extends Controller
             $weatherPorts[] = [
                 'name' => $loc->name,
                 'city' => $loc->city,
+                'type' => strtoupper((string) $loc->type),
+                'facility_kind' => $loc->facility_kind_label,
+                'facility_title' => $loc->facility_kind_title,
                 'code' => $loc->display_code,
                 'code_type' => $loc->code_type_label,
                 'unlocode' => $loc->display_code,
@@ -267,10 +270,13 @@ class DashboardController extends Controller
             ];
         }
 
-        // Dedicated selected port for Seaport Live Weather Widget
+        // Dedicated selected location for Dashboard Weather Widget
         $selectedPort = $weatherPorts[0] ?? [
             'name' => 'Port of Tanjung Priok',
             'city' => 'Jakarta',
+            'type' => 'PORT',
+            'facility_kind' => 'port',
+            'facility_title' => 'Port',
             'code' => 'IDJKT',
             'code_type' => 'UN/LOCODE',
             'unlocode' => 'IDJKT',
@@ -497,6 +503,8 @@ class DashboardController extends Controller
                 'mode_label' => $modeLabel,
                 'transport_mode' => $modeCode,
                 'primary_reference' => $s->primary_reference,
+                'primary_reference_label' => $s->primary_reference_label,
+                'labeled_primary_reference' => $s->labeled_primary_reference,
                 'status' => $s->status,
                 'status_label' => $s->status_display_label,
                 'is_delayed' => (bool) $s->is_delayed,

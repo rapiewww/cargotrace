@@ -20,8 +20,39 @@ class MaritimeNewsService
     public const CACHE_TTL = 3600; // 1 hour
 
     /**
-     * Get parsed maritime shipping news articles.
-     * Concurrently fetches configured RSS feeds with fallback to stale cache.
+     * Get parsed freight news articles across sea, air, and road sources.
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    public function getFreightNews(int $limit = 96): array
+    {
+        return $this->getMaritimeNews($limit);
+    }
+
+    /**
+     * Resolve transport mode category (SEA, AIR, ROAD) for a given feed source.
+     */
+    public function resolveSourceMode(string $sourceName): string
+    {
+        $feedModes = config('cargotrace.news.feed_modes', []);
+        if (isset($feedModes[$sourceName])) {
+            return strtoupper((string) $feedModes[$sourceName]);
+        }
+
+        $lower = strtolower($sourceName);
+        if (str_contains($lower, 'air') || str_contains($lower, 'cargo week')) {
+            return 'AIR';
+        }
+        if (str_contains($lower, 'freightwaves') || str_contains($lower, 'transport topics') || str_contains($lower, 'carrier') || str_contains($lower, 'supply chain') || str_contains($lower, 'road') || str_contains($lower, 'truck')) {
+            return 'ROAD';
+        }
+
+        return 'SEA';
+    }
+
+    /**
+     * Get parsed multimodal freight news articles.
+     * Concurrently fetches configured RSS/Atom feeds with fallback to stale cache.
      *
      * @return array<int, array<string, mixed>>
      */
@@ -29,12 +60,18 @@ class MaritimeNewsService
     {
         $feedsConfig = config('cargotrace.news.feeds', [
             'gCaptain' => 'https://gcaptain.com/feed/',
-            'The Maritime Executive' => 'https://www.maritime-executive.com/articles.rss',
+            'Maritime Executive' => 'https://www.maritime-executive.com/articles.rss',
             'Splash247' => 'https://splash247.com/feed/',
             'World Cargo News' => 'https://www.worldcargonews.com/feed/',
             'Container News' => 'https://container-news.com/feed/',
             'Seatrade Maritime' => 'https://www.seatrade-maritime.com/rss.xml',
             'Hellenic Shipping News' => 'https://www.hellenicshippingnews.com/feed/',
+            'Air Cargo News' => 'https://www.aircargonews.net/feed/',
+            'Air Cargo Week' => 'https://aircargoweek.com/feed/',
+            'FreightWaves' => 'https://www.freightwaves.com/feed',
+            'Transport Topics' => 'https://www.ttnews.com/rss.xml',
+            'Commercial Carrier Journal' => 'https://www.ccjdigital.com/rss',
+            'Supply Chain Dive' => 'https://www.supplychaindive.com/feeds/news/',
         ]);
 
         $allArticles = [];
@@ -53,6 +90,7 @@ class MaritimeNewsService
             if ($cached && is_array($cached)) {
                 foreach ($cached as $item) {
                     $item['data_source'] = 'cached';
+                    $item['mode'] = $item['mode'] ?? $this->resolveSourceMode((string) ($item['source'] ?? $name));
                     $allArticles[] = $item;
                 }
             } else {
@@ -67,8 +105,8 @@ class MaritimeNewsService
                 $responses = Http::pool(function (Pool $pool) use ($feedsToFetch) {
                     foreach ($feedsToFetch as $name => $url) {
                         $pool->as($name)->timeout(6)->withHeaders([
-                            'User-Agent' => 'CargoTrace/1.0 (Maritime Visibility Platform; +http://cargotrace.test)',
-                            'Accept' => 'application/rss+xml, application/xml, text/xml',
+                            'User-Agent' => 'CargoTrace/1.0 (Freight Visibility Platform; +http://cargotrace.test)',
+                            'Accept' => 'application/rss+xml, application/atom+xml, application/xml, text/xml',
                         ])->get($url);
                     }
                 });
@@ -100,6 +138,7 @@ class MaritimeNewsService
                     if ($stale && is_array($stale)) {
                         foreach ($stale as $item) {
                             $item['data_source'] = 'cached';
+                            $item['mode'] = $item['mode'] ?? $this->resolveSourceMode((string) ($item['source'] ?? $name));
                             $allArticles[] = $item;
                         }
                     }
@@ -149,9 +188,9 @@ class MaritimeNewsService
         return Cache::remember($cacheKey, 1800, function () use ($key) {
             try {
                 $response = Http::timeout(6)->withHeaders([
-                    'User-Agent' => 'CargoTrace/1.0 (Maritime Visibility Platform; +http://cargotrace.test)',
+                    'User-Agent' => 'CargoTrace/1.0 (Freight Visibility Platform; +http://cargotrace.test)',
                 ])->get('https://gnews.io/api/v4/search', [
-                    'q' => 'maritime OR "ocean freight" OR "container shipping"',
+                    'q' => '"air cargo" OR "ocean freight" OR "road freight" OR "container shipping"',
                     'lang' => 'en',
                     'max' => 10,
                     'apikey' => $key,
@@ -170,10 +209,11 @@ class MaritimeNewsService
                         $articles[] = [
                             'headline' => $cleanTitle,
                             'title' => $cleanTitle,
-                            'source' => $a['source']['name'] ?? 'GNews Maritime',
+                            'source' => $a['source']['name'] ?? 'GNews Freight',
+                            'mode' => 'SEA',
                             'url' => $a['url'] ?? '',
                             'thumbnail' => $a['image'] ?? null,
-                            'category' => 'Global Maritime',
+                            'category' => 'Global Freight',
                             'summary' => $cleanSummary,
                             'published_at' => $a['publishedAt'] ?? Carbon::now()->toIso8601String(),
                             'data_source' => 'live',
@@ -199,6 +239,8 @@ class MaritimeNewsService
     public function parseRssFeed(string $xmlContent, string $sourceName): array
     {
         $articles = [];
+
+        $mode = $this->resolveSourceMode($sourceName);
 
         try {
             $xml = simplexml_load_string($xmlContent, 'SimpleXMLElement', LIBXML_NOCDATA);
@@ -243,6 +285,7 @@ class MaritimeNewsService
                         'headline' => $cleanTitle,
                         'title' => $cleanTitle,
                         'source' => $sourceName,
+                        'mode' => $mode,
                         'url' => $link,
                         'thumbnail' => $thumbnail,
                         'category' => $category,
@@ -284,6 +327,7 @@ class MaritimeNewsService
                         'headline' => $cleanTitle,
                         'title' => $cleanTitle,
                         'source' => $sourceName,
+                        'mode' => $mode,
                         'url' => $link,
                         'thumbnail' => null,
                         'category' => $category,
@@ -452,7 +496,8 @@ class MaritimeNewsService
     }
 
     /**
-     * Mark articles as relevant to given shipments based on port names, UN/LOCODE, and countries.
+     * Mark articles as relevant to given shipments based on ports, airports (IATA),
+     * cities, countries, carriers, and seeded spice/essential oil commodities.
      *
      * @param  array<int, array<string, mixed>>  $articles
      * @param  iterable|null  $shipments
@@ -464,30 +509,67 @@ class MaritimeNewsService
             return $articles;
         }
 
+        $commodityCatalog = [
+            'nutmeg' => ['nutmeg'],
+            'cloves' => ['cloves', 'clove'],
+            'clove' => ['cloves', 'clove'],
+            'cinnamon' => ['cinnamon', 'cassia'],
+            'pepper' => ['pepper'],
+            'ginger' => ['ginger'],
+            'patchouli' => ['patchouli'],
+        ];
+
         $keywords = [];
+        $collectLocationTerms = static function ($location) use (&$keywords): void {
+            if (! $location) {
+                return;
+            }
+            $keywords[] = $location->unlocode;
+            $keywords[] = $location->iata_code;
+            $keywords[] = $location->display_code;
+            $keywords[] = $location->city;
+            $keywords[] = $location->country;
+
+            $shortBase = trim(preg_replace('/\b(port|airport|depot|warehouse|border|cfs)\b/i', '', (string) ($location->short_name ?? '')));
+            if (mb_strlen($shortBase) >= 3) {
+                $keywords[] = $shortBase;
+            }
+
+            foreach (['Schiphol', 'Changi', 'Kualanamu', 'Belawan', 'Tanjung Priok', 'Nhava Sheva', 'Jebel Ali', 'Maasvlakte', 'Soekarno-Hatta', 'Charles de Gaulle'] as $hubName) {
+                if (stripos((string) $location->name, $hubName) !== false) {
+                    $keywords[] = $hubName;
+                }
+            }
+        };
+
         foreach ($shipments as $s) {
-            if ($s->originLocation) {
-                $keywords[] = $s->originLocation->unlocode;
-                $keywords[] = $s->originLocation->city;
-                $keywords[] = $s->originLocation->country;
-            }
-            if ($s->destinationLocation) {
-                $keywords[] = $s->destinationLocation->unlocode;
-                $keywords[] = $s->destinationLocation->city;
-                $keywords[] = $s->destinationLocation->country;
-            }
-            if ($s->currentLocation) {
-                $keywords[] = $s->currentLocation->unlocode;
-                $keywords[] = $s->currentLocation->city;
-            }
+            $collectLocationTerms($s->originLocation);
+            $collectLocationTerms($s->destinationLocation);
+            $collectLocationTerms($s->currentLocation);
+
             if ($s->carrier) {
                 $keywords[] = $s->carrier->name;
             }
+
+            $cargoText = (string) ($s->notes ?? '');
+            if ($s->relationLoaded('items') || method_exists($s, 'items')) {
+                foreach ($s->items as $item) {
+                    $cargoText .= ' '.($item->description ?? '');
+                }
+            }
+
+            foreach ($commodityCatalog as $needle => $aliases) {
+                if (stripos($cargoText, $needle) !== false) {
+                    foreach ($aliases as $alias) {
+                        $keywords[] = $alias;
+                    }
+                }
+            }
         }
 
-        $cleanKeywords = array_unique(array_filter(array_map('trim', $keywords), function ($k) {
+        $cleanKeywords = array_values(array_unique(array_filter(array_map(fn ($k) => trim((string) $k), $keywords), function ($k) {
             return mb_strlen($k) >= 3;
-        }));
+        })));
 
         if (empty($cleanKeywords)) {
             return $articles;
@@ -497,7 +579,7 @@ class MaritimeNewsService
             $text = ($article['headline'] ?? '').' '.($article['summary'] ?? '');
             $matches = [];
             foreach ($cleanKeywords as $kw) {
-                if (stripos($text, $kw) !== false) {
+                if (preg_match('/\b'.preg_quote($kw, '/').'\b/i', $text)) {
                     $matches[] = $kw;
                 }
             }

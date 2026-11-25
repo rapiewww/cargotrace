@@ -7,7 +7,7 @@
         ? $recentShipments
         : \App\Models\Shipment::query()
             ->when(auth()->user()->role === 'customer', fn($q) => $q->where('customer_id', auth()->id()))
-            ->with(['carrier', 'originLocation', 'destinationLocation', 'currentLocation'])
+            ->with(['carrier', 'originLocation', 'destinationLocation', 'currentLocation', 'items'])
             ->latest()
             ->take(8)
             ->get();
@@ -693,7 +693,7 @@
                                         </div>
                                         <span class="text-[11px] theme-text-muted block font-sans">
                                             {{ $s->carrier->name ?? 'Freight Carrier' }}
-                                            &bull; <span class="font-mono text-cyan-600 dark:text-cyan-400 font-semibold">{{ $s->primary_reference }}</span>
+                                            &bull; <span class="font-mono text-cyan-600 dark:text-cyan-400 font-semibold">{{ $s->labeled_primary_reference }}</span>
                                         </span>
                                     </div>
                                 </div>
@@ -798,14 +798,17 @@
                 @foreach($overFreeTimeShipments as $ofs)
                     @php
                         $eval = $ofs->free_time_eval ?? app(\App\Services\FreeTimeService::class)->calculate($ofs);
-                        $containers = $ofs->items->map(fn($it) => $it->formatted_container_number)->filter()->unique()->values();
+                        $refParts = $ofs->formatted_reference_parts;
                     @endphp
                     <div class="p-3.5 rounded-2xl theme-card border theme-border flex flex-col justify-between space-y-2">
                         <div class="flex items-start justify-between gap-2">
                             <div>
-                                <a href="{{ route('shipments.show', $ofs) }}" class="font-mono font-bold text-xs theme-heading hover:text-blue-600 dark:hover:text-cyan-400 transition-colors">
-                                    {{ $ofs->tracking_number }}
-                                </a>
+                                <div class="flex items-center gap-1.5">
+                                    <a href="{{ route('shipments.show', $ofs) }}" class="font-mono font-bold text-xs theme-heading hover:text-blue-600 dark:hover:text-cyan-400 transition-colors">
+                                        {{ $ofs->tracking_number }}
+                                    </a>
+                                    <x-mode-badge :mode="$ofs->transport_mode ?? 'SEA'" size="xs" />
+                                </div>
                                 <span class="text-[11px] theme-text-muted block font-sans">
                                     {{ $ofs->carrier->name ?? 'Carrier' }} &bull; {{ $ofs->originLocation->short_name ?? 'Origin' }} to {{ $ofs->destinationLocation->short_name ?? 'Destination' }} ({{ $ofs->originLocation->display_code ?? 'ORI' }} &rarr; {{ $ofs->destinationLocation->display_code ?? 'DST' }})
                                 </span>
@@ -815,11 +818,11 @@
                             </span>
                         </div>
 
-                        @if($containers->isNotEmpty())
-                            <div class="text-[11px] font-mono theme-text-secondary">
-                                <span class="theme-text-muted">Container:</span> {{ $containers->implode(', ') }}
-                            </div>
-                        @endif
+                        <div class="text-[11px] font-mono theme-text-secondary flex flex-wrap items-center gap-x-3 gap-y-0.5">
+                            @foreach($refParts as $part)
+                                <span><span class="theme-text-muted">{{ $part['label'] }}:</span> {{ $part['value'] }}</span>
+                            @endforeach
+                        </div>
 
                         <div class="flex items-center justify-between pt-1 border-t theme-border text-[10px] font-mono theme-text-muted">
                             <span>Arrived {{ $eval['arrival_at']?->format('M d, Y') }}</span>
@@ -833,12 +836,13 @@
         </div>
     @endif
 
-    <!-- Secondary Utility Strip: Port Weather, Currency Converter, Maritime News -->
+    <!-- Secondary Utility Strip: Location Weather, Currency Converter, Freight News -->
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start font-sans">
-        <!-- 1. Port Weather Widget -->
+        <!-- 1. Location Weather Widget -->
         @php
             $selectedPort = $weatherPorts[0] ?? [
                 'city' => 'Singapore',
+                'facility_title' => 'Port',
                 'code' => 'SGSIN',
                 'code_type' => 'UN/LOCODE',
                 'unlocode' => 'SGSIN',
@@ -852,15 +856,15 @@
         @endphp
         <div class="p-6 rounded-3xl theme-card border theme-border shadow-xl space-y-4 transition-colors duration-200">
             <div class="flex items-center justify-between pb-2 border-b theme-border">
-                <span class="text-xs font-semibold theme-heading font-sans">Port weather</span>
+                <span class="text-xs font-semibold theme-heading font-sans">Location weather</span>
                 <div class="flex items-center gap-1.5">
                     <x-data-source-badge :source="$selectedPort['data_source'] ?? 'live'" />
-                    @if(isset($selectedPort['weather']['timestamp']) && $selectedPort['weather']['timestamp'])
+                    @if(isset($selectedPort['weather']['recorded_at']) && $selectedPort['weather']['recorded_at'])
                         <span class="text-[10px] theme-text-muted font-sans">
-                            Updated {{ \Carbon\Carbon::parse($selectedPort['weather']['timestamp'])->format('H:i') }}
+                            Updated {{ \Carbon\Carbon::parse($selectedPort['weather']['recorded_at'])->format('H:i') }}
                         </span>
                     @endif
-                    <a href="{{ route('weather.index') }}" class="text-[10px] font-semibold px-2 py-0.5 rounded theme-card-elevated border theme-border hover:border-blue-500 theme-heading font-sans transition inline-flex items-center gap-1" title="Open full weather hub">
+                    <a href="{{ route('weather.index') }}" class="text-[10px] font-semibold px-2 py-0.5 rounded theme-card-elevated border theme-border hover:border-blue-500 theme-heading font-sans transition inline-flex items-center gap-1" title="Open location weather hub">
                         <span>Hub</span>
                         <span>&rarr;</span>
                     </a>
@@ -871,7 +875,7 @@
                 <div class="flex items-center justify-between">
                     <div>
                         <h3 class="text-base font-extrabold theme-heading font-sans">{{ $selectedPort['city'] ?? 'Singapore' }}</h3>
-                        <span class="text-[11px] theme-text-muted font-mono" title="{{ $selectedPort['code_type'] ?? 'UN/LOCODE' }}: {{ $selectedPort['code'] ?? $selectedPort['unlocode'] ?? 'SGSIN' }}">{{ $selectedPort['code'] ?? $selectedPort['unlocode'] ?? 'SGSIN' }} &bull; {{ $selectedPort['code_type'] ?? 'UN/LOCODE' }}</span>
+                        <span class="text-[11px] theme-text-muted font-mono" title="{{ $selectedPort['code_type'] ?? 'UN/LOCODE' }}: {{ $selectedPort['code'] ?? $selectedPort['unlocode'] ?? 'SGSIN' }}">{{ $selectedPort['facility_title'] ?? 'Port' }} &bull; {{ $selectedPort['code'] ?? $selectedPort['unlocode'] ?? 'SGSIN' }}</span>
                     </div>
                     <div class="text-right">
                         <span class="text-3xl font-black theme-heading tabular-nums font-mono">
@@ -887,6 +891,7 @@
                     <div>Wind speed: <b class="theme-heading font-mono">{{ $selectedPort['weather']['wind_kph'] ?? '14.5' }} km/h</b></div>
                     <div>Relative humidity: <b class="theme-heading font-mono">{{ $selectedPort['weather']['humidity'] ?? '68' }}%</b></div>
                 </div>
+                <p class="text-[10px] theme-text-muted">Context only, not a delay prediction.</p>
             </div>
         </div>
 
@@ -924,10 +929,10 @@
                 >
                     <option value="USD" selected>USD</option>
                     <option value="EUR">EUR</option>
+                    <option value="INR">INR</option>
                     <option value="IDR">IDR</option>
-                    <option value="CNY">CNY</option>
                     <option value="SGD">SGD</option>
-                    <option value="AUD">AUD</option>
+                    <option value="AED">AED</option>
                 </select>
 
                 <button
@@ -949,9 +954,9 @@
                     <option value="IDR" selected>IDR</option>
                     <option value="USD">USD</option>
                     <option value="EUR">EUR</option>
-                    <option value="CNY">CNY</option>
+                    <option value="INR">INR</option>
                     <option value="SGD">SGD</option>
-                    <option value="AUD">AUD</option>
+                    <option value="AED">AED</option>
                 </select>
             </div>
 
@@ -963,10 +968,10 @@
             </div>
         </div>
 
-        <!-- 3. Live Maritime News Feed -->
+        <!-- 3. Live Freight News Feed -->
         <div class="p-5 rounded-3xl theme-card border space-y-3 transition-colors duration-200 font-sans">
             <div class="flex items-center justify-between pb-2 border-b theme-border">
-                <span class="text-xs font-semibold theme-heading font-sans">Maritime news wire</span>
+                <span class="text-xs font-semibold theme-heading font-sans">Freight news</span>
                 <div class="flex items-center gap-1.5">
                     <x-data-source-badge :source="$news[0]['data_source'] ?? 'live'" />
                     @if(isset($news[0]['published_at']) && $news[0]['published_at'])
@@ -974,7 +979,7 @@
                             Updated {{ \Carbon\Carbon::parse($news[0]['published_at'])->format('H:i') }}
                         </span>
                     @endif
-                    <a href="{{ route('news.index') }}" class="text-[10px] text-cyan-600 dark:text-cyan-400 hover:underline font-sans" title="Open all maritime news">
+                    <a href="{{ route('news.index') }}" class="text-[10px] text-cyan-600 dark:text-cyan-400 hover:underline font-sans" title="Open all freight news">
                         All news &rarr;
                     </a>
                 </div>
@@ -994,8 +999,8 @@
                         <div class="min-w-0 flex-1 space-y-1">
                             <div class="flex items-center justify-between gap-1">
                                 <div class="flex items-center gap-1.5 min-w-0">
-                                    <span class="text-[10px] font-semibold text-cyan-600 dark:text-cyan-400 font-sans truncate max-w-[110px]" title="{{ $n['source'] ?? 'Maritime Wire' }}">
-                                        {{ $n['source'] ?? 'Maritime Wire' }}
+                                    <span class="text-[10px] font-semibold text-cyan-600 dark:text-cyan-400 font-sans truncate max-w-[110px]" title="{{ $n['source'] ?? 'Freight Wire' }}">
+                                        {{ $n['source'] ?? 'Freight Wire' }}
                                     </span>
                                     @if(!empty($n['is_relevant']))
                                         <span class="px-1.5 py-0.5 rounded text-[9px] font-sans font-medium bg-blue-500/20 text-cyan-400 border border-blue-400/30">
@@ -1046,6 +1051,7 @@
     const currencyRates = Object.assign({
         'USD': 1.0,
         'EUR': 0.92,
+        'INR': 84.0,
         'IDR': 15873.0,
         'SGD': 1.34,
         'CNY': 7.23,

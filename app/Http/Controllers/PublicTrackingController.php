@@ -15,7 +15,13 @@ class PublicTrackingController extends Controller
     public function show(string $tracking_number): View
     {
         $clean = strtoupper(preg_replace('/\s+/', '', $tracking_number));
+        $cleanDigits = preg_replace('/[^\d]/', '', $tracking_number);
         $shipment = Shipment::where('tracking_number', $tracking_number)
+            ->orWhere('container_number', $clean)
+            ->orWhere('awb_number', $tracking_number)
+            ->when($cleanDigits !== '', fn ($q) => $q->orWhere('awb_number', $cleanDigits))
+            ->orWhere('vehicle_plate', $tracking_number)
+            ->orWhere('cmr_number', $tracking_number)
             ->orWhereHas('items', function ($iq) use ($tracking_number, $clean) {
                 $iq->where('container_number', $tracking_number)
                     ->orWhere('container_number', $clean)

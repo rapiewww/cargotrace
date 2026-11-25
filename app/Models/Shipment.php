@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Support\Awb;
 use App\Support\Iso6346;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -190,30 +191,130 @@ class Shipment extends Model
     }
 
     /**
-     * Formatted ISO 6346 container number on shipment level.
+     * Formatted ISO 6346 container number on shipment level (SEA only).
      */
     public function getFormattedContainerNumberAttribute(): ?string
     {
-        $num = $this->container_number ?: $this->items->first()?->container_number ?: $this->items->first()?->sku;
+        if (strtoupper((string) ($this->transport_mode ?? 'SEA')) !== 'SEA') {
+            return null;
+        }
+
+        $firstItem = $this->items->first();
+        $num = $this->container_number
+            ?: $firstItem?->container_number
+            ?: ($firstItem && Iso6346::isValid((string) $firstItem->sku) ? $firstItem->sku : null);
 
         return $num ? Iso6346::format($num) : null;
     }
 
     /**
-     * Formatted Air Waybill (e.g. "126-12345675").
+     * All formatted ISO 6346 container numbers associated with a SEA shipment.
+     *
+     * @return list<string>
+     */
+    public function getFormattedContainerNumbersAttribute(): array
+    {
+        if (strtoupper((string) ($this->transport_mode ?? 'SEA')) !== 'SEA') {
+            return [];
+        }
+
+        $containers = collect([$this->container_number ? Iso6346::format($this->container_number) : null])
+            ->merge($this->items->map(fn (ShipmentItem $it) => $it->formatted_container_number))
+            ->filter()
+            ->unique()
+            ->values()
+            ->all();
+
+        return $containers;
+    }
+
+    /**
+     * Formatted Air Waybill (e.g. "020-06002706") for AIR shipments only.
      */
     public function getFormattedAwbNumberAttribute(): ?string
     {
-        if (! $this->awb_number) {
+        if (strtoupper((string) ($this->transport_mode ?? 'SEA')) !== 'AIR') {
             return null;
         }
 
-        $clean = preg_replace('/[\s\-]+/', '', (string) $this->awb_number);
-        if (strlen($clean) === 11) {
-            return substr($clean, 0, 3).'-'.substr($clean, 3);
+        return Awb::format($this->awb_number);
+    }
+
+    /**
+     * Mode-appropriate label for the primary reference.
+     */
+    public function getPrimaryReferenceLabelAttribute(): string
+    {
+        return match (strtoupper((string) ($this->transport_mode ?? 'SEA'))) {
+            'AIR' => 'AWB',
+            'ROAD' => 'Plate / CMR',
+            default => 'Container',
+        };
+    }
+
+    /**
+     * Structured mode-appropriate reference parts for views.
+     *
+     * @return list<array{label: string, value: string}>
+     */
+    public function getFormattedReferencePartsAttribute(): array
+    {
+        $mode = strtoupper((string) ($this->transport_mode ?? 'SEA'));
+
+        if ($mode === 'AIR') {
+            return [
+                ['label' => 'AWB', 'value' => $this->formatted_awb_number ?? 'Pending'],
+            ];
         }
 
-        return $this->awb_number;
+        if ($mode === 'ROAD') {
+            $parts = [];
+            if ($this->vehicle_plate) {
+                $parts[] = ['label' => 'Plate', 'value' => $this->vehicle_plate];
+            }
+            if ($this->cmr_number) {
+                $parts[] = ['label' => 'CMR', 'value' => $this->cmr_number];
+            }
+
+            if (empty($parts)) {
+                return [
+                    ['label' => 'Plate', 'value' => 'Pending'],
+                    ['label' => 'CMR', 'value' => 'Pending'],
+                ];
+            }
+
+            return $parts;
+        }
+
+        $containers = $this->formatted_container_numbers;
+        if (! empty($containers)) {
+            return [
+                ['label' => 'Container', 'value' => implode(', ', $containers)],
+            ];
+        }
+
+        if ($this->bill_of_lading_number) {
+            return [
+                ['label' => 'B/L', 'value' => $this->bill_of_lading_number],
+            ];
+        }
+
+        return [
+            ['label' => 'Container', 'value' => 'Pending'],
+        ];
+    }
+
+    /**
+     * Mode-labeled primary reference summary (e.g. "Container: MSCU 201476 1", "AWB: 020-06002706", "Plate: BK 8419 XZ · CMR: CMR-2026-00419").
+     */
+    public function getLabeledPrimaryReferenceAttribute(): string
+    {
+        $parts = array_map(
+            fn (array $part) => "{$part['label']}: {$part['value']}",
+            $this->formatted_reference_parts
+        );
+
+        return implode(' · ', $parts);
     }
 
     /**

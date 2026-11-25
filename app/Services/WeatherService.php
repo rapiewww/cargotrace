@@ -54,7 +54,7 @@ class WeatherService
             $response = Http::timeout(5)->get('https://api.open-meteo.com/v1/forecast', [
                 'latitude' => $lat,
                 'longitude' => $lon,
-                'current' => 'temperature_2m,relative_humidity_2m,weather_code,wind_speed_10m,visibility',
+                'current' => 'temperature_2m,relative_humidity_2m,precipitation,rain,weather_code,wind_speed_10m,visibility',
                 'timezone' => 'auto',
             ]);
 
@@ -67,6 +67,9 @@ class WeatherService
                 $temp = (float) ($current['temperature_2m'] ?? 28.5);
                 $humidity = (int) ($current['relative_humidity_2m'] ?? 75);
                 $windKph = round((float) ($current['wind_speed_10m'] ?? 12.0), 1);
+                $rainMm = isset($current['rain'])
+                    ? round((float) $current['rain'], 1)
+                    : (isset($current['precipitation']) ? round((float) $current['precipitation'], 1) : 0.0);
                 $visibilityM = isset($current['visibility']) ? (float) $current['visibility'] : null;
                 $visibilityKm = $visibilityM !== null ? round($visibilityM / 1000, 1) : null;
 
@@ -80,6 +83,8 @@ class WeatherService
                     'weather_code' => $code,
                     'humidity' => $humidity,
                     'wind_kph' => $windKph,
+                    'rain_mm' => $rainMm,
+                    'precipitation_mm' => $rainMm,
                     'visibility_km' => $visibilityKm,
                     'visibility_m' => $visibilityM,
                     'recorded_at' => Carbon::now()->toIso8601String(),
@@ -358,7 +363,7 @@ class WeatherService
     }
 
     /**
-     * Map WMO Weather Interpretation Codes (WW) into human-readable maritime conditions.
+     * Map WMO Weather Interpretation Codes (WW) into human-readable conditions.
      */
     public function interpretWeatherCode(int $code): string
     {
@@ -367,25 +372,25 @@ class WeatherService
             1 => 'Mainly Clear',
             2 => 'Partly Cloudy',
             3 => 'Overcast',
-            45, 48 => 'Marine Fog & Mist',
+            45, 48 => 'Fog & Mist',
             51, 53, 55 => 'Light Drizzle',
             56, 57 => 'Freezing Drizzle',
             61, 63 => 'Moderate Rain',
-            65 => 'Heavy Sea Downpour',
+            65 => 'Heavy Downpour',
             66, 67 => 'Freezing Rain',
             71, 73, 75 => 'Snow Flurries',
             77 => 'Snow Grains',
             80, 81 => 'Passing Rain Showers',
             82 => 'Violent Rain Showers',
             85, 86 => 'Snow Showers',
-            95 => 'Thunderstorm & Heavy Seas',
+            95 => 'Thunderstorm',
             96, 99 => 'Severe Thunderstorm with Hail',
-            default => 'Scattered Clouds & Fair Breeze',
+            default => 'Scattered Clouds & Breeze',
         };
     }
 
     /**
-     * Deterministic maritime weather fallback generator.
+     * Deterministic weather fallback generator.
      *
      * @return array<string, mixed>
      */
@@ -402,10 +407,12 @@ class WeatherService
             'longitude' => $lon,
             'temperature_c' => round($temp, 1),
             'feels_like_c' => round($temp + 1.5, 1),
-            'condition' => 'Scattered Clouds & Sea Breeze',
+            'condition' => 'Scattered Clouds & Light Breeze',
             'weather_code' => 2,
             'humidity' => $humidity,
             'wind_kph' => round($wind, 1),
+            'rain_mm' => 0.0,
+            'precipitation_mm' => 0.0,
             'visibility_km' => null,
             'visibility_m' => null,
             'recorded_at' => Carbon::now()->toIso8601String(),

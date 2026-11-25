@@ -53,6 +53,7 @@ class DatabaseSeeder extends Seeder
                 'headline' => 'Malacca Strait Feeder Schedule Tightens Ahead of Peak Spice Export Season',
                 'title' => 'Malacca Strait Feeder Schedule Tightens Ahead of Peak Spice Export Season',
                 'source' => 'gCaptain',
+                'mode' => 'SEA',
                 'url' => 'https://gcaptain.com/malacca-strait-feeder-schedule-update',
                 'thumbnail' => '/images/news-placeholder.svg',
                 'category' => 'Waterways',
@@ -67,11 +68,42 @@ class DatabaseSeeder extends Seeder
                 'headline' => 'Rotterdam Maasvlakte Expands Phytosanitary Inspection Bays for Agricultural Imports',
                 'title' => 'Rotterdam Maasvlakte Expands Phytosanitary Inspection Bays for Agricultural Imports',
                 'source' => 'Maritime Executive',
+                'mode' => 'SEA',
                 'url' => 'https://maritime-executive.com/rotterdam-phytosanitary-inspection-bays',
                 'thumbnail' => '/images/news-placeholder.svg',
                 'category' => 'Port Operations',
                 'summary' => 'New temperature-controlled inspection docks speed up EU customs release for botanicals and whole spices.',
                 'published_at' => $now->copy()->subHours(8)->toIso8601String(),
+                'data_source' => 'cached',
+            ],
+        ]);
+
+        Cache::forever(MaritimeNewsService::STALE_CACHE_KEY_PREFIX.md5('Air Cargo News'), [
+            [
+                'headline' => 'Changi and Frankfurt Airfreight Hubs Expand Cool-Room Handling for Botanical Oils',
+                'title' => 'Changi and Frankfurt Airfreight Hubs Expand Cool-Room Handling for Botanical Oils',
+                'source' => 'Air Cargo News',
+                'mode' => 'AIR',
+                'url' => 'https://www.aircargonews.net/cool-room-botanical-oils',
+                'thumbnail' => '/images/news-placeholder.svg',
+                'category' => 'Air Cargo',
+                'summary' => 'Widebody freighter lanes from Medan KNO and Jakarta CGK add temperature-monitored bays for patchouli essential oil.',
+                'published_at' => $now->copy()->subHours(6)->toIso8601String(),
+                'data_source' => 'cached',
+            ],
+        ]);
+
+        Cache::forever(MaritimeNewsService::STALE_CACHE_KEY_PREFIX.md5('FreightWaves'), [
+            [
+                'headline' => 'Overland Spice Haulage Corridors Add Digital CMR Checkpoints Across ASEAN and EU',
+                'title' => 'Overland Spice Haulage Corridors Add Digital CMR Checkpoints Across ASEAN and EU',
+                'source' => 'FreightWaves',
+                'mode' => 'ROAD',
+                'url' => 'https://www.freightwaves.com/digital-cmr-checkpoints',
+                'thumbnail' => '/images/news-placeholder.svg',
+                'category' => 'Road Freight',
+                'summary' => 'Regional trucking depots from Aceh to Medan and Marseille to Grasse streamline consignment note handovers.',
+                'published_at' => $now->copy()->subHours(10)->toIso8601String(),
                 'data_source' => 'cached',
             ],
         ]);

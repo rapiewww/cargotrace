@@ -249,7 +249,8 @@ class ShipmentWebController extends Controller
         $locations = Location::orderBy('name')->get();
         $user = Auth::user();
 
-        // Relevant maritime news for this shipment corridor
+        // Relevant freight news for this shipment corridor
+        $shipment->loadMissing('items');
         $rawNews = $this->newsService->getMaritimeNews(12);
         $taggedNews = $this->newsService->tagShipmentRelevance($rawNews, [$shipment]);
         $relatedNews = collect($taggedNews)->filter(fn ($item) => ! empty($item['is_relevant']))->take(3)->values()->all();
@@ -257,7 +258,7 @@ class ShipmentWebController extends Controller
             $relatedNews = array_slice($rawNews, 0, 3);
         }
 
-        // Real weather at latest tracking location
+        // Real weather at latest tracking location (wave & crane advisory for seaports only)
         $latestLocation = $shipment->currentLocation
             ?? $shipment->trackingEvents->first(fn ($e) => $e->location !== null)?->location
             ?? $shipment->originLocation;
@@ -273,13 +274,15 @@ class ShipmentWebController extends Controller
                 (float) $latestLocation->longitude,
                 $latestLocation->name
             );
-            $locationMarine = $this->weatherService->getMarineWeather(
-                (float) $latestLocation->latitude,
-                (float) $latestLocation->longitude
-            );
-            $windKph = (float) ($locationWeather['wind_kph'] ?? 0);
-            $craneAdvisory = $this->weatherService->getCraneAdvisory($windKph);
-            $beaufortScale = $this->weatherService->getBeaufortScale($windKph);
+            if ($latestLocation->isSeaport()) {
+                $locationMarine = $this->weatherService->getMarineWeather(
+                    (float) $latestLocation->latitude,
+                    (float) $latestLocation->longitude
+                );
+                $windKph = (float) ($locationWeather['wind_kph'] ?? 0);
+                $craneAdvisory = $this->weatherService->getCraneAdvisory($windKph);
+                $beaufortScale = $this->weatherService->getBeaufortScale($windKph);
+            }
         }
 
         $freeTime = app(FreeTimeService::class)->calculate($shipment);

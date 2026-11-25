@@ -15,17 +15,17 @@ class NewsWebController extends Controller
     ) {}
 
     /**
-     * Display the dedicated Maritime News Wire Hub with server-side filters and pagination.
+     * Display the dedicated Freight News Hub with mode chips, server-side filters, and pagination.
      */
     public function index(Request $request): View
     {
         $rawNews = $this->newsService->getMaritimeNews(96);
 
-        // Fetch user's active shipments for relevance matching
+        // Fetch user's active shipments (with items for commodity matching) for relevance tagging
         $user = $request->user();
         $shipments = [];
         if ($user) {
-            $shipmentQuery = Shipment::query()->with(['originLocation', 'destinationLocation', 'currentLocation', 'carrier']);
+            $shipmentQuery = Shipment::query()->with(['originLocation', 'destinationLocation', 'currentLocation', 'carrier', 'items']);
             if ($user->role === 'customer') {
                 $shipmentQuery->where('customer_id', $user->id);
             }
@@ -34,17 +34,30 @@ class NewsWebController extends Controller
 
         $allNews = $this->newsService->tagShipmentRelevance($rawNews, $shipments);
 
+        $rawMode = strtoupper(trim((string) $request->query('mode', 'ALL')));
+        $selectedMode = in_array($rawMode, ['SEA', 'AIR', 'ROAD'], true) ? $rawMode : 'ALL';
         $selectedCategory = $request->query('category', 'all');
         $searchQuery = trim((string) $request->query('q', ''));
         $selectedSource = $request->query('source', 'all');
         $onlyRelevant = (bool) $request->query('relevant', false);
+
+        // Compute mode counts across fetched articles
+        $modeCounts = [
+            'ALL' => count($allNews),
+            'SEA' => collect($allNews)->filter(fn ($item) => strtoupper((string) ($item['mode'] ?? 'SEA')) === 'SEA')->count(),
+            'AIR' => collect($allNews)->filter(fn ($item) => strtoupper((string) ($item['mode'] ?? '')) === 'AIR')->count(),
+            'ROAD' => collect($allNews)->filter(fn ($item) => strtoupper((string) ($item['mode'] ?? '')) === 'ROAD')->count(),
+        ];
 
         // Extract available categories & sources for filters
         $categories = collect($allNews)->pluck('category')->filter()->unique()->values()->all();
         $sources = collect($allNews)->pluck('source')->filter()->unique()->values()->all();
 
         // Filter news items
-        $filteredNews = collect($allNews)->filter(function ($item) use ($selectedCategory, $searchQuery, $selectedSource, $onlyRelevant) {
+        $filteredNews = collect($allNews)->filter(function ($item) use ($selectedMode, $selectedCategory, $searchQuery, $selectedSource, $onlyRelevant) {
+            if ($selectedMode !== 'ALL' && strtoupper((string) ($item['mode'] ?? 'SEA')) !== $selectedMode) {
+                return false;
+            }
             if ($onlyRelevant && empty($item['is_relevant'])) {
                 return false;
             }
@@ -88,6 +101,8 @@ class NewsWebController extends Controller
             'allNews',
             'categories',
             'sources',
+            'selectedMode',
+            'modeCounts',
             'selectedCategory',
             'searchQuery',
             'selectedSource',

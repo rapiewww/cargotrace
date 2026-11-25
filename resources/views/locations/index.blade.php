@@ -6,7 +6,7 @@
         <div>
             <div class="flex items-center gap-3">
                 <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight theme-heading font-sans">
-                    Global Ports & Checkpoints
+                    Global Locations & Checkpoints
                 </h1>
                 <span class="text-xs px-2.5 py-0.5 rounded-full bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 border border-cyan-500/20 font-mono">
                     Location Network ({{ count($locations) }})
@@ -20,7 +20,7 @@
         @if(auth()->user()->role === 'admin')
             <button type="button" onclick="document.getElementById('add-location-modal').classList.remove('hidden')" class="px-4 py-2.5 rounded-xl bg-gradient-to-r from-amber-400 via-orange-400 to-amber-500 hover:from-amber-300 hover:to-orange-400 text-slate-950 font-bold text-xs flex items-center gap-1.5 transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] shadow-lg shadow-amber-500/20">
                 <svg class="w-4 h-4 text-slate-950" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/></svg>
-                Register Port / Hub
+                Register Location
             </button>
         @endif
     </div>
@@ -70,7 +70,7 @@
 <div id="add-location-modal" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
     <div class="theme-card border theme-border rounded-2xl max-w-md w-full p-6 shadow-2xl relative space-y-4">
         <div class="flex items-center justify-between border-b theme-border pb-3">
-            <h3 class="text-base font-bold theme-heading tracking-tight">Register Seaport / Terminal</h3>
+            <h3 class="text-base font-bold theme-heading tracking-tight">Register Location</h3>
             <button onclick="document.getElementById('add-location-modal').classList.add('hidden')" class="theme-text-muted hover:theme-heading text-xl leading-none">&times;</button>
         </div>
 
@@ -97,7 +97,7 @@
 
             <div class="space-y-1.5">
                 <label class="uppercase text-[10px] tracking-wider theme-text-muted font-semibold block">Location Name *</label>
-                <input type="text" name="name" required placeholder="Tanjung Priok Container Terminal" class="w-full px-3.5 py-2.5 rounded-xl theme-input border focus:ring-1 focus:ring-cyan-500">
+                <input type="text" name="name" required placeholder="Port of Tanjung Priok / Kualanamu Airport / Medan Depot" class="w-full px-3.5 py-2.5 rounded-xl theme-input border focus:ring-1 focus:ring-cyan-500">
             </div>
 
             <div class="grid grid-cols-2 gap-3">

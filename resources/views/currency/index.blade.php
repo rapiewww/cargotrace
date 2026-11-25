@@ -26,10 +26,10 @@
                 </a>
             </div>
             <h1 class="text-2xl sm:text-3xl font-black theme-heading tracking-tight mt-1.5">
-                <span class="sr-only">Maritime Currency FX &bull; Ocean Freight Valuation Calculator &bull; </span>Currency Converter & Reference Rates
+                Currency Converter &amp; Reference Rates
             </h1>
             <p class="text-xs sm:text-sm theme-text-secondary mt-1">
-                Global sovereign currency valuations for maritime bills of lading, manifest reconciliation, and container fleet portfolio valuation.
+                Global currency valuations for sea, air, and road consignments, manifest reconciliation, and portfolio valuation.
             </p>
         </div>
 
@@ -37,7 +37,7 @@
         <div class="flex items-center gap-2">
             <span class="text-xs theme-text-secondary font-medium">Base matrix:</span>
             <div class="flex items-center gap-1.5">
-                @foreach(['USD', 'EUR', 'SGD'] as $b)
+                @foreach(['USD', 'EUR', 'INR', 'IDR'] as $b)
                     <a
                         href="?base={{ $b }}@if(request('matrix'))&matrix={{ request('matrix') }}@endif"
                         class="px-2.5 py-1 rounded-lg text-xs font-mono font-bold transition border {{ $baseCurrency === $b ? 'bg-blue-600 text-white border-blue-600' : 'theme-card-elevated theme-border theme-text-secondary hover:theme-heading hover:border-blue-500' }}"
@@ -203,7 +203,7 @@
             </div>
 
             <div id="history-unavailable-notice" class="hidden p-3 rounded-xl theme-card-elevated border theme-border text-xs theme-text-secondary text-center">
-                Historical 30-day ECB chart is available for major currency pairs (EUR, USD, GBP, JPY, CNY, AUD, CAD, CHF, etc.).
+                Historical 30-day ECB chart is available for reference currency pairs (USD, EUR, INR, IDR, SGD, GBP, JPY, etc.).
             </div>
         </div>
 
@@ -294,7 +294,7 @@
     <div class="p-6 sm:p-8 rounded-3xl theme-card border space-y-5 transition-colors duration-200">
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-3 border-b theme-border">
             <div>
-                <h3 class="text-base font-bold theme-heading"><span class="sr-only">Maritime FX Cross-Rate Matrix &bull; </span>Maritime cross-rate matrix</h3>
+                <h3 class="text-base font-bold theme-heading">Freight cross-rate matrix</h3>
                 <span class="text-xs theme-text-secondary">Select 3 to 8 currencies to configure the multi-currency conversion grid</span>
             </div>
             <div class="flex items-center gap-2">
@@ -543,10 +543,11 @@
             }
         } catch (e) {}
         return [
-            { from: 'USD', to: 'EUR' },
             { from: 'USD', to: 'IDR' },
-            { from: 'EUR', to: 'SGD' },
-            { from: 'CNY', to: 'USD' }
+            { from: 'EUR', to: 'IDR' },
+            { from: 'USD', to: 'EUR' },
+            { from: 'USD', to: 'INR' },
+            { from: 'INR', to: 'IDR' }
         ];
     }
 

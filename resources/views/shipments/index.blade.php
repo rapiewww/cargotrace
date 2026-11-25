@@ -112,7 +112,7 @@
 
                 <!-- Origin Hub -->
                 <div class="space-y-1.5">
-                    <label class="uppercase text-[10px] tracking-wider theme-text-muted font-semibold block">Origin Port</label>
+                    <label class="uppercase text-[10px] tracking-wider theme-text-muted font-semibold block">Origin Location</label>
                     <select name="origin_location_id" class="w-full px-3.5 py-2 rounded-xl theme-input border text-xs focus:ring-1 focus:ring-cyan-500 focus:outline-none transition">
                         <option value="">All Origins</option>
                         @foreach($locations as $loc)
@@ -188,19 +188,19 @@
                             <td class="py-4 px-4 font-mono text-xs">
                                 @if(($s->transport_mode ?? 'SEA') === 'SEA')
                                     <span class="text-blue-600 dark:text-cyan-400 font-semibold block">
-                                        {{ $s->formatted_container_number ?? $s->container_number ?? 'No container' }}
+                                        <span class="theme-text-muted font-normal">Container:</span> {{ $s->formatted_container_number ?? $s->container_number ?? 'Not assigned' }}
                                     </span>
                                     @if($s->bill_of_lading_number)
                                         <span class="text-[10px] theme-text-muted block">B/L: {{ $s->bill_of_lading_number }}</span>
                                     @endif
                                 @elseif(($s->transport_mode ?? 'SEA') === 'AIR')
                                     <span class="text-sky-600 dark:text-sky-400 font-semibold block">
-                                        {{ $s->formatted_awb_number ?? $s->awb_number ?? 'No AWB' }}
+                                        <span class="theme-text-muted font-normal">AWB:</span> {{ $s->formatted_awb_number ?? $s->awb_number ?? 'Not assigned' }}
                                     </span>
                                     <span class="text-[10px] theme-text-muted block">Air waybill</span>
                                 @elseif(($s->transport_mode ?? 'SEA') === 'ROAD')
                                     <span class="text-emerald-600 dark:text-emerald-400 font-semibold block">
-                                        {{ $s->vehicle_plate ?? 'No plate' }}
+                                        <span class="theme-text-muted font-normal">Plate:</span> {{ $s->vehicle_plate ?? 'Not assigned' }}
                                     </span>
                                     @if($s->cmr_number)
                                         <span class="text-[10px] theme-text-muted block">CMR: {{ $s->cmr_number }}</span>

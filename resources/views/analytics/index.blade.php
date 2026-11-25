@@ -28,9 +28,9 @@
             </h1>
             <p class="text-xs sm:text-sm theme-text-secondary mt-1 max-w-3xl">
                 @if($isCustomer)
-                    Performance indicators, carrier reliability, and corridor metrics for your contracted ocean-container shipments.
+                    Performance indicators, carrier reliability, and corridor metrics for your contracted sea, air, and road shipments.
                 @else
-                    Carrier reliability metrics, corridor delay variance, weekly throughput, and exception resolution velocity across commercial container operations.
+                    Carrier reliability metrics, corridor delay variance, weekly throughput, and exception resolution velocity across multimodal operations.
                 @endif
             </p>
         </div>
@@ -130,7 +130,7 @@
                 @endif
             </div>
             <div class="mt-2 text-xs theme-text-muted">
-                Calculated across delayed voyages in range
+                Calculated across delayed consignments in range
             </div>
         </div>
 
@@ -184,7 +184,7 @@
             </div>
             <h3 class="text-lg font-bold theme-heading">No shipment activity found in selected date range</h3>
             <p class="text-xs sm:text-sm theme-text-secondary mt-1.5 max-w-md">
-                There are no ocean consignments or exception events recorded between {{ $from->format('M d, Y') }} and {{ $to->format('M d, Y') }}. Try widening the filter or resetting to the last 90 days.
+                There are no consignments or exception events recorded between {{ $from->format('M d, Y') }} and {{ $to->format('M d, Y') }}. Try widening the filter or resetting to the last 90 days.
             </p>
             <div class="mt-5">
                 <a
@@ -202,7 +202,7 @@
                 <div>
                     <h2 class="text-lg font-bold theme-heading">Carrier reliability and on-time performance</h2>
                     <p class="text-xs theme-text-secondary mt-0.5">
-                        Performance aggregates by ocean container liner operating across active shipping corridors.
+                        Performance aggregates by sea, air, and road carriers operating across active corridors.
                     </p>
                 </div>
                 <a
@@ -280,7 +280,7 @@
                 <div>
                     <h2 class="text-lg font-bold theme-heading">12-week throughput and performance trend</h2>
                     <p class="text-xs theme-text-secondary mt-0.5">
-                        Weekly consignment creations comparing on-time arrivals against voyage delays.
+                        Weekly consignment creations comparing on-time arrivals against transit delays.
                     </p>
                 </div>
                 <a
@@ -299,7 +299,7 @@
                         <canvas id="analyticsWeeklyChart"></canvas>
                     </div>
                     <p class="text-[11px] theme-text-muted text-center italic">
-                        Stacked columns represent total weekly container creations (green: on-time, amber: delayed).
+                        Stacked columns represent total weekly consignment creations (green: on-time, amber: delayed).
                     </p>
                 </div>
 
@@ -495,9 +495,9 @@
         <div class="p-6 rounded-3xl theme-card border theme-border space-y-6">
             <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b theme-border">
                 <div>
-                    <h2 class="text-lg font-bold theme-heading">Maritime shipping lanes and delay variance</h2>
+                    <h2 class="text-lg font-bold theme-heading">Freight lanes and delay variance</h2>
                     <p class="text-xs theme-text-secondary mt-0.5">
-                        Corridor routing metrics comparing scheduled voyage arrivals to actual terminal berthing.
+                        Corridor routing metrics comparing scheduled arrivals to actual hub arrivals across sea, air, and road lanes.
                     </p>
                 </div>
                 <div class="flex items-center gap-2">
@@ -529,7 +529,7 @@
                         <canvas id="analyticsLaneChart"></canvas>
                     </div>
                     <p class="text-[11px] theme-text-muted text-center italic">
-                        Corridors identified with highest mean voyage delay hours.
+                        Corridors identified with highest mean delay hours.
                     </p>
                 </div>
 

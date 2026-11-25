@@ -171,7 +171,7 @@ XML;
     // Filter by search query that returns no results
     $emptyResponse = $this->actingAs($admin)->get(route('news.index', ['q' => 'NON_EXISTENT_KEYWORD_XYZ']));
     $emptyResponse->assertOk();
-    $emptyResponse->assertSee('No maritime news articles found');
+    $emptyResponse->assertSee('No freight news articles found');
 });
 
 test('shipment detail page renders related maritime news block', function () {
@@ -201,7 +201,7 @@ XML;
 
     $response = $this->actingAs($admin)->get(route('shipments.show', $shipment));
     $response->assertOk();
-    $response->assertSee('Related Maritime News');
+    $response->assertSee('Related Freight News');
 });
 
 test('maritime news service handles empty RSS response without throwing', function () {

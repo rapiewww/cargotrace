@@ -1,15 +1,15 @@
-# CargoTrace: Global Ocean Container Shipment Visibility & Tracking Platform
+# CargoTrace: Global spice freight by sea, air and road
 
 [![Laravel 13](https://img.shields.io/badge/Laravel-13.x-FF2D20?style=flat&logo=laravel&logoColor=white)](https://laravel.com)
 [![PHP 8.3+](https://img.shields.io/badge/PHP-8.3%2B-777BB4?style=flat&logo=php&logoColor=white)](https://php.net)
 [![Tailwind CSS v4](https://img.shields.io/badge/TailwindCSS-v4.0-38B2AC?style=flat&logo=tailwind-css&logoColor=white)](https://tailwindcss.com)
 [![Leaflet.js](https://img.shields.io/badge/Leaflet-1.9.4-199900?style=flat&logo=leaflet&logoColor=white)](https://leafletjs.com)
 [![Chart.js](https://img.shields.io/badge/Chart.js-4.4-FF6384?style=flat&logo=chartdotjs&logoColor=white)](https://www.chartjs.org)
-[![Pest Tests](https://img.shields.io/badge/Tests-174%20Passed%20(1695%20assertions)-10B981?style=flat)](https://pestphp.com)
+[![Pest Tests](https://img.shields.io/badge/Tests-Passing-10B981?style=flat)](https://pestphp.com)
 
 > **Academic Capstone Project**  
 > Course: Web Programming / Final Individual Project  
-> Domain: Enterprise Ocean Container Shipping & Maritime Logistics Visibility  
+> Domain: Global spice freight by sea, air and road (Indonesian spices and essential oils)  
 > Local Dev URL: `http://cargotrace.test` (Laravel Herd) or `http://localhost:8000` (Docker)
 
 ---
@@ -24,18 +24,18 @@
 
 ## 2. Problem Statement & System Overview
 
-International ocean container shipping powers global commerce, yet container visibility remains fragmented across heterogeneous carrier portals and transshipment hubs. Shippers face critical visibility barriers:
-- **Blind Transits & Unannounced Schedule Deviations:** Adverse oceanic weather and seaport terminal congestion cause unannounced delays without automated customer notifications.
-- **Cross-Border Multi-Currency Friction:** Bills of lading and manifests are billed in divergent sovereign currencies (EUR, GBP, SGD, CNY), hindering consolidated portfolio valuation.
-- **Multi-Tenant Data Privacy:** Consignees require full operational visibility into their containers without accessing proprietary pricing or trade lanes of competing shippers.
+Exporting Indonesian spices and essential oils worldwide spans ocean container lines, air cargo freighters, and regional road hauliers, yet shipment visibility remains fragmented across heterogeneous carrier portals and handover hubs. Shippers face critical visibility barriers:
+- **Blind Transits & Unannounced Schedule Deviations:** Weather events, customs inspections, flight offloads, and border queues cause unannounced delays without automated customer notifications.
+- **Cross-Border Multi-Currency Friction:** Consignments are invoiced in divergent currencies (USD, EUR, INR, IDR), hindering consolidated portfolio valuation.
+- **Multi-Tenant Data Privacy:** Consignees require full operational visibility into their consignments without accessing proprietary pricing or trade lanes of competing shippers.
 
-**CargoTrace** solves these problems with an enterprise-grade maritime visibility platform featuring:
-- **Pure Maritime Domain:** 100% focused on ocean container carriers (Maersk, MSC, CMA CGM, COSCO, Hapag-Lloyd, ONE) and verified UN/LOCODE container seaports.
-- **Deterministic Delay & ETA Engine:** Rigorous, reproducible schedule variance calculation ($LOW \le 6\text{h}$, $MEDIUM \le 24\text{h}$, $HIGH > 24\text{h}$) with automated customer alerts.
+**CargoTrace** solves these problems with a multimodal freight visibility platform featuring:
+- **Multimodal Spice Freight Domain:** Tracks sea containers (ISO 6346 & B/L across UN/LOCODE seaports), air cargo (11-digit mod-7 AWB across IATA airports), and road haulage (vehicle plate & CMR across depots and borders) for nutmeg, cloves, cinnamon, pepper, ginger, and patchouli oil.
+- **Per-Mode Deterministic Delay & ETA Engine:** Rigorous, reproducible schedule variance calculation (AIR 3h/12h, ROAD 6h/24h, SEA 12h/48h) with automated customer alerts.
 - **Dual-Theme Enterprise UI (Light & Dark Mode):** Zero-flicker CSS custom property engine with dynamic OpenStreetMap tile filter synchronization.
-- **Responsive Grouped Sidebar:** Grouped operations, intelligence, master data, and administration navigation with an icon rail collapse mode (`w-20` / `w-64`).
+- **Responsive Grouped Sidebar:** Grouped operations, intelligence (Location Weather, Currency FX, Freight News), master data, and administration navigation with an icon rail collapse mode (`w-20` / `w-64`).
 - **Multi-Tenant Role-Based Access Control (RBAC):** Distinct permission boundaries and automated query scoping for `admin`, `operator`, and `customer` personas.
-- **Truthful Telemetry Provenance:** Explicit provenance badges (`LIVE`, `CACHED`, or `SIMULATED`) ensuring academic integrity and operational transparency.
+- **Truthful Telemetry Provenance:** Explicit provenance badges (`LIVE`, `CACHED`, or `SIMULATED`) and context-only external feeds (`context only, not a delay prediction`).
 
 ---
 
@@ -115,11 +115,11 @@ All live third-party services in CargoTrace operate keyless without requiring AP
 
 1. **Open-Meteo API**:
    - **Endpoints**: `https://api.open-meteo.com/v1/forecast` and `https://marine-api.open-meteo.com/v1/marine`
-   - **Coverage**: Atmospheric temperature, wind speed, relative humidity, visibility, and oceanic wave height, wave period, wave direction, and swell height.
+   - **Coverage**: Atmospheric temperature, wind speed, rainfall, relative humidity, and visibility across ports, airports, and depots; oceanic wave height, wave period, wave direction, and swell height for seaports only (context only, not a delay prediction).
    - **Terms & Attribution**: Free for non-commercial and commercial use with attribution. Licensed under [Creative Commons Attribution 4.0 International (CC BY 4.0)](https://open-meteo.com).
 2. **ExchangeRate-API**:
    - **Endpoint**: `https://open.er-api.com/v6/latest/USD`
-   - **Coverage**: Spot exchange rates for ~160 sovereign currencies, updated daily.
+   - **Coverage**: Spot exchange rates for ~160 sovereign currencies, defaulting to USD, EUR, INR, and IDR.
    - **Terms & Attribution**: Free tier with required attribution link to [ExchangeRate-API](https://www.exchangerate-api.com).
 3. **Frankfurter API**:
    - **Endpoint**: `https://api.frankfurter.dev/v1/`
@@ -127,11 +127,13 @@ All live third-party services in CargoTrace operate keyless without requiring AP
    - **Terms & Attribution**: Open source, keyless, and free.
 4. **OpenStreetMap & Nominatim**:
    - **Endpoints**: `https://tile.openstreetmap.org/{z}/{x}/{y}.png` and `https://nominatim.openstreetmap.org`
-   - **Coverage**: Seaport geographic coordinates, tile rendering, and reverse geocoding.
+   - **Coverage**: Location geographic coordinates, tile rendering, and reverse geocoding.
    - **Terms & Attribution**: Data &copy; [OpenStreetMap contributors](https://www.openstreetmap.org/copyright) licensed under the Open Database License (ODbL).
-5. **Maritime News RSS Syndication**:
-   - **Feeds**: *gCaptain* (`https://gcaptain.com/feed/`) and *The Maritime Executive* (`https://maritime-executive.com/rss`).
-   - **Terms & Attribution**: Real-time RSS syndication of headlines, article excerpts, and OpenGraph thumbnails with direct links to full articles on the publishers' websites.
+5. **Multimodal Freight News RSS Syndication**:
+   - **Sea Feeds**: *gCaptain*, *The Maritime Executive*, *Splash247*, *World Cargo News*, *Container News*, *Seatrade Maritime*, and *Hellenic Shipping News*.
+   - **Air Feeds**: *Air Cargo News* and *Air Cargo Week*.
+   - **Road & Logistics Feeds**: *FreightWaves*, *Transport Topics*, *Commercial Carrier Journal*, and *Supply Chain Dive*.
+   - **Terms & Attribution**: Real-time RSS/Atom syndication of headlines, article excerpts, and OpenGraph thumbnails with direct links to full articles on the publishers' websites.
 6. **Globe Textures**:
    - Three-Globe NASA Blue Marble, night lights, and Earth topology textures self-hosted locally under `/images/globe/` for zero third-party CDN dependency.
 
@@ -286,11 +288,11 @@ This project strictly adheres to the Anti-Slop design guidelines (`.claude/skill
 
 ## 9. Known Limitations
 
-1. **No Live Satellite AIS Transponder Feeds:** CargoTrace chronicles container positions and transit progress through registered seaport milestones, operator-verified checkpoints, and mathematical great-circle spherical calculations. It does not ingest raw VHF satellite AIS vessel broadcasts.
-2. **Marine Wave Data Coverage:** Open-Meteo Marine API provides wave and swell observations for oceanic and coastal coordinates. Inland waterways, river terminals, or dry ports gracefully display "No marine wave observations at this inland terminal".
+1. **No Live Satellite AIS or Flight Radar Feeds:** CargoTrace chronicles shipment positions and transit progress through registered port, airport, and depot milestones, operator-verified checkpoints, and mathematical great-circle spherical calculations.
+2. **Marine Wave Data Coverage:** Open-Meteo Marine API is queried for seaports only and provides wave and swell observations for oceanic and coastal coordinates; airports and inland depots display temperature, wind, rainfall, and visibility only.
 3. **Historical FX Time-Series Coverage:** 30-day historical currency charts rely on European Central Bank (Frankfurter) reference currencies. Rare non-ECB sovereign pairs preserve real-time spot conversions while gracefully omitting the historical trendline.
-4. **Nominatim Geocoding Rate Limits:** Seaport reverse geocoding via OpenStreetMap Nominatim is strictly rate-limited to 1 request/second and cached persistently in the database.
-5. **Single Primary Ocean Carrier Lane:** Shipments currently model one primary ocean carrier booking from port of loading to port of discharge; intermediate feeder barge and transshipment legs are captured as sequential tracking checkpoints.
+4. **Nominatim Geocoding Rate Limits:** Reverse geocoding via OpenStreetMap Nominatim is strictly rate-limited to 1 request/second and cached persistently in the database.
+5. **Single Primary Transport Mode per Shipment:** Phase 1 models one primary mode (SEA, AIR, or ROAD) per shipment; multi-leg door-to-door chaining is future work.
 
 ---
 
@@ -318,9 +320,9 @@ This project strictly adheres to the Anti-Slop design guidelines (`.claude/skill
   - **Open-Meteo & Marine API:** Atmospheric and oceanic wave metrics licensed under [CC BY 4.0](https://open-meteo.com).
   - **OpenStreetMap & Nominatim:** Geographic map tiles and geocoding &copy; [OpenStreetMap contributors](https://www.openstreetmap.org/copyright) under ODbL.
   - **ExchangeRate-API & Frankfurter:** Multi-currency spot rates and ECB historical time-series data.
-  - **Maritime RSS News Feeds:** Syndicated maritime editorial excerpts courtesy of *gCaptain*, *The Maritime Executive*, *Splash247*, *World Cargo News*, *Container News*, *Seatrade Maritime*, and *Hellenic Shipping News*.
+  - **Freight RSS News Feeds:** Syndicated industry editorial excerpts across sea, air, and road courtesy of *gCaptain*, *The Maritime Executive*, *Splash247*, *World Cargo News*, *Container News*, *Seatrade Maritime*, *Hellenic Shipping News*, *Air Cargo News*, *Air Cargo Week*, *FreightWaves*, *Transport Topics*, *Commercial Carrier Journal*, and *Supply Chain Dive*.
 - **AI Tool Assistance:** Generative AI tools (Claude Code / Antigravity) were used in a pair-programming capacity for boilerplate scaffolding, unit test suites, and documentation refinement under developer direction and rigorous verification.
 
 ---
 
-&copy; 2026 CargoTrace &bull; Global Ocean Container Shipment Visibility & Tracking Platform
+&copy; 2026 CargoTrace &bull; Global spice freight by sea, air and road

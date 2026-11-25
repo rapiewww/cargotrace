@@ -19,7 +19,7 @@ test('public landing page loads successfully with hero and metrics', function ()
 
     $response->assertStatus(200);
     $response->assertSee('CargoTrace');
-    $response->assertSee('Global Logistics Intelligence');
+    $response->assertSee('Global spice freight by sea, air and road');
     $response->assertSee('Track Shipment');
     $response->assertSee('Sign In / Portal');
 });
@@ -188,46 +188,45 @@ test('audit logs page accessible only to admin', function () {
     $this->actingAs($customer)->get('/audit-logs')->assertStatus(403);
 });
 
-test('dedicated maritime weather hub loads with telemetry and forecast', function () {
+test('dedicated location weather hub loads with telemetry and forecast', function () {
     $user = User::first();
 
     $response = $this->actingAs($user)->get('/weather');
     $response->assertStatus(200);
-    $response->assertSee('Seaport Weather');
-    $response->assertSee('Open-Meteo Integration');
-    $response->assertSee('Beaufort');
-    $response->assertSee('7-Day Seaport Forecast');
+    $response->assertSee('Location Weather');
+    $response->assertSee('Open-Meteo');
+    $response->assertSee('7-Day');
+    $response->assertSee('context only, not a delay prediction');
 });
 
-test('dedicated currency fx hub loads with calculator and freight benchmarks', function () {
+test('dedicated currency fx hub loads with calculator and portfolio valuation', function () {
     $user = User::first();
 
     $response = $this->actingAs($user)->get('/currency');
     $response->assertStatus(200);
-    $response->assertSee('Maritime Currency FX');
-    $response->assertSee('Ocean Freight Valuation Calculator');
-    $response->assertSee('Maritime FX Cross-Rate Matrix');
-    $response->assertSee('Portfolio Value by Currency');
+    $response->assertSee('Currency Converter & Reference Rates');
+    $response->assertSee('Freight cross-rate matrix');
+    $response->assertSee('Portfolio value by currency');
 });
 
-test('dedicated maritime news hub loads with thumbnails and category filters', function () {
+test('dedicated freight news hub loads with thumbnails and category filters', function () {
     $user = User::first();
 
     $response = $this->actingAs($user)->get('/news');
     $response->assertStatus(200);
-    $response->assertSee('Maritime News Wire');
-    $response->assertSee('All Categories');
+    $response->assertSee('Freight News');
+    $response->assertSee('All categories');
     $response->assertSee('news-placeholder.svg');
 });
 
-test('global sidebar displays improved text labels and links for maritime intelligence', function () {
+test('global sidebar displays improved text labels and links for freight intelligence', function () {
     $user = User::where('role', 'admin')->first();
 
     $response = $this->actingAs($user)->get('/dashboard');
     $response->assertStatus(200);
     $response->assertSee('Global View');
     $response->assertSee('Shipments');
-    $response->assertSee('Seaport Weather');
+    $response->assertSee('Location Weather');
     $response->assertSee('Currency FX');
-    $response->assertSee('Maritime News');
+    $response->assertSee('Freight News');
 });

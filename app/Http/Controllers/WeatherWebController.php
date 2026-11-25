@@ -16,16 +16,16 @@ class WeatherWebController extends Controller
     ) {}
 
     /**
-     * Display the dedicated Maritime Seaport Weather Hub.
+     * Display the dedicated Location Weather Hub across seaports, airports, and depots.
      */
     public function index(Request $request): View
     {
         $user = Auth::user();
 
-        // 1. Fetch every row of the locations table (ports on active routes first)
+        // 1. Fetch every row of the locations table
         $allLocations = Location::orderBy('name')->get();
 
-        // 2. Identify ports on active routes for the current user
+        // 2. Identify locations on active routes for the current user
         $shipmentsQuery = Shipment::whereNotIn('status', ['DELIVERED', 'CANCELLED']);
         if ($user && $user->role === 'customer') {
             $shipmentsQuery->where('customer_id', $user->id);
@@ -37,12 +37,15 @@ class WeatherWebController extends Controller
             $s->destination_location_id,
         ])->filter()->unique()->values()->all();
 
-        // Split into active route ports and other global ports
+        // Split into active route locations and categorized groups
         $activeRoutePorts = $allLocations->whereIn('id', $activePortIds)->values();
         $otherPorts = $allLocations->whereNotIn('id', $activePortIds)->values();
+        $seaports = $otherPorts->filter(fn (Location $loc) => $loc->isSeaport())->values();
+        $airports = $otherPorts->filter(fn (Location $loc) => strtoupper((string) $loc->type) === 'AIRPORT')->values();
+        $depots = $otherPorts->filter(fn (Location $loc) => ! $loc->isSeaport() && strtoupper((string) $loc->type) !== 'AIRPORT')->values();
 
-        // 3. Resolve selected port
-        $selectedParam = $request->query('port');
+        // 3. Resolve selected location (?location= or ?port=)
+        $selectedParam = $request->query('location') ?? $request->query('port');
         $selectedLocation = null;
 
         if ($selectedParam) {
@@ -63,9 +66,13 @@ class WeatherWebController extends Controller
                 'name' => $selectedLocation->name,
                 'city' => $selectedLocation->city ?? '',
                 'country' => $selectedLocation->country ?? '',
-                'code' => $selectedLocation->display_code ?: 'PORT',
+                'type' => strtoupper((string) $selectedLocation->type),
+                'is_seaport' => $selectedLocation->isSeaport(),
+                'facility_kind' => $selectedLocation->facility_kind_label,
+                'facility_title' => $selectedLocation->facility_kind_title,
+                'code' => $selectedLocation->display_code ?: 'LOC',
                 'code_type' => $selectedLocation->code_type_label,
-                'unlocode' => $selectedLocation->display_code ?: 'PORT',
+                'unlocode' => $selectedLocation->display_code ?: 'LOC',
                 'latitude' => (float) $selectedLocation->latitude,
                 'longitude' => (float) $selectedLocation->longitude,
                 'is_active_route' => in_array($selectedLocation->id, $activePortIds),
@@ -76,6 +83,10 @@ class WeatherWebController extends Controller
                 'name' => 'Port of Tanjung Priok',
                 'city' => 'Jakarta',
                 'country' => 'Indonesia',
+                'type' => 'PORT',
+                'is_seaport' => true,
+                'facility_kind' => 'port',
+                'facility_title' => 'Port',
                 'code' => 'IDJKT',
                 'code_type' => 'UN/LOCODE',
                 'unlocode' => 'IDJKT',
@@ -92,54 +103,64 @@ class WeatherWebController extends Controller
             $selectedPort['name']
         );
 
-        $marineWeather = $this->weatherService->getMarineWeather(
-            $selectedPort['latitude'],
-            $selectedPort['longitude']
-        );
-
         $forecast = $this->weatherService->getPortForecast(
             $selectedPort['latitude'],
             $selectedPort['longitude'],
             $selectedPort['name']
         );
 
-        // 5. Compute Rule-based Advisory & Beaufort derived from wind
-        $windKph = (float) ($currentWeather['wind_kph'] ?? 12.0);
-        $beaufort = $this->weatherService->getBeaufortScale($windKph);
-        $craneStatus = $this->weatherService->getCraneAdvisory($windKph);
+        // 5. Marine wave & swell and quay crane advisories apply to seaports only
+        $marineWeather = null;
+        $beaufort = null;
+        $craneStatus = null;
+        if ($selectedPort['is_seaport']) {
+            $marineWeather = $this->weatherService->getMarineWeather(
+                $selectedPort['latitude'],
+                $selectedPort['longitude']
+            );
+            $windKph = (float) ($currentWeather['wind_kph'] ?? 12.0);
+            $beaufort = $this->weatherService->getBeaufortScale($windKph);
+            $craneStatus = $this->weatherService->getCraneAdvisory($windKph);
+        }
 
-        // 6. Build Compare Table across selected / active ports
+        // 6. Build Compare Table across selected / active locations
         $compareIds = $request->query('compare');
         if (is_array($compareIds) && ! empty($compareIds)) {
             $compareLocations = $allLocations->whereIn('id', $compareIds)->take(6)->values();
         } else {
-            // Default compare: active route ports + top ports (up to 4)
-            $compareLocations = $activeRoutePorts->merge($otherPorts)->take(4)->values();
+            $compareLocations = $activeRoutePorts->merge($otherPorts)->take(6)->values();
         }
 
         $compareData = [];
         foreach ($compareLocations as $loc) {
+            $isSeaport = $loc->isSeaport();
             $cWeather = $this->weatherService->getPortWeather((float) $loc->latitude, (float) $loc->longitude, $loc->name);
-            $cMarine = $this->weatherService->getMarineWeather((float) $loc->latitude, (float) $loc->longitude);
-            $cCrane = $this->weatherService->getCraneAdvisory((float) ($cWeather['wind_kph'] ?? 0));
-            $cBeaufort = $this->weatherService->getBeaufortScale((float) ($cWeather['wind_kph'] ?? 0));
+            $cMarine = $isSeaport ? $this->weatherService->getMarineWeather((float) $loc->latitude, (float) $loc->longitude) : null;
+            $cCrane = $isSeaport ? $this->weatherService->getCraneAdvisory((float) ($cWeather['wind_kph'] ?? 0)) : null;
+            $cBeaufort = $isSeaport ? $this->weatherService->getBeaufortScale((float) ($cWeather['wind_kph'] ?? 0)) : null;
 
             $compareData[] = [
                 'id' => $loc->id,
                 'name' => $loc->name,
-                'code' => $loc->display_code ?: 'PORT',
+                'type' => strtoupper((string) $loc->type),
+                'is_seaport' => $isSeaport,
+                'facility_kind' => $loc->facility_kind_label,
+                'facility_title' => $loc->facility_kind_title,
+                'code' => $loc->display_code ?: 'LOC',
                 'code_type' => $loc->code_type_label,
-                'unlocode' => $loc->display_code ?: 'PORT',
+                'unlocode' => $loc->display_code ?: 'LOC',
                 'city' => $loc->city ?? '',
                 'country' => $loc->country ?? '',
                 'temp_c' => $cWeather['temperature_c'] ?? null,
                 'condition' => $cWeather['condition'] ?? 'Clear',
                 'wind_kph' => $cWeather['wind_kph'] ?? null,
-                'beaufort_force' => $cBeaufort['force'] ?? 1,
-                'has_marine_data' => $cMarine['has_marine_data'] ?? false,
-                'wave_height' => $cMarine['wave_height'] ?? null,
-                'crane_status' => $cCrane['status'] ?? 'Full Clearance',
-                'crane_color' => $cCrane['color'] ?? 'emerald',
+                'rain_mm' => $cWeather['rain_mm'] ?? 0.0,
+                'visibility_km' => $cWeather['visibility_km'] ?? null,
+                'beaufort_force' => $cBeaufort['force'] ?? null,
+                'has_marine_data' => $isSeaport && ($cMarine['has_marine_data'] ?? false),
+                'wave_height' => $isSeaport ? ($cMarine['wave_height'] ?? null) : null,
+                'crane_status' => $cCrane['status'] ?? null,
+                'crane_color' => $cCrane['color'] ?? null,
             ];
         }
 
@@ -147,6 +168,9 @@ class WeatherWebController extends Controller
             'allLocations',
             'activeRoutePorts',
             'otherPorts',
+            'seaports',
+            'airports',
+            'depots',
             'selectedPort',
             'currentWeather',
             'marineWeather',

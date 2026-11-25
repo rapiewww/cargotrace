@@ -20,7 +20,7 @@
                                 <span class="text-xl font-extrabold tracking-tight theme-heading block">CargoTrace</span>
                                 <span class="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-600 dark:text-cyan-400 border border-blue-500/20 font-mono">Global</span>
                             </div>
-                            <span class="text-[10px] uppercase tracking-widest theme-text-muted font-semibold block leading-tight">Global Logistics Intelligence</span>
+                            <span class="text-[10px] uppercase tracking-widest theme-text-muted font-semibold block leading-tight">Global spice freight by sea, air and road</span>
                         </div>
                     </a>
                 </div>
@@ -225,7 +225,7 @@
                         See a shipment timeline
                     </h2>
                     <p class="text-sm sm:text-base theme-text-secondary leading-relaxed">
-                        Every container follows verified milestone events from departure gate, ocean transit corridors, and seaport checkpoints to final delivery. Status variances calculate ETA changes directly from port logs.
+                        Every consignment follows verified milestone events across sea, air, and road corridors from origin handover to final delivery. Schedule variances recalculate ETA directly from checkpoint logs.
                     </p>
                     @if($feat)
                     <div class="pt-2">
@@ -280,14 +280,14 @@
                                 </span>
                                 <div class="flex-1 flex items-center justify-between text-xs">
                                     <div>
-                                        <span class="font-bold theme-heading block">Origin port &bull; Loaded</span>
+                                        <span class="font-bold theme-heading block">Origin &bull; Dispatched</span>
                                         <span class="text-[11px] theme-text-secondary font-mono">{{ $feat->originLocation->name ?? 'Port of Singapore (SGSIN)' }}</span>
                                     </div>
                                     <span class="theme-text-muted text-[11px] font-mono">{{ $feat->expected_departure_at?->format('M d, H:i') ?? 'Oct 25, 15:57' }}</span>
                                 </div>
                             </div>
 
-                            <!-- Milestone 2: Active Sea Leg -->
+                            <!-- Milestone 2: Active Transit Leg -->
                             <div class="relative flex items-start space-x-3.5">
                                 <span class="w-4 h-4 rounded-full bg-cyan-500 dark:bg-cyan-400 mt-0.5 shrink-0 ring-4 ring-cyan-500/30 z-10 animate-pulse flex items-center justify-center">
                                     <span class="w-1.5 h-1.5 rounded-full bg-white dark:bg-slate-950"></span>
@@ -295,18 +295,18 @@
                                 <div class="flex-1 flex items-center justify-between text-xs">
                                     <div>
                                         <span class="font-bold text-blue-600 dark:text-cyan-300 block">Current waypoint</span>
-                                        <span class="text-[11px] theme-text-secondary font-mono">{{ $feat->currentLocation->name ?? 'Malacca Strait Sea Lane' }}</span>
+                                        <span class="text-[11px] theme-text-secondary font-mono">{{ $feat->currentLocation->name ?? 'Transit corridor' }}</span>
                                     </div>
-                                    <span class="text-blue-600 dark:text-cyan-400 text-[11px] font-mono font-semibold">Under voyage</span>
+                                    <span class="text-blue-600 dark:text-cyan-400 text-[11px] font-mono font-semibold">In transit</span>
                                 </div>
                             </div>
 
-                            <!-- Milestone 3: Destination Port -->
+                            <!-- Milestone 3: Destination -->
                             <div class="relative flex items-start space-x-3.5">
                                 <span class="w-4 h-4 rounded-full border-2 border-slate-400 dark:border-slate-500 bg-slate-100 dark:bg-slate-900 mt-0.5 shrink-0 z-10"></span>
                                 <div class="flex-1 flex items-center justify-between text-xs">
                                     <div>
-                                        <span class="font-semibold theme-text-secondary block">Destination port</span>
+                                        <span class="font-semibold theme-text-secondary block">Destination</span>
                                         <span class="text-[11px] theme-text-muted font-mono">{{ $feat->destinationLocation->name ?? 'Port of Rotterdam (NLRTM)' }}</span>
                                     </div>
                                     <span class="theme-text-muted text-[11px] font-mono">{{ $feat->expected_arrival_at?->format('M d, H:i') ?? 'Nov 08, 15:57' }}</span>
@@ -342,10 +342,10 @@
                     How it works
                 </div>
                 <h2 class="text-3xl sm:text-4xl font-extrabold tracking-tight theme-heading">
-                    Three steps from port to destination
+                    Three steps from origin to destination
                 </h2>
                 <p class="text-sm sm:text-base theme-text-secondary leading-relaxed">
-                    CargoTrace records container progress at every critical handover point across the maritime supply chain.
+                    CargoTrace records consignment progress at every handover point across sea, air, and road corridors.
                 </p>
             </div>
 
@@ -359,7 +359,7 @@
                         </div>
                         <h3 class="text-lg font-bold theme-heading tracking-tight">Book and register freight</h3>
                         <p class="text-xs sm:text-sm theme-text-secondary leading-relaxed">
-                            Log container consignments with bill of lading numbers, ISO container codes, participating ocean carrier lines, origin and destination seaports, and planned transit schedules.
+                            Log sea, air, and road consignments with ISO 6346 container numbers, 11-digit AWB codes, vehicle plates and CMR notes, carrier lines, and transit schedules.
                         </p>
                     </div>
                     <div class="pt-3 border-t theme-border text-[11px] theme-text-muted font-mono">
@@ -374,13 +374,13 @@
                             <span class="text-xs font-mono font-bold text-blue-600 dark:text-cyan-400 bg-blue-500/10 dark:bg-cyan-400/10 px-2.5 py-1 rounded-md border border-blue-500/20">Step 02</span>
                             <svg class="w-5 h-5 text-cyan-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
                         </div>
-                        <h3 class="text-lg font-bold theme-heading tracking-tight">Record verified port checkpoints</h3>
+                        <h3 class="text-lg font-bold theme-heading tracking-tight">Record verified checkpoints</h3>
                         <p class="text-xs sm:text-sm theme-text-secondary leading-relaxed">
-                            Operators record gate-in, vessel loading, sea transit legs, transshipment transfers, and berth arrivals at standardized UN/LOCODE seaports with timestamped event notes.
+                            Operators record dispatch, transit hubs, transshipments, and arrivals across UN/LOCODE seaports, IATA airports, and inland depots with timestamped notes.
                         </p>
                     </div>
                     <div class="pt-3 border-t theme-border text-[11px] theme-text-muted font-mono">
-                        UN/LOCODE checkpoints &bull; Timestamped logging
+                        UN/LOCODE, IATA &amp; depot checkpoints &bull; Timestamped logging
                     </div>
                 </div>
 
@@ -414,10 +414,10 @@
                         Network map
                     </div>
                     <h2 class="text-3xl sm:text-4xl font-extrabold tracking-tight theme-heading">
-                        Global shipping network
+                        Global freight network
                     </h2>
                     <p class="text-xs sm:text-sm theme-text-secondary mt-1 max-w-2xl">
-                        Strategic ocean container routes and seaport hubs tracked across global shipping lanes with verified UN/LOCODE milestones.
+                        Sea, air, and road corridors connecting Indonesian spice origins with seaports, airports, and regional depots worldwide.
                     </p>
                 </div>
                 <div class="flex items-center space-x-6 text-xs font-mono">
@@ -427,7 +427,7 @@
                     </div>
                     <div class="flex items-center gap-2">
                         <span class="w-2.5 h-2.5 rounded-full bg-blue-500"></span>
-                        <span class="theme-text-secondary">Seaport hubs: <strong>{{ count($locations) }}</strong></span>
+                        <span class="theme-text-secondary">Trade locations: <strong>{{ count($locations) }}</strong></span>
                     </div>
                 </div>
             </div>
@@ -436,7 +436,7 @@
             <div class="relative rounded-2xl overflow-hidden border theme-border shadow-2xl theme-card">
                 <div id="landing-world-map" class="w-full h-[480px] z-10"></div>
                 <div class="absolute bottom-4 left-4 z-20 px-3.5 py-2 rounded-xl theme-card-elevated border theme-border text-[11px] theme-text-muted font-mono shadow-lg">
-                    <span>Interactive OpenStreetMap &bull; Geodesic Bezier arcs connecting ports</span>
+                    <span>Interactive OpenStreetMap &bull; Geodesic route corridors connecting ports, airports and depots</span>
                 </div>
             </div>
         </div>
@@ -468,7 +468,7 @@
                         </div>
                         <h3 class="text-lg font-bold theme-heading tracking-tight">Platform governance & settings</h3>
                         <p class="text-xs sm:text-sm theme-text-secondary leading-relaxed">
-                            Manage user accounts and permissions, configure global delay calculation thresholds (LOW and MEDIUM alert hours), manage seaport master records, and inspect audit trails.
+                            Manage user accounts and permissions, configure per-mode delay thresholds (LOW and MEDIUM alert hours), manage port, airport, and depot records, and inspect audit trails.
                         </p>
                         <div class="flex flex-wrap gap-1.5 pt-1">
                             <span class="text-[11px] px-2 py-0.5 rounded theme-card-elevated border theme-border theme-text-secondary font-mono">User management</span>
@@ -491,7 +491,7 @@
                         </div>
                         <h3 class="text-lg font-bold theme-heading tracking-tight">Consignment & milestone operations</h3>
                         <p class="text-xs sm:text-sm theme-text-secondary leading-relaxed">
-                            Create ocean container consignments, assign shipping lines and vessels, log checkpoint milestones at port berths, and evaluate transit schedules.
+                            Create sea, air, and road consignments, assign carriers, log checkpoint milestones across hubs, and evaluate transit schedules.
                         </p>
                         <div class="flex flex-wrap gap-1.5 pt-1">
                             <span class="text-[11px] px-2 py-0.5 rounded theme-card-elevated border theme-border theme-text-secondary font-mono">Consignment booking</span>
@@ -514,11 +514,11 @@
                         </div>
                         <h3 class="text-lg font-bold theme-heading tracking-tight">Shipment tracking & visibility</h3>
                         <p class="text-xs sm:text-sm theme-text-secondary leading-relaxed">
-                            Track consignments by tracking number, review verified milestone progression, check destination seaport weather, and view arrival estimates.
+                            Track consignments by tracking number or reference, review verified milestone progression, check destination location weather, and view arrival estimates.
                         </p>
                         <div class="flex flex-wrap gap-1.5 pt-1">
                             <span class="text-[11px] px-2 py-0.5 rounded theme-card-elevated border theme-border theme-text-secondary font-mono">Consignment tracking</span>
-                            <span class="text-[11px] px-2 py-0.5 rounded theme-card-elevated border theme-border theme-text-secondary font-mono">Port weather</span>
+                            <span class="text-[11px] px-2 py-0.5 rounded theme-card-elevated border theme-border theme-text-secondary font-mono">Location weather</span>
                             <span class="text-[11px] px-2 py-0.5 rounded theme-card-elevated border theme-border theme-text-secondary font-mono">Timeline view</span>
                         </div>
                     </div>
@@ -542,7 +542,7 @@
                         </svg>
                     </div>
                     <div>
-                        <span class="theme-heading font-semibold block">&copy; {{ date('Y') }} CargoTrace &bull; Ocean Container Consignment Tracking</span>
+                        <span class="theme-heading font-semibold block">&copy; {{ date('Y') }} CargoTrace &bull; Global spice freight by sea, air and road</span>
                         <span class="text-[11px] text-blue-600 dark:text-cyan-400 font-sans">Individual University Web Programming Capstone Project &bull; Laravel, Blade & Tailwind CSS</span>
                     </div>
                 </div>
@@ -556,8 +556,8 @@
             </div>
 
             <div class="pt-6 border-t theme-border flex flex-col sm:flex-row items-center justify-between gap-4 text-[11px] theme-text-muted">
-                <span>Standardized UN/LOCODE seaport milestones and rule-based arrival schedule evaluations.</span>
-                <span>Worldwide ocean container freight scope.</span>
+                <span>Standardized UN/LOCODE, IATA, and depot milestones with rule-based arrival schedule evaluations.</span>
+                <span>Global spice freight by sea, air and road.</span>
             </div>
         </div>
     </footer>

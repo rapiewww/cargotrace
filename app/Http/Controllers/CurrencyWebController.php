@@ -15,7 +15,7 @@ class CurrencyWebController extends Controller
     ) {}
 
     /**
-     * Display the dedicated Maritime Currency FX & Valuation Hub.
+     * Display the dedicated Freight Currency FX & Valuation Hub.
      */
     public function index(Request $request): View
     {
@@ -32,7 +32,7 @@ class CurrencyWebController extends Controller
         $frankfurterCurrencies = [];
         $initialHistory = null;
         $crossMatrix = [];
-        $defaultMatrix = ['USD', 'EUR', 'CNY', 'SGD', 'IDR'];
+        $defaultMatrix = CurrencyService::SEEDED_CURRENCIES;
 
         try {
             $fxData = $this->currencyService->getRates($baseCurrency);

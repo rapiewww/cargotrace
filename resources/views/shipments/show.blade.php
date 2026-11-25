@@ -110,7 +110,7 @@
                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs font-mono">
                     @if(($shipment->transport_mode ?? 'SEA') === 'SEA')
                         <div class="p-3 rounded-xl theme-card-elevated border theme-border">
-                            <span class="uppercase text-[10px] tracking-wider theme-text-muted font-semibold block">Container Number</span>
+                            <span class="uppercase text-[10px] tracking-wider theme-text-muted font-semibold block">Container</span>
                             <span class="font-bold text-blue-600 dark:text-cyan-400 text-sm">{{ $shipment->formatted_container_number ?? $shipment->container_number ?? 'Not assigned' }}</span>
                         </div>
                         <div class="p-3 rounded-xl theme-card-elevated border theme-border">
@@ -203,14 +203,14 @@
                 @endif
             </x-card>
 
-            <!-- Port Weather at Latest Location (Context only, not a delay prediction) -->
+            <!-- Location Weather at Latest Location (Context only, not a delay prediction) -->
             @if(isset($locationWeather) && $locationWeather && isset($latestLocation) && $latestLocation)
                 <x-card class="space-y-4">
                     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2 border-b theme-border">
                         <div>
                             <div class="flex flex-wrap items-center gap-2">
                                 <span class="text-xs font-semibold theme-heading block">
-                                    <span class="sr-only">Seaport Weather at Latest Location &bull; </span>Port weather at latest location
+                                    Location weather at latest {{ $latestLocation->facility_kind_label }}
                                 </span>
                                 <span class="text-[11px] px-2 py-0.5 rounded-full bg-slate-500/10 text-slate-500 dark:text-slate-400 border border-slate-500/20 font-medium">
                                     context only, not a delay prediction
@@ -222,9 +222,9 @@
                         </div>
                         <div class="flex items-center gap-2 self-start sm:self-auto">
                             <x-data-source-badge :source="$locationWeather['data_source'] ?? 'live'" />
-                            @if(isset($locationWeather['timestamp']) && $locationWeather['timestamp'])
+                            @if(isset($locationWeather['recorded_at']) && $locationWeather['recorded_at'])
                                 <span class="text-[11px] theme-text-muted">
-                                    Updated {{ \Carbon\Carbon::parse($locationWeather['timestamp'])->format('M d, H:i') }}
+                                    Updated {{ \Carbon\Carbon::parse($locationWeather['recorded_at'])->format('M d, H:i') }}
                                 </span>
                             @endif
                         </div>
@@ -239,25 +239,46 @@
                         <div class="p-3 rounded-xl theme-card-elevated border theme-border">
                             <span class="text-[11px] theme-text-muted font-medium block">Wind speed</span>
                             <span class="text-base font-bold font-mono theme-heading">{{ $locationWeather['wind_kph'] }} km/h</span>
-                            <span class="text-xs theme-text-secondary block">Force {{ $beaufortScale['force'] ?? 1 }} &bull; {{ $beaufortScale['desc'] ?? 'Breeze' }}</span>
-                        </div>
-                        <div class="p-3 rounded-xl theme-card-elevated border theme-border">
-                            <span class="text-[11px] theme-text-muted font-medium block">Wave height</span>
-                            @if(!empty($locationMarine['has_marine_data']) && $locationMarine['wave_height'] !== null)
-                                <span class="text-base font-bold font-mono theme-heading">{{ number_format($locationMarine['wave_height'], 2) }} m</span>
-                                <span class="text-xs theme-text-secondary block">Period: {{ $locationMarine['wave_period'] ?? 'N/A' }}s</span>
+                            @if($latestLocation->isSeaport() && $beaufortScale)
+                                <span class="text-xs theme-text-secondary block">Force {{ $beaufortScale['force'] ?? 1 }} &bull; {{ $beaufortScale['desc'] ?? 'Breeze' }}</span>
                             @else
-                                <span class="text-xs font-medium theme-text-secondary block pt-1">No marine data</span>
+                                <span class="text-xs theme-text-secondary block">Humidity: {{ $locationWeather['humidity'] ?? '-' }}%</span>
                             @endif
                         </div>
-                        <div class="p-3 rounded-xl theme-card-elevated border theme-border">
-                            <span class="text-[11px] theme-text-muted font-medium block"><span class="sr-only">STS Crane Advisory</span>Crane advisory</span>
-                            <span class="text-xs font-bold font-mono block pt-1
-                                {{ ($craneAdvisory['color'] ?? '') === 'emerald' ? 'text-emerald-500' : (($craneAdvisory['color'] ?? '') === 'amber' ? 'text-amber-500' : 'text-rose-500') }}">
-                                {{ $craneAdvisory['status'] ?? 'Full Clearance' }}
-                            </span>
-                            <span class="text-[10px] theme-text-muted block">Rule-based</span>
-                        </div>
+                        @if($latestLocation->isSeaport())
+                            <div class="p-3 rounded-xl theme-card-elevated border theme-border">
+                                <span class="text-[11px] theme-text-muted font-medium block">Wave height</span>
+                                @if(!empty($locationMarine['has_marine_data']) && $locationMarine['wave_height'] !== null)
+                                    <span class="text-base font-bold font-mono theme-heading">{{ number_format($locationMarine['wave_height'], 2) }} m</span>
+                                    <span class="text-xs theme-text-secondary block">Period: {{ $locationMarine['wave_period'] ?? 'N/A' }}s</span>
+                                @else
+                                    <span class="text-xs font-medium theme-text-secondary block pt-1">No marine data</span>
+                                @endif
+                            </div>
+                            <div class="p-3 rounded-xl theme-card-elevated border theme-border">
+                                <span class="text-[11px] theme-text-muted font-medium block"><span class="sr-only">STS Crane Advisory</span>Crane advisory</span>
+                                <span class="text-xs font-bold font-mono block pt-1
+                                    {{ ($craneAdvisory['color'] ?? '') === 'emerald' ? 'text-emerald-500' : (($craneAdvisory['color'] ?? '') === 'amber' ? 'text-amber-500' : 'text-rose-500') }}">
+                                    {{ $craneAdvisory['status'] ?? 'Full Clearance' }}
+                                </span>
+                                <span class="text-[10px] theme-text-muted block">Rule-based</span>
+                            </div>
+                        @else
+                            <div class="p-3 rounded-xl theme-card-elevated border theme-border">
+                                <span class="text-[11px] theme-text-muted font-medium block">Rain</span>
+                                <span class="text-base font-bold font-mono theme-heading">{{ number_format((float) ($locationWeather['rain_mm'] ?? 0), 1) }} mm</span>
+                                <span class="text-xs theme-text-secondary block">Current precipitation</span>
+                            </div>
+                            <div class="p-3 rounded-xl theme-card-elevated border theme-border">
+                                <span class="text-[11px] theme-text-muted font-medium block">Visibility</span>
+                                @if(isset($locationWeather['visibility_km']) && $locationWeather['visibility_km'] !== null)
+                                    <span class="text-base font-bold font-mono theme-heading">{{ $locationWeather['visibility_km'] }} km</span>
+                                    <span class="text-xs theme-text-secondary block">{{ $locationWeather['visibility_km'] >= 10 ? 'Clear' : 'Reduced' }}</span>
+                                @else
+                                    <span class="text-xs font-medium theme-text-secondary block pt-1">Not reported</span>
+                                @endif
+                            </div>
+                        @endif
                     </div>
                 </x-card>
             @endif
@@ -274,7 +295,7 @@
                         <thead>
                             <tr class="border-b border-white/5 text-slate-500 uppercase text-[10px] font-mono">
                                 <th class="pb-2">Description</th>
-                                <th class="pb-2">Container Number / SKU</th>
+                                <th class="pb-2">{{ strtoupper($shipment->transport_mode ?? 'SEA') === 'SEA' ? 'Container / SKU' : 'Item SKU' }}</th>
                                 <th class="pb-2 text-right">Qty</th>
                                 <th class="pb-2 text-right">Weight (KG)</th>
                                 <th class="pb-2 text-right">Volume (CBM)</th>
@@ -285,7 +306,7 @@
                                 <tr>
                                     <td class="py-2.5 font-sans font-semibold theme-heading">{{ $item->description }}</td>
                                     <td class="py-2.5 text-slate-400 font-mono">
-                                        @if($item->container_number || \App\Support\Iso6346::isValid((string) $item->sku))
+                                        @if(strtoupper($shipment->transport_mode ?? 'SEA') === 'SEA' && ($item->container_number || \App\Support\Iso6346::isValid((string) $item->sku)))
                                             <span class="text-blue-600 dark:text-cyan-400 font-semibold">{{ $item->formatted_container_number }}</span>
                                         @else
                                             <span>{{ $item->sku ?? '-' }}</span>
@@ -341,13 +362,13 @@
                 </x-card>
             @endif
 
-            <!-- Related Maritime News Corridor Intelligence -->
+            <!-- Related Freight News Corridor Intelligence -->
             @if(!empty($relatedNews))
                 <x-card class="space-y-4">
                     <div class="flex items-center justify-between pb-3 border-b theme-border">
                         <div>
                             <span class="uppercase text-[10px] tracking-wider text-cyan-600 dark:text-cyan-400 font-semibold block font-mono">Corridor Intelligence</span>
-                            <h3 class="text-base font-bold theme-heading">Related Maritime News</h3>
+                            <h3 class="text-base font-bold theme-heading">Related Freight News</h3>
                         </div>
                         <a href="{{ route('news.index') }}" class="text-xs font-mono text-blue-600 dark:text-cyan-400 hover:underline">All News &rarr;</a>
                     </div>
@@ -365,7 +386,7 @@
                                 >
                                 <div class="min-w-0 flex-1 space-y-1">
                                     <div class="flex items-center justify-between text-[10px] font-mono">
-                                        <span class="text-blue-600 dark:text-cyan-400 font-bold uppercase truncate max-w-[120px]">{{ $rn['source'] ?? 'Maritime Wire' }}</span>
+                                        <span class="text-blue-600 dark:text-cyan-400 font-bold uppercase truncate max-w-[120px]">{{ $rn['source'] ?? 'Freight Wire' }}</span>
                                         <span class="theme-text-muted">{{ \Carbon\Carbon::parse($rn['published_at'])->diffForHumans(null, true) }}</span>
                                     </div>
                                     <a href="{{ $rn['url'] ?? '#' }}" target="_blank" rel="noopener noreferrer" class="text-xs font-semibold theme-heading group-hover:text-blue-600 dark:group-hover:text-cyan-400 transition line-clamp-2 block leading-snug">

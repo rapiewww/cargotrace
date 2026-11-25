@@ -19,11 +19,18 @@ class CurrencyService
     public const CACHE_TTL = 3600; // 1 hour
 
     /**
-     * Commonly used maritime trade currencies pinned at the top of comboboxes.
+     * Seeded CargoTrace portfolio currencies.
      *
      * @var array<string>
      */
-    public const PINNED_CURRENCIES = ['USD', 'EUR', 'IDR', 'SGD', 'CNY', 'JPY', 'AUD', 'GBP', 'AED'];
+    public const SEEDED_CURRENCIES = ['USD', 'EUR', 'INR', 'IDR'];
+
+    /**
+     * Commonly used freight trade currencies pinned at the top of comboboxes.
+     *
+     * @var array<string>
+     */
+    public const PINNED_CURRENCIES = ['USD', 'EUR', 'INR', 'IDR', 'SGD', 'AED', 'MYR', 'GBP', 'JPY', 'AUD', 'CNY'];
 
     /**
      * Fetch all world currency rates from open.er-api.com, cached for 1 hour.
