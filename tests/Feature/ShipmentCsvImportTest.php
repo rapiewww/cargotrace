@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\AuditLog;
 use App\Models\Shipment;
 use App\Models\User;
+use App\Support\Iso6346;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 
@@ -139,9 +140,9 @@ test('duplicate shipment numbers within CSV and against database are flagged as 
         // Row 2: duplicates existing DB shipment
         "{$existing->tracking_number},MSCU,SGSIN,NLRTM,MSCU 123456 6,2026-11-20,2026-12-10",
         // Row 3: new tracking number
-        'CTG-SEA-2026-88001,MAEU,CNSHA,DEHAM,MAEU 987654 2,2026-11-22,2026-12-14',
+        'CTG-SEA-2026-88001,MAEU,IDBLW,DEHAM,MAEU 987654 2,2026-11-22,2026-12-14',
         // Row 4: duplicate of row 3 tracking number
-        'CTG-SEA-2026-88001,COSU,CNSHA,USLAX,COSU 456789 0,2026-11-25,2026-12-12',
+        'CTG-SEA-2026-88001,HLCU,IDJKT,USNYC,'.Iso6346::format(Iso6346::generate('HLCU', 456789)).',2026-11-25,2026-12-12',
     ]);
 
     $file = UploadedFile::fake()->createWithContent('duplicates.csv', $csv);
@@ -172,7 +173,7 @@ test('partial errors: preview separates valid and invalid rows, confirm commits 
         // Row 4: Invalid (same origin and destination)
         'CTG-SEA-2026-99003,MAEU,SGSIN,SGSIN,MAEU 987654 2,FCL,30000.00,USD,2026-11-20,2026-12-10,Textiles',
         // Row 5: Valid
-        'CTG-SEA-2026-99004,COSU,CNSHA,USLAX,COSU 456789 0,FCL,75000.00,USD,2026-11-22,2026-12-15,Consumer electronics',
+        'CTG-SEA-2026-99004,HLCU,IDJKT,USNYC,'.Iso6346::format(Iso6346::generate('HLCU', 456789)).',FCL,75000.00,USD,2026-11-22,2026-12-15,Lampung Black Pepper Whole',
     ]);
 
     $file = UploadedFile::fake()->createWithContent('partial.csv', $csv);

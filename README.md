@@ -225,16 +225,24 @@ docker compose exec app php artisan migrate --seed
 
 ---
 
-## 6. Demo Accounts & Credentials
+## 6. Demo Accounts, Credentials & Sample Shipments
 
-The database seeder provisions pre-configured personas with default password: `password`.
+The database seeder provisions pre-configured personas with default password: `password` (see `docs/DEMO_DATA.md` for all 8 accounts, including 4 additional fictional spice wholesalers and fragrance houses).
 
 | Role | Email | Company Affiliation | Access Scope |
 |---|---|---|---|
-| **Admin** | `admin@cargotrace.test` | CargoTrace HQ Operations | Universal Control, User Directory, Delay Thresholds, Audit Logs |
-| **Operator** | `operator@cargotrace.test` | Port Operations Center | Waybills, Checkpoints, Exceptions Resolution, Master Data |
-| **Customer** | `customer@cargotrace.test` | PT Nusantara Ocean Cargo | Consigned Shipments & In-App Notifications |
-| **Customer 2** | `customer2@cargotrace.test` | EuroPacific Maritime B.V. | Consigned Shipments & In-App Notifications |
+| **Admin** | `admin@cargotrace.test` | Nusa Spice Freight HQ | Universal Control, User Directory, Delay Thresholds, Audit Logs |
+| **Operator** | `operator@cargotrace.test` | Nusa Spice Freight Operations Desk | Waybills, Checkpoints, Exceptions Resolution, Master Data |
+| **Customer** | `customer@cargotrace.test` | PT Rempah Nusantara Sejahtera | Consigned Shipments & In-App Notifications |
+| **Customer 2** | `customer2@cargotrace.test` | Van der Berg Spice Trading B.V. | Consigned Shipments & In-App Notifications |
+
+### Sample Tracking Numbers (Public `/track/{tracking_number}` & Portal)
+
+| Tracking Number | Mode | Route | Status | Cargo Highlights |
+|---|---|---|---|---|
+| `CTG-SEA-2026-00189` | SEA | `IDJKT` to `NLRTM` | `DELIVERED` (late +10h, LOW) | Whole Nutmeg ABCD & Whole Cloves Lal Pari |
+| `CTG-SEA-2026-00244` | SEA | `IDBLW` to `USNYC` | `IN_TRANSIT` (delayed +56h, HIGH) | Sumatra Cassia Cinnamon & Lampung Black Pepper |
+| `CTG-AIR-2026-00678` | AIR | `IDKNO` to `FRCDG` | `IN_TRANSIT` (delayed +2.5h, LOW) | Aceh Steam-Distilled Patchouli Essential Oil |
 
 > **Pro-Tip:** The `/login` page features 1-click Quick Demo buttons to authenticate instantly as any role.
 

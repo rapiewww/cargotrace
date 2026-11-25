@@ -7,1578 +7,902 @@ use App\Models\Location;
 use App\Models\Shipment;
 use App\Models\ShipmentItem;
 use App\Models\User;
+use App\Support\Awb;
 use App\Support\Iso6346;
+use App\Support\RoadReference;
 use Carbon\Carbon;
 use Illuminate\Database\Seeder;
 
 class ShipmentSeeder extends Seeder
 {
     /**
-     * Exchange rate reference table relative to USD.
+     * Offline FX rates relative to USD (matches DatabaseSeeder cache).
+     *
+     * @var array<string, float>
      */
     protected const FX_RATES_TO_USD = [
         'USD' => 1.0,
-        'EUR' => 1.086956,   // 1 / 0.92
-        'CNY' => 0.138312,   // 1 / 7.23
-        'IDR' => 0.000063,   // 1 / 15873
-        'SGD' => 0.746268,   // 1 / 1.34
-        'AUD' => 0.657894,   // 1 / 1.52
-        'GBP' => 1.265822,   // 1 / 0.79
-        'JPY' => 0.006472,   // 1 / 154.5
-        'AED' => 0.272479,   // 1 / 3.67
-        'BRL' => 0.173010,   // 1 / 5.78
-        'HKD' => 0.128534,   // 1 / 7.78
-        'KRW' => 0.000714,   // 1 / 1400
-        'MYR' => 0.224719,   // 1 / 4.45
-        'THB' => 0.029411,   // 1 / 34.0
-        'VND' => 0.000039,   // 1 / 25400
-        'ZAR' => 0.055555,   // 1 / 18.0
+        'EUR' => 1.086957,
+        'INR' => 0.011905,
+        'IDR' => 0.000063,
+        'SGD' => 0.746269,
+        'AED' => 0.272480,
+        'MYR' => 0.224719,
     ];
 
     /**
-     * Run the shipment seeds.
+     * Airline 3-digit AWB prefixes (mark in docs/DEMO_DATA.md for verification).
+     *
+     * @var array<string, string>
+     */
+    protected const AWB_PREFIXES = [
+        'GIA' => '126',
+        'SQC' => '618',
+        'EKC' => '176',
+        'QRC' => '157',
+        'LHC' => '020',
+    ];
+
+    /**
+     * Commodity catalog for Indonesian spices and essential oils.
+     *
+     * @var array<string, array{name: string, hs_code: string, packaging: string, haz: bool}>
+     */
+    protected const COMMODITIES = [
+        'nutmeg' => [
+            'name' => 'Whole Nutmeg ABCD Grade (Banda & North Maluku)',
+            'hs_code' => '0908.11',
+            'packaging' => '50 kg polypropylene woven sacks',
+            'haz' => false,
+        ],
+        'cloves' => [
+            'name' => 'Whole Cloves Lal Pari Hand-Picked Grade',
+            'hs_code' => '0907.10',
+            'packaging' => '50 kg double jute gunny bags',
+            'haz' => false,
+        ],
+        'cinnamon' => [
+            'name' => 'Sumatra Cassia Cinnamon Quills (Korintje Grade A)',
+            'hs_code' => '0906.11',
+            'packaging' => '25 kg kraft-lined export cartons',
+            'haz' => false,
+        ],
+        'pepper' => [
+            'name' => 'Lampung Black Pepper Whole ASTA 570',
+            'hs_code' => '0904.11',
+            'packaging' => '50 kg moisture-barrier lined bags',
+            'haz' => false,
+        ],
+        'ginger' => [
+            'name' => 'Java Dried Sliced Ginger Root (Jahe Emprit)',
+            'hs_code' => '0910.11',
+            'packaging' => '25 kg laminated woven sacks on pallets',
+            'haz' => false,
+        ],
+        'patchouli' => [
+            'name' => 'Aceh Steam-Distilled Patchouli Essential Oil (PA 32%)',
+            'hs_code' => '3301.29',
+            'packaging' => '200 kg galvanized steel drums / 25 kg aluminum flasks',
+            'haz' => false,
+        ],
+    ];
+
+    /**
+     * Seed 48 multimodal spice and essential oil shipments across the last 10 weeks:
+     * 22 SEA, 14 AIR, 12 ROAD | 6 CREATED/BOOKED, 24 IN_TRANSIT, 18 DELIVERED.
      */
     public function run(): void
     {
-        $users = [
-            'c1' => User::where('email', 'customer@cargotrace.test')->first(),
-            'c2' => User::where('email', 'customer2@cargotrace.test')->first(),
-            'c3' => User::where('email', 'customer3@cargotrace.test')->first(),
-            'c4' => User::where('email', 'customer4@cargotrace.test')->first(),
+        $customers = [
+            'c1' => User::where('email', 'customer@cargotrace.test')->firstOrFail(),
+            'c2' => User::where('email', 'customer2@cargotrace.test')->firstOrFail(),
+            'c3' => User::where('email', 'customer3@cargotrace.test')->firstOrFail(),
+            'c4' => User::where('email', 'customer4@cargotrace.test')->firstOrFail(),
+            'c5' => User::where('email', 'customer5@cargotrace.test')->firstOrFail(),
+            'c6' => User::where('email', 'customer6@cargotrace.test')->firstOrFail(),
         ];
 
         $carriers = Carrier::all()->keyBy('code');
         $locations = Location::all()->keyBy('unlocode');
-
         $now = Carbon::now();
+        $week0Start = $now->copy()->startOfWeek();
 
-        // 45 curated, realistic ocean-container shipments across 6 trade corridors:
-        // Status breakdown: 6 CREATED/BOOKED, 20 IN_TRANSIT, 19 DELIVERED (Total = 45)
-        // Customer distribution: c1 = 12, c2 = 12, c3 = 11, c4 = 10 (Total = 45)
-        $shipmentsData = [
-            // =================================================================
-            // CANONICAL SAMPLE SHIPMENTS (PRESERVED FROM PRIOR PHASES)
-            // =================================================================
-            // 1. CTG-SEA-2026-00189: Jakarta -> Rotterdam (Delivered late)
-            [
-                'tracking_number' => 'CTG-SEA-2026-00189',
-                'reference_number' => 'B/L-MAEU-901842',
-                'customer_key' => 'c1',
-                'carrier_code' => 'MAEU',
-                'origin' => 'IDJKT',
-                'destination' => 'NLRTM',
-                'current' => 'NLRTM',
-                'cargo_type' => 'FCL',
-                'weight_kg' => 24500.0,
-                'volume_cbm' => 68.5,
-                'declared_value' => 1450000000.0,
-                'currency' => 'IDR',
-                'shipping_cost' => 78500000.0,
-                'status' => 'DELIVERED',
-                'expected_departure' => $now->copy()->subWeeks(5),
-                'expected_arrival' => $now->copy()->subDays(5),
-                'actual_arrival' => $now->copy()->subDays(4)->subHours(7),
-                'estimated_arrival' => $now->copy()->subDays(4)->subHours(6),
-                'is_delayed' => true,
-                'delay_hours' => 17.0,
-                'delay_severity' => 'LOW',
-                'delay_reason' => 'North Sea storm gale winds delayed pilot boarding at Maasvlakte entrance.',
-                'notes' => 'Export documentation complete. Clean bill of lading issued by Maersk Line Indonesia.',
-                'items' => [
-                    ['desc' => '40ft High Cube Container: Specialty Grade 1 Gayo Organic Arabica Green Coffee', 'qty' => 350, 'val' => 2600000.0, 'cur' => 'IDR', 'wt' => 14000.0, 'cbm' => 38.0],
-                    ['desc' => '20ft Dry Container: Toraja Single Origin High-Altitude Raw Beans', 'qty' => 280, 'val' => 1928571.0, 'cur' => 'IDR', 'wt' => 10500.0, 'cbm' => 30.5],
-                ],
-            ],
+        // Helper closure to produce deterministic timestamps anchored in the last 10 weeks.
+        $atWeekOffset = function (int $weeksAgo, int $dayOffset, int $hour = 9) use ($week0Start, $now): Carbon {
+            $dt = $week0Start->copy()->subWeeks($weeksAgo)->addDays($dayOffset)->setTime($hour, 15, 0);
+            if ($dt->greaterThan($now->copy()->subHours(2))) {
+                return $now->copy()->subHours(2 + ($weeksAgo + $dayOffset));
+            }
 
-            // 2. CTG-SEA-2026-00244: Shanghai -> Los Angeles (In transit, customs hold, delayed)
-            [
-                'tracking_number' => 'CTG-SEA-2026-00244',
-                'reference_number' => 'B/L-MSCU-440192',
-                'customer_key' => 'c2',
-                'carrier_code' => 'MSCU',
-                'origin' => 'CNSHA',
-                'destination' => 'USLAX',
-                'current' => 'USLAX',
-                'cargo_type' => 'FCL',
-                'weight_kg' => 18200.0,
-                'volume_cbm' => 54.0,
-                'declared_value' => 1850000.0,
-                'currency' => 'CNY',
-                'shipping_cost' => 62000.0,
-                'status' => 'IN_TRANSIT',
-                'expected_departure' => $now->copy()->subWeeks(2)->subDays(2),
-                'expected_arrival' => $now->copy()->subDays(2),
-                'actual_arrival' => null,
-                'estimated_arrival' => $now->copy()->addDays(1),
-                'is_delayed' => true,
-                'delay_hours' => 58.0,
-                'delay_severity' => 'HIGH',
-                'delay_reason' => 'Vessel anchored awaiting CET customs examination berth at Pier 400.',
-                'notes' => 'Class 9 Lithium-ion energy storage racks. IMO DG placards verified before trans-Pacific voyage.',
-                'items' => [
-                    ['desc' => '40ft Dry Container: Commercial Lithium Iron Phosphate Battery Storage Modules', 'qty' => 120, 'val' => 15416.0, 'cur' => 'CNY', 'wt' => 18200.0, 'cbm' => 54.0, 'haz' => true],
-                ],
-            ],
+            return $dt;
+        };
 
-            // 3. CTG-SEA-2026-00678: Singapore -> Sydney (In transit, low delay)
-            [
-                'tracking_number' => 'CTG-SEA-2026-00678',
-                'reference_number' => 'B/L-ONEY-881902',
-                'customer_key' => 'c1',
-                'carrier_code' => 'ONEY',
-                'origin' => 'SGSIN',
-                'destination' => 'AUSYD',
-                'current' => 'SGSIN',
-                'cargo_type' => 'FCL',
-                'weight_kg' => 19840.0,
-                'volume_cbm' => 52.8,
-                'declared_value' => 320000.0,
-                'currency' => 'SGD',
-                'shipping_cost' => 8600.0,
-                'status' => 'IN_TRANSIT',
-                'expected_departure' => $now->copy()->subDays(6),
-                'expected_arrival' => $now->copy()->addHours(12),
-                'actual_arrival' => null,
-                'estimated_arrival' => $now->copy()->addHours(15)->addMinutes(30),
-                'is_delayed' => true,
-                'delay_hours' => 3.5,
-                'delay_severity' => 'LOW',
-                'delay_reason' => 'Severe swell in Coral Sea required vessel speed adjustment to 14.5 knots.',
-                'notes' => 'Precision automation robotics arm components. Keep dry stowage above waterline.',
-                'items' => [
-                    ['desc' => '40ft HC Container: Six-Axis Industrial Robotic Articulated Arms', 'qty' => 80, 'val' => 4000.0, 'cur' => 'SGD', 'wt' => 19840.0, 'cbm' => 52.8],
-                ],
-            ],
+        $seaSerial = 200100;
+        $airSerial = 600100;
+        $roadSerial = 400;
 
-            // =================================================================
-            // CORRIDOR 1: ASIA -> EUROPE (Deepsea Mainline)
-            // =================================================================
-            // 4. Ningbo -> Hamburg [DELIVERED ON-TIME]
-            [
-                'tracking_number' => 'CTG-SEA-2026-00101',
-                'reference_number' => 'B/L-HLCU-710291',
-                'customer_key' => 'c2',
-                'carrier_code' => 'HLCU',
-                'origin' => 'CNNGB',
-                'destination' => 'DEHAM',
-                'current' => 'DEHAM',
-                'cargo_type' => 'FCL',
-                'weight_kg' => 22400.0,
-                'volume_cbm' => 64.0,
-                'declared_value' => 165000.0,
-                'currency' => 'EUR',
-                'shipping_cost' => 4200.0,
-                'status' => 'DELIVERED',
-                'expected_departure' => $now->copy()->subWeeks(7),
-                'expected_arrival' => $now->copy()->subWeeks(2),
-                'actual_arrival' => $now->copy()->subWeeks(2)->subHours(3),
-                'estimated_arrival' => $now->copy()->subWeeks(2)->subHours(3),
-                'is_delayed' => false,
-                'delay_hours' => 0.0,
-                'delay_severity' => 'NONE',
-                'delay_reason' => null,
-                'notes' => 'Precision machine tool parts from Zhejiang manufacturing corridor.',
-                'items' => [
-                    ['desc' => '40ft Dry Container: CNC Machining Spindles & Linear Guide Bearings', 'qty' => 200, 'val' => 825.0, 'cur' => 'EUR', 'wt' => 22400.0, 'cbm' => 64.0],
-                ],
-            ],
+        $shipments = $this->buildDataset($now, $atWeekOffset);
 
-            // 5. Shanghai -> Rotterdam [DELIVERED ON-TIME]
-            [
-                'tracking_number' => 'CTG-SEA-2026-00102',
-                'reference_number' => 'B/L-COSU-551029',
-                'customer_key' => 'c2',
-                'carrier_code' => 'COSU',
-                'origin' => 'CNSHA',
-                'destination' => 'NLRTM',
-                'current' => 'NLRTM',
-                'cargo_type' => 'FCL',
-                'weight_kg' => 26000.0,
-                'volume_cbm' => 72.0,
-                'declared_value' => 210000.0,
-                'currency' => 'EUR',
-                'shipping_cost' => 4800.0,
-                'status' => 'DELIVERED',
-                'expected_departure' => $now->copy()->subWeeks(6),
-                'expected_arrival' => $now->copy()->subWeeks(1)->subDays(3),
-                'actual_arrival' => $now->copy()->subWeeks(1)->subDays(3),
-                'estimated_arrival' => $now->copy()->subWeeks(1)->subDays(3),
-                'is_delayed' => false,
-                'delay_hours' => 0.0,
-                'delay_severity' => 'NONE',
-                'delay_reason' => null,
-                'notes' => 'Solar photovoltaic panels and smart micro-inverters.',
-                'items' => [
-                    ['desc' => '40ft HC Container: Monocrystalline Bifacial Solar Modules', 'qty' => 620, 'val' => 338.7, 'cur' => 'EUR', 'wt' => 26000.0, 'cbm' => 72.0],
-                ],
-            ],
+        foreach ($shipments as $idx => $spec) {
+            $mode = $spec['mode'];
+            $carrier = $carriers[$spec['carrier']] ?? Carrier::where('mode', $mode)->firstOrFail();
+            $origin = $locations[$spec['origin']];
+            $dest = $locations[$spec['destination']];
+            $curr = $locations[$spec['current']];
+            $customer = $customers[$spec['customer']];
 
-            // 6. Shenzhen -> Antwerp [IN_TRANSIT ON-TIME]
-            [
-                'tracking_number' => 'CTG-SEA-2026-00103',
-                'reference_number' => 'B/L-CMDU-882019',
-                'customer_key' => 'c2',
-                'carrier_code' => 'CMDU',
-                'origin' => 'CNSZX',
-                'destination' => 'BEANR',
-                'current' => 'SGSIN',
-                'cargo_type' => 'FCL',
-                'weight_kg' => 21000.0,
-                'volume_cbm' => 58.0,
-                'declared_value' => 195000.0,
-                'currency' => 'EUR',
-                'shipping_cost' => 4100.0,
-                'status' => 'IN_TRANSIT',
-                'expected_departure' => $now->copy()->subWeeks(2),
-                'expected_arrival' => $now->copy()->addWeeks(2),
-                'actual_arrival' => null,
-                'estimated_arrival' => $now->copy()->addWeeks(2),
-                'is_delayed' => false,
-                'delay_hours' => 0.0,
-                'delay_severity' => 'NONE',
-                'delay_reason' => null,
-                'notes' => 'Consumer electronics and telecom network switches. Transiting Singapore hub.',
-                'items' => [
-                    ['desc' => '40ft Dry Container: Optical Fiber Network Switches & Routing Units', 'qty' => 450, 'val' => 433.3, 'cur' => 'EUR', 'wt' => 21000.0, 'cbm' => 58.0],
-                ],
-            ],
-
-            // 7. Busan -> Rotterdam [IN_TRANSIT MEDIUM DELAY]
-            [
-                'tracking_number' => 'CTG-SEA-2026-00104',
-                'reference_number' => 'B/L-HMMU-990123',
-                'customer_key' => 'c2',
-                'carrier_code' => 'HMMU',
-                'origin' => 'KRPUS',
-                'destination' => 'NLRTM',
-                'current' => 'AEDXB',
-                'cargo_type' => 'FCL',
-                'weight_kg' => 25200.0,
-                'volume_cbm' => 66.0,
-                'declared_value' => 280000.0,
-                'currency' => 'EUR',
-                'shipping_cost' => 5200.0,
-                'status' => 'IN_TRANSIT',
-                'expected_departure' => $now->copy()->subWeeks(3),
-                'expected_arrival' => $now->copy()->addDays(5),
-                'actual_arrival' => null,
-                'estimated_arrival' => $now->copy()->addDays(5)->addHours(16),
-                'is_delayed' => true,
-                'delay_hours' => 16.0,
-                'delay_severity' => 'MEDIUM',
-                'delay_reason' => 'Port of Jebel Ali berth queue caused 16-hour transshipment departure lag.',
-                'notes' => 'Automotive powertrain components and steel castings from Ulsan.',
-                'items' => [
-                    ['desc' => '40ft Heavy Duty Container: High-Tensile Automotive Crankshafts', 'qty' => 380, 'val' => 736.8, 'cur' => 'EUR', 'wt' => 25200.0, 'cbm' => 66.0],
-                ],
-            ],
-
-            // 8. Singapore -> Hamburg [BOOKED]
-            [
-                'tracking_number' => 'CTG-SEA-2026-00105',
-                'reference_number' => 'B/L-MAEU-110294',
-                'customer_key' => 'c2',
-                'carrier_code' => 'MAEU',
-                'origin' => 'SGSIN',
-                'destination' => 'DEHAM',
-                'current' => 'SGSIN',
-                'cargo_type' => 'FCL',
-                'weight_kg' => 19500.0,
-                'volume_cbm' => 55.0,
-                'declared_value' => 140000.0,
-                'currency' => 'EUR',
-                'shipping_cost' => 3800.0,
-                'status' => 'BOOKED',
-                'expected_departure' => $now->copy()->addDays(3),
-                'expected_arrival' => $now->copy()->addWeeks(4)->addDays(2),
-                'actual_arrival' => null,
-                'estimated_arrival' => $now->copy()->addWeeks(4)->addDays(2),
-                'is_delayed' => false,
-                'delay_hours' => 0.0,
-                'delay_severity' => 'NONE',
-                'delay_reason' => null,
-                'notes' => 'Laden containers received at Tuas Terminal container freight station.',
-                'items' => [
-                    ['desc' => '40ft Dry Container: Industrial Polymer Resins in Bulk Bags', 'qty' => 500, 'val' => 280.0, 'cur' => 'EUR', 'wt' => 19500.0, 'cbm' => 55.0],
-                ],
-            ],
-
-            // 9. Piraeus -> Rotterdam [DELIVERED ON-TIME]
-            [
-                'tracking_number' => 'CTG-SEA-2026-00106',
-                'reference_number' => 'B/L-COSU-661028',
-                'customer_key' => 'c2',
-                'carrier_code' => 'COSU',
-                'origin' => 'GRPIR',
-                'destination' => 'NLRTM',
-                'current' => 'NLRTM',
-                'cargo_type' => 'FCL',
-                'weight_kg' => 18000.0,
-                'volume_cbm' => 50.0,
-                'declared_value' => 95000.0,
-                'currency' => 'EUR',
-                'shipping_cost' => 1800.0,
-                'status' => 'DELIVERED',
-                'expected_departure' => $now->copy()->subWeeks(3),
-                'expected_arrival' => $now->copy()->subWeeks(1)->subDays(4),
-                'actual_arrival' => $now->copy()->subWeeks(1)->subDays(4)->subHours(2),
-                'estimated_arrival' => $now->copy()->subWeeks(1)->subDays(4)->subHours(2),
-                'is_delayed' => false,
-                'delay_hours' => 0.0,
-                'delay_severity' => 'NONE',
-                'delay_reason' => null,
-                'notes' => 'Mediterranean feeder leg linking Piraeus PCT to North Sea gateway.',
-                'items' => [
-                    ['desc' => '20ft Container: Greek Extra Virgin Olive Oil Drums', 'qty' => 120, 'val' => 791.6, 'cur' => 'EUR', 'wt' => 18000.0, 'cbm' => 50.0],
-                ],
-            ],
-
-            // 10. Shanghai -> Valencia [IN_TRANSIT ON-TIME]
-            [
-                'tracking_number' => 'CTG-SEA-2026-00107',
-                'reference_number' => 'B/L-CMDU-772910',
-                'customer_key' => 'c2',
-                'carrier_code' => 'CMDU',
-                'origin' => 'CNSHA',
-                'destination' => 'ESVLC',
-                'current' => 'GRPIR',
-                'cargo_type' => 'FCL',
-                'weight_kg' => 23000.0,
-                'volume_cbm' => 62.0,
-                'declared_value' => 175000.0,
-                'currency' => 'EUR',
-                'shipping_cost' => 3900.0,
-                'status' => 'IN_TRANSIT',
-                'expected_departure' => $now->copy()->subWeeks(3)->subDays(2),
-                'expected_arrival' => $now->copy()->addDays(4),
-                'actual_arrival' => null,
-                'estimated_arrival' => $now->copy()->addDays(4),
-                'is_delayed' => false,
-                'delay_hours' => 0.0,
-                'delay_severity' => 'NONE',
-                'delay_reason' => null,
-                'notes' => 'Direct call via Suez Canal corridor entering Mediterranean waters.',
-                'items' => [
-                    ['desc' => '40ft Dry Container: Ceramic Tiles and Engineered Quartz Slabs', 'qty' => 400, 'val' => 437.5, 'cur' => 'EUR', 'wt' => 23000.0, 'cbm' => 62.0],
-                ],
-            ],
-
-            // =================================================================
-            // CORRIDOR 2: ASIA -> NORTH AMERICA (Transpacific Eastbound)
-            // =================================================================
-            // 11. Shanghai -> Los Angeles [DELIVERED ON-TIME]
-            [
-                'tracking_number' => 'CTG-SEA-2026-00201',
-                'reference_number' => 'B/L-MAEU-402918',
-                'customer_key' => 'c3',
-                'carrier_code' => 'MAEU',
-                'origin' => 'CNSHA',
-                'destination' => 'USLAX',
-                'current' => 'USLAX',
-                'cargo_type' => 'FCL',
-                'weight_kg' => 20500.0,
-                'volume_cbm' => 58.0,
-                'declared_value' => 240000.0,
-                'currency' => 'USD',
-                'shipping_cost' => 3900.0,
-                'status' => 'DELIVERED',
-                'expected_departure' => $now->copy()->subWeeks(6),
-                'expected_arrival' => $now->copy()->subWeeks(3),
-                'actual_arrival' => $now->copy()->subWeeks(3)->subHours(5),
-                'estimated_arrival' => $now->copy()->subWeeks(3)->subHours(5),
-                'is_delayed' => false,
-                'delay_hours' => 0.0,
-                'delay_severity' => 'NONE',
-                'delay_reason' => null,
-                'notes' => 'High-density consumer electronics; Pier 400 offloaded with no demurrage.',
-                'items' => [
-                    ['desc' => '40ft HC Container: Consumer Smart Home Automation Hubs', 'qty' => 850, 'val' => 282.35, 'cur' => 'USD', 'wt' => 20500.0, 'cbm' => 58.0],
-                ],
-            ],
-
-            // 12. Shenzhen -> New York [DELIVERED LATE]
-            [
-                'tracking_number' => 'CTG-SEA-2026-00202',
-                'reference_number' => 'B/L-COSU-991044',
-                'customer_key' => 'c3',
-                'carrier_code' => 'COSU',
-                'origin' => 'CNSZX',
-                'destination' => 'USNYC',
-                'current' => 'USNYC',
-                'cargo_type' => 'FCL',
-                'weight_kg' => 24000.0,
-                'volume_cbm' => 65.0,
-                'declared_value' => 310000.0,
-                'currency' => 'USD',
-                'shipping_cost' => 5800.0,
-                'status' => 'DELIVERED',
-                'expected_departure' => $now->copy()->subWeeks(7),
-                'expected_arrival' => $now->copy()->subWeeks(2)->subDays(1),
-                'actual_arrival' => $now->copy()->subWeeks(2)->addHours(8),
-                'estimated_arrival' => $now->copy()->subWeeks(2)->addHours(8),
-                'is_delayed' => true,
-                'delay_hours' => 32.0,
-                'delay_severity' => 'HIGH',
-                'delay_reason' => 'Panama Canal neopanamax lock scheduling queue backlog.',
-                'notes' => 'All-water East Coast loop via Panama Canal.',
-                'items' => [
-                    ['desc' => '40ft HC Container: Industrial Power Inverters & Battery Enclosures', 'qty' => 320, 'val' => 968.75, 'cur' => 'USD', 'wt' => 24000.0, 'cbm' => 65.0],
-                ],
-            ],
-
-            // 13. Busan -> Los Angeles [IN_TRANSIT ON-TIME]
-            [
-                'tracking_number' => 'CTG-SEA-2026-00203',
-                'reference_number' => 'B/L-HMMU-332910',
-                'customer_key' => 'c3',
-                'carrier_code' => 'HMMU',
-                'origin' => 'KRPUS',
-                'destination' => 'USLAX',
-                'current' => 'USLAX',
-                'cargo_type' => 'FCL',
-                'weight_kg' => 19000.0,
-                'volume_cbm' => 52.0,
-                'declared_value' => 180000.0,
-                'currency' => 'USD',
-                'shipping_cost' => 3400.0,
-                'status' => 'IN_TRANSIT',
-                'expected_departure' => $now->copy()->subDays(11),
-                'expected_arrival' => $now->copy()->addDays(2),
-                'actual_arrival' => null,
-                'estimated_arrival' => $now->copy()->addDays(2),
-                'is_delayed' => false,
-                'delay_hours' => 0.0,
-                'delay_severity' => 'NONE',
-                'delay_reason' => null,
-                'notes' => 'Vessel completing great circle northern Pacific routing.',
-                'items' => [
-                    ['desc' => '40ft Container: Pre-fabricated Semiconductor Cleanroom Panels', 'qty' => 150, 'val' => 1200.0, 'cur' => 'USD', 'wt' => 19000.0, 'cbm' => 52.0],
-                ],
-            ],
-
-            // 14. Tokyo -> Savannah [IN_TRANSIT HIGH DELAY]
-            [
-                'tracking_number' => 'CTG-SEA-2026-00204',
-                'reference_number' => 'B/L-ONEY-220194',
-                'customer_key' => 'c3',
-                'carrier_code' => 'ONEY',
-                'origin' => 'JPTYO',
-                'destination' => 'USSAV',
-                'current' => 'PAPTY',
-                'cargo_type' => 'FCL',
-                'weight_kg' => 21500.0,
-                'volume_cbm' => 60.0,
-                'declared_value' => 290000.0,
-                'currency' => 'USD',
-                'shipping_cost' => 5400.0,
-                'status' => 'IN_TRANSIT',
-                'expected_departure' => $now->copy()->subWeeks(3),
-                'expected_arrival' => $now->copy()->addDays(3),
-                'actual_arrival' => null,
-                'estimated_arrival' => $now->copy()->addDays(5)->addHours(4),
-                'is_delayed' => true,
-                'delay_hours' => 52.0,
-                'delay_severity' => 'HIGH',
-                'delay_reason' => 'Balboa anchorage fog hold and auxiliary boiler maintenance in canal basin.',
-                'notes' => 'Automotive precision transmission sub-assemblies.',
-                'items' => [
-                    ['desc' => '40ft Dry Container: Hybrid Vehicle Planetary Gear Sets', 'qty' => 240, 'val' => 1208.33, 'cur' => 'USD', 'wt' => 21500.0, 'cbm' => 60.0],
-                ],
-            ],
-
-            // 15. Ningbo -> Los Angeles [IN_TRANSIT LOW DELAY]
-            [
-                'tracking_number' => 'CTG-SEA-2026-00205',
-                'reference_number' => 'B/L-EGLV-440182',
-                'customer_key' => 'c3',
-                'carrier_code' => 'EGLV',
-                'origin' => 'CNNGB',
-                'destination' => 'USLAX',
-                'current' => 'USLAX',
-                'cargo_type' => 'FCL',
-                'weight_kg' => 23500.0,
-                'volume_cbm' => 64.0,
-                'declared_value' => 220000.0,
-                'currency' => 'USD',
-                'shipping_cost' => 3600.0,
-                'status' => 'IN_TRANSIT',
-                'expected_departure' => $now->copy()->subDays(13),
-                'expected_arrival' => $now->copy()->addHours(18),
-                'actual_arrival' => null,
-                'estimated_arrival' => $now->copy()->addDays(1)->subHours(2),
-                'is_delayed' => true,
-                'delay_hours' => 4.0,
-                'delay_severity' => 'LOW',
-                'delay_reason' => 'Strong head currents off San Clemente Island reduced vessel cruising speed.',
-                'notes' => 'Apparel and footwear consignment for holiday retail distribution.',
-                'items' => [
-                    ['desc' => '40ft HC Container: Garments On Hanger (GOH) Textile Consignment', 'qty' => 1200, 'val' => 183.33, 'cur' => 'USD', 'wt' => 23500.0, 'cbm' => 64.0],
-                ],
-            ],
-
-            // 16. Hong Kong -> New York [CREATED]
-            [
-                'tracking_number' => 'CTG-SEA-2026-00206',
-                'reference_number' => 'B/L-ZIMU-881902',
-                'customer_key' => 'c3',
-                'carrier_code' => 'ZIMU',
-                'origin' => 'HKHKG',
-                'destination' => 'USNYC',
-                'current' => 'HKHKG',
-                'cargo_type' => 'FCL',
-                'weight_kg' => 17800.0,
-                'volume_cbm' => 48.0,
-                'declared_value' => 165000.0,
-                'currency' => 'USD',
-                'shipping_cost' => 4600.0,
-                'status' => 'CREATED',
-                'expected_departure' => $now->copy()->addDays(5),
-                'expected_arrival' => $now->copy()->addWeeks(4)->addDays(4),
-                'actual_arrival' => null,
-                'estimated_arrival' => $now->copy()->addWeeks(4)->addDays(4),
-                'is_delayed' => false,
-                'delay_hours' => 0.0,
-                'delay_severity' => 'NONE',
-                'delay_reason' => null,
-                'notes' => 'Booking accepted; awaiting customs export declaration at Kwai Tsing gate.',
-                'items' => [
-                    ['desc' => '40ft Dry Container: Commercial Medical Diagnostic Monitor Kits', 'qty' => 300, 'val' => 550.0, 'cur' => 'USD', 'wt' => 17800.0, 'cbm' => 48.0],
-                ],
-            ],
-
-            // 17. Shanghai -> Savannah [DELIVERED ON-TIME]
-            [
-                'tracking_number' => 'CTG-SEA-2026-00207',
-                'reference_number' => 'B/L-YMLU-112093',
-                'customer_key' => 'c3',
-                'carrier_code' => 'YMLU',
-                'origin' => 'CNSHA',
-                'destination' => 'USSAV',
-                'current' => 'USSAV',
-                'cargo_type' => 'FCL',
-                'weight_kg' => 22000.0,
-                'volume_cbm' => 62.0,
-                'declared_value' => 190000.0,
-                'currency' => 'USD',
-                'shipping_cost' => 4900.0,
-                'status' => 'DELIVERED',
-                'expected_departure' => $now->copy()->subWeeks(8),
-                'expected_arrival' => $now->copy()->subWeeks(3)->subDays(2),
-                'actual_arrival' => $now->copy()->subWeeks(3)->subDays(2),
-                'estimated_arrival' => $now->copy()->subWeeks(3)->subDays(2),
-                'is_delayed' => false,
-                'delay_hours' => 0.0,
-                'delay_severity' => 'NONE',
-                'delay_reason' => null,
-                'notes' => 'Clean delivery to Garden City Terminal intermodal rail ramp.',
-                'items' => [
-                    ['desc' => '40ft Dry Container: Furniture & Commercial Architectural Millwork', 'qty' => 420, 'val' => 452.38, 'cur' => 'USD', 'wt' => 22000.0, 'cbm' => 62.0],
-                ],
-            ],
-
-            // =================================================================
-            // CORRIDOR 3: SOUTHEAST ASIA -> AUSTRALIA
-            // =================================================================
-            // 18. Jakarta -> Sydney [DELIVERED ON-TIME]
-            [
-                'tracking_number' => 'CTG-SEA-2026-00301',
-                'reference_number' => 'B/L-MAEU-501928',
-                'customer_key' => 'c1',
-                'carrier_code' => 'MAEU',
-                'origin' => 'IDJKT',
-                'destination' => 'AUSYD',
-                'current' => 'AUSYD',
-                'cargo_type' => 'FCL',
-                'weight_kg' => 21800.0,
-                'volume_cbm' => 58.0,
-                'declared_value' => 1650000000.0,
-                'currency' => 'IDR',
-                'shipping_cost' => 42000000.0,
-                'status' => 'DELIVERED',
-                'expected_departure' => $now->copy()->subWeeks(4),
-                'expected_arrival' => $now->copy()->subWeeks(2)->subDays(1),
-                'actual_arrival' => $now->copy()->subWeeks(2)->subDays(1)->subHours(4),
-                'estimated_arrival' => $now->copy()->subWeeks(2)->subDays(1)->subHours(4),
-                'is_delayed' => false,
-                'delay_hours' => 0.0,
-                'delay_severity' => 'NONE',
-                'delay_reason' => null,
-                'notes' => 'Indonesian timber plywood & certified teak flooring consignments.',
-                'items' => [
-                    ['desc' => '40ft Dry Container: Certified Sustainable Engineered Teak Flooring', 'qty' => 450, 'val' => 3666666.0, 'cur' => 'IDR', 'wt' => 21800.0, 'cbm' => 58.0],
-                ],
-            ],
-
-            // 19. Port Klang -> Sydney [IN_TRANSIT ON-TIME]
-            [
-                'tracking_number' => 'CTG-SEA-2026-00302',
-                'reference_number' => 'B/L-ONEY-661092',
-                'customer_key' => 'c1',
-                'carrier_code' => 'ONEY',
-                'origin' => 'MYPKG',
-                'destination' => 'AUSYD',
-                'current' => 'SGSIN',
-                'cargo_type' => 'FCL',
-                'weight_kg' => 20200.0,
-                'volume_cbm' => 54.0,
-                'declared_value' => 260000.0,
-                'currency' => 'AUD',
-                'shipping_cost' => 4800.0,
-                'status' => 'IN_TRANSIT',
-                'expected_departure' => $now->copy()->subDays(8),
-                'expected_arrival' => $now->copy()->addDays(6),
-                'actual_arrival' => null,
-                'estimated_arrival' => $now->copy()->addDays(6),
-                'is_delayed' => false,
-                'delay_hours' => 0.0,
-                'delay_severity' => 'NONE',
-                'delay_reason' => null,
-                'notes' => 'Semiconductor packaging components from Penang corridor.',
-                'items' => [
-                    ['desc' => '40ft Dry Container: Precision IC Substrates & Leadframes', 'qty' => 600, 'val' => 433.33, 'cur' => 'AUD', 'wt' => 20200.0, 'cbm' => 54.0],
-                ],
-            ],
-
-            // 20. Laem Chabang -> Sydney [DELIVERED LATE]
-            [
-                'tracking_number' => 'CTG-SEA-2026-00303',
-                'reference_number' => 'B/L-MSCU-330192',
-                'customer_key' => 'c1',
-                'carrier_code' => 'MSCU',
-                'origin' => 'THLCH',
-                'destination' => 'AUSYD',
-                'current' => 'AUSYD',
-                'cargo_type' => 'FCL',
-                'weight_kg' => 23000.0,
-                'volume_cbm' => 60.0,
-                'declared_value' => 210000.0,
-                'currency' => 'AUD',
-                'shipping_cost' => 4400.0,
-                'status' => 'DELIVERED',
-                'expected_departure' => $now->copy()->subWeeks(5),
-                'expected_arrival' => $now->copy()->subWeeks(3),
-                'actual_arrival' => $now->copy()->subWeeks(3)->addHours(14),
-                'estimated_arrival' => $now->copy()->subWeeks(3)->addHours(14),
-                'is_delayed' => true,
-                'delay_hours' => 14.0,
-                'delay_severity' => 'MEDIUM',
-                'delay_reason' => 'Port Botany DAFF mandatory biosecurity treatment clearance.',
-                'notes' => 'Agricultural rubber machinery & tractor components.',
-                'items' => [
-                    ['desc' => '40ft Heavy Container: Agricultural Tractor Drive Axles', 'qty' => 140, 'val' => 1500.0, 'cur' => 'AUD', 'wt' => 23000.0, 'cbm' => 60.0],
-                ],
-            ],
-
-            // 21. Singapore -> Sydney [IN_TRANSIT ON-TIME]
-            [
-                'tracking_number' => 'CTG-SEA-2026-00304',
-                'reference_number' => 'B/L-CMDU-901844',
-                'customer_key' => 'c1',
-                'carrier_code' => 'CMDU',
-                'origin' => 'SGSIN',
-                'destination' => 'AUSYD',
-                'current' => 'AUSYD',
-                'cargo_type' => 'FCL',
-                'weight_kg' => 18500.0,
-                'volume_cbm' => 49.0,
-                'declared_value' => 240000.0,
-                'currency' => 'SGD',
-                'shipping_cost' => 5100.0,
-                'status' => 'IN_TRANSIT',
-                'expected_departure' => $now->copy()->subDays(10),
-                'expected_arrival' => $now->copy()->addDays(3),
-                'actual_arrival' => null,
-                'estimated_arrival' => $now->copy()->addDays(3),
-                'is_delayed' => false,
-                'delay_hours' => 0.0,
-                'delay_severity' => 'NONE',
-                'delay_reason' => null,
-                'notes' => 'Medical lab reagents and diagnostic consumables in temperature-controlled reefers.',
-                'items' => [
-                    ['desc' => '40ft Reefer Container: Laboratory In-Vitro Diagnostic Reagents', 'qty' => 480, 'val' => 500.0, 'cur' => 'SGD', 'wt' => 18500.0, 'cbm' => 49.0],
-                ],
-            ],
-
-            // 22. Jakarta -> Sydney [BOOKED]
-            [
-                'tracking_number' => 'CTG-SEA-2026-00305',
-                'reference_number' => 'B/L-COSU-119284',
-                'customer_key' => 'c1',
-                'carrier_code' => 'COSU',
-                'origin' => 'IDJKT',
-                'destination' => 'AUSYD',
-                'current' => 'IDJKT',
-                'cargo_type' => 'FCL',
-                'weight_kg' => 19000.0,
-                'volume_cbm' => 52.0,
-                'declared_value' => 980000000.0,
-                'currency' => 'IDR',
-                'shipping_cost' => 38000000.0,
-                'status' => 'BOOKED',
-                'expected_departure' => $now->copy()->addDays(4),
-                'expected_arrival' => $now->copy()->addWeeks(2)->addDays(3),
-                'actual_arrival' => null,
-                'estimated_arrival' => $now->copy()->addWeeks(2)->addDays(3),
-                'is_delayed' => false,
-                'delay_hours' => 0.0,
-                'delay_severity' => 'NONE',
-                'delay_reason' => null,
-                'notes' => 'Desiccated coconut and palm-based oleochemical drums booked on COSCO feeder.',
-                'items' => [
-                    ['desc' => '20ft Container: Refined Palm Fatty Acid Distillate Drums', 'qty' => 100, 'val' => 9800000.0, 'cur' => 'IDR', 'wt' => 19000.0, 'cbm' => 52.0],
-                ],
-            ],
-
-            // =================================================================
-            // CORRIDOR 4: INTRA-ASIA (Short-Sea & Feeder Lanes)
-            // =================================================================
-            // 23. Shanghai -> Jakarta [DELIVERED ON-TIME]
-            [
-                'tracking_number' => 'CTG-SEA-2026-00401',
-                'reference_number' => 'B/L-COSU-801948',
-                'customer_key' => 'c1',
-                'carrier_code' => 'COSU',
-                'origin' => 'CNSHA',
-                'destination' => 'IDJKT',
-                'current' => 'IDJKT',
-                'cargo_type' => 'FCL',
-                'weight_kg' => 24000.0,
-                'volume_cbm' => 62.0,
-                'declared_value' => 880000.0,
-                'currency' => 'CNY',
-                'shipping_cost' => 18000.0,
-                'status' => 'DELIVERED',
-                'expected_departure' => $now->copy()->subWeeks(5),
-                'expected_arrival' => $now->copy()->subWeeks(3)->subDays(3),
-                'actual_arrival' => $now->copy()->subWeeks(3)->subDays(3),
-                'estimated_arrival' => $now->copy()->subWeeks(3)->subDays(3),
-                'is_delayed' => false,
-                'delay_hours' => 0.0,
-                'delay_severity' => 'NONE',
-                'delay_reason' => null,
-                'notes' => 'Structural steel fasteners & mechanical components for Java infrastructure project.',
-                'items' => [
-                    ['desc' => '20ft Heavy Container: High-Tensile Structural Fasteners & Stud Bolts', 'qty' => 240, 'val' => 3666.6, 'cur' => 'CNY', 'wt' => 24000.0, 'cbm' => 62.0],
-                ],
-            ],
-
-            // 24. Tokyo -> Singapore [DELIVERED ON-TIME]
-            [
-                'tracking_number' => 'CTG-SEA-2026-00402',
-                'reference_number' => 'B/L-ONEY-550192',
-                'customer_key' => 'c4',
-                'carrier_code' => 'ONEY',
-                'origin' => 'JPTYO',
-                'destination' => 'SGSIN',
-                'current' => 'SGSIN',
-                'cargo_type' => 'FCL',
-                'weight_kg' => 16500.0,
-                'volume_cbm' => 45.0,
-                'declared_value' => 38000000.0,
-                'currency' => 'JPY',
-                'shipping_cost' => 420000.0,
-                'status' => 'DELIVERED',
-                'expected_departure' => $now->copy()->subWeeks(4),
-                'expected_arrival' => $now->copy()->subWeeks(3),
-                'actual_arrival' => $now->copy()->subWeeks(3)->subHours(2),
-                'estimated_arrival' => $now->copy()->subWeeks(3)->subHours(2),
-                'is_delayed' => false,
-                'delay_hours' => 0.0,
-                'delay_severity' => 'NONE',
-                'delay_reason' => null,
-                'notes' => 'Precision camera optics & wafer inspection stepper components.',
-                'items' => [
-                    ['desc' => '40ft Dry Container: Optical Glass Prism Elements & Calibration Stages', 'qty' => 180, 'val' => 211111.0, 'cur' => 'JPY', 'wt' => 16500.0, 'cbm' => 45.0],
-                ],
-            ],
-
-            // 25. Busan -> Ho Chi Minh City [IN_TRANSIT ON-TIME]
-            [
-                'tracking_number' => 'CTG-SEA-2026-00403',
-                'reference_number' => 'B/L-HMMU-440192',
-                'customer_key' => 'c4',
-                'carrier_code' => 'HMMU',
-                'origin' => 'KRPUS',
-                'destination' => 'VNSGN',
-                'current' => 'CNSZX',
-                'cargo_type' => 'FCL',
-                'weight_kg' => 22000.0,
-                'volume_cbm' => 58.0,
-                'declared_value' => 195000000.0,
-                'currency' => 'KRW',
-                'shipping_cost' => 2800000.0,
-                'status' => 'IN_TRANSIT',
-                'expected_departure' => $now->copy()->subDays(6),
-                'expected_arrival' => $now->copy()->addDays(3),
-                'actual_arrival' => null,
-                'estimated_arrival' => $now->copy()->addDays(3),
-                'is_delayed' => false,
-                'delay_hours' => 0.0,
-                'delay_severity' => 'NONE',
-                'delay_reason' => null,
-                'notes' => 'Synthetic textile yarns for Binh Duong garment assembly plant.',
-                'items' => [
-                    ['desc' => '40ft Dry Container: Industrial Polyester Filament Yarn Spools', 'qty' => 800, 'val' => 243750.0, 'cur' => 'KRW', 'wt' => 22000.0, 'cbm' => 58.0],
-                ],
-            ],
-
-            // 26. Shenzhen -> Port Klang [IN_TRANSIT LOW DELAY]
-            [
-                'tracking_number' => 'CTG-SEA-2026-00404',
-                'reference_number' => 'B/L-CMDU-661029',
-                'customer_key' => 'c1',
-                'carrier_code' => 'CMDU',
-                'origin' => 'CNSZX',
-                'destination' => 'MYPKG',
-                'current' => 'VNSGN',
-                'cargo_type' => 'FCL',
-                'weight_kg' => 19500.0,
-                'volume_cbm' => 50.0,
-                'declared_value' => 740000.0,
-                'currency' => 'CNY',
-                'shipping_cost' => 15000.0,
-                'status' => 'IN_TRANSIT',
-                'expected_departure' => $now->copy()->subDays(7),
-                'expected_arrival' => $now->copy()->addHours(8),
-                'actual_arrival' => null,
-                'estimated_arrival' => $now->copy()->addHours(13)->addMinutes(30),
-                'is_delayed' => true,
-                'delay_hours' => 5.5,
-                'delay_severity' => 'LOW',
-                'delay_reason' => 'South China Sea heavy monsoonal rain squalls reduced cruising speed.',
-                'notes' => 'Air conditioner rotary compressors for Selangor assembly line.',
-                'items' => [
-                    ['desc' => '40ft Dry Container: Hermetic Inverter Rotary Compressors', 'qty' => 550, 'val' => 1345.45, 'cur' => 'CNY', 'wt' => 19500.0, 'cbm' => 50.0],
-                ],
-            ],
-
-            // 27. Ningbo -> Laem Chabang [DELIVERED ON-TIME]
-            [
-                'tracking_number' => 'CTG-SEA-2026-00405',
-                'reference_number' => 'B/L-EGLV-220194',
-                'customer_key' => 'c4',
-                'carrier_code' => 'EGLV',
-                'origin' => 'CNNGB',
-                'destination' => 'THLCH',
-                'current' => 'THLCH',
-                'cargo_type' => 'FCL',
-                'weight_kg' => 21000.0,
-                'volume_cbm' => 56.0,
-                'declared_value' => 620000.0,
-                'currency' => 'CNY',
-                'shipping_cost' => 14000.0,
-                'status' => 'DELIVERED',
-                'expected_departure' => $now->copy()->subWeeks(3),
-                'expected_arrival' => $now->copy()->subWeeks(1)->subDays(6),
-                'actual_arrival' => $now->copy()->subWeeks(1)->subDays(6),
-                'estimated_arrival' => $now->copy()->subWeeks(1)->subDays(6),
-                'is_delayed' => false,
-                'delay_hours' => 0.0,
-                'delay_severity' => 'NONE',
-                'delay_reason' => null,
-                'notes' => 'Automotive stamping dies and hydraulic press tooling.',
-                'items' => [
-                    ['desc' => '20ft Heavy Container: High-Precision Progressive Stamping Dies', 'qty' => 6, 'val' => 103333.3, 'cur' => 'CNY', 'wt' => 21000.0, 'cbm' => 56.0],
-                ],
-            ],
-
-            // 28. Singapore -> Jakarta [IN_TRANSIT ON-TIME]
-            [
-                'tracking_number' => 'CTG-SEA-2026-00406',
-                'reference_number' => 'B/L-MAEU-881029',
-                'customer_key' => 'c1',
-                'carrier_code' => 'MAEU',
-                'origin' => 'SGSIN',
-                'destination' => 'IDJKT',
-                'current' => 'IDJKT',
-                'cargo_type' => 'FCL',
-                'weight_kg' => 17000.0,
-                'volume_cbm' => 46.0,
-                'declared_value' => 145000.0,
-                'currency' => 'SGD',
-                'shipping_cost' => 2100.0,
-                'status' => 'IN_TRANSIT',
-                'expected_departure' => $now->copy()->subDays(2),
-                'expected_arrival' => $now->copy()->addHours(6),
-                'actual_arrival' => null,
-                'estimated_arrival' => $now->copy()->addHours(6),
-                'is_delayed' => false,
-                'delay_hours' => 0.0,
-                'delay_severity' => 'NONE',
-                'delay_reason' => null,
-                'notes' => 'Shuttle feeder across Sunda Strait corridor entering Tanjung Priok outer roads.',
-                'items' => [
-                    ['desc' => '20ft Dry Container: Water Treatment Poly-Aluminium Chloride Coagulant', 'qty' => 180, 'val' => 805.5, 'cur' => 'SGD', 'wt' => 17000.0, 'cbm' => 46.0],
-                ],
-            ],
-
-            // 29. Hong Kong -> Tokyo [DELIVERED LATE]
-            [
-                'tracking_number' => 'CTG-SEA-2026-00407',
-                'reference_number' => 'B/L-ONEY-772910',
-                'customer_key' => 'c4',
-                'carrier_code' => 'ONEY',
-                'origin' => 'HKHKG',
-                'destination' => 'JPTYO',
-                'current' => 'JPTYO',
-                'cargo_type' => 'FCL',
-                'weight_kg' => 18800.0,
-                'volume_cbm' => 51.0,
-                'declared_value' => 29000000.0,
-                'currency' => 'JPY',
-                'shipping_cost' => 380000.0,
-                'status' => 'DELIVERED',
-                'expected_departure' => $now->copy()->subWeeks(4),
-                'expected_arrival' => $now->copy()->subWeeks(2)->subDays(4),
-                'actual_arrival' => $now->copy()->subWeeks(2)->subDays(3)->addHours(4),
-                'estimated_arrival' => $now->copy()->subWeeks(2)->subDays(3)->addHours(4),
-                'is_delayed' => true,
-                'delay_hours' => 20.0,
-                'delay_severity' => 'MEDIUM',
-                'delay_reason' => 'Subtropical low off Okinawa forced vessel to alter course south.',
-                'notes' => 'Commercial display panels for Kanto regional assembly center.',
-                'items' => [
-                    ['desc' => '40ft HC Container: Industrial Touchscreen Displays & Bezels', 'qty' => 350, 'val' => 82857.0, 'cur' => 'JPY', 'wt' => 18800.0, 'cbm' => 51.0],
-                ],
-            ],
-
-            // 30. Jakarta -> Singapore [CREATED]
-            [
-                'tracking_number' => 'CTG-SEA-2026-00408',
-                'reference_number' => 'B/L-MAEU-991024',
-                'customer_key' => 'c1',
-                'carrier_code' => 'MAEU',
-                'origin' => 'IDJKT',
-                'destination' => 'SGSIN',
-                'current' => 'IDJKT',
-                'cargo_type' => 'FCL',
-                'weight_kg' => 21000.0,
-                'volume_cbm' => 55.0,
-                'declared_value' => 780000000.0,
-                'currency' => 'IDR',
-                'shipping_cost' => 24000000.0,
-                'status' => 'CREATED',
-                'expected_departure' => $now->copy()->addDays(2),
-                'expected_arrival' => $now->copy()->addDays(5),
-                'actual_arrival' => null,
-                'estimated_arrival' => $now->copy()->addDays(5),
-                'is_delayed' => false,
-                'delay_hours' => 0.0,
-                'delay_severity' => 'NONE',
-                'delay_reason' => null,
-                'notes' => 'Container booking confirmed; waiting for feeder vessel berthing slot at JICT.',
-                'items' => [
-                    ['desc' => '40ft Container: High-Grade Industrial Cocoa Butter Cartons', 'qty' => 400, 'val' => 1950000.0, 'cur' => 'IDR', 'wt' => 21000.0, 'cbm' => 55.0],
-                ],
-            ],
-
-            // =================================================================
-            // CORRIDOR 5: EUROPE -> AMERICAS (Transatlantic & South America)
-            // =================================================================
-            // 31. Rotterdam -> New York [DELIVERED ON-TIME]
-            [
-                'tracking_number' => 'CTG-SEA-2026-00501',
-                'reference_number' => 'B/L-MAEU-770192',
-                'customer_key' => 'c2',
-                'carrier_code' => 'MAEU',
-                'origin' => 'NLRTM',
-                'destination' => 'USNYC',
-                'current' => 'USNYC',
-                'cargo_type' => 'FCL',
-                'weight_kg' => 20000.0,
-                'volume_cbm' => 55.0,
-                'declared_value' => 175000.0,
-                'currency' => 'EUR',
-                'shipping_cost' => 3200.0,
-                'status' => 'DELIVERED',
-                'expected_departure' => $now->copy()->subWeeks(5),
-                'expected_arrival' => $now->copy()->subWeeks(3)->subDays(4),
-                'actual_arrival' => $now->copy()->subWeeks(3)->subDays(4)->subHours(3),
-                'estimated_arrival' => $now->copy()->subWeeks(3)->subDays(4)->subHours(3),
-                'is_delayed' => false,
-                'delay_hours' => 0.0,
-                'delay_severity' => 'NONE',
-                'delay_reason' => null,
-                'notes' => 'European confectionery and specialty brewing malt in dry van.',
-                'items' => [
-                    ['desc' => '40ft Dry Container: Artisanal Belgian Chocolate Blocks & Cocoa Mass', 'qty' => 600, 'val' => 291.66, 'cur' => 'EUR', 'wt' => 20000.0, 'cbm' => 55.0],
-                ],
-            ],
-
-            // 32. Antwerp -> Santos [IN_TRANSIT ON-TIME]
-            [
-                'tracking_number' => 'CTG-SEA-2026-00502',
-                'reference_number' => 'B/L-MSCU-881920',
-                'customer_key' => 'c2',
-                'carrier_code' => 'MSCU',
-                'origin' => 'BEANR',
-                'destination' => 'BRSSZ',
-                'current' => 'BRSSZ',
-                'cargo_type' => 'FCL',
-                'weight_kg' => 23400.0,
-                'volume_cbm' => 62.0,
-                'declared_value' => 160000.0,
-                'currency' => 'EUR',
-                'shipping_cost' => 4500.0,
-                'status' => 'IN_TRANSIT',
-                'expected_departure' => $now->copy()->subWeeks(2)->subDays(2),
-                'expected_arrival' => $now->copy()->addDays(4),
-                'actual_arrival' => null,
-                'estimated_arrival' => $now->copy()->addDays(4),
-                'is_delayed' => false,
-                'delay_hours' => 0.0,
-                'delay_severity' => 'NONE',
-                'delay_reason' => null,
-                'notes' => 'Southbound Atlantic lane crossing equator toward Santos BTP terminal.',
-                'items' => [
-                    ['desc' => '40ft Container: Agro-Chemical Fertilizer Formulation Additives', 'qty' => 450, 'val' => 355.55, 'cur' => 'EUR', 'wt' => 23400.0, 'cbm' => 62.0],
-                ],
-            ],
-
-            // 33. Hamburg -> Los Angeles [DELIVERED LATE]
-            [
-                'tracking_number' => 'CTG-SEA-2026-00503',
-                'reference_number' => 'B/L-HLCU-990184',
-                'customer_key' => 'c2',
-                'carrier_code' => 'HLCU',
-                'origin' => 'DEHAM',
-                'destination' => 'USLAX',
-                'current' => 'USLAX',
-                'cargo_type' => 'FCL',
-                'weight_kg' => 22000.0,
-                'volume_cbm' => 59.0,
-                'declared_value' => 280000.0,
-                'currency' => 'EUR',
-                'shipping_cost' => 6200.0,
-                'status' => 'DELIVERED',
-                'expected_departure' => $now->copy()->subWeeks(8),
-                'expected_arrival' => $now->copy()->subWeeks(3),
-                'actual_arrival' => $now->copy()->subWeeks(3)->addHours(22),
-                'estimated_arrival' => $now->copy()->subWeeks(3)->addHours(22),
-                'is_delayed' => true,
-                'delay_hours' => 22.0,
-                'delay_severity' => 'MEDIUM',
-                'delay_reason' => 'Panama Canal transit convoy maintenance slowed Pacific transit.',
-                'notes' => 'German engineered industrial pump skids and variable-speed drives.',
-                'items' => [
-                    ['desc' => '40ft Open Top Container: Heavy-Duty Industrial Centrifugal Slurry Pumps', 'qty' => 4, 'val' => 70000.0, 'cur' => 'EUR', 'wt' => 22000.0, 'cbm' => 59.0],
-                ],
-            ],
-
-            // 34. Valencia -> Balboa [IN_TRANSIT ON-TIME]
-            [
-                'tracking_number' => 'CTG-SEA-2026-00504',
-                'reference_number' => 'B/L-CMDU-110298',
-                'customer_key' => 'c2',
-                'carrier_code' => 'CMDU',
-                'origin' => 'ESVLC',
-                'destination' => 'PAPTY',
-                'current' => 'PAPTY',
-                'cargo_type' => 'FCL',
-                'weight_kg' => 20500.0,
-                'volume_cbm' => 54.0,
-                'declared_value' => 125000.0,
-                'currency' => 'EUR',
-                'shipping_cost' => 3600.0,
-                'status' => 'IN_TRANSIT',
-                'expected_departure' => $now->copy()->subDays(12),
-                'expected_arrival' => $now->copy()->addDays(2),
-                'actual_arrival' => null,
-                'estimated_arrival' => $now->copy()->addDays(2),
-                'is_delayed' => false,
-                'delay_hours' => 0.0,
-                'delay_severity' => 'NONE',
-                'delay_reason' => null,
-                'notes' => 'Transatlantic westbound entering Caribbean approach.',
-                'items' => [
-                    ['desc' => '40ft Dry Container: Spanish Ceramic Wall Tiles & Glazed Porcelain', 'qty' => 380, 'val' => 328.94, 'cur' => 'EUR', 'wt' => 20500.0, 'cbm' => 54.0],
-                ],
-            ],
-
-            // 35. Rotterdam -> Santos [BOOKED]
-            [
-                'tracking_number' => 'CTG-SEA-2026-00505',
-                'reference_number' => 'B/L-MSCU-441092',
-                'customer_key' => 'c2',
-                'carrier_code' => 'MSCU',
-                'origin' => 'NLRTM',
-                'destination' => 'BRSSZ',
-                'current' => 'NLRTM',
-                'cargo_type' => 'FCL',
-                'weight_kg' => 24500.0,
-                'volume_cbm' => 66.0,
-                'declared_value' => 185000.0,
-                'currency' => 'EUR',
-                'shipping_cost' => 4300.0,
-                'status' => 'BOOKED',
-                'expected_departure' => $now->copy()->addDays(3),
-                'expected_arrival' => $now->copy()->addWeeks(3)->addDays(1),
-                'actual_arrival' => null,
-                'estimated_arrival' => $now->copy()->addWeeks(3)->addDays(1),
-                'is_delayed' => false,
-                'delay_hours' => 0.0,
-                'delay_severity' => 'NONE',
-                'delay_reason' => null,
-                'notes' => 'Export containers sealed at Maasvlakte rail transfer depot.',
-                'items' => [
-                    ['desc' => '40ft Container: Food Processing Sanitation Equipment', 'qty' => 120, 'val' => 1541.66, 'cur' => 'EUR', 'wt' => 24500.0, 'cbm' => 66.0],
-                ],
-            ],
-
-            // =================================================================
-            // CORRIDOR 6: MIDDLE EAST & AFRICA -> ASIA / WORLD
-            // =================================================================
-            // 36. Jebel Ali -> Singapore [DELIVERED ON-TIME]
-            [
-                'tracking_number' => 'CTG-SEA-2026-00601',
-                'reference_number' => 'B/L-MAEU-220198',
-                'customer_key' => 'c1',
-                'carrier_code' => 'MAEU',
-                'origin' => 'AEDXB',
-                'destination' => 'SGSIN',
-                'current' => 'SGSIN',
-                'cargo_type' => 'FCL',
-                'weight_kg' => 22000.0,
-                'volume_cbm' => 58.0,
-                'declared_value' => 650000.0,
-                'currency' => 'AED',
-                'shipping_cost' => 11000.0,
-                'status' => 'DELIVERED',
-                'expected_departure' => $now->copy()->subWeeks(4),
-                'expected_arrival' => $now->copy()->subWeeks(2)->subDays(3),
-                'actual_arrival' => $now->copy()->subWeeks(2)->subDays(3),
-                'estimated_arrival' => $now->copy()->subWeeks(2)->subDays(3),
-                'is_delayed' => false,
-                'delay_hours' => 0.0,
-                'delay_severity' => 'NONE',
-                'delay_reason' => null,
-                'notes' => 'Petrochemical polymers from Gulf refineries delivered to Jurong Island.',
-                'items' => [
-                    ['desc' => '40ft Dry Container: Linear Low-Density Polyethylene Granules', 'qty' => 880, 'val' => 738.63, 'cur' => 'AED', 'wt' => 22000.0, 'cbm' => 58.0],
-                ],
-            ],
-
-            // 37. Jebel Ali -> Shanghai [IN_TRANSIT ON-TIME]
-            [
-                'tracking_number' => 'CTG-SEA-2026-00602',
-                'reference_number' => 'B/L-COSU-770192',
-                'customer_key' => 'c4',
-                'carrier_code' => 'COSU',
-                'origin' => 'AEDXB',
-                'destination' => 'CNSHA',
-                'current' => 'SGSIN',
-                'cargo_type' => 'FCL',
-                'weight_kg' => 25000.0,
-                'volume_cbm' => 65.0,
-                'declared_value' => 720000.0,
-                'currency' => 'AED',
-                'shipping_cost' => 13500.0,
-                'status' => 'IN_TRANSIT',
-                'expected_departure' => $now->copy()->subDays(9),
-                'expected_arrival' => $now->copy()->addDays(5),
-                'actual_arrival' => null,
-                'estimated_arrival' => $now->copy()->addDays(5),
-                'is_delayed' => false,
-                'delay_hours' => 0.0,
-                'delay_severity' => 'NONE',
-                'delay_reason' => null,
-                'notes' => 'Arabian Gulf export loop transiting Strait of Malacca.',
-                'items' => [
-                    ['desc' => '40ft Container: High-Purity Aluminium Ingots', 'qty' => 500, 'val' => 1440.0, 'cur' => 'AED', 'wt' => 25000.0, 'cbm' => 65.0],
-                ],
-            ],
-
-            // 38. Jebel Ali -> Jakarta [DELIVERED LATE]
-            [
-                'tracking_number' => 'CTG-SEA-2026-00603',
-                'reference_number' => 'B/L-ONEY-330198',
-                'customer_key' => 'c1',
-                'carrier_code' => 'ONEY',
-                'origin' => 'AEDXB',
-                'destination' => 'IDJKT',
-                'current' => 'IDJKT',
-                'cargo_type' => 'FCL',
-                'weight_kg' => 21000.0,
-                'volume_cbm' => 54.0,
-                'declared_value' => 590000.0,
-                'currency' => 'AED',
-                'shipping_cost' => 12000.0,
-                'status' => 'DELIVERED',
-                'expected_departure' => $now->copy()->subWeeks(5),
-                'expected_arrival' => $now->copy()->subWeeks(3)->subDays(1),
-                'actual_arrival' => $now->copy()->subWeeks(3)->addHours(12),
-                'estimated_arrival' => $now->copy()->subWeeks(3)->addHours(12),
-                'is_delayed' => true,
-                'delay_hours' => 12.0,
-                'delay_severity' => 'MEDIUM',
-                'delay_reason' => 'Port of Colombo bunker barge scheduling delay en route.',
-                'notes' => 'Synthetic lubricant base oils in ISO tank container.',
-                'items' => [
-                    ['desc' => '20ft ISO Tank: Group III Hydrocracked Synthetic Base Oil', 'qty' => 1, 'val' => 590000.0, 'cur' => 'AED', 'wt' => 21000.0, 'cbm' => 54.0],
-                ],
-            ],
-
-            // 39. Durban -> Singapore [IN_TRANSIT ON-TIME]
-            [
-                'tracking_number' => 'CTG-SEA-2026-00604',
-                'reference_number' => 'B/L-MSCU-901824',
-                'customer_key' => 'c4',
-                'carrier_code' => 'MSCU',
-                'origin' => 'ZADUR',
-                'destination' => 'SGSIN',
-                'current' => 'SGSIN',
-                'cargo_type' => 'FCL',
-                'weight_kg' => 23500.0,
-                'volume_cbm' => 60.0,
-                'declared_value' => 2800000.0,
-                'currency' => 'ZAR',
-                'shipping_cost' => 65000.0,
-                'status' => 'IN_TRANSIT',
-                'expected_departure' => $now->copy()->subDays(14),
-                'expected_arrival' => $now->copy()->addDays(4),
-                'actual_arrival' => null,
-                'estimated_arrival' => $now->copy()->addDays(4),
-                'is_delayed' => false,
-                'delay_hours' => 0.0,
-                'delay_severity' => 'NONE',
-                'delay_reason' => null,
-                'notes' => 'Southern Indian Ocean crossing with copper cathode sheets.',
-                'items' => [
-                    ['desc' => '20ft Heavy Container: Electrolytic Copper Cathodes Grade A', 'qty' => 450, 'val' => 6222.2, 'cur' => 'ZAR', 'wt' => 23500.0, 'cbm' => 60.0],
-                ],
-            ],
-
-            // 40. Jebel Ali -> Durban [IN_TRANSIT HIGH DELAY]
-            [
-                'tracking_number' => 'CTG-SEA-2026-00605',
-                'reference_number' => 'B/L-CMDU-440192',
-                'customer_key' => 'c4',
-                'carrier_code' => 'CMDU',
-                'origin' => 'AEDXB',
-                'destination' => 'ZADUR',
-                'current' => 'ZADUR',
-                'cargo_type' => 'FCL',
-                'weight_kg' => 19200.0,
-                'volume_cbm' => 50.0,
-                'declared_value' => 480000.0,
-                'currency' => 'AED',
-                'shipping_cost' => 9800.0,
-                'status' => 'IN_TRANSIT',
-                'expected_departure' => $now->copy()->subDays(12),
-                'expected_arrival' => $now->copy()->subHours(8),
-                'actual_arrival' => null,
-                'estimated_arrival' => $now->copy()->addDays(1)->addHours(4),
-                'is_delayed' => true,
-                'delay_hours' => 36.0,
-                'delay_severity' => 'HIGH',
-                'delay_reason' => 'Durban Pier 2 container terminal crane mechanical failure queue.',
-                'notes' => 'East Africa coastal loop feeder vessel awaiting open berth.',
-                'items' => [
-                    ['desc' => '40ft Container: Packaged Foodstuffs & Dried Dates Consignment', 'qty' => 700, 'val' => 685.71, 'cur' => 'AED', 'wt' => 19200.0, 'cbm' => 50.0],
-                ],
-            ],
-
-            // =================================================================
-            // ADDITIONAL COMPREHENSIVE LANES TO REACH 45 SHIPMENTS
-            // =================================================================
-            // 41. Tokyo -> Los Angeles [DELIVERED ON-TIME]
-            [
-                'tracking_number' => 'CTG-SEA-2026-00701',
-                'reference_number' => 'B/L-ONEY-881024',
-                'customer_key' => 'c4',
-                'carrier_code' => 'ONEY',
-                'origin' => 'JPTYO',
-                'destination' => 'USLAX',
-                'current' => 'USLAX',
-                'cargo_type' => 'FCL',
-                'weight_kg' => 20000.0,
-                'volume_cbm' => 56.0,
-                'declared_value' => 35000000.0,
-                'currency' => 'JPY',
-                'shipping_cost' => 480000.0,
-                'status' => 'DELIVERED',
-                'expected_departure' => $now->copy()->subWeeks(6),
-                'expected_arrival' => $now->copy()->subWeeks(4),
-                'actual_arrival' => $now->copy()->subWeeks(4)->subHours(3),
-                'estimated_arrival' => $now->copy()->subWeeks(4)->subHours(3),
-                'is_delayed' => false,
-                'delay_hours' => 0.0,
-                'delay_severity' => 'NONE',
-                'delay_reason' => null,
-                'notes' => 'Industrial robotics servo motors for West Coast manufacturing.',
-                'items' => [
-                    ['desc' => '40ft Container: AC Servo Motors & Integrated Encoders', 'qty' => 400, 'val' => 87500.0, 'cur' => 'JPY', 'wt' => 20000.0, 'cbm' => 56.0],
-                ],
-            ],
-
-            // 42. Santos -> Rotterdam [DELIVERED LATE]
-            [
-                'tracking_number' => 'CTG-SEA-2026-00702',
-                'reference_number' => 'B/L-MSCU-550198',
-                'customer_key' => 'c2',
-                'carrier_code' => 'MSCU',
-                'origin' => 'BRSSZ',
-                'destination' => 'NLRTM',
-                'current' => 'NLRTM',
-                'cargo_type' => 'FCL',
-                'weight_kg' => 24000.0,
-                'volume_cbm' => 64.0,
-                'declared_value' => 1200000.0,
-                'currency' => 'BRL',
-                'shipping_cost' => 28000.0,
-                'status' => 'DELIVERED',
-                'expected_departure' => $now->copy()->subWeeks(7),
-                'expected_arrival' => $now->copy()->subWeeks(3)->subDays(3),
-                'actual_arrival' => $now->copy()->subWeeks(3)->subDays(2)->addHours(6),
-                'estimated_arrival' => $now->copy()->subWeeks(3)->subDays(2)->addHours(6),
-                'is_delayed' => true,
-                'delay_hours' => 30.0,
-                'delay_severity' => 'HIGH',
-                'delay_reason' => 'Tropical squall off Cape Verde caused 30-hour course adjustment.',
-                'notes' => 'Brazilian green coffee beans and frozen concentrated orange juice.',
-                'items' => [
-                    ['desc' => '40ft Reefer Container: Bulk Frozen Orange Juice Drums', 'qty' => 120, 'val' => 10000.0, 'cur' => 'BRL', 'wt' => 24000.0, 'cbm' => 64.0],
-                ],
-            ],
-
-            // 43. Port Klang -> Rotterdam [IN_TRANSIT ON-TIME]
-            [
-                'tracking_number' => 'CTG-SEA-2026-00703',
-                'reference_number' => 'B/L-MAEU-440182',
-                'customer_key' => 'c1',
-                'carrier_code' => 'MAEU',
-                'origin' => 'MYPKG',
-                'destination' => 'NLRTM',
-                'current' => 'AEDXB',
-                'cargo_type' => 'FCL',
-                'weight_kg' => 22500.0,
-                'volume_cbm' => 60.0,
-                'declared_value' => 180000.0,
-                'currency' => 'USD',
-                'shipping_cost' => 4200.0,
-                'status' => 'IN_TRANSIT',
-                'expected_departure' => $now->copy()->subWeeks(2)->subDays(3),
-                'expected_arrival' => $now->copy()->addWeeks(1)->addDays(4),
-                'actual_arrival' => null,
-                'estimated_arrival' => $now->copy()->addWeeks(1)->addDays(4),
-                'is_delayed' => false,
-                'delay_hours' => 0.0,
-                'delay_severity' => 'NONE',
-                'delay_reason' => null,
-                'notes' => 'Medical grade nitrile examination gloves in dry containers.',
-                'items' => [
-                    ['desc' => '40ft HC Container: Nitrile Powder-Free Medical Examination Gloves', 'qty' => 3000, 'val' => 60.0, 'cur' => 'USD', 'wt' => 22500.0, 'cbm' => 60.0],
-                ],
-            ],
-
-            // 44. Jakarta (CGK) -> Amsterdam (AMS) [GIA / AIR / IN_TRANSIT]
-            [
-                'tracking_number' => 'CTG-AIR-2026-00704',
-                'transport_mode' => 'AIR',
-                'awb_number' => '12612345675',
-                'reference_number' => 'AWB-126-12345675',
-                'customer_key' => 'c4',
-                'carrier_code' => 'GIA',
-                'origin' => 'IDCGK',
-                'destination' => 'NLAMS',
-                'current' => 'NLAMS',
-                'cargo_type' => 'AIR_FREIGHT',
-                'weight_kg' => 1250.0,
-                'volume_cbm' => 4.5,
-                'declared_value' => 75000.0,
-                'currency' => 'EUR',
-                'shipping_cost' => 6200.0,
-                'status' => 'IN_TRANSIT',
-                'expected_departure' => $now->copy()->subDays(1),
-                'expected_arrival' => $now->copy()->addDay(),
-                'actual_arrival' => null,
-                'estimated_arrival' => $now->copy()->addDay(),
-                'is_delayed' => false,
-                'delay_hours' => 0.0,
-                'delay_severity' => 'NONE',
-                'delay_reason' => null,
-                'notes' => 'High-value Indonesian patchouli and clove essential oils air freight.',
-                'items' => [
-                    ['desc' => 'Air Cargo ULD: Pure Java Vetiver & Patchouli Essential Oil (3301.29)', 'qty' => 50, 'val' => 1500.0, 'cur' => 'EUR', 'wt' => 1250.0, 'cbm' => 4.5, 'hs_code' => '3301.29', 'packaging' => 'Steel Drums'],
-                ],
-            ],
-
-            // 45. Medan -> Jakarta [LOGIS / ROAD / CREATED]
-            [
-                'tracking_number' => 'CTG-ROAD-2026-00705',
-                'transport_mode' => 'ROAD',
-                'vehicle_plate' => 'B 9123 TX',
-                'cmr_number' => 'CMR-2026-0045',
-                'reference_number' => 'CMR-2026-0045',
-                'customer_key' => 'c1',
-                'carrier_code' => 'LOGIS',
-                'origin' => 'IDMES',
-                'destination' => 'IDJKT',
-                'current' => 'IDMES',
-                'cargo_type' => 'ROAD',
-                'weight_kg' => 8500.0,
-                'volume_cbm' => 22.0,
-                'declared_value' => 380000000.0,
-                'currency' => 'IDR',
-                'shipping_cost' => 18500000.0,
-                'status' => 'CREATED',
-                'expected_departure' => $now->copy()->addDays(2),
-                'expected_arrival' => $now->copy()->addDays(5),
-                'actual_arrival' => null,
-                'estimated_arrival' => $now->copy()->addDays(5),
-                'is_delayed' => false,
-                'delay_hours' => 0.0,
-                'delay_severity' => 'NONE',
-                'delay_reason' => null,
-                'notes' => 'North Sumatra highland spices overland transit to Tanjung Priok seaport.',
-                'items' => [
-                    ['desc' => 'Overland Pallets: Whole Banda Nutmeg & Mace (HS 0908.11)', 'qty' => 170, 'val' => 2235294.0, 'cur' => 'IDR', 'wt' => 8500.0, 'cbm' => 22.0, 'hs_code' => '0908.11', 'packaging' => 'Jute Sacks'],
-                ],
-            ],
-        ];
-
-        // Seed each shipment along with ISO 6346 compliant container numbers & items
-        $serialCounter = 100001;
-        foreach ($shipmentsData as $data) {
-            $customer = $users[$data['customer_key']];
-            $carrier = $carriers[$data['carrier_code']];
-            $origin = $locations[$data['origin']];
-            $dest = $locations[$data['destination']];
-            $currLoc = isset($data['current']) ? $locations[$data['current']] : $origin;
-
-            $currency = $data['currency'];
+            $currency = $spec['currency'];
             $rateToUsd = self::FX_RATES_TO_USD[$currency] ?? 1.0;
-            $convertedUsd = round($data['declared_value'] * $rateToUsd, 2);
+            $convertedUsd = round($spec['declared_value'] * $rateToUsd, 2);
+
+            $delayHours = (float) ($spec['delay_hours'] ?? 0.0);
+            $delaySeverity = $this->computeSeverity($mode, $delayHours);
+            $isDelayed = $delayHours > 0;
+
+            $containerNum = null;
+            $blNum = null;
+            $awbNum = null;
+            $vehiclePlate = null;
+            $cmrNum = null;
+            $refNum = null;
+
+            if ($mode === 'SEA') {
+                $containerNum = Iso6346::generate($carrier->code, $seaSerial);
+                $blNum = RoadReference::billOfLading($carrier->code, 2026, $seaSerial);
+                $refNum = $blNum;
+            } elseif ($mode === 'AIR') {
+                $prefix = self::AWB_PREFIXES[$carrier->code] ?? '126';
+                $awbNum = Awb::generate($prefix, $airSerial);
+                $refNum = Awb::format($awbNum);
+                $airSerial += 17;
+            } else {
+                $vehiclePlate = RoadReference::vehiclePlate($spec['plate_region'] ?? 'BK', $roadSerial);
+                $cmrNum = RoadReference::cmrNumber(2026, $roadSerial);
+                $refNum = $cmrNum;
+                $roadSerial += 1;
+            }
+
+            $routeNews = null;
+            if ($isDelayed && ! empty($spec['delay_reason'])) {
+                $routeNews = [
+                    'source' => 'Nusa Spice Freight Operations Desk',
+                    'headline' => 'Corridor Advisory: '.$spec['delay_reason'],
+                    'impact' => 'Schedule variance: +'.number_format($delayHours, 1)." hours ({$delaySeverity}).",
+                    'published_at' => $spec['created_at']->copy()->addHours(12)->toIso8601String(),
+                ];
+            }
 
             $currencySnapshot = [
                 'base' => 'USD',
                 'rates' => [
                     'USD' => 1.0,
                     'EUR' => 0.92,
-                    'CNY' => 7.23,
+                    'INR' => 84.0,
                     'IDR' => 15873.0,
                     'SGD' => 1.34,
-                    'AUD' => 1.52,
                     'AED' => 3.67,
-                    'JPY' => 154.5,
+                    'MYR' => 4.45,
                 ],
                 'origin_currency' => $currency,
                 'destination_currency' => $dest->currency_code,
                 'rate_origin_to_usd' => $rateToUsd,
                 'rate_usd_to_dest' => self::FX_RATES_TO_USD[$dest->currency_code] ?? 1.0,
-                'recorded_at' => $data['expected_departure']->toIso8601String(),
+                'recorded_at' => $spec['expected_departure']->toIso8601String(),
             ];
 
-            $routeNews = null;
-            if ($data['is_delayed']) {
-                $routeNews = [
-                    'source' => 'Maritime Operations Bulletin',
-                    'headline' => 'Route Advisory: '.$data['delay_reason'],
-                    'impact' => 'Delay evaluation: +'.round($data['delay_hours']).' hours along transit corridor.',
-                    'published_at' => $data['expected_departure']->copy()->addDays(2)->toIso8601String(),
-                ];
-            }
-
-            $mode = $data['transport_mode'] ?? 'SEA';
-            $containerNum = null;
-            $blNum = null;
-            $awbNum = null;
-            $plate = null;
-            $cmrNum = null;
-
-            if ($mode === 'SEA') {
-                $containerNum = Iso6346::generate($carrier->code, $serialCounter);
-                $blNum = $data['reference_number'] ?? ('B/L-'.$carrier->code.'-'.rand(100000, 999999));
-            } elseif ($mode === 'AIR') {
-                $awbNum = $data['awb_number'] ?? '12612345675';
-            } elseif ($mode === 'ROAD') {
-                $plate = $data['vehicle_plate'] ?? 'B 9123 TX';
-                $cmrNum = $data['cmr_number'] ?? 'CMR-2026-0044';
-            }
-
             $shipment = Shipment::firstOrCreate(
-                ['tracking_number' => $data['tracking_number']],
+                ['tracking_number' => $spec['tracking_number']],
                 [
                     'transport_mode' => $mode,
-                    'reference_number' => $data['reference_number'],
+                    'reference_number' => $refNum,
                     'container_number' => $containerNum,
                     'bill_of_lading_number' => $blNum,
                     'awb_number' => $awbNum,
-                    'vehicle_plate' => $plate,
+                    'vehicle_plate' => $vehiclePlate,
                     'cmr_number' => $cmrNum,
                     'customer_id' => $customer->id,
                     'carrier_id' => $carrier->id,
                     'origin_location_id' => $origin->id,
                     'destination_location_id' => $dest->id,
-                    'current_location_id' => $currLoc->id,
-                    'cargo_type' => $data['cargo_type'],
-                    'total_weight_kg' => $data['weight_kg'],
-                    'total_volume_cbm' => $data['volume_cbm'],
-                    'declared_value' => $data['declared_value'],
+                    'current_location_id' => $curr->id,
+                    'cargo_type' => $spec['cargo_type'],
+                    'total_weight_kg' => $spec['weight_kg'],
+                    'total_volume_cbm' => $spec['volume_cbm'],
+                    'declared_value' => $spec['declared_value'],
                     'currency_code' => $currency,
-                    'shipping_cost' => $data['shipping_cost'],
+                    'shipping_cost' => $spec['shipping_cost'],
                     'exchange_rate_to_usd' => $rateToUsd,
                     'converted_value_usd' => $convertedUsd,
                     'currency_snapshot' => $currencySnapshot,
-                    'status' => $data['status'],
-                    'expected_departure_at' => $data['expected_departure'],
-                    'expected_arrival_at' => $data['expected_arrival'],
-                    'estimated_arrival_at' => $data['estimated_arrival'],
-                    'actual_arrival_at' => $data['actual_arrival'],
-                    'is_delayed' => $data['is_delayed'],
-                    'delay_hours' => $data['delay_hours'],
-                    'delay_severity' => $data['delay_severity'],
-                    'delay_reason' => $data['delay_reason'],
+                    'status' => $spec['status'],
+                    'expected_departure_at' => $spec['expected_departure'],
+                    'expected_arrival_at' => $spec['expected_arrival'],
+                    'estimated_arrival_at' => $spec['estimated_arrival'],
+                    'actual_arrival_at' => $spec['actual_arrival'],
+                    'is_delayed' => $isDelayed,
+                    'delay_hours' => $delayHours,
+                    'delay_severity' => $delaySeverity,
+                    'delay_reason' => $spec['delay_reason'] ?? null,
                     'route_news_snapshot' => $routeNews,
-                    'notes' => $data['notes'],
+                    'notes' => $spec['notes'],
                 ]
             );
 
-            // Establish realistic created_at and updated_at across the last 10 weeks
-            $depTime = $data['expected_departure'];
-            if ($depTime->isFuture()) {
-                $createdAt = $now->copy()->subDays(1 + ($serialCounter % 7))->subHours(($serialCounter * 3) % 18);
-            } else {
-                $createdAt = $depTime->copy()->subDays(3)->subHours(($serialCounter * 2) % 20);
-            }
-            $updatedAt = $data['actual_arrival'] ?? ($depTime->isPast() ? $now->copy()->subHours(2) : $createdAt);
-
-            $shipment->created_at = $createdAt;
-            $shipment->updated_at = $updatedAt;
+            $shipment->created_at = $spec['created_at'];
+            $shipment->updated_at = $spec['actual_arrival'] ?? ($spec['expected_departure']->isPast() ? $now->copy()->subHours(2) : $spec['created_at']);
             $shipment->saveQuietly();
 
-            // Seed items with ISO 6346 compliant container numbers for SEA or appropriate identifiers
-            foreach ($data['items'] as $item) {
+            foreach ($spec['items'] as $itemIdx => $itemSpec) {
+                $commodity = self::COMMODITIES[$itemSpec['commodity']];
+
                 if ($mode === 'SEA') {
-                    $itemContainer = Iso6346::generate($carrier->code, $serialCounter++);
-                    $itemSku = $itemContainer;
+                    $itemContainer = $itemIdx === 0 ? $containerNum : Iso6346::generate($carrier->code, $seaSerial);
+                    $seaSerial++;
+                    $sku = $itemContainer;
                 } elseif ($mode === 'AIR') {
                     $itemContainer = null;
-                    $itemSku = 'AIR-'.($carrier->code).'-'.sprintf('%06d', $serialCounter++);
+                    $sku = 'AIR-'.$carrier->code.'-'.sprintf('%06d', $airSerial + $itemIdx);
                 } else {
                     $itemContainer = null;
-                    $itemSku = 'ROAD-'.sprintf('%06d', $serialCounter++);
+                    $sku = 'ROAD-'.$carrier->code.'-'.sprintf('%06d', ($idx + 1) * 10 + $itemIdx);
                 }
 
                 ShipmentItem::firstOrCreate(
                     [
                         'shipment_id' => $shipment->id,
-                        'sku' => $itemSku,
+                        'sku' => $sku,
                     ],
                     [
                         'container_number' => $itemContainer,
-                        'description' => $item['desc'],
-                        'hs_code' => $item['hs_code'] ?? null,
-                        'packaging' => $item['packaging'] ?? null,
-                        'quantity' => $item['qty'],
-                        'unit_value' => $item['val'],
-                        'currency_code' => $item['cur'],
-                        'weight_kg' => $item['wt'],
-                        'volume_cbm' => $item['cbm'],
-                        'is_hazardous' => $item['haz'] ?? false,
+                        'hs_code' => $commodity['hs_code'],
+                        'description' => $itemSpec['description'] ?? $commodity['name'],
+                        'packaging' => $itemSpec['packaging'] ?? $commodity['packaging'],
+                        'quantity' => $itemSpec['quantity'],
+                        'unit_value' => $itemSpec['unit_value'],
+                        'currency_code' => $currency,
+                        'weight_kg' => $itemSpec['weight_kg'],
+                        'volume_cbm' => $itemSpec['volume_cbm'],
+                        'is_hazardous' => $commodity['haz'],
                     ]
                 );
             }
+
+            if ($mode === 'SEA') {
+                $seaSerial++;
+            }
         }
+    }
+
+    /**
+     * Compute deterministic delay severity matching EtaService per-mode thresholds:
+     * AIR 3/12h, ROAD 6/24h, SEA 12/48h.
+     */
+    protected function computeSeverity(string $mode, float $delayHours): string
+    {
+        if ($delayHours <= 0) {
+            return 'NONE';
+        }
+
+        [$low, $medium] = match (strtoupper($mode)) {
+            'AIR' => [3.0, 12.0],
+            'ROAD' => [6.0, 24.0],
+            default => [12.0, 48.0],
+        };
+
+        return match (true) {
+            $delayHours <= $low => 'LOW',
+            $delayHours <= $medium => 'MEDIUM',
+            default => 'HIGH',
+        };
+    }
+
+    /**
+     * Build the 48 deterministic synthetic spice freight consignments.
+     *
+     * @return list<array<string, mixed>>
+     */
+    protected function buildDataset(Carbon $now, callable $atWeekOffset): array
+    {
+        $rows = [];
+
+        // Helper for SEA shipments
+        $sea = function (
+            string $tracking,
+            string $customer,
+            string $carrier,
+            string $origin,
+            string $dest,
+            string $current,
+            string $status,
+            Carbon $createdAt,
+            Carbon $expDep,
+            Carbon $expArr,
+            ?Carbon $actArr,
+            float $delayHours,
+            ?string $delayReason,
+            string $currency,
+            float $declaredValue,
+            float $shippingCost,
+            float $weightKg,
+            float $volumeCbm,
+            string $cargoType,
+            string $incoterm,
+            array $items,
+            ?string $notes = null
+        ): array {
+            $estArr = $actArr ? $actArr->copy() : ($delayHours > 0 ? $expArr->copy()->addMinutes((int) round($delayHours * 60)) : $expArr->copy());
+
+            return [
+                'tracking_number' => $tracking,
+                'mode' => 'SEA',
+                'customer' => $customer,
+                'carrier' => $carrier,
+                'origin' => $origin,
+                'destination' => $dest,
+                'current' => $current,
+                'status' => $status,
+                'created_at' => $createdAt,
+                'expected_departure' => $expDep,
+                'expected_arrival' => $expArr,
+                'estimated_arrival' => $estArr,
+                'actual_arrival' => $actArr,
+                'delay_hours' => $delayHours,
+                'delay_reason' => $delayReason,
+                'currency' => $currency,
+                'declared_value' => $declaredValue,
+                'shipping_cost' => $shippingCost,
+                'weight_kg' => $weightKg,
+                'volume_cbm' => $volumeCbm,
+                'cargo_type' => $cargoType,
+                'notes' => ($notes ?? "Incoterm: {$incoterm}. Phytosanitary and Certificate of Origin verified by Nusa Spice Freight."),
+                'items' => $items,
+            ];
+        };
+
+        // Helper for AIR shipments
+        $air = function (
+            string $tracking,
+            string $customer,
+            string $carrier,
+            string $origin,
+            string $dest,
+            string $current,
+            string $status,
+            Carbon $createdAt,
+            Carbon $expDep,
+            Carbon $expArr,
+            ?Carbon $actArr,
+            float $delayHours,
+            ?string $delayReason,
+            string $currency,
+            float $declaredValue,
+            float $shippingCost,
+            float $weightKg,
+            float $volumeCbm,
+            string $incoterm,
+            array $items,
+            ?string $notes = null
+        ): array {
+            $estArr = $actArr ? $actArr->copy() : ($delayHours > 0 ? $expArr->copy()->addMinutes((int) round($delayHours * 60)) : $expArr->copy());
+
+            return [
+                'tracking_number' => $tracking,
+                'mode' => 'AIR',
+                'customer' => $customer,
+                'carrier' => $carrier,
+                'origin' => $origin,
+                'destination' => $dest,
+                'current' => $current,
+                'status' => $status,
+                'created_at' => $createdAt,
+                'expected_departure' => $expDep,
+                'expected_arrival' => $expArr,
+                'estimated_arrival' => $estArr,
+                'actual_arrival' => $actArr,
+                'delay_hours' => $delayHours,
+                'delay_reason' => $delayReason,
+                'currency' => $currency,
+                'declared_value' => $declaredValue,
+                'shipping_cost' => $shippingCost,
+                'weight_kg' => $weightKg,
+                'volume_cbm' => $volumeCbm,
+                'cargo_type' => 'AIR_FREIGHT',
+                'notes' => ($notes ?? "Incoterm: {$incoterm}. GC-MS assay report and COA attached for airfreight screening."),
+                'items' => $items,
+            ];
+        };
+
+        // Helper for ROAD shipments
+        $road = function (
+            string $tracking,
+            string $customer,
+            string $carrier,
+            string $origin,
+            string $dest,
+            string $current,
+            string $status,
+            string $plateRegion,
+            Carbon $createdAt,
+            Carbon $expDep,
+            Carbon $expArr,
+            ?Carbon $actArr,
+            float $delayHours,
+            ?string $delayReason,
+            string $currency,
+            float $declaredValue,
+            float $shippingCost,
+            float $weightKg,
+            float $volumeCbm,
+            string $incoterm,
+            array $items,
+            ?string $notes = null
+        ): array {
+            $estArr = $actArr ? $actArr->copy() : ($delayHours > 0 ? $expArr->copy()->addMinutes((int) round($delayHours * 60)) : $expArr->copy());
+
+            return [
+                'tracking_number' => $tracking,
+                'mode' => 'ROAD',
+                'customer' => $customer,
+                'carrier' => $carrier,
+                'origin' => $origin,
+                'destination' => $dest,
+                'current' => $current,
+                'status' => $status,
+                'plate_region' => $plateRegion,
+                'created_at' => $createdAt,
+                'expected_departure' => $expDep,
+                'expected_arrival' => $expArr,
+                'estimated_arrival' => $estArr,
+                'actual_arrival' => $actArr,
+                'delay_hours' => $delayHours,
+                'delay_reason' => $delayReason,
+                'currency' => $currency,
+                'declared_value' => $declaredValue,
+                'shipping_cost' => $shippingCost,
+                'weight_kg' => $weightKg,
+                'volume_cbm' => $volumeCbm,
+                'cargo_type' => 'ROAD',
+                'notes' => ($notes ?? "Incoterm: {$incoterm}. Sealed box truck with temperature and humidity logger."),
+                'items' => $items,
+            ];
+        };
+
+        // =====================================================================
+        // CANONICAL PRESERVED SHIPMENTS (3)
+        // =====================================================================
+        // 1. CTG-SEA-2026-00189: IDJKT -> NLRTM [SEA, DELIVERED LATE +10h = LOW]
+        $rows[] = $sea(
+            'CTG-SEA-2026-00189', 'c1', 'MAEU', 'IDJKT', 'NLRTM', 'NLRTM', 'DELIVERED',
+            $now->copy()->subDays(36),
+            $now->copy()->subDays(34),
+            $now->copy()->subDays(5),
+            $now->copy()->subDays(5)->addHours(10),
+            10.0,
+            'North Sea squall front delayed Maasvlakte pilot boarding by 10 hours.',
+            'IDR', 1450000000.0, 78500000.0, 24500.0, 62.0, 'FCL', 'CIF Rotterdam',
+            [
+                ['commodity' => 'nutmeg', 'description' => '40ft Dry Container: Whole Nutmeg ABCD Grade (Banda & Maluku)', 'quantity' => 280, 'unit_value' => 3200000.0, 'weight_kg' => 14000.0, 'volume_cbm' => 34.0],
+                ['commodity' => 'cloves', 'description' => '20ft Dry Container: Whole Cloves Lal Pari Hand-Picked Grade', 'quantity' => 210, 'unit_value' => 2638095.0, 'weight_kg' => 10500.0, 'volume_cbm' => 28.0],
+            ],
+            'Incoterm: CIF Rotterdam. Export phytosanitary certificate and Indonesia COO issued at Tanjung Priok.'
+        );
+
+        // 2. CTG-SEA-2026-00244: IDBLW -> USNYC [SEA, IN_TRANSIT DELAYED +56h = HIGH]
+        $rows[] = $sea(
+            'CTG-SEA-2026-00244', 'c4', 'MSCU', 'IDBLW', 'USNYC', 'USNYC', 'IN_TRANSIT',
+            $now->copy()->subDays(28),
+            $now->copy()->subDays(25),
+            $now->copy()->subDays(1),
+            null,
+            56.0,
+            'Port Newark USDA and CBP intensive agricultural examination hold on cassia lot.',
+            'USD', 142000.0, 6400.0, 21800.0, 58.5, 'FCL', 'CIF New York',
+            [
+                ['commodity' => 'cinnamon', 'description' => '40ft HC Container: Sumatra Cassia Cinnamon Quills (Korintje Grade A)', 'quantity' => 520, 'unit_value' => 175.0, 'weight_kg' => 13000.0, 'volume_cbm' => 36.5],
+                ['commodity' => 'pepper', 'description' => '20ft Dry Container: Lampung Black Pepper Whole ASTA 570', 'quantity' => 176, 'unit_value' => 289.77, 'weight_kg' => 8800.0, 'volume_cbm' => 22.0],
+            ],
+            'Incoterm: CIF New York. FDA Prior Notice filed; awaiting Newark CET lab release.'
+        );
+
+        // 3. CTG-AIR-2026-00678: IDKNO -> FRCDG [AIR, IN_TRANSIT DELAYED +2.5h = LOW]
+        $rows[] = $air(
+            'CTG-AIR-2026-00678', 'c3', 'SQC', 'IDKNO', 'FRCDG', 'SGCHG', 'IN_TRANSIT',
+            $now->copy()->subDays(2)->subHours(6),
+            $now->copy()->subHours(16),
+            $now->copy()->addHours(6),
+            null,
+            2.5,
+            'Equatorial squall at Changi Airfreight Centre metered freighter departure.',
+            'EUR', 68500.0, 4150.0, 620.0, 2.4, 'CIP Paris CDG',
+            [
+                ['commodity' => 'patchouli', 'description' => 'Aceh Steam-Distilled Patchouli Essential Oil (25 kg aluminum flasks)', 'packaging' => '24 aluminum flasks in UN plywood crates', 'quantity' => 24, 'unit_value' => 2854.17, 'weight_kg' => 620.0, 'volume_cbm' => 2.4],
+            ],
+            'Incoterm: CIP Paris CDG. Bound for Grasse fragrance extraction lab via Changi.'
+        );
+
+        // =====================================================================
+        // REMAINING SEA SHIPMENTS (20 more = 22 SEA total)
+        // =====================================================================
+        // SEA #3 (Week 9 - old delivered on-time, c5)
+        $rows[] = $sea(
+            'CTG-SEA-2026-00101', 'c5', 'HLCU', 'IDJKT', 'INNSA', 'INNSA', 'DELIVERED',
+            $atWeekOffset(9, 1, 9), $atWeekOffset(9, 3, 10), $now->copy()->subDays(46), $now->copy()->subDays(46)->subHours(4), 0.0, null,
+            'INR', 6450000.0, 210000.0, 19200.0, 48.0, 'FCL', 'CFR Nhava Sheva',
+            [['commodity' => 'cloves', 'quantity' => 384, 'unit_value' => 16796.88, 'weight_kg' => 19200.0, 'volume_cbm' => 48.0]]
+        );
+
+        // SEA #4 (Week 8 - delivered on-time, c2)
+        $rows[] = $sea(
+            'CTG-SEA-2026-00102', 'c2', 'CMDU', 'IDBLW', 'NLRTM', 'NLRTM', 'DELIVERED',
+            $atWeekOffset(8, 2, 11), $atWeekOffset(8, 4, 8), $now->copy()->subDays(34), $now->copy()->subDays(34)->subHours(2), 0.0, null,
+            'EUR', 118000.0, 4900.0, 22400.0, 56.0, 'FCL', 'CIF Rotterdam',
+            [['commodity' => 'nutmeg', 'quantity' => 448, 'unit_value' => 263.39, 'weight_kg' => 22400.0, 'volume_cbm' => 56.0]]
+        );
+
+        // SEA #5 (Week 7 - delivered on-time, c6)
+        $rows[] = $sea(
+            'CTG-SEA-2026-00103', 'c6', 'ONEY', 'IDJKT', 'AEJEA', 'AEJEA', 'DELIVERED',
+            $atWeekOffset(7, 1, 10), $atWeekOffset(7, 3, 14), $now->copy()->subDays(32), $now->copy()->subDays(32), 0.0, null,
+            'USD', 89000.0, 3200.0, 18500.0, 46.0, 'FCL', 'CIF Jebel Ali',
+            [['commodity' => 'pepper', 'quantity' => 370, 'unit_value' => 240.54, 'weight_kg' => 18500.0, 'volume_cbm' => 46.0]]
+        );
+
+        // SEA #6 (Week 7 - delivered LATE +30h MEDIUM, c2) -> carries RESOLVED CUSTOMS_HOLD 48h!
+        $rows[] = $sea(
+            'CTG-SEA-2026-00104', 'c2', 'MAEU', 'IDBLW', 'DEHAM', 'DEHAM', 'DELIVERED',
+            $atWeekOffset(7, 3, 9), $atWeekOffset(7, 5, 10), $now->copy()->subDays(11)->subHours(6), $now->copy()->subDays(10), 30.0,
+            'Hamburg phytosanitary pallet inspection delayed container release by 30 hours.',
+            'EUR', 132000.0, 5100.0, 23000.0, 60.0, 'FCL', 'CIF Hamburg',
+            [['commodity' => 'cinnamon', 'quantity' => 920, 'unit_value' => 143.48, 'weight_kg' => 23000.0, 'volume_cbm' => 60.0]]
+        );
+
+        // SEA #7 (Week 6 - delivered on-time, c3) -> carries RESOLVED DOCUMENTATION_ISSUE
+        $rows[] = $sea(
+            'CTG-SEA-2026-00105', 'c3', 'CMDU', 'IDJKT', 'FRMRS', 'FRMRS', 'DELIVERED',
+            $atWeekOffset(6, 1, 8), $atWeekOffset(6, 3, 12), $now->copy()->subDays(18), $now->copy()->subDays(18)->subHours(3), 0.0, null,
+            'EUR', 154000.0, 4700.0, 16800.0, 42.0, 'FCL', 'CIF Marseille-Fos',
+            [['commodity' => 'patchouli', 'description' => 'Aceh Patchouli Essential Oil in 200 kg Steel Drums', 'packaging' => '84 steel drums on strapped pallets', 'quantity' => 84, 'unit_value' => 1833.33, 'weight_kg' => 16800.0, 'volume_cbm' => 42.0]]
+        );
+
+        // SEA #8 (Week 6 - delivered on-time, c4)
+        $rows[] = $sea(
+            'CTG-SEA-2026-00106', 'c4', 'HLCU', 'IDJKT', 'USSAV', 'USSAV', 'DELIVERED',
+            $atWeekOffset(6, 2, 13), $atWeekOffset(6, 4, 15), $now->copy()->subDays(14), $now->copy()->subDays(14)->subHours(5), 0.0, null,
+            'USD', 112500.0, 5400.0, 20400.0, 54.0, 'FCL', 'CIF Savannah',
+            [['commodity' => 'ginger', 'quantity' => 816, 'unit_value' => 137.87, 'weight_kg' => 20400.0, 'volume_cbm' => 54.0]]
+        );
+
+        // SEA #9 (Week 5 - delivered on-time, c1)
+        $rows[] = $sea(
+            'CTG-SEA-2026-00107', 'c1', 'ONEY', 'IDBLW', 'MYPKG', 'MYPKG', 'DELIVERED',
+            $atWeekOffset(5, 1, 10), $atWeekOffset(5, 2, 14), $now->copy()->subDays(31), $now->copy()->subDays(31)->subHours(1), 0.0, null,
+            'IDR', 690000000.0, 24000000.0, 14200.0, 32.0, 'LCL', 'CFR Port Klang',
+            [['commodity' => 'pepper', 'quantity' => 284, 'unit_value' => 2429577.46, 'weight_kg' => 14200.0, 'volume_cbm' => 32.0]]
+        );
+
+        // SEA #10 (Week 4 - in-transit on-time, c2, Singapore-consolidated nutmeg leg)
+        $rows[] = $sea(
+            'CTG-SEA-2026-00201', 'c2', 'MAEU', 'SGSIN', 'NLRTM', 'AEJEA', 'IN_TRANSIT',
+            $atWeekOffset(4, 1, 9), $now->copy()->subDays(22), $now->copy()->addDays(6), null, 0.0, null,
+            'EUR', 124000.0, 4650.0, 22000.0, 58.0, 'FCL', 'CIF Rotterdam',
+            [['commodity' => 'nutmeg', 'quantity' => 440, 'unit_value' => 281.82, 'weight_kg' => 22000.0, 'volume_cbm' => 58.0]]
+        );
+
+        // SEA #11 (Week 3 - in-transit on-time, c5)
+        $rows[] = $sea(
+            'CTG-SEA-2026-00202', 'c5', 'ONEY', 'IDBLW', 'INNSA', 'SGSIN', 'IN_TRANSIT',
+            $atWeekOffset(3, 1, 10), $now->copy()->subDays(12), $now->copy()->addDays(4), null, 0.0, null,
+            'INR', 7250000.0, 195000.0, 19600.0, 50.0, 'FCL', 'CIF Nhava Sheva',
+            [['commodity' => 'cloves', 'quantity' => 392, 'unit_value' => 18494.90, 'weight_kg' => 19600.0, 'volume_cbm' => 50.0]]
+        );
+
+        // SEA #12 (Week 3 - in-transit DELAYED +28h MEDIUM, c6) -> carries OPEN PORT_CONGESTION
+        $rows[] = $sea(
+            'CTG-SEA-2026-00203', 'c6', 'MSCU', 'IDJKT', 'AEJEA', 'AEJEA', 'IN_TRANSIT',
+            $atWeekOffset(3, 2, 11), $now->copy()->subDays(15), $now->copy()->subHours(10), null, 28.0,
+            'Jebel Ali Terminal 2 berth congestion delayed vessel mooring.',
+            'USD', 96000.0, 3450.0, 18900.0, 49.0, 'FCL', 'CIF Jebel Ali',
+            [['commodity' => 'cinnamon', 'quantity' => 756, 'unit_value' => 126.98, 'weight_kg' => 18900.0, 'volume_cbm' => 49.0]]
+        );
+
+        // SEA #13 (Week 2 - in-transit on-time, c3)
+        $rows[] = $sea(
+            'CTG-SEA-2026-00204', 'c3', 'CMDU', 'IDBLW', 'FRMRS', 'AEJEA', 'IN_TRANSIT',
+            $atWeekOffset(2, 0, 9), $now->copy()->subDays(14), $now->copy()->addDays(11), null, 0.0, null,
+            'EUR', 162000.0, 5100.0, 17500.0, 44.0, 'FCL', 'CIF Marseille-Fos',
+            [['commodity' => 'patchouli', 'description' => 'Aceh Patchouli Essential Oil in 200 kg Drums', 'packaging' => '88 steel drums on strapped pallets', 'quantity' => 88, 'unit_value' => 1840.91, 'weight_kg' => 17500.0, 'volume_cbm' => 44.0]]
+        );
+
+        // SEA #14 (Week 2 - in-transit DELAYED +64h HIGH, c2) -> carries OPEN MISROUTED
+        $rows[] = $sea(
+            'CTG-SEA-2026-00205', 'c2', 'HLCU', 'IDBLW', 'DEHAM', 'SGSIN', 'IN_TRANSIT',
+            $atWeekOffset(2, 2, 14), $now->copy()->subDays(11), $now->copy()->addDays(14), null, 64.0,
+            'Container staged to wrong feeder stack at Singapore transshipment yard.',
+            'EUR', 114000.0, 4800.0, 21200.0, 55.0, 'FCL', 'CIF Hamburg',
+            [['commodity' => 'pepper', 'quantity' => 424, 'unit_value' => 268.87, 'weight_kg' => 21200.0, 'volume_cbm' => 55.0]]
+        );
+
+        // SEA #15 (Week 2 - in-transit on-time, c4)
+        $rows[] = $sea(
+            'CTG-SEA-2026-00206', 'c4', 'MAEU', 'IDJKT', 'USSAV', 'SGSIN', 'IN_TRANSIT',
+            $atWeekOffset(2, 3, 10), $now->copy()->subDays(10), $now->copy()->addDays(18), null, 0.0, null,
+            'USD', 136000.0, 6100.0, 22600.0, 60.0, 'FCL', 'CIF Savannah',
+            [['commodity' => 'nutmeg', 'quantity' => 452, 'unit_value' => 300.88, 'weight_kg' => 22600.0, 'volume_cbm' => 60.0]]
+        );
+
+        // SEA #16 (Week 1 - in-transit DELAYED +8h LOW, c1)
+        $rows[] = $sea(
+            'CTG-SEA-2026-00207', 'c1', 'ONEY', 'IDJKT', 'SGSIN', 'MYPKG', 'IN_TRANSIT',
+            $atWeekOffset(1, 0, 8), $now->copy()->subDays(4), $now->copy()->addDays(1), null, 8.0,
+            'Port Klang feeder bunkering stop extended Malacca Strait transit by 8 hours.',
+            'IDR', 540000000.0, 19500000.0, 15000.0, 36.0, 'LCL', 'FOB Tanjung Priok',
+            [['commodity' => 'ginger', 'quantity' => 600, 'unit_value' => 900000.0, 'weight_kg' => 15000.0, 'volume_cbm' => 36.0]]
+        );
+
+        // SEA #17 (Week 1 - in-transit on-time, c5)
+        $rows[] = $sea(
+            'CTG-SEA-2026-00208', 'c5', 'MSCU', 'IDJKT', 'INNSA', 'SGSIN', 'IN_TRANSIT',
+            $atWeekOffset(1, 1, 13), $now->copy()->subDays(5), $now->copy()->addDays(7), null, 0.0, null,
+            'INR', 5800000.0, 175000.0, 16500.0, 41.0, 'FCL', 'CFR Nhava Sheva',
+            [['commodity' => 'nutmeg', 'quantity' => 330, 'unit_value' => 17575.76, 'weight_kg' => 16500.0, 'volume_cbm' => 41.0]]
+        );
+
+        // SEA #18 (Week 1 - in-transit on-time, c6)
+        $rows[] = $sea(
+            'CTG-SEA-2026-00209', 'c6', 'HLCU', 'IDBLW', 'AEJEA', 'MYPKG', 'IN_TRANSIT',
+            $atWeekOffset(1, 2, 11), $now->copy()->subDays(4), $now->copy()->addDays(9), null, 0.0, null,
+            'USD', 84500.0, 3100.0, 17800.0, 45.0, 'FCL', 'CIF Jebel Ali',
+            [['commodity' => 'cloves', 'quantity' => 356, 'unit_value' => 237.36, 'weight_kg' => 17800.0, 'volume_cbm' => 45.0]]
+        );
+
+        // SEA #19 (Week 0 - in-transit on-time, c4)
+        $rows[] = $sea(
+            'CTG-SEA-2026-00210', 'c4', 'CMDU', 'IDJKT', 'USNYC', 'SGSIN', 'IN_TRANSIT',
+            $now->copy()->subDays(2), $now->copy()->subHours(28), $now->copy()->addDays(26), null, 0.0, null,
+            'USD', 148000.0, 6500.0, 23200.0, 61.0, 'FCL', 'CIF New York',
+            [['commodity' => 'cinnamon', 'quantity' => 928, 'unit_value' => 159.48, 'weight_kg' => 23200.0, 'volume_cbm' => 61.0]]
+        );
+
+        // SEA #20 (Week 1 - CREATED, c1)
+        $rows[] = $sea(
+            'CTG-SEA-2026-00211', 'c1', 'MAEU', 'IDBLW', 'NLRTM', 'IDBLW', 'CREATED',
+            $atWeekOffset(1, 4, 15), $now->copy()->addDays(3), $now->copy()->addDays(31), null, 0.0, null,
+            'IDR', 1280000000.0, 68000000.0, 21000.0, 56.0, 'FCL', 'FOB Belawan',
+            [['commodity' => 'nutmeg', 'quantity' => 420, 'unit_value' => 3047619.05, 'weight_kg' => 21000.0, 'volume_cbm' => 56.0]]
+        );
+
+        // SEA #21 (Week 0 - BOOKED, c3)
+        $rows[] = $sea(
+            'CTG-SEA-2026-00212', 'c3', 'CMDU', 'IDJKT', 'FRMRS', 'IDJKT', 'BOOKED',
+            $now->copy()->subDays(1), $now->copy()->addDays(2), $now->copy()->addDays(27), null, 0.0, null,
+            'EUR', 105000.0, 4400.0, 14800.0, 38.0, 'FCL', 'FOB Tanjung Priok',
+            [['commodity' => 'cloves', 'quantity' => 296, 'unit_value' => 354.73, 'weight_kg' => 14800.0, 'volume_cbm' => 38.0]]
+        );
+
+        // SEA #22 (Week 0 - BOOKED, c5)
+        $rows[] = $sea(
+            'CTG-SEA-2026-00213', 'c5', 'ONEY', 'IDBLW', 'INNSA', 'IDBLW', 'BOOKED',
+            $now->copy()->subDays(2), $now->copy()->addDays(4), $now->copy()->addDays(16), null, 0.0, null,
+            'INR', 6100000.0, 185000.0, 18000.0, 46.0, 'FCL', 'FOB Belawan',
+            [['commodity' => 'pepper', 'quantity' => 360, 'unit_value' => 16944.44, 'weight_kg' => 18000.0, 'volume_cbm' => 46.0]]
+        );
+
+        // =====================================================================
+        // AIR SHIPMENTS (13 more = 14 AIR total)
+        // =====================================================================
+        // AIR #2 (Week 6 - delivered on-time, c3)
+        $rows[] = $air(
+            'CTG-AIR-2026-00301', 'c3', 'LHC', 'IDCGK', 'DEFRA', 'DEFRA', 'DELIVERED',
+            $atWeekOffset(6, 3, 10), $now->copy()->subDays(41), $now->copy()->subDays(40), $now->copy()->subDays(40)->subHours(1), 0.0, null,
+            'EUR', 54000.0, 3400.0, 480.0, 1.8, 'CIP Frankfurt',
+            [['commodity' => 'patchouli', 'description' => 'Aceh Patchouli Essential Oil (25 kg aluminum flasks)', 'packaging' => '19 aluminum flasks in UN crates', 'quantity' => 19, 'unit_value' => 2842.11, 'weight_kg' => 480.0, 'volume_cbm' => 1.8]]
+        );
+
+        // AIR #3 (Week 5 - delivered LATE +2.0h LOW, c2)
+        $rows[] = $air(
+            'CTG-AIR-2026-00302', 'c2', 'SQC', 'IDCGK', 'NLAMS', 'NLAMS', 'DELIVERED',
+            $atWeekOffset(5, 2, 11), $now->copy()->subDays(34), $now->copy()->subDays(33), $now->copy()->subDays(33)->addHours(2), 2.0,
+            'Schiphol apron slot hold delayed freighter unloading by 2 hours.',
+            'EUR', 41200.0, 2900.0, 520.0, 2.1, 'CIP Amsterdam',
+            [['commodity' => 'cloves', 'description' => 'Whole Clove Buds Export Grade Samples', 'packaging' => '26 foil-lined cartons', 'quantity' => 26, 'unit_value' => 1584.62, 'weight_kg' => 520.0, 'volume_cbm' => 2.1]]
+        );
+
+        // AIR #4 (Week 4 - delivered on-time, c6)
+        $rows[] = $air(
+            'CTG-AIR-2026-00303', 'c6', 'EKC', 'IDCGK', 'AEDXB', 'AEDXB', 'DELIVERED',
+            $atWeekOffset(4, 2, 14), $now->copy()->subDays(27), $now->copy()->subDays(26), $now->copy()->subDays(26)->subHours(1), 0.0, null,
+            'USD', 38500.0, 2400.0, 640.0, 2.6, 'CIP Dubai DXB',
+            [['commodity' => 'nutmeg', 'description' => 'Graded Banda Nutmeg & Mace Air Urgent Lot', 'packaging' => '32 sealed export cartons', 'quantity' => 32, 'unit_value' => 1203.13, 'weight_kg' => 640.0, 'volume_cbm' => 2.6]]
+        );
+
+        // AIR #5 (Week 3 - delivered LATE +9.0h MEDIUM, c5)
+        $rows[] = $air(
+            'CTG-AIR-2026-00304', 'c5', 'GIA', 'IDKNO', 'INBOM', 'INBOM', 'DELIVERED',
+            $atWeekOffset(3, 3, 9), $now->copy()->subDays(20), $now->copy()->subDays(19), $now->copy()->subDays(19)->addHours(9), 9.0,
+            'Connecting airfreight rotation hold via Jakarta CGK.',
+            'INR', 2950000.0, 145000.0, 410.0, 1.5, 'CIP Mumbai BOM',
+            [['commodity' => 'patchouli', 'description' => 'Aceh Patchouli Oil Rectified Lot', 'packaging' => '16 aluminum flasks', 'quantity' => 16, 'unit_value' => 184375.0, 'weight_kg' => 410.0, 'volume_cbm' => 1.5]]
+        );
+
+        // AIR #6 (Week 2 - delivered on-time, c4)
+        $rows[] = $air(
+            'CTG-AIR-2026-00305', 'c4', 'QRC', 'IDCGK', 'USJFK', 'USJFK', 'DELIVERED',
+            $atWeekOffset(2, 1, 10), $now->copy()->subDays(13), $now->copy()->subDays(12), $now->copy()->subDays(12), 0.0, null,
+            'USD', 74000.0, 5200.0, 780.0, 3.1, 'CIP New York JFK',
+            [['commodity' => 'patchouli', 'description' => 'High-Purity Patchouli Oil for US Botanicals', 'packaging' => '30 aluminum flasks in UN crates', 'quantity' => 30, 'unit_value' => 2466.67, 'weight_kg' => 780.0, 'volume_cbm' => 3.1]]
+        );
+
+        // AIR #7 (Week 1 - in-transit DELAYED +16.0h HIGH, c3) -> carries INVESTIGATING FLIGHT_OFFLOAD
+        $rows[] = $air(
+            'CTG-AIR-2026-00306', 'c3', 'EKC', 'IDKNO', 'FRCDG', 'AEDXB', 'IN_TRANSIT',
+            $atWeekOffset(1, 3, 10), $now->copy()->subDays(2), $now->copy()->subHours(4), null, 16.0,
+            'Cargo pallet offloaded at DXB transit hub due to aircraft weight-and-balance limits.',
+            'EUR', 61000.0, 3900.0, 540.0, 2.2, 'CIP Paris CDG',
+            [['commodity' => 'patchouli', 'description' => 'Sumatra Patchouli & Clove Leaf Oil Assay Lot', 'packaging' => '22 aluminum flasks', 'quantity' => 22, 'unit_value' => 2772.73, 'weight_kg' => 540.0, 'volume_cbm' => 2.2]]
+        );
+
+        // AIR #8 (Week 1 - in-transit DELAYED +20.0h HIGH, c2) -> carries OPEN DOCUMENTATION_ISSUE
+        $rows[] = $air(
+            'CTG-AIR-2026-00307', 'c2', 'LHC', 'IDCGK', 'NLAMS', 'DEFRA', 'IN_TRANSIT',
+            $atWeekOffset(1, 4, 11), $now->copy()->subDays(2), $now->copy()->subHours(6), null, 20.0,
+            'EU phytosanitary and GC-MS certificate mismatch flagged at Frankfurt transit desk.',
+            'EUR', 49500.0, 3250.0, 460.0, 1.9, 'CIP Amsterdam',
+            [['commodity' => 'cinnamon', 'description' => 'Organic Cassia Essential Oil & Bark Samples', 'packaging' => '20 UN-certified drums', 'quantity' => 20, 'unit_value' => 2475.0, 'weight_kg' => 460.0, 'volume_cbm' => 1.9]]
+        );
+
+        // AIR #9 (Week 1 - in-transit DELAYED +7.5h MEDIUM, c6) -> carries INVESTIGATING PORT_CONGESTION
+        $rows[] = $air(
+            'CTG-AIR-2026-00308', 'c6', 'QRC', 'IDBTJ', 'AEDXB', 'SGCHG', 'IN_TRANSIT',
+            $atWeekOffset(1, 5, 9), $now->copy()->subHours(18), $now->copy()->addHours(4), null, 7.5,
+            'Peak-hour cargo ramp congestion at Changi freighter apron.',
+            'USD', 44800.0, 2850.0, 390.0, 1.6, 'CIP Dubai DXB',
+            [['commodity' => 'patchouli', 'description' => 'Banda Aceh First-Distillation Patchouli Oil', 'packaging' => '16 aluminum flasks', 'quantity' => 16, 'unit_value' => 2800.0, 'weight_kg' => 390.0, 'volume_cbm' => 1.6]]
+        );
+
+        // AIR #10 (Week 0 - in-transit on-time, c5)
+        $rows[] = $air(
+            'CTG-AIR-2026-00309', 'c5', 'SQC', 'IDKNO', 'INBOM', 'SGCHG', 'IN_TRANSIT',
+            $now->copy()->subDays(1)->subHours(4), $now->copy()->subHours(10), $now->copy()->addHours(8), null, 0.0, null,
+            'INR', 2450000.0, 128000.0, 350.0, 1.4, 'CIP Mumbai BOM',
+            [['commodity' => 'cloves', 'description' => 'High-Eugenol Clove Bud Oil Urgent Batch', 'packaging' => '14 aluminum flasks', 'quantity' => 14, 'unit_value' => 175000.0, 'weight_kg' => 350.0, 'volume_cbm' => 1.4]]
+        );
+
+        // AIR #11 (Week 0 - in-transit on-time, c4)
+        $rows[] = $air(
+            'CTG-AIR-2026-00310', 'c4', 'LHC', 'IDCGK', 'USJFK', 'DEFRA', 'IN_TRANSIT',
+            $now->copy()->subDays(2), $now->copy()->subHours(20), $now->copy()->addHours(10), null, 0.0, null,
+            'USD', 58000.0, 4300.0, 610.0, 2.5, 'CIP New York JFK',
+            [['commodity' => 'ginger', 'description' => 'Java Dried Ginger Oleoresin & Sliced Root', 'packaging' => '25 sealed export drums', 'quantity' => 25, 'unit_value' => 2320.0, 'weight_kg' => 610.0, 'volume_cbm' => 2.5]]
+        );
+
+        // AIR #12 (Week 0 - in-transit on-time, c1)
+        $rows[] = $air(
+            'CTG-AIR-2026-00311', 'c1', 'GIA', 'IDBTJ', 'SGCHG', 'IDCGK', 'IN_TRANSIT',
+            $now->copy()->subDays(1), $now->copy()->subHours(8), $now->copy()->addHours(6), null, 0.0, null,
+            'IDR', 485000000.0, 22000000.0, 320.0, 1.2, 'CIP Singapore SIN',
+            [['commodity' => 'patchouli', 'description' => 'Aceh Patchouli Oil Export Pre-Lot', 'packaging' => '12 aluminum flasks', 'quantity' => 12, 'unit_value' => 40416666.67, 'weight_kg' => 320.0, 'volume_cbm' => 1.2]]
+        );
+
+        // AIR #13 (Week 0 - CREATED, c6)
+        $rows[] = $air(
+            'CTG-AIR-2026-00312', 'c6', 'EKC', 'IDCGK', 'AEDXB', 'IDCGK', 'CREATED',
+            $now->copy()->subDays(1), $now->copy()->addHours(18), $now->copy()->addDays(2), null, 0.0, null,
+            'USD', 36000.0, 2100.0, 280.0, 1.1, 'FCA Jakarta CGK',
+            [['commodity' => 'pepper', 'description' => 'Lampung White & Black Pepper Sample Air Lot', 'packaging' => '14 vacuum cartons', 'quantity' => 14, 'unit_value' => 2571.43, 'weight_kg' => 280.0, 'volume_cbm' => 1.1]]
+        );
+
+        // AIR #14 (Week 0 - BOOKED, c6)
+        $rows[] = $air(
+            'CTG-AIR-2026-00313', 'c6', 'QRC', 'IDKNO', 'AEDXB', 'IDKNO', 'BOOKED',
+            $now->copy()->subDays(2), $now->copy()->addDays(1), $now->copy()->addDays(2)->addHours(12), null, 0.0, null,
+            'USD', 56800.0, 3600.0, 440.0, 1.7, 'FCA Medan KNO',
+            [['commodity' => 'nutmeg', 'description' => 'Aceh Essential Nutmeg Oil Airfreight', 'packaging' => '18 aluminum flasks', 'quantity' => 18, 'unit_value' => 3155.56, 'weight_kg' => 440.0, 'volume_cbm' => 1.7]]
+        );
+
+        // =====================================================================
+        // ROAD SHIPMENTS (12 ROAD total)
+        // =====================================================================
+        // ROAD #1 (Week 5 - delivered on-time, Aceh -> Medan, c1)
+        $rows[] = $road(
+            'CTG-ROAD-2026-00401', 'c1', 'SMTR', 'IDLSW', 'IDMES', 'IDMES', 'DELIVERED', 'BL',
+            $atWeekOffset(5, 3, 8), $now->copy()->subDays(36), $now->copy()->subDays(35), $now->copy()->subDays(35)->subHours(1), 0.0, null,
+            'IDR', 420000000.0, 6800000.0, 6200.0, 18.0, 'EXW Lhokseumawe',
+            [['commodity' => 'patchouli', 'description' => 'Aceh Patchouli Oil Drums for Medan Consolidation', 'packaging' => '31 steel drums', 'quantity' => 31, 'unit_value' => 13548387.10, 'weight_kg' => 6200.0, 'volume_cbm' => 18.0]]
+        );
+
+        // ROAD #2 (Week 4 - delivered LATE +5.0h LOW, Aceh -> Belawan Port, c1)
+        $rows[] = $road(
+            'CTG-ROAD-2026-00402', 'c1', 'BKTJ', 'IDACE', 'IDBLW', 'IDBLW', 'DELIVERED', 'BK',
+            $atWeekOffset(4, 3, 7), $now->copy()->subDays(28), $now->copy()->subDays(27), $now->copy()->subDays(27)->addHours(5), 5.0,
+            'Heavy monsoon rain along East Sumatra Highway slowed convoy speed.',
+            'IDR', 385000000.0, 7400000.0, 8400.0, 22.0, 'FCA Port of Belawan',
+            [['commodity' => 'nutmeg', 'description' => 'Aceh Nutmeg Sacks for Belawan Container Stuffing', 'packaging' => '168 polypropylene sacks', 'quantity' => 168, 'unit_value' => 2291666.67, 'weight_kg' => 8400.0, 'volume_cbm' => 22.0]]
+        );
+
+        // ROAD #3 (Week 3 - delivered on-time, Marseille-Fos -> Grasse, c3)
+        $rows[] = $road(
+            'CTG-ROAD-2026-00403', 'c3', 'PRVF', 'FRMRS', 'FRGRS', 'FRGRS', 'DELIVERED', 'FR',
+            $atWeekOffset(3, 4, 9), $now->copy()->subDays(21), $now->copy()->subDays(20), $now->copy()->subDays(20)->subHours(1), 0.0, null,
+            'EUR', 78000.0, 1450.0, 4200.0, 12.5, 'DAP Grasse Depot',
+            [['commodity' => 'patchouli', 'description' => 'Last-Mile Aromatics Delivery from Marseille-Fos to Grasse', 'packaging' => '21 steel drums', 'quantity' => 21, 'unit_value' => 3714.29, 'weight_kg' => 4200.0, 'volume_cbm' => 12.5]]
+        );
+
+        // ROAD #4 (Week 2 - delivered LATE +14.0h MEDIUM, Nhava Sheva -> CFS, c5)
+        $rows[] = $road(
+            'CTG-ROAD-2026-00404', 'c5', 'KHND', 'INNSA', 'INNSC', 'INNSC', 'DELIVERED', 'IN',
+            $atWeekOffset(2, 4, 8), $now->copy()->subDays(13), $now->copy()->subDays(12), $now->copy()->subDays(12)->addHours(14), 14.0,
+            'Port gate drayage queue at Nhava Sheva delayed container transfer to CFS.',
+            'INR', 3100000.0, 48000.0, 9600.0, 26.0, 'DAP Nhava Sheva CFS',
+            [['commodity' => 'cloves', 'description' => 'Clove Gunny Bags Port-to-CFS Bonded Drayage', 'packaging' => '192 jute gunny bags', 'quantity' => 192, 'unit_value' => 16145.83, 'weight_kg' => 9600.0, 'volume_cbm' => 26.0]]
+        );
+
+        // ROAD #5 (Week 2 - delivered on-time, Rotterdam Port -> Rotterdam Depot, c2)
+        $rows[] = $road(
+            'CTG-ROAD-2026-00405', 'c2', 'RHNL', 'NLRTM', 'NLRDD', 'NLRDD', 'DELIVERED', 'NL',
+            $atWeekOffset(2, 5, 10), $now->copy()->subDays(11), $now->copy()->subDays(10), $now->copy()->subDays(10)->subHours(2), 0.0, null,
+            'EUR', 66000.0, 980.0, 7800.0, 20.5, 'DAP Rotterdam Depot',
+            [['commodity' => 'pepper', 'description' => 'Lampung Black Pepper Pallets Maasvlakte Shuttle', 'packaging' => '156 lined sacks on Euro-pallets', 'quantity' => 156, 'unit_value' => 423.08, 'weight_kg' => 7800.0, 'volume_cbm' => 20.5]]
+        );
+
+        // ROAD #6 (Week 1 - in-transit DELAYED +4.5h LOW, Lhokseumawe -> KNO Airport, c1) -> carries INVESTIGATING DAMAGED
+        $rows[] = $road(
+            'CTG-ROAD-2026-00406', 'c1', 'SMTR', 'IDLSW', 'IDKNO', 'IDMES', 'IN_TRANSIT', 'BL',
+            $atWeekOffset(1, 2, 7), $now->copy()->subHours(14), $now->copy()->subHours(2), null, 4.5,
+            'Pallet shrink-wrap abrasion detected during Medan cross-dock check; re-strapping in progress.',
+            'IDR', 295000000.0, 5600000.0, 2800.0, 8.5, 'FCA Medan KNO',
+            [['commodity' => 'cinnamon', 'description' => 'Korintje Cinnamon Export Cartons Linehaul to KNO', 'packaging' => '112 export cartons', 'quantity' => 112, 'unit_value' => 2633928.57, 'weight_kg' => 2800.0, 'volume_cbm' => 8.5]]
+        );
+
+        // ROAD #7 (Week 1 - in-transit DELAYED +12.0h MEDIUM, Banda Aceh -> Medan Depot, c4) -> carries INVESTIGATING VEHICLE_BREAKDOWN
+        $rows[] = $road(
+            'CTG-ROAD-2026-00407', 'c4', 'BKTJ', 'IDACE', 'IDMES', 'IDLSW', 'IN_TRANSIT', 'BK',
+            $atWeekOffset(1, 3, 6), $now->copy()->subHours(20), $now->copy()->subHours(4), null, 12.0,
+            'Tractor radiator coolant hose fault near Tebing Tinggi; relief truck dispatched.',
+            'USD', 46000.0, 950.0, 7400.0, 19.5, 'FCA Medan Depot',
+            [['commodity' => 'ginger', 'description' => 'Aceh & North Sumatra Dried Ginger Root Lots', 'packaging' => '296 laminated sacks', 'quantity' => 296, 'unit_value' => 155.41, 'weight_kg' => 7400.0, 'volume_cbm' => 19.5]]
+        );
+
+        // ROAD #8 (Week 1 - in-transit DELAYED +28.0h HIGH, Rotterdam Depot -> Hamburg via Venlo, c2) -> carries OPEN BORDER_QUEUE
+        $rows[] = $road(
+            'CTG-ROAD-2026-00408', 'c2', 'RHNL', 'NLRDD', 'DEHAM', 'NLVEN', 'IN_TRANSIT', 'NL',
+            $atWeekOffset(1, 4, 8), $now->copy()->subDays(2), $now->copy()->subHours(16), null, 28.0,
+            'Venlo NL/DE agricultural border inspection queue holding bonded spice trailer.',
+            'EUR', 88000.0, 2150.0, 11200.0, 29.0, 'DAP Hamburg',
+            [['commodity' => 'nutmeg', 'description' => 'Bonded Nutmeg & Mace Distribution to Hamburg', 'packaging' => '224 woven sacks on 16 pallets', 'quantity' => 224, 'unit_value' => 392.86, 'weight_kg' => 11200.0, 'volume_cbm' => 29.0]]
+        );
+
+        // ROAD #9 (Week 0 - in-transit on-time, Medan Depot -> Belawan Port, c6)
+        $rows[] = $road(
+            'CTG-ROAD-2026-00409', 'c6', 'SMTR', 'IDMES', 'IDBLW', 'IDMES', 'IN_TRANSIT', 'BK',
+            $now->copy()->subDays(1), $now->copy()->subHours(8), $now->copy()->addHours(4), null, 0.0, null,
+            'USD', 39000.0, 420.0, 9200.0, 24.0, 'FOB Belawan',
+            [['commodity' => 'pepper', 'description' => 'Medan Consolidated Black Pepper Drayage to Belawan', 'packaging' => '184 moisture-lined sacks', 'quantity' => 184, 'unit_value' => 211.96, 'weight_kg' => 9200.0, 'volume_cbm' => 24.0]]
+        );
+
+        // ROAD #10 (Week 0 - in-transit on-time, Paris CDG -> Grasse Depot, c3)
+        $rows[] = $road(
+            'CTG-ROAD-2026-00410', 'c3', 'PRVF', 'FRCDG', 'FRGRS', 'FRCDG', 'IN_TRANSIT', 'FR',
+            $now->copy()->subDays(1)->subHours(3), $now->copy()->subHours(12), $now->copy()->addHours(5), null, 0.0, null,
+            'EUR', 64000.0, 1850.0, 1100.0, 4.2, 'DAP Grasse Depot',
+            [['commodity' => 'patchouli', 'description' => 'CDG Cleared Patchouli Flasks Express Road Linehaul', 'packaging' => '44 aluminum flasks on climate pallet', 'quantity' => 44, 'unit_value' => 1454.55, 'weight_kg' => 1100.0, 'volume_cbm' => 4.2]]
+        );
+
+        // ROAD #11 (Week 0 - in-transit on-time, Mumbai BOM -> Nhava Sheva CFS, c5)
+        $rows[] = $road(
+            'CTG-ROAD-2026-00411', 'c5', 'KHND', 'INBOM', 'INNSC', 'INBOM', 'IN_TRANSIT', 'IN',
+            $now->copy()->subDays(2), $now->copy()->subHours(7), $now->copy()->addHours(3), null, 0.0, null,
+            'INR', 1850000.0, 32000.0, 1450.0, 4.8, 'DAP Nhava Sheva CFS',
+            [['commodity' => 'cloves', 'description' => 'BOM Airfreight Clove Oil Transfer to Nhava Sheva CFS', 'packaging' => '58 aluminum flasks in crates', 'quantity' => 58, 'unit_value' => 31896.55, 'weight_kg' => 1450.0, 'volume_cbm' => 4.8]]
+        );
+
+        // ROAD #12 (Week 0 - BOOKED, Lhokseumawe -> Medan Depot, c4)
+        $rows[] = $road(
+            'CTG-ROAD-2026-00412', 'c4', 'SMTR', 'IDLSW', 'IDMES', 'IDLSW', 'BOOKED', 'B',
+            $now->copy()->subDays(1), $now->copy()->addDays(1), $now->copy()->addDays(2), null, 0.0, null,
+            'USD', 51500.0, 780.0, 6800.0, 17.5, 'FCA Medan Depot',
+            [['commodity' => 'cinnamon', 'description' => 'Lhokseumawe Cassia Cinnamon Bales Scheduled Dispatch', 'packaging' => '272 export cartons', 'quantity' => 272, 'unit_value' => 189.34, 'weight_kg' => 6800.0, 'volume_cbm' => 17.5]]
+        );
+
+        return $rows;
     }
 }

@@ -313,6 +313,7 @@ class ShipmentService
     {
         $prefix = match (strtoupper($mode)) {
             'AIR', 'AIR_FREIGHT' => 'CTG-AIR',
+            'ROAD' => 'CTG-ROAD',
             'MULTIMODAL' => 'CTG-MUL',
             'LAND' => 'CTG-LND',
             default => 'CTG-SEA',

@@ -170,8 +170,14 @@
                     </div>
                 </form>
 
-                <!-- One secondary link -->
-                <div class="pt-1">
+                <!-- Sample tracking quick links + secondary anchor -->
+                <div class="pt-1 space-y-2">
+                    <div class="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs">
+                        <span class="text-slate-600 dark:text-slate-400">Sample consignments:</span>
+                        <a href="{{ url('/track/CTG-SEA-2026-00189') }}" class="font-mono text-blue-600 dark:text-cyan-400 hover:underline">CTG-SEA-2026-00189</a>
+                        <a href="{{ url('/track/CTG-SEA-2026-00244') }}" class="font-mono text-blue-600 dark:text-cyan-400 hover:underline">CTG-SEA-2026-00244</a>
+                        <a href="{{ url('/track/CTG-AIR-2026-00678') }}" class="font-mono text-blue-600 dark:text-cyan-400 hover:underline">CTG-AIR-2026-00678</a>
+                    </div>
                     <a href="#how-it-works" class="inline-flex items-center gap-1.5 text-xs font-semibold text-blue-600 dark:text-cyan-400 hover:text-blue-700 dark:hover:text-cyan-300 transition-colors">
                         <span>How it works</span>
                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>

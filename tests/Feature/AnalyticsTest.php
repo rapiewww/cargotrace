@@ -28,19 +28,19 @@ test('admin and operator can access analytics page and receive global dataset me
     $adminResponse->assertOk()
         ->assertSee('Operations and fleet analytics')
         ->assertSee('Fleet-wide operations scope')
-        ->assertViewHas('summary', fn ($s) => $s['total_shipments'] === 45);
+        ->assertViewHas('summary', fn ($s) => $s['total_shipments'] === 48);
 
     $operatorResponse = $this->actingAs($operator)->get(route('analytics.index'));
     $operatorResponse->assertOk()
         ->assertSee('Operations and fleet analytics')
-        ->assertViewHas('summary', fn ($s) => $s['total_shipments'] === 45);
+        ->assertViewHas('summary', fn ($s) => $s['total_shipments'] === 48);
 });
 
 test('customers see strictly a summary of their own shipments and cannot view global data', function () {
     $customer1 = User::where('email', 'customer@cargotrace.test')->first();
     $c1ShipmentsCount = Shipment::where('customer_id', $customer1->id)->count();
 
-    expect($c1ShipmentsCount)->toBe(15);
+    expect($c1ShipmentsCount)->toBe(8);
 
     $response = $this->actingAs($customer1)->get(route('analytics.index'));
     $response->assertOk()
@@ -172,7 +172,7 @@ test('csv export streams correct table data and enforces role scoping', function
     expect($adminExport->headers->get('content-type'))->toContain('text/csv')
         ->and($adminExport->headers->get('content-disposition'))->toContain('attachment');
 
-    // Customer exports carriers: content must only reflect customer's 15 shipments
+    // Customer exports carriers: content must only reflect customer's 8 shipments
     ob_start();
     $response = $this->actingAs($customer1)->get(route('analytics.export', ['table' => 'carriers']));
     $response->sendContent();
@@ -182,7 +182,7 @@ test('csv export streams correct table data and enforces role scoping', function
         ->and($csvContent)->toContain('Carrier Name')
         ->and($csvContent)->toContain('Total Shipments');
 
-    // Parse CSV lines and verify sum of total shipments matches customer1 count (15)
+    // Parse CSV lines and verify sum of total shipments matches customer1 count (8)
     $lines = array_filter(explode("\n", trim($csvContent)));
     array_shift($lines); // remove header
     $sumShipments = 0;
@@ -192,5 +192,5 @@ test('csv export streams correct table data and enforces role scoping', function
             $sumShipments += (int) $cols[2];
         }
     }
-    expect($sumShipments)->toBe(15);
+    expect($sumShipments)->toBe(8);
 });
