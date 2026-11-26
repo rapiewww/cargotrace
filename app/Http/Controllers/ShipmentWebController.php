@@ -58,65 +58,15 @@ class ShipmentWebController extends Controller
             'ROAD' => (clone $countQuery)->where('transport_mode', 'ROAD')->count(),
         ];
 
-        // Mode filter
-        if ($request->filled('mode') && in_array(strtoupper($request->query('mode')), ['SEA', 'AIR', 'ROAD'])) {
-            $query->where('transport_mode', strtoupper($request->query('mode')));
-        }
+        // Mode filter + shared manifest filters & sorting
+        $this->applyManifestFilters($query, $request);
+        $currentSort = $this->applyManifestSort($query, $request);
 
-        if ($request->filled('search')) {
-            $s = trim($request->query('search'));
-            $cleanContainer = strtoupper(preg_replace('/\s+/', '', $s));
-            $cleanDigits = preg_replace('/[^\d]/', '', $s);
-            $query->where(function ($q) use ($s, $cleanContainer, $cleanDigits) {
-                $q->where('tracking_number', 'like', "%{$s}%")
-                    ->orWhere('reference_number', 'like', "%{$s}%")
-                    ->orWhere('container_number', 'like', "%{$s}%")
-                    ->orWhere('container_number', 'like', "%{$cleanContainer}%")
-                    ->orWhere('bill_of_lading_number', 'like', "%{$s}%")
-                    ->orWhere('awb_number', 'like', "%{$s}%")
-                    ->when($cleanDigits !== '', fn ($sub) => $sub->orWhere('awb_number', 'like', "%{$cleanDigits}%"))
-                    ->orWhere('vehicle_plate', 'like', "%{$s}%")
-                    ->orWhere('cmr_number', 'like', "%{$s}%")
-                    ->orWhereHas('items', function ($iq) use ($s, $cleanContainer) {
-                        $iq->where('container_number', 'like', "%{$s}%")
-                            ->orWhere('container_number', 'like', "%{$cleanContainer}%")
-                            ->orWhere('sku', 'like', "%{$s}%")
-                            ->orWhere('sku', 'like', "%{$cleanContainer}%");
-                    });
-            });
-        }
-        if ($request->filled('status')) {
-            $query->where('status', strtoupper($request->query('status')));
-        }
-        if ($request->filled('carrier_id')) {
-            $query->where('carrier_id', $request->query('carrier_id'));
-        }
-        if ($request->filled('origin_location_id')) {
-            $query->where('origin_location_id', $request->query('origin_location_id'));
-        }
-        if ($request->filled('destination_location_id')) {
-            $query->where('destination_location_id', $request->query('destination_location_id'));
-        }
-        if ($request->has('is_delayed') && $request->query('is_delayed') !== '') {
-            $query->where('is_delayed', filter_var($request->query('is_delayed'), FILTER_VALIDATE_BOOLEAN));
-        }
-        if ($request->boolean('has_open_exceptions')) {
-            $query->whereHas('exceptions', function ($eq) {
-                $eq->whereIn('status', ['OPEN', 'INVESTIGATING']);
-            });
-        }
-        if ($request->filled('date_from')) {
-            $query->whereDate('expected_departure_at', '>=', $request->query('date_from'));
-        }
-        if ($request->filled('date_to')) {
-            $query->whereDate('expected_arrival_at', '<=', $request->query('date_to'));
-        }
-
-        $shipments = $query->orderByDesc('created_at')->paginate(12)->withQueryString();
+        $shipments = $query->paginate(12)->withQueryString();
         $carriers = Carrier::where('is_active', true)->orderBy('name')->get();
         $locations = Location::orderBy('name')->get();
 
-        return view('shipments.index', compact('shipments', 'carriers', 'locations', 'user', 'modeCounts'));
+        return view('shipments.index', compact('shipments', 'carriers', 'locations', 'user', 'modeCounts', 'currentSort'));
     }
 
     public function exportCsv(Request $request): StreamedResponse
@@ -128,42 +78,10 @@ class ShipmentWebController extends Controller
             $query->where('customer_id', $user->id);
         }
 
-        if ($request->filled('search')) {
-            $s = trim($request->query('search'));
-            $cleanContainer = strtoupper(preg_replace('/\s+/', '', $s));
-            $query->where(function ($q) use ($s, $cleanContainer) {
-                $q->where('tracking_number', 'like', "%{$s}%")
-                    ->orWhere('reference_number', 'like', "%{$s}%")
-                    ->orWhereHas('items', function ($iq) use ($s, $cleanContainer) {
-                        $iq->where('container_number', 'like', "%{$s}%")
-                            ->orWhere('container_number', 'like', "%{$cleanContainer}%")
-                            ->orWhere('sku', 'like', "%{$s}%")
-                            ->orWhere('sku', 'like', "%{$cleanContainer}%");
-                    });
-            });
-        }
-        if ($request->filled('status')) {
-            $query->where('status', strtoupper($request->query('status')));
-        }
-        if ($request->filled('carrier_id')) {
-            $query->where('carrier_id', $request->query('carrier_id'));
-        }
-        if ($request->filled('origin_location_id')) {
-            $query->where('origin_location_id', $request->query('origin_location_id'));
-        }
-        if ($request->filled('destination_location_id')) {
-            $query->where('destination_location_id', $request->query('destination_location_id'));
-        }
-        if ($request->has('is_delayed') && $request->query('is_delayed') !== '') {
-            $query->where('is_delayed', filter_var($request->query('is_delayed'), FILTER_VALIDATE_BOOLEAN));
-        }
-        if ($request->boolean('has_open_exceptions')) {
-            $query->whereHas('exceptions', function ($eq) {
-                $eq->whereIn('status', ['OPEN', 'INVESTIGATING']);
-            });
-        }
+        $this->applyManifestFilters($query, $request);
+        $this->applyManifestSort($query, $request);
 
-        $shipments = $query->orderByDesc('created_at')->get();
+        $shipments = $query->get();
         $filename = 'cargotrace-shipments-'.date('Y-m-d_His').'.csv';
 
         $headers = [
@@ -475,5 +393,103 @@ class ShipmentWebController extends Controller
         $shipment->delete();
 
         return redirect()->route('shipments.index')->with('success', 'Shipment deleted.');
+    }
+
+    /**
+     * Apply shared manifest query filters for both the index view and CSV export.
+     */
+    protected function applyManifestFilters($query, Request $request): void
+    {
+        if ($request->filled('mode') && in_array(strtoupper((string) $request->query('mode')), ['SEA', 'AIR', 'ROAD'], true)) {
+            $query->where('transport_mode', strtoupper((string) $request->query('mode')));
+        }
+
+        if ($request->filled('search')) {
+            $s = trim((string) $request->query('search'));
+            $cleanContainer = strtoupper(preg_replace('/\s+/', '', $s));
+            $cleanDigits = preg_replace('/[^\d]/', '', $s);
+            $query->where(function ($q) use ($s, $cleanContainer, $cleanDigits) {
+                $q->where('tracking_number', 'like', "%{$s}%")
+                    ->orWhere('reference_number', 'like', "%{$s}%")
+                    ->orWhere('container_number', 'like', "%{$s}%")
+                    ->orWhere('container_number', 'like', "%{$cleanContainer}%")
+                    ->orWhere('bill_of_lading_number', 'like', "%{$s}%")
+                    ->orWhere('awb_number', 'like', "%{$s}%")
+                    ->when($cleanDigits !== '', fn ($sub) => $sub->orWhere('awb_number', 'like', "%{$cleanDigits}%"))
+                    ->orWhere('vehicle_plate', 'like', "%{$s}%")
+                    ->orWhere('cmr_number', 'like', "%{$s}%")
+                    ->orWhereHas('items', function ($iq) use ($s, $cleanContainer) {
+                        $iq->where('container_number', 'like', "%{$s}%")
+                            ->orWhere('container_number', 'like', "%{$cleanContainer}%")
+                            ->orWhere('sku', 'like', "%{$s}%")
+                            ->orWhere('sku', 'like', "%{$cleanContainer}%");
+                    });
+            });
+        }
+
+        if ($request->filled('status')) {
+            $query->where('status', strtoupper((string) $request->query('status')));
+        }
+
+        if ($request->filled('carrier_id')) {
+            $query->where('carrier_id', $request->query('carrier_id'));
+        }
+
+        if ($request->filled('origin_location_id')) {
+            $query->where('origin_location_id', $request->query('origin_location_id'));
+        }
+
+        if ($request->filled('destination_location_id')) {
+            $query->where('destination_location_id', $request->query('destination_location_id'));
+        }
+
+        if ($request->has('is_delayed') && $request->query('is_delayed') !== '') {
+            $query->where('is_delayed', filter_var($request->query('is_delayed'), FILTER_VALIDATE_BOOLEAN));
+        }
+
+        if ($request->boolean('has_open_exceptions')) {
+            $query->whereHas('exceptions', function ($eq) {
+                $eq->whereIn('status', ['OPEN', 'INVESTIGATING']);
+            });
+        }
+
+        if ($request->filled('date_from')) {
+            try {
+                $fromDate = Carbon::parse((string) $request->query('date_from'))->toDateString();
+                $query->whereDate('expected_departure_at', '>=', $fromDate);
+            } catch (\Throwable) {
+                // Ignore unparseable date filter input
+            }
+        }
+
+        if ($request->filled('date_to')) {
+            try {
+                $toDate = Carbon::parse((string) $request->query('date_to'))->toDateString();
+                $query->whereDate('expected_arrival_at', '<=', $toDate);
+            } catch (\Throwable) {
+                // Ignore unparseable date filter input
+            }
+        }
+    }
+
+    /**
+     * Apply manifest sorting and return the normalized active sort key.
+     */
+    protected function applyManifestSort($query, Request $request): string
+    {
+        $sort = strtolower(trim((string) $request->query('sort', 'newest')));
+
+        match ($sort) {
+            'eta_soonest' => $query->orderByRaw('CASE WHEN estimated_arrival_at IS NULL THEN 1 ELSE 0 END ASC')
+                ->orderBy('estimated_arrival_at', 'asc')
+                ->orderByDesc('id'),
+            'highest_value' => $query->orderByDesc('converted_value_usd')->orderByDesc('id'),
+            'most_delayed' => $query->orderByDesc('is_delayed')->orderByDesc('delay_hours')->orderByDesc('id'),
+            default => $query->orderByDesc('created_at')->orderByDesc('id'),
+        };
+
+        return in_array($sort, ['newest', 'eta_soonest', 'highest_value', 'most_delayed'], true)
+            ? $sort
+            : 'newest';
     }
 }

@@ -27,6 +27,7 @@
 
                 <!-- Nav Links: Sentence case pointing to existing sections -->
                 <nav class="hidden md:flex items-center space-x-8 text-xs font-medium theme-text-secondary">
+                    <a href="#modes" class="hover:text-blue-500 dark:hover:text-cyan-400 transition-colors">Freight modes</a>
                     <a href="#timeline" class="hover:text-blue-500 dark:hover:text-cyan-400 transition-colors">Timeline</a>
                     <a href="#how-it-works" class="hover:text-blue-500 dark:hover:text-cyan-400 transition-colors">How it works</a>
                     <a href="#network" class="hover:text-blue-500 dark:hover:text-cyan-400 transition-colors">Network map</a>
@@ -75,60 +76,77 @@
 
     @php
         $feat = $featuredShipment ?? $activeShipments->first();
-        $heroLightImage = config('cargotrace.hero_images.light') ?? (file_exists(public_path('images/backgrounds/bg-light.webp')) ? 'images/backgrounds/bg-light.webp' : null);
+        $heroDarkImage = config('cargotrace.hero_images.dark')
+            ?: (file_exists(public_path('images/backgrounds/hero-multimodal-dark.jpg'))
+                ? 'images/backgrounds/hero-multimodal-dark.jpg'
+                : 'images/backgrounds/bg-dark.webp');
+        $heroLightImage = config('cargotrace.hero_images.light')
+            ?: (file_exists(public_path('images/backgrounds/hero-multimodal-light.jpg'))
+                ? 'images/backgrounds/hero-multimodal-light.jpg'
+                : (file_exists(public_path('images/backgrounds/hero-light.webp'))
+                    ? 'images/backgrounds/hero-light.webp'
+                    : (file_exists(public_path('images/backgrounds/bg-light.webp'))
+                        ? 'images/backgrounds/bg-light.webp'
+                        : null)));
+        $heroDarkIsMultimodal = str_contains($heroDarkImage, 'hero-multimodal');
+        $heroLightIsMultimodal = $heroLightImage && str_contains($heroLightImage, 'hero-multimodal');
     @endphp
 
-    <!-- 1. CINEMATIC MARITIME HERO SECTION (Dark: bg-dark.webp | Light: bg-light.webp or fallback) -->
-    <section class="relative min-h-[580px] sm:min-h-[640px] lg:min-h-[700px] flex items-center overflow-hidden border-b theme-border">
-        <!-- Background Imagery: Two <img> siblings toggled by [data-theme] in CSS -->
+    <main>
+    <!-- 1. CINEMATIC MULTIMODAL HERO SECTION (Dark: hero-multimodal-dark.jpg / bg-dark.webp | Light: hero-multimodal-light.jpg / bg-light.webp) -->
+    <section class="relative min-h-[600px] sm:min-h-[680px] lg:min-h-[760px] flex items-center overflow-hidden border-b theme-border bg-[#EEF5FB] dark:bg-[#060D1A] transition-colors duration-300 ease-in-out">
+        <!-- Background Imagery: Both themes share identical positioned box and crossfade via opacity -->
         <div class="absolute inset-0 z-0 overflow-hidden pointer-events-none">
-            {{-- Dark Theme Background Photography --}}
-            <img
-                src="{{ asset('images/backgrounds/bg-dark.webp') }}"
-                alt="Container ship and gantry cranes at night"
-                width="2560"
-                height="1440"
-                fetchpriority="high"
-                loading="eager"
-                decoding="sync"
-                class="hero-img-dark w-full h-full object-cover [object-position:80%_center] md:[object-position:right_center] filter brightness-100 contrast-100"
-            >
-
-            {{-- Light Theme Background Photography (or pale gradient + SVG motif fallback) --}}
-            @if($heroLightImage)
+            <div class="hero-artwork-frame absolute inset-0 lg:inset-y-0 lg:left-auto lg:right-0 lg:h-full lg:w-auto lg:aspect-[2752/1536]">
+                {{-- Dark Theme Background Photography --}}
                 <img
-                    src="{{ asset($heroLightImage) }}"
-                    alt="Daytime maritime container port operations"
-                    width="2560"
-                    height="1440"
-                    fetchpriority="low"
-                    loading="lazy"
-                    decoding="async"
-                    class="hero-img-light w-full h-full object-cover [object-position:80%_center] md:[object-position:right_center] filter brightness-100 contrast-100"
+                    src="{{ asset($heroDarkImage) }}"
+                    alt="Multimodal spice freight terminal at night with container ship, cargo aircraft, and haulage truck"
+                    width="{{ $heroDarkIsMultimodal ? 2752 : 2560 }}"
+                    height="{{ $heroDarkIsMultimodal ? 1536 : 1440 }}"
+                    fetchpriority="high"
+                    loading="eager"
+                    decoding="sync"
+                    class="absolute inset-0 w-full h-full object-cover [object-position:76%_center] lg:object-contain lg:object-right opacity-0 dark:opacity-100 transition-opacity duration-300 ease-in-out filter brightness-100 contrast-100"
                 >
-            @else
-                <div class="hero-fallback-light w-full h-full bg-gradient-to-br from-[#F4F7FB] via-sky-50 to-slate-200 relative">
-                    <x-svg-network-motif class="text-slate-500 opacity-10" />
-                </div>
-            @endif
 
-            <!-- Dark Theme Gradient Scrim -->
-            <div class="absolute inset-0 hidden dark:block" style="background: linear-gradient(90deg, rgba(5, 11, 20, 0.90) 0%, rgba(5, 11, 20, 0.82) 30%, rgba(5, 11, 20, 0.45) 48%, rgba(5, 11, 20, 0) 60%), linear-gradient(180deg, rgba(5, 11, 20, 0.25) 0%, rgba(5, 11, 20, 0) 80px);"></div>
+                {{-- Light Theme Background Photography (or pale gradient + SVG motif fallback) --}}
+                @if($heroLightImage)
+                    <img
+                        src="{{ asset($heroLightImage) }}"
+                        alt="Daytime multimodal freight operations showing container vessel, cargo plane, and road transport"
+                        width="{{ $heroLightIsMultimodal ? 2752 : 2560 }}"
+                        height="{{ $heroLightIsMultimodal ? 1536 : 1440 }}"
+                        fetchpriority="high"
+                        loading="eager"
+                        decoding="async"
+                        class="absolute inset-0 w-full h-full object-cover [object-position:76%_center] lg:object-contain lg:object-right opacity-100 dark:opacity-0 transition-opacity duration-300 ease-in-out filter brightness-100 contrast-100"
+                    >
+                @else
+                    <div class="absolute inset-0 w-full h-full bg-gradient-to-br from-[#EEF5FB] via-sky-50 to-slate-200 opacity-100 dark:opacity-0 transition-opacity duration-300 ease-in-out">
+                        <x-svg-network-motif class="text-slate-500 opacity-10" />
+                    </div>
+                @endif
+            </div>
 
-            <!-- Light Theme Gradient Scrim -->
-            <div class="absolute inset-0 block dark:hidden" style="background: linear-gradient(90deg, rgba(244, 247, 251, 0.93) 0%, rgba(244, 247, 251, 0.85) 30%, rgba(244, 247, 251, 0.45) 48%, rgba(244, 247, 251, 0) 60%), linear-gradient(180deg, rgba(244, 247, 251, 0.30) 0%, rgba(244, 247, 251, 0) 80px);"></div>
+            <!-- Dark Theme Gradient Scrim (crossfades smoothly, protects left typography while keeping right artwork uncropped) -->
+            <div class="absolute inset-0 opacity-0 dark:opacity-100 transition-opacity duration-300 ease-in-out" style="background: linear-gradient(90deg, rgba(6, 13, 26, 0.96) 0%, rgba(6, 13, 26, 0.84) 26%, rgba(6, 13, 26, 0.36) 44%, rgba(6, 13, 26, 0) 56%), linear-gradient(180deg, rgba(6, 13, 26, 0.22) 0%, rgba(6, 13, 26, 0) 80px);"></div>
+            <div class="absolute inset-0 sm:hidden bg-[#060D1A]/45 opacity-0 dark:opacity-100 transition-opacity duration-300 ease-in-out"></div>
+
+            <!-- Light Theme Gradient Scrim (crossfades smoothly, protects left typography while keeping right artwork uncropped) -->
+            <div class="absolute inset-0 opacity-100 dark:opacity-0 transition-opacity duration-300 ease-in-out" style="background: linear-gradient(90deg, rgba(238, 245, 251, 0.96) 0%, rgba(238, 245, 251, 0.86) 26%, rgba(238, 245, 251, 0.38) 44%, rgba(238, 245, 251, 0) 56%), linear-gradient(180deg, rgba(238, 245, 251, 0.25) 0%, rgba(238, 245, 251, 0) 80px);"></div>
+            <div class="absolute inset-0 sm:hidden bg-[#EEF5FB]/55 opacity-100 dark:opacity-0 transition-opacity duration-300 ease-in-out"></div>
         </div>
 
-        <div class="relative z-10 w-full max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-24">
+        <div class="relative z-10 w-full max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-24 lg:py-28">
             <!-- Hero content limited to max-width 36rem so text sits entirely inside the scrim -->
             <div class="max-w-[36rem] space-y-6">
-                <!-- Eyebrow label: Sentence case -->
-                <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-blue-600/10 dark:bg-blue-600/25 border border-blue-600/25 dark:border-blue-400/30 text-blue-700 dark:text-cyan-300 text-xs font-medium backdrop-blur-sm">
-                    <span class="w-2 h-2 rounded-full bg-blue-600 dark:bg-cyan-400"></span>
-                    Global spice freight by sea, air and road
-                </div>
+                <!-- Understated Kicker: Sentence case -->
+                <p class="text-xs font-semibold text-blue-700 dark:text-cyan-300 tracking-wide">
+                    Multimodal spice and essential oil export tracking
+                </p>
 
-                <!-- Headline: "Follow every container from port to port." with accent span -->
+                <!-- Headline -->
                 <h1 class="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-[#0B1728] dark:text-white leading-[1.08]">
                     Follow every consignment<br>
                     <span class="text-[#2563EB] dark:text-cyan-400">
@@ -138,7 +156,7 @@
 
                 <!-- One-sentence subline -->
                 <p class="text-base sm:text-lg text-slate-700 dark:text-slate-200 leading-relaxed">
-                    Track nutmeg, cloves, patchouli oil and more across sea, air and road.
+                    Track nutmeg, cloves, patchouli oil and more from Indonesian origins to buyers worldwide.
                 </p>
 
                 <!-- Tracking-number search box -->
@@ -147,25 +165,28 @@
                     onsubmit="if(window.handlePublicTrack){window.handlePublicTrack();}else{var q=document.getElementById('public-track-input').value.trim();if(q){window.location.href='/track/'+encodeURIComponent(q);}}"
                     class="pt-2 space-y-2"
                 >
+                    <label for="public-track-input" class="block text-xs font-medium text-slate-700 dark:text-slate-200">
+                        Track by consignment, container, AWB or plate
+                    </label>
                     <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5">
                         <div class="relative flex-1">
                             <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400 dark:text-slate-500">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
                             </div>
                             <input
                                 type="text"
                                 id="public-track-input"
                                 placeholder="Tracking number, e.g. {{ $feat->tracking_number ?? 'CTG-SEA-2026-00244' }}"
-                                class="w-full pl-10 pr-4 py-3 rounded-xl bg-white/95 dark:bg-[#0B1728]/90 border border-[#D5DEEA] dark:border-white/10 text-[#0B1728] dark:text-[#E6EEF8] placeholder-slate-400 dark:placeholder-slate-500 text-xs font-mono focus:outline-none focus:ring-2 focus:ring-[#2563EB] dark:focus:ring-cyan-400 shadow-sm"
+                                class="w-full min-h-[44px] pl-10 pr-4 py-3 rounded-xl bg-white/95 dark:bg-[#0B1728]/90 border border-[#D5DEEA] dark:border-white/10 text-[#0B1728] dark:text-[#E6EEF8] placeholder-slate-500 dark:placeholder-slate-400 text-xs font-mono focus:outline-none focus:ring-2 focus:ring-[#2563EB] dark:focus:ring-cyan-400 shadow-sm"
                             >
                         </div>
                         <button
                             type="submit"
                             aria-label="Track Shipment"
-                            class="px-5 py-3 rounded-xl bg-[#2563EB] hover:bg-[#1D4ED8] text-white font-semibold text-xs transition shadow-md shadow-blue-500/20 whitespace-nowrap cursor-pointer flex items-center justify-center gap-1.5"
+                            class="min-h-[44px] px-5 py-3 rounded-xl bg-[#2563EB] hover:bg-[#1D4ED8] text-white font-semibold text-xs transition shadow-md shadow-blue-500/20 whitespace-nowrap cursor-pointer flex items-center justify-center gap-1.5"
                         >
                             <span>Track a shipment</span>
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
                         </button>
                     </div>
                 </form>
@@ -173,14 +194,14 @@
                 <!-- Sample tracking quick links + secondary anchor -->
                 <div class="pt-1 space-y-2">
                     <div class="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs">
-                        <span class="text-slate-600 dark:text-slate-400">Sample consignments:</span>
-                        <a href="{{ url('/track/CTG-SEA-2026-00189') }}" class="font-mono text-blue-600 dark:text-cyan-400 hover:underline">CTG-SEA-2026-00189</a>
-                        <a href="{{ url('/track/CTG-SEA-2026-00244') }}" class="font-mono text-blue-600 dark:text-cyan-400 hover:underline">CTG-SEA-2026-00244</a>
-                        <a href="{{ url('/track/CTG-AIR-2026-00678') }}" class="font-mono text-blue-600 dark:text-cyan-400 hover:underline">CTG-AIR-2026-00678</a>
+                        <span class="text-slate-700 dark:text-slate-300">Sample consignments:</span>
+                        <a href="{{ url('/track/CTG-SEA-2026-00189') }}" class="font-mono text-blue-700 dark:text-cyan-400 hover:underline py-1">CTG-SEA-2026-00189</a>
+                        <a href="{{ url('/track/CTG-SEA-2026-00244') }}" class="font-mono text-blue-700 dark:text-cyan-400 hover:underline py-1">CTG-SEA-2026-00244</a>
+                        <a href="{{ url('/track/CTG-AIR-2026-00678') }}" class="font-mono text-blue-700 dark:text-cyan-400 hover:underline py-1">CTG-AIR-2026-00678</a>
                     </div>
-                    <a href="#how-it-works" class="inline-flex items-center gap-1.5 text-xs font-semibold text-blue-600 dark:text-cyan-400 hover:text-blue-700 dark:hover:text-cyan-300 transition-colors">
-                        <span>How it works</span>
-                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                    <a href="#modes" class="inline-flex items-center gap-1.5 text-xs font-semibold text-blue-700 dark:text-cyan-400 hover:text-blue-800 dark:hover:text-cyan-300 transition-colors py-1">
+                        <span>Explore freight modes</span>
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
                     </a>
                 </div>
             </div>
@@ -206,6 +227,100 @@
                 <div class="px-4 pt-6 md:pt-0">
                     <div class="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-blue-600 dark:text-cyan-400 tracking-tight font-mono">{{ number_format($totalShipments) }}</div>
                     <div class="text-xs theme-text-muted mt-1.5 font-medium">Shipments tracked to date</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 2B. MULTIMODAL CAPABILITY HIGHLIGHT (3-column Sea / Air / Road spice export scope) -->
+    <section id="modes" class="py-14 lg:py-20 border-b theme-border theme-page transition-colors duration-200">
+        <div class="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
+            <div class="flex flex-col md:flex-row md:items-end justify-between gap-4">
+                <div class="max-w-2xl space-y-2">
+                    <p class="text-xs font-semibold text-blue-600 dark:text-cyan-400">Multimodal freight coverage</p>
+                    <h2 class="text-2xl sm:text-3xl font-extrabold tracking-tight theme-heading">
+                        Three transport corridors for Indonesian spice exports
+                    </h2>
+                    <p class="text-sm theme-text-secondary leading-relaxed">
+                        Every shipment carries mode-specific identifiers, location codes, and delay thresholds tailored to ocean, air, and overland spice trade legs.
+                    </p>
+                </div>
+                <a href="#network" class="text-xs font-semibold text-blue-600 dark:text-cyan-400 hover:underline inline-flex items-center gap-1.5 py-2 self-start md:self-auto">
+                    <span>Inspect live route map</span>
+                    <span aria-hidden="true">&rarr;</span>
+                </a>
+            </div>
+
+            <div class="rounded-2xl theme-card border theme-border overflow-hidden grid grid-cols-1 md:grid-cols-3 divide-y md:divide-y-0 md:divide-x theme-border">
+                <!-- Sea Freight (Primary Export Corridor) -->
+                <div class="p-6 sm:p-8 flex flex-col justify-between gap-5 bg-blue-500/[0.03] dark:bg-blue-500/[0.05]">
+                    <div class="space-y-3">
+                        <div class="flex items-center justify-between gap-3">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 rounded-xl bg-blue-500/15 text-blue-600 dark:text-cyan-400 border border-blue-500/25 flex items-center justify-center">
+                                    <x-mode-icon mode="SEA" class="w-5 h-5" />
+                                </div>
+                                <div>
+                                    <h3 class="text-lg font-bold theme-heading tracking-tight">Sea Freight</h3>
+                                    <span class="text-[11px] font-mono theme-text-muted">UN/LOCODE &bull; ISO 6346 &bull; B/L</span>
+                                </div>
+                            </div>
+                            <span class="text-[11px] font-semibold px-2.5 py-0.5 rounded-full bg-blue-600/15 text-blue-700 dark:text-cyan-300 border border-blue-500/25 whitespace-nowrap">
+                                Primary export
+                            </span>
+                        </div>
+                        <p class="text-xs sm:text-sm theme-text-secondary leading-relaxed">
+                            Containerized nutmeg, cloves, cassia, and black pepper moving from Belawan and Tanjung Priok to Rotterdam, Hamburg, Jebel Ali, and US East Coast ports.
+                        </p>
+                    </div>
+                    <div class="pt-4 border-t theme-border flex items-center justify-between text-xs">
+                        <span class="theme-text-muted font-medium">Database volume</span>
+                        <span class="font-mono font-bold text-blue-600 dark:text-cyan-400 tabular-nums">{{ number_format($modeTotals['SEA'] ?? 0) }} consignments</span>
+                    </div>
+                </div>
+
+                <!-- Air Freight -->
+                <div class="p-6 sm:p-8 flex flex-col justify-between gap-5">
+                    <div class="space-y-3">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-xl bg-sky-500/15 text-sky-600 dark:text-sky-400 border border-sky-500/25 flex items-center justify-center">
+                                <x-mode-icon mode="AIR" class="w-5 h-5" />
+                            </div>
+                            <div>
+                                <h3 class="text-lg font-bold theme-heading tracking-tight">Air Freight</h3>
+                                <span class="text-[11px] font-mono theme-text-muted">IATA &bull; 11-digit AWB</span>
+                            </div>
+                        </div>
+                        <p class="text-xs sm:text-sm theme-text-secondary leading-relaxed">
+                            Temperature-sensitive patchouli, clove bud, and nutmeg essential oils routed through Kualanamu and Soekarno-Hatta to Paris CDG, Schiphol, and JFK.
+                        </p>
+                    </div>
+                    <div class="pt-4 border-t theme-border flex items-center justify-between text-xs">
+                        <span class="theme-text-muted font-medium">Database volume</span>
+                        <span class="font-mono font-bold text-sky-600 dark:text-sky-400 tabular-nums">{{ number_format($modeTotals['AIR'] ?? 0) }} consignments</span>
+                    </div>
+                </div>
+
+                <!-- Road Freight -->
+                <div class="p-6 sm:p-8 flex flex-col justify-between gap-5">
+                    <div class="space-y-3">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-xl bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/25 flex items-center justify-center">
+                                <x-mode-icon mode="ROAD" class="w-5 h-5" />
+                            </div>
+                            <div>
+                                <h3 class="text-lg font-bold theme-heading tracking-tight">Road Freight</h3>
+                                <span class="text-[11px] font-mono theme-text-muted">Depots &bull; Plate &bull; CMR</span>
+                            </div>
+                        </div>
+                        <p class="text-xs sm:text-sm theme-text-secondary leading-relaxed">
+                            First-mile Sumatra plantation hauls from Lhokseumawe and Banda Aceh to Medan hubs, plus European last-mile deliveries to Grasse and Rotterdam depots.
+                        </p>
+                    </div>
+                    <div class="pt-4 border-t theme-border flex items-center justify-between text-xs">
+                        <span class="theme-text-muted font-medium">Database volume</span>
+                        <span class="font-mono font-bold text-emerald-600 dark:text-emerald-400 tabular-nums">{{ number_format($modeTotals['ROAD'] ?? 0) }} consignments</span>
+                    </div>
                 </div>
             </div>
         </div>
@@ -531,6 +646,8 @@
         </div>
     </section>
 
+    </main>
+
     <!-- 7. ENTERPRISE FOOTER -->
     <footer class="theme-sidebar border-t theme-border py-12 text-xs theme-text-muted transition-colors duration-200">
         <div class="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
@@ -547,6 +664,7 @@
                     </div>
                 </div>
                 <div class="flex flex-wrap items-center gap-6 theme-text-secondary font-medium">
+                    <a href="#modes" class="hover:theme-heading transition">Freight modes</a>
                     <a href="#timeline" class="hover:theme-heading transition">Timeline</a>
                     <a href="#how-it-works" class="hover:theme-heading transition">How it works</a>
                     <a href="#network" class="hover:theme-heading transition">Network map</a>
@@ -569,7 +687,8 @@
         worldMap: {
             containerId: 'landing-world-map',
             options: {
-                shipments: @json($mapShipments)
+                shipments: @json($mapShipments),
+                locations: @json($mapLocations ?? [])
             }
         }
     };

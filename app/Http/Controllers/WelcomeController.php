@@ -24,6 +24,12 @@ class WelcomeController extends Controller
         $locations = Location::all();
         $carriers = Carrier::where('is_active', true)->get();
 
+        $modeTotals = [
+            'SEA' => Shipment::where('transport_mode', 'SEA')->count(),
+            'AIR' => Shipment::where('transport_mode', 'AIR')->count(),
+            'ROAD' => Shipment::where('transport_mode', 'ROAD')->count(),
+        ];
+
         $activeShipments = Shipment::whereIn('status', ['IN_TRANSIT', 'PICKED_UP', 'BOOKED'])
             ->with(['originLocation', 'destinationLocation', 'currentLocation', 'carrier'])
             ->get();
@@ -59,6 +65,7 @@ class WelcomeController extends Controller
                 'id' => $s->id,
                 'tracking_number' => $s->tracking_number,
                 'status' => $s->status,
+                'transport_mode' => strtoupper((string) ($s->transport_mode ?? $s->carrier?->mode ?? 'SEA')),
                 'is_delayed' => (bool) $s->is_delayed,
                 'delay_hours' => (int) $s->delay_hours,
                 'carrier' => $s->carrier?->name ?? 'Carrier',
@@ -97,18 +104,36 @@ class WelcomeController extends Controller
             ];
         })->toArray();
 
+        $mapLocations = $locations
+            ->filter(fn (Location $loc) => $loc->latitude !== null && $loc->longitude !== null)
+            ->map(fn (Location $loc) => [
+                'id' => (int) $loc->id,
+                'name' => $loc->name,
+                'short_name' => $loc->short_name,
+                'display_code' => $loc->display_code,
+                'code_type_label' => $loc->code_type_label,
+                'country' => $loc->country,
+                'type' => $loc->type,
+                'latitude' => (float) $loc->latitude,
+                'longitude' => (float) $loc->longitude,
+            ])
+            ->values()
+            ->all();
+
         return view('welcome', compact(
             'totalShipments',
             'onTimePercentage',
             'totalValueUsd',
             'locations',
             'carriers',
+            'modeTotals',
             'activeShipments',
             'featuredShipment',
             'news',
             'currencyData',
             'rates',
-            'mapShipments'
+            'mapShipments',
+            'mapLocations'
         ));
     }
 }

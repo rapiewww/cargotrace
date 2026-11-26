@@ -3,8 +3,11 @@ import L from 'leaflet';
 import {
     createMap,
     getGreatCircleArc,
+    getModeSvg,
     getSeverityColor,
     getSeverityLabel,
+    normalizeLongitude,
+    splitAntimeridianSegments,
     unwrapLongitudeNear,
 } from './map';
 
@@ -79,9 +82,9 @@ function normalizeDataset(options = {}) {
 
 function getModeDisplay(mode) {
     const normalized = String(mode || 'SEA').toUpperCase();
-    if (normalized === 'AIR') return { code: 'AIR', icon: '✈️', label: 'Air' };
-    if (normalized === 'ROAD') return { code: 'ROAD', icon: '🚚', label: 'Road' };
-    return { code: 'SEA', icon: '🚢', label: 'Sea' };
+    if (normalized === 'AIR') return { code: 'AIR', svg: getModeSvg('AIR', 11), label: 'Air' };
+    if (normalized === 'ROAD') return { code: 'ROAD', svg: getModeSvg('ROAD', 11), label: 'Road' };
+    return { code: 'SEA', svg: getModeSvg('SEA', 11), label: 'Sea' };
 }
 
 function getLocCode(loc) {
@@ -146,8 +149,8 @@ function buildShipmentPopupHtml(shipment, pointRole, locationName, locationCode 
                 <a href="${detailUrl}" style="font-family: 'JetBrains Mono', monospace; font-weight: 700; color: #38BDF8; text-decoration: none;">
                     ${escapeHtml(shipment.tracking_number)}
                 </a>
-                <span style="font-size: 10px; font-weight: 600; padding: 2px 7px; border-radius: 9999px; background: rgba(37, 99, 235, 0.16); border: 1px solid rgba(56, 189, 248, 0.25); white-space: nowrap;">
-                    ${modeInfo.icon} ${modeInfo.label}
+                <span style="display: inline-flex; align-items: center; gap: 4px; font-size: 10px; font-weight: 600; padding: 2px 7px; border-radius: 9999px; background: rgba(37, 99, 235, 0.16); border: 1px solid rgba(56, 189, 248, 0.25); white-space: nowrap;">
+                    ${modeInfo.svg} <span>${modeInfo.label}</span>
                 </span>
             </div>
             <div style="font-weight: 600; margin-bottom: 4px;">
@@ -272,7 +275,7 @@ function renderGlobeData(dataset) {
                 status: s.status_label || s.status,
                 isDelayed,
                 color: severityColor,
-                name: `${modeInfo.icon} ${s.tracking_number} [${modeInfo.label}] (${getLocCode(orig) || 'ORI'} -> ${getLocCode(dest) || 'DST'})`,
+                name: `[${modeInfo.label}] ${s.tracking_number} (${getLocCode(orig) || 'ORI'} -> ${getLocCode(dest) || 'DST'})`,
             });
         });
     });
@@ -451,16 +454,17 @@ function renderLeaflet2DData(dataset) {
                 mode: modeInfo.code,
                 numPoints: 64,
             });
+            const segments = splitAntimeridianSegments(points);
 
             // Route line styling per mode:
-            // SEA: solid curved great-circle arc
+            // SEA: solid curved arc
             // AIR: dashed higher arc
             // ROAD: straight line
             const dashArray = modeInfo.code === 'AIR' ? '8, 6' : null;
             const weight = modeInfo.code === 'ROAD' ? 3.0 : (modeInfo.code === 'AIR' ? 2.4 : 2.6);
 
             const polyline = runLayerSafely(`polyline ${s.tracking_number}`, () => {
-                const line = L.polyline(points, {
+                const line = L.polyline(segments, {
                     color: strokeColor,
                     weight,
                     dashArray,
@@ -472,7 +476,7 @@ function renderLeaflet2DData(dataset) {
             });
 
             const originMarker = runLayerSafely(`origin marker ${s.tracking_number}`, () => {
-                const marker = L.circleMarker([origLat, origLng], {
+                const marker = L.circleMarker([origLat, normalizeLongitude(origLng)], {
                     radius: 5,
                     fillColor: '#2563EB',
                     color: markerRingColor,
@@ -485,7 +489,7 @@ function renderLeaflet2DData(dataset) {
             });
 
             const destinationMarker = runLayerSafely(`destination marker ${s.tracking_number}`, () => {
-                const marker = L.circleMarker([destLat, destLng], {
+                const marker = L.circleMarker([destLat, normalizeLongitude(Number(destLngRaw))], {
                     radius: 5,
                     fillColor: '#0891B2',
                     color: markerRingColor,
@@ -502,8 +506,7 @@ function renderLeaflet2DData(dataset) {
             if (isFiniteCoord(trackingPoint?.lat) && isFiniteCoord(trackingPoint?.lng)) {
                 currentMarker = runLayerSafely(`current marker ${s.tracking_number}`, () => {
                     const currLat = Number(trackingPoint.lat);
-                    const midLng = (origLng + destLng) / 2;
-                    const currLng = unwrapLongitudeNear(Number(trackingPoint.lng), midLng);
+                    const currLng = normalizeLongitude(Number(trackingPoint.lng));
 
                     const marker = L.circleMarker([currLat, currLng], {
                         radius: 7,
@@ -521,7 +524,12 @@ function renderLeaflet2DData(dataset) {
                 });
             }
 
-            const bounds = L.latLngBounds(points);
+            const bounds = (polyline && polyline.getBounds && polyline.getBounds().isValid())
+                ? polyline.getBounds()
+                : L.latLngBounds([
+                    [origLat, normalizeLongitude(origLng)],
+                    [destLat, normalizeLongitude(Number(destLngRaw))],
+                ]);
             if (currentMarker) {
                 bounds.extend(currentMarker.getLatLng());
             }
@@ -592,6 +600,8 @@ export function initRoutes2DMap(containerId, options = {}) {
         zoom: 2,
         minZoom: 2,
         maxZoom: 18,
+        maxBounds: [[-75, -180], [80, 180]],
+        maxBoundsViscosity: 0.7,
         zoomControl: false,
         worldCopyJump: false,
         tileOverrides: {
@@ -743,13 +753,13 @@ function highlightActivityRow(trackingNumber = null) {
 
 function updateFilterTabButtons(activeKey) {
     document.querySelectorAll('.map-filter-tab').forEach(btn => {
-        btn.className = 'px-2.5 py-1 rounded-xl font-semibold transition map-filter-tab theme-text-muted hover:theme-heading cursor-pointer';
+        btn.className = 'px-2.5 py-1 rounded-xl font-semibold transition map-filter-tab theme-text-muted hover:theme-heading cursor-pointer inline-flex items-center gap-1';
         btn.setAttribute('aria-pressed', 'false');
     });
 
     const activeBtn = document.getElementById(`tab-filter-${activeKey.toLowerCase()}`);
     if (activeBtn) {
-        activeBtn.className = 'px-2.5 py-1 rounded-xl font-semibold transition map-filter-tab bg-blue-600 text-white shadow-sm cursor-pointer';
+        activeBtn.className = 'px-2.5 py-1 rounded-xl font-semibold transition map-filter-tab bg-blue-600 text-white shadow-sm cursor-pointer inline-flex items-center gap-1';
         activeBtn.setAttribute('aria-pressed', 'true');
     }
 }

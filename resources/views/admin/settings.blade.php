@@ -46,7 +46,8 @@
                     <div class="p-4 rounded-xl bg-slate-950/40 border border-slate-800 space-y-3">
                         <div class="flex items-center justify-between">
                             <span class="font-bold text-white uppercase tracking-wider text-[11px] flex items-center gap-2">
-                                <span>🚢</span> Sea Freight (SEA)
+                                <x-mode-icon mode="SEA" class="w-4 h-4 text-cyan-400" />
+                                <span>Sea Freight (SEA)</span>
                             </span>
                             <span class="text-[10px] text-slate-400 font-mono">Default: 12h / 48h</span>
                         </div>
@@ -76,7 +77,8 @@
                     <div class="p-4 rounded-xl bg-slate-950/40 border border-slate-800 space-y-3">
                         <div class="flex items-center justify-between">
                             <span class="font-bold text-white uppercase tracking-wider text-[11px] flex items-center gap-2">
-                                <span>✈️</span> Air Freight (AIR)
+                                <x-mode-icon mode="AIR" class="w-4 h-4 text-sky-400" />
+                                <span>Air Freight (AIR)</span>
                             </span>
                             <span class="text-[10px] text-slate-400 font-mono">Default: 3h / 12h</span>
                         </div>
@@ -106,7 +108,8 @@
                     <div class="p-4 rounded-xl bg-slate-950/40 border border-slate-800 space-y-3">
                         <div class="flex items-center justify-between">
                             <span class="font-bold text-white uppercase tracking-wider text-[11px] flex items-center gap-2">
-                                <span>🚚</span> Road Freight (ROAD)
+                                <x-mode-icon mode="ROAD" class="w-4 h-4 text-emerald-400" />
+                                <span>Road Freight (ROAD)</span>
                             </span>
                             <span class="text-[10px] text-slate-400 font-mono">Default: 6h / 24h</span>
                         </div>

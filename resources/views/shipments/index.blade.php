@@ -43,10 +43,10 @@
         @php
             $currentMode = strtoupper(request('mode', 'ALL'));
             $modesList = [
-                'ALL' => ['label' => 'All modes', 'icon' => '🌐', 'count' => $modeCounts['ALL'] ?? $shipments->total()],
-                'SEA' => ['label' => 'Sea', 'icon' => '🚢', 'count' => $modeCounts['SEA'] ?? 0],
-                'AIR' => ['label' => 'Air', 'icon' => '✈️', 'count' => $modeCounts['AIR'] ?? 0],
-                'ROAD' => ['label' => 'Road', 'icon' => '🚚', 'count' => $modeCounts['ROAD'] ?? 0],
+                'ALL' => ['label' => 'All modes', 'count' => $modeCounts['ALL'] ?? $shipments->total()],
+                'SEA' => ['label' => 'Sea', 'count' => $modeCounts['SEA'] ?? 0],
+                'AIR' => ['label' => 'Air', 'count' => $modeCounts['AIR'] ?? 0],
+                'ROAD' => ['label' => 'Road', 'count' => $modeCounts['ROAD'] ?? 0],
             ];
         @endphp
         @foreach($modesList as $mKey => $mData)
@@ -55,10 +55,10 @@
                 $chipUrl = request()->fullUrlWithQuery(['mode' => $mKey === 'ALL' ? null : $mKey, 'page' => null]);
             @endphp
             <a href="{{ $chipUrl }}"
-               class="px-3.5 py-1.5 rounded-full text-xs font-semibold border inline-flex items-center gap-2 transition whitespace-nowrap {{ $isActive ? 'bg-blue-600 text-white border-blue-600 shadow-sm shadow-blue-500/20' : 'theme-card-elevated theme-border theme-text-secondary hover:theme-heading hover:border-blue-500' }}">
-                <span>{{ $mData['icon'] }}</span>
+               class="px-3.5 py-1.5 rounded-full text-xs font-semibold border inline-flex items-center gap-2 transition whitespace-nowrap min-h-[36px] {{ $isActive ? 'bg-blue-600 text-white border-blue-600 shadow-sm shadow-blue-500/20' : 'theme-card-elevated theme-border theme-text-secondary hover:theme-heading hover:border-blue-500' }}">
+                <x-mode-icon :mode="$mKey" class="w-3.5 h-3.5" />
                 <span>{{ $mData['label'] }}</span>
-                <span class="px-1.5 py-0.2 rounded-full text-[10px] font-mono {{ $isActive ? 'bg-white/20 text-white' : 'bg-slate-200 dark:bg-slate-800 theme-text-muted' }}">
+                <span class="px-1.5 py-0.2 rounded-full text-[10px] font-mono tabular-nums {{ $isActive ? 'bg-white/20 text-white' : 'bg-slate-200 dark:bg-slate-800 theme-text-muted' }}">
                     {{ $mData['count'] }}
                 </span>
             </a>
@@ -68,32 +68,37 @@
     <!-- Search & Multi-Filter Bar -->
     <x-card class="space-y-4">
         <form method="GET" action="{{ route('shipments.index') }}" class="space-y-4">
+            @if(request()->filled('mode') && in_array(strtoupper(request('mode')), ['SEA', 'AIR', 'ROAD']))
+                <input type="hidden" name="mode" value="{{ strtoupper(request('mode')) }}">
+            @endif
             @if(request()->boolean('has_open_exceptions'))
                 <input type="hidden" name="has_open_exceptions" value="1">
             @endif
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 text-xs">
+
+            <!-- Filter Row 1: Search, Status, Carrier, Delay -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 text-xs">
                 <!-- Search -->
                 <div class="space-y-1.5">
-                    <label class="uppercase text-[10px] tracking-wider theme-text-muted font-semibold block">Tracking / Reference</label>
-                    <input type="text" name="search" value="{{ request('search') }}" placeholder="e.g. CTG-SEA-2026..." class="w-full px-3.5 py-2 rounded-xl theme-input border font-mono text-xs focus:ring-1 focus:ring-cyan-500 focus:outline-none transition">
+                    <label for="filter-search" class="text-[11px] theme-text-muted font-semibold block">Tracking or reference</label>
+                    <input id="filter-search" type="text" name="search" value="{{ request('search') }}" placeholder="e.g. CTG-SEA-2026..." class="w-full min-h-[40px] px-3.5 py-2 rounded-xl theme-input border font-mono text-xs focus:ring-1 focus:ring-cyan-500 focus:outline-none transition">
                 </div>
 
                 <!-- Status Filter -->
                 <div class="space-y-1.5">
-                    <label class="uppercase text-[10px] tracking-wider theme-text-muted font-semibold block">Lifecycle Status</label>
-                    <select name="status" class="w-full px-3.5 py-2 rounded-xl theme-input border text-xs focus:ring-1 focus:ring-cyan-500 focus:outline-none transition font-mono">
-                        <option value="">All Statuses</option>
+                    <label for="filter-status" class="text-[11px] theme-text-muted font-semibold block">Lifecycle status</label>
+                    <select id="filter-status" name="status" class="w-full min-h-[40px] px-3.5 py-2 rounded-xl theme-input border text-xs focus:ring-1 focus:ring-cyan-500 focus:outline-none transition font-mono">
+                        <option value="">All statuses</option>
                         @foreach(['CREATED', 'BOOKED', 'PICKED_UP', 'IN_TRANSIT', 'DELIVERED'] as $st)
-                            <option value="{{ $st }}" {{ request('status') === $st ? 'selected' : '' }}>{{ $st }}</option>
+                            <option value="{{ $st }}" {{ strtoupper((string) request('status')) === $st ? 'selected' : '' }}>{{ $st }}</option>
                         @endforeach
                     </select>
                 </div>
 
                 <!-- Carrier Filter -->
                 <div class="space-y-1.5">
-                    <label class="uppercase text-[10px] tracking-wider theme-text-muted font-semibold block">Carrier</label>
-                    <select name="carrier_id" class="w-full px-3.5 py-2 rounded-xl theme-input border text-xs focus:ring-1 focus:ring-cyan-500 focus:outline-none transition">
-                        <option value="">All Carriers</option>
+                    <label for="filter-carrier" class="text-[11px] theme-text-muted font-semibold block">Carrier</label>
+                    <select id="filter-carrier" name="carrier_id" class="w-full min-h-[40px] px-3.5 py-2 rounded-xl theme-input border text-xs focus:ring-1 focus:ring-cyan-500 focus:outline-none transition">
+                        <option value="">All carriers</option>
                         @foreach($carriers as $c)
                             <option value="{{ $c->id }}" {{ request('carrier_id') == $c->id ? 'selected' : '' }}>{{ $c->name }} ({{ $c->code }})</option>
                         @endforeach
@@ -102,29 +107,67 @@
 
                 <!-- Delay Filter -->
                 <div class="space-y-1.5">
-                    <label class="uppercase text-[10px] tracking-wider theme-text-muted font-semibold block">Delay Status</label>
-                    <select name="is_delayed" class="w-full px-3.5 py-2 rounded-xl theme-input border text-xs focus:ring-1 focus:ring-cyan-500 focus:outline-none transition">
-                        <option value="">All (On-Time & Delayed)</option>
-                        <option value="1" {{ request('is_delayed') === '1' ? 'selected' : '' }}>Delayed Only</option>
-                        <option value="0" {{ request('is_delayed') === '0' ? 'selected' : '' }}>On-Time Only</option>
+                    <label for="filter-delay" class="text-[11px] theme-text-muted font-semibold block">Delay status</label>
+                    <select id="filter-delay" name="is_delayed" class="w-full min-h-[40px] px-3.5 py-2 rounded-xl theme-input border text-xs focus:ring-1 focus:ring-cyan-500 focus:outline-none transition">
+                        <option value="">All (On-time &amp; delayed)</option>
+                        <option value="1" {{ request('is_delayed') === '1' ? 'selected' : '' }}>Delayed only</option>
+                        <option value="0" {{ request('is_delayed') === '0' ? 'selected' : '' }}>On-time only</option>
                     </select>
                 </div>
+            </div>
 
-                <!-- Origin Hub -->
+            <!-- Filter Row 2: Origin, Destination, Date Range, Sort -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 text-xs">
+                <!-- Origin Location -->
                 <div class="space-y-1.5">
-                    <label class="uppercase text-[10px] tracking-wider theme-text-muted font-semibold block">Origin Location</label>
-                    <select name="origin_location_id" class="w-full px-3.5 py-2 rounded-xl theme-input border text-xs focus:ring-1 focus:ring-cyan-500 focus:outline-none transition">
-                        <option value="">All Origins</option>
+                    <label for="filter-origin" class="text-[11px] theme-text-muted font-semibold block">Origin location</label>
+                    <select id="filter-origin" name="origin_location_id" class="w-full min-h-[40px] px-3.5 py-2 rounded-xl theme-input border text-xs focus:ring-1 focus:ring-cyan-500 focus:outline-none transition">
+                        <option value="">All origins</option>
                         @foreach($locations as $loc)
                             <option value="{{ $loc->id }}" {{ request('origin_location_id') == $loc->id ? 'selected' : '' }}>{{ $loc->short_name }} ({{ $loc->display_code }})</option>
                         @endforeach
+                    </select>
+                </div>
+
+                <!-- Destination Location -->
+                <div class="space-y-1.5">
+                    <label for="filter-destination" class="text-[11px] theme-text-muted font-semibold block">Destination location</label>
+                    <select id="filter-destination" name="destination_location_id" class="w-full min-h-[40px] px-3.5 py-2 rounded-xl theme-input border text-xs focus:ring-1 focus:ring-cyan-500 focus:outline-none transition">
+                        <option value="">All destinations</option>
+                        @foreach($locations as $loc)
+                            <option value="{{ $loc->id }}" {{ request('destination_location_id') == $loc->id ? 'selected' : '' }}>{{ $loc->short_name }} ({{ $loc->display_code }})</option>
+                        @endforeach
+                    </select>
+                </div>
+
+                <!-- Date From -->
+                <div class="space-y-1.5">
+                    <label for="filter-date-from" class="text-[11px] theme-text-muted font-semibold block">Departure from</label>
+                    <input id="filter-date-from" type="date" name="date_from" value="{{ request('date_from') }}" class="w-full min-h-[40px] px-3.5 py-2 rounded-xl theme-input border font-mono text-xs focus:ring-1 focus:ring-cyan-500 focus:outline-none transition">
+                </div>
+
+                <!-- Date To -->
+                <div class="space-y-1.5">
+                    <label for="filter-date-to" class="text-[11px] theme-text-muted font-semibold block">Arrival to</label>
+                    <input id="filter-date-to" type="date" name="date_to" value="{{ request('date_to') }}" class="w-full min-h-[40px] px-3.5 py-2 rounded-xl theme-input border font-mono text-xs focus:ring-1 focus:ring-cyan-500 focus:outline-none transition">
+                </div>
+
+                <!-- Sort Selector -->
+                <div class="space-y-1.5">
+                    <label for="filter-sort" class="text-[11px] theme-text-muted font-semibold block">Sort by</label>
+                    @php $activeSort = $currentSort ?? request('sort', 'newest'); @endphp
+                    <select id="filter-sort" name="sort" class="w-full min-h-[40px] px-3.5 py-2 rounded-xl theme-input border text-xs focus:ring-1 focus:ring-cyan-500 focus:outline-none transition">
+                        <option value="newest" {{ $activeSort === 'newest' ? 'selected' : '' }}>Newest</option>
+                        <option value="eta_soonest" {{ $activeSort === 'eta_soonest' ? 'selected' : '' }}>ETA soonest</option>
+                        <option value="highest_value" {{ $activeSort === 'highest_value' ? 'selected' : '' }}>Highest value</option>
+                        <option value="most_delayed" {{ $activeSort === 'most_delayed' ? 'selected' : '' }}>Most delayed</option>
                     </select>
                 </div>
             </div>
 
             <div class="flex flex-wrap items-center justify-between gap-2 pt-3 border-t theme-border">
                 <div class="flex flex-wrap items-center gap-2">
-                    <span class="text-xs theme-text-muted font-mono">
+                    <span class="text-xs theme-text-muted font-mono tabular-nums">
                         Showing {{ $shipments->firstItem() ?? 0 }} - {{ $shipments->lastItem() ?? 0 }} of {{ $shipments->total() }} shipments
                     </span>
                     @if(request()->boolean('has_open_exceptions'))
@@ -135,10 +178,10 @@
                     @endif
                 </div>
                 <div class="flex items-center space-x-2">
-                    <a href="{{ route('shipments.index') }}" class="px-3 py-1.5 rounded-lg text-xs font-semibold theme-text-muted hover:theme-heading hover:bg-slate-200 dark:hover:bg-slate-800 transition">
+                    <a href="{{ route('shipments.index') }}" class="px-3 py-2 rounded-lg text-xs font-semibold theme-text-muted hover:theme-heading hover:bg-slate-200 dark:hover:bg-slate-800 transition min-h-[36px] inline-flex items-center">
                         Reset Filters
                     </a>
-                    <button type="submit" class="px-4 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs transition">
+                    <button type="submit" class="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs transition cursor-pointer min-h-[36px]">
                         Apply Filter
                     </button>
                 </div>
@@ -152,30 +195,30 @@
             <table class="w-full text-left text-xs border-collapse">
                 <thead>
                     <tr class="theme-card-elevated border-b theme-border theme-text-muted font-mono uppercase text-[10px] tracking-wider">
-                        <th class="py-3.5 px-4 font-semibold">Tracking no.</th>
-                        <th class="py-3.5 px-4 font-semibold">Mode</th>
-                        <th class="py-3.5 px-4 font-semibold">Reference</th>
-                        <th class="py-3.5 px-4 font-semibold">Carrier</th>
-                        <th class="py-3.5 px-4 font-semibold">Origin &rarr; Destination</th>
-                        <th class="py-3.5 px-4 font-semibold">Lifecycle Status</th>
-                        <th class="py-3.5 px-4 font-semibold">Schedule Variance</th>
-                        <th class="py-3.5 px-4 font-semibold">Value</th>
-                        <th class="py-3.5 px-4 font-semibold text-right">Action</th>
+                        <th class="py-3.5 px-4 font-semibold whitespace-nowrap">Tracking no.</th>
+                        <th class="py-3.5 px-4 font-semibold whitespace-nowrap">Mode</th>
+                        <th class="py-3.5 px-4 font-semibold whitespace-nowrap">Reference</th>
+                        <th class="py-3.5 px-4 font-semibold whitespace-nowrap">Carrier</th>
+                        <th class="py-3.5 px-4 font-semibold whitespace-nowrap">Origin &rarr; Destination</th>
+                        <th class="py-3.5 px-4 font-semibold whitespace-nowrap">Lifecycle Status</th>
+                        <th class="py-3.5 px-4 font-semibold whitespace-nowrap">Schedule Variance</th>
+                        <th class="py-3.5 px-4 font-semibold whitespace-nowrap text-right">Value</th>
+                        <th class="py-3.5 px-4 font-semibold whitespace-nowrap text-right">Action</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y theme-border">
                     @forelse($shipments as $s)
                         <tr class="hover:bg-blue-600/5 transition-colors group">
                             <!-- Tracking / Reference -->
-                            <td class="py-4 px-4">
-                                <a href="{{ route('shipments.show', $s) }}" class="font-mono font-bold theme-heading group-hover:text-cyan-600 dark:group-hover:text-cyan-400 transition-colors block text-sm">
+                            <td class="py-4 px-4 whitespace-nowrap tabular-nums">
+                                <a href="{{ route('shipments.show', $s) }}" class="font-mono font-bold theme-heading group-hover:text-cyan-600 dark:group-hover:text-cyan-400 transition-colors block text-sm whitespace-nowrap tabular-nums">
                                     {{ $s->tracking_number }}
                                 </a>
                                 @if($s->reference_number)
-                                    <span class="text-[10px] font-mono theme-text-muted block">Ref: {{ $s->reference_number }}</span>
+                                    <span class="text-[10px] font-mono theme-text-muted block whitespace-nowrap tabular-nums">Ref: {{ $s->reference_number }}</span>
                                 @endif
                                 @if(auth()->user()->role !== 'customer' && $s->customer)
-                                    <span class="text-[10px] theme-text-secondary block">{{ $s->customer->company_name ?? $s->customer->name }}</span>
+                                    <span class="text-[10px] theme-text-secondary block truncate max-w-[180px]">{{ $s->customer->company_name ?? $s->customer->name }}</span>
                                 @endif
                             </td>
 
@@ -185,33 +228,33 @@
                             </td>
 
                             <!-- Reference Column (Mode's main reference) -->
-                            <td class="py-4 px-4 font-mono text-xs">
+                            <td class="py-4 px-4 font-mono text-xs whitespace-nowrap tabular-nums">
                                 @if(($s->transport_mode ?? 'SEA') === 'SEA')
-                                    <span class="text-blue-600 dark:text-cyan-400 font-semibold block">
+                                    <span class="text-blue-600 dark:text-cyan-400 font-semibold block whitespace-nowrap tabular-nums">
                                         <span class="theme-text-muted font-normal">Container:</span> {{ $s->formatted_container_number ?? $s->container_number ?? 'Not assigned' }}
                                     </span>
                                     @if($s->bill_of_lading_number)
-                                        <span class="text-[10px] theme-text-muted block">B/L: {{ $s->bill_of_lading_number }}</span>
+                                        <span class="text-[10px] theme-text-muted block whitespace-nowrap tabular-nums">B/L: {{ $s->bill_of_lading_number }}</span>
                                     @endif
                                 @elseif(($s->transport_mode ?? 'SEA') === 'AIR')
-                                    <span class="text-sky-600 dark:text-sky-400 font-semibold block">
+                                    <span class="text-sky-600 dark:text-sky-400 font-semibold block whitespace-nowrap tabular-nums">
                                         <span class="theme-text-muted font-normal">AWB:</span> {{ $s->formatted_awb_number ?? $s->awb_number ?? 'Not assigned' }}
                                     </span>
-                                    <span class="text-[10px] theme-text-muted block">Air waybill</span>
+                                    <span class="text-[10px] theme-text-muted block whitespace-nowrap">Air waybill</span>
                                 @elseif(($s->transport_mode ?? 'SEA') === 'ROAD')
-                                    <span class="text-emerald-600 dark:text-emerald-400 font-semibold block">
+                                    <span class="text-emerald-600 dark:text-emerald-400 font-semibold block whitespace-nowrap tabular-nums">
                                         <span class="theme-text-muted font-normal">Plate:</span> {{ $s->vehicle_plate ?? 'Not assigned' }}
                                     </span>
                                     @if($s->cmr_number)
-                                        <span class="text-[10px] theme-text-muted block">CMR: {{ $s->cmr_number }}</span>
+                                        <span class="text-[10px] theme-text-muted block whitespace-nowrap tabular-nums">CMR: {{ $s->cmr_number }}</span>
                                     @endif
                                 @endif
                             </td>
 
                             <!-- Carrier -->
-                            <td class="py-4 px-4">
+                            <td class="py-4 px-4 whitespace-nowrap">
                                 <div class="flex items-center space-x-2">
-                                    <span class="px-2 py-0.5 rounded theme-card-elevated border theme-border text-[10px] font-mono font-bold text-cyan-600 dark:text-cyan-400">
+                                    <span class="px-2 py-0.5 rounded theme-card-elevated border theme-border text-[10px] font-mono font-bold text-cyan-600 dark:text-cyan-400 whitespace-nowrap">
                                         {{ $s->carrier->code }}
                                     </span>
                                     <div>
@@ -222,8 +265,8 @@
                             </td>
 
                             <!-- Route -->
-                            <td class="py-4 px-4 font-mono text-xs">
-                                <div class="flex items-center space-x-2 theme-text-primary">
+                            <td class="py-4 px-4 font-mono text-xs whitespace-nowrap">
+                                <div class="flex items-center space-x-2 theme-text-primary whitespace-nowrap">
                                     <span class="font-bold theme-heading">{{ $s->originLocation->display_code }}</span>
                                     <span class="text-cyan-500">&rarr;</span>
                                     <span class="font-bold theme-heading">{{ $s->destinationLocation->display_code }}</span>
@@ -239,43 +282,43 @@
                             </td>
 
                             <!-- Delay Status -->
-                            <td class="py-4 px-4">
+                            <td class="py-4 px-4 whitespace-nowrap tabular-nums">
                                 @if($s->is_delayed)
-                                    <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30 font-mono">
+                                    <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30 font-mono whitespace-nowrap tabular-nums">
                                         <span class="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse"></span>
                                         +{{ (int)$s->delay_hours }}h ({{ $s->delay_severity }})
                                     </span>
                                 @else
-                                    <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 font-mono">
+                                    <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 font-mono whitespace-nowrap">
                                         <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
                                         On Schedule
                                     </span>
                                 @endif
-                                <span class="text-[10px] theme-text-muted block mt-1 font-mono">
+                                <span class="text-[10px] theme-text-muted block mt-1 font-mono whitespace-nowrap tabular-nums">
                                     ETA: {{ $s->estimated_arrival_at?->format('M d, H:i') ?? 'TBD' }}
                                 </span>
                             </td>
 
                             <!-- Cargo Value -->
-                            <td class="py-4 px-4 font-mono">
-                                <span class="font-bold theme-heading block">
+                            <td class="py-4 px-4 font-mono whitespace-nowrap tabular-nums text-right">
+                                <span class="font-bold theme-heading block whitespace-nowrap tabular-nums">
                                     ${{ number_format($s->converted_value_usd, 0) }}
                                 </span>
-                                <span class="text-[10px] theme-text-muted">
+                                <span class="text-[10px] theme-text-muted whitespace-nowrap tabular-nums">
                                     {{ number_format($s->declared_value, 0) }} {{ $s->currency_code }}
                                 </span>
                             </td>
 
                             <!-- Action -->
-                            <td class="py-4 px-4 text-right">
-                                <a href="{{ route('shipments.show', $s) }}" class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-blue-500/10 hover:bg-blue-500/20 text-blue-600 dark:text-cyan-400 border border-blue-500/30 text-xs font-semibold transition">
+                            <td class="py-4 px-4 text-right whitespace-nowrap">
+                                <a href="{{ route('shipments.show', $s) }}" class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-blue-500/10 hover:bg-blue-500/20 text-blue-600 dark:text-cyan-400 border border-blue-500/30 text-xs font-semibold transition whitespace-nowrap">
                                     Details &rarr;
                                 </a>
                             </td>
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="7" class="py-12">
+                            <td colspan="9" class="py-12">
                                 <x-empty-state
                                     title="No Shipments Found"
                                     description="No cargo manifests match your current filter parameters."

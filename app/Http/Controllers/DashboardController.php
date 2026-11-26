@@ -291,6 +291,24 @@ class DashboardController extends Controller
             'ROAD' => (clone $shipmentQuery)->whereIn('status', ['IN_TRANSIT', 'PICKED_UP', 'BOOKED'])->where('transport_mode', 'ROAD')->count(),
         ];
 
+        $totalModesCount = [
+            'SEA' => (clone $shipmentQuery)->where('transport_mode', 'SEA')->count(),
+            'AIR' => (clone $shipmentQuery)->where('transport_mode', 'AIR')->count(),
+            'ROAD' => (clone $shipmentQuery)->where('transport_mode', 'ROAD')->count(),
+        ];
+
+        $modeMix = [];
+        foreach (['SEA' => 'Sea', 'AIR' => 'Air', 'ROAD' => 'Road'] as $modeKey => $modeLabel) {
+            $cnt = $totalModesCount[$modeKey];
+            $modeMix[$modeKey] = [
+                'code' => $modeKey,
+                'label' => $modeLabel,
+                'count' => $cnt,
+                'active' => $activeModesCount[$modeKey],
+                'share' => $totalShipments > 0 ? round(($cnt / $totalShipments) * 100, 1) : 0.0,
+            ];
+        }
+
         // Unified role-scoped map payload for both 3D globe and 2D Leaflet
         $mapData = $this->buildMapDataPayload($user);
         $mapShipments = $mapData['shipments'];
@@ -340,7 +358,8 @@ class DashboardController extends Controller
             'onTimeComparison',
             'overFreeTimeShipments',
             'freeTimeService',
-            'activeModesCount'
+            'activeModesCount',
+            'modeMix'
         ));
     }
 

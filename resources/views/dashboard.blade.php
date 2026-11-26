@@ -20,7 +20,8 @@
         <a href="{{ route('shipments.index', ['mode' => 'SEA']) }}" class="p-4 rounded-2xl theme-card border hover:border-blue-500/50 transition-all flex items-center justify-between group">
             <div class="space-y-1">
                 <span class="text-xs font-semibold theme-text-secondary flex items-center gap-1.5">
-                    <span>🚢</span> Ocean freight (Sea)
+                    <x-mode-icon mode="SEA" class="w-4 h-4 text-blue-600 dark:text-cyan-400" />
+                    <span>Ocean freight (Sea)</span>
                 </span>
                 <div class="text-2xl font-extrabold theme-heading font-mono tabular-nums">
                     {{ $activeModesCount['SEA'] ?? 0 }} <span class="text-xs font-normal theme-text-muted font-sans">active</span>
@@ -36,7 +37,8 @@
         <a href="{{ route('shipments.index', ['mode' => 'AIR']) }}" class="p-4 rounded-2xl theme-card border hover:border-sky-500/50 transition-all flex items-center justify-between group">
             <div class="space-y-1">
                 <span class="text-xs font-semibold theme-text-secondary flex items-center gap-1.5">
-                    <span>✈️</span> Air freight (Air)
+                    <x-mode-icon mode="AIR" class="w-4 h-4 text-sky-600 dark:text-sky-400" />
+                    <span>Air freight (Air)</span>
                 </span>
                 <div class="text-2xl font-extrabold theme-heading font-mono tabular-nums">
                     {{ $activeModesCount['AIR'] ?? 0 }} <span class="text-xs font-normal theme-text-muted font-sans">active</span>
@@ -52,7 +54,8 @@
         <a href="{{ route('shipments.index', ['mode' => 'ROAD']) }}" class="p-4 rounded-2xl theme-card border hover:border-emerald-500/50 transition-all flex items-center justify-between group">
             <div class="space-y-1">
                 <span class="text-xs font-semibold theme-text-secondary flex items-center gap-1.5">
-                    <span>🚚</span> Road freight (Road)
+                    <x-mode-icon mode="ROAD" class="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                    <span>Road freight (Road)</span>
                 </span>
                 <div class="text-2xl font-extrabold theme-heading font-mono tabular-nums">
                     {{ $activeModesCount['ROAD'] ?? 0 }} <span class="text-xs font-normal theme-text-muted font-sans">active</span>
@@ -249,36 +252,39 @@
                         onclick="setMapFilter('ALL')"
                         id="tab-filter-all"
                         aria-pressed="true"
-                        class="px-2.5 py-1 rounded-xl font-semibold transition map-filter-tab bg-blue-600 text-white cursor-pointer"
+                        class="px-2.5 py-1 rounded-xl font-semibold transition map-filter-tab bg-blue-600 text-white cursor-pointer inline-flex items-center gap-1"
                     >
-                        All
+                        <span>All</span>
                     </button>
                     <button
                         type="button"
                         onclick="setMapFilter('SEA')"
                         id="tab-filter-sea"
                         aria-pressed="false"
-                        class="px-2.5 py-1 rounded-xl font-semibold transition map-filter-tab theme-text-muted hover:theme-heading cursor-pointer"
+                        class="px-2.5 py-1 rounded-xl font-semibold transition map-filter-tab theme-text-muted hover:theme-heading cursor-pointer inline-flex items-center gap-1"
                     >
-                        🚢 Sea
+                        <x-mode-icon mode="SEA" class="w-3.5 h-3.5" />
+                        <span>Sea</span>
                     </button>
                     <button
                         type="button"
                         onclick="setMapFilter('AIR')"
                         id="tab-filter-air"
                         aria-pressed="false"
-                        class="px-2.5 py-1 rounded-xl font-semibold transition map-filter-tab theme-text-muted hover:theme-heading cursor-pointer"
+                        class="px-2.5 py-1 rounded-xl font-semibold transition map-filter-tab theme-text-muted hover:theme-heading cursor-pointer inline-flex items-center gap-1"
                     >
-                        ✈️ Air
+                        <x-mode-icon mode="AIR" class="w-3.5 h-3.5" />
+                        <span>Air</span>
                     </button>
                     <button
                         type="button"
                         onclick="setMapFilter('ROAD')"
                         id="tab-filter-road"
                         aria-pressed="false"
-                        class="px-2.5 py-1 rounded-xl font-semibold transition map-filter-tab theme-text-muted hover:theme-heading cursor-pointer"
+                        class="px-2.5 py-1 rounded-xl font-semibold transition map-filter-tab theme-text-muted hover:theme-heading cursor-pointer inline-flex items-center gap-1"
                     >
-                        🚚 Road
+                        <x-mode-icon mode="ROAD" class="w-3.5 h-3.5" />
+                        <span>Road</span>
                     </button>
                     <span class="w-px h-3.5 bg-slate-300 dark:bg-slate-700 mx-1"></span>
                     <button
@@ -286,31 +292,37 @@
                         onclick="setMapFilter('DELAYED')"
                         id="tab-filter-delayed"
                         aria-pressed="false"
-                        class="px-2.5 py-1 rounded-xl font-semibold transition map-filter-tab theme-text-muted hover:text-amber-500 cursor-pointer"
+                        class="px-2.5 py-1 rounded-xl font-semibold transition map-filter-tab theme-text-muted hover:text-amber-500 cursor-pointer inline-flex items-center gap-1"
                     >
-                        Delayed
+                        <span>Delayed</span>
                     </button>
                     <button
                         type="button"
                         onclick="setMapFilter('EXCEPTIONS')"
                         id="tab-filter-exceptions"
                         aria-pressed="false"
-                        class="px-2.5 py-1 rounded-xl font-semibold transition map-filter-tab theme-text-muted hover:text-rose-500 cursor-pointer"
+                        class="px-2.5 py-1 rounded-xl font-semibold transition map-filter-tab theme-text-muted hover:text-rose-500 cursor-pointer inline-flex items-center gap-1"
                     >
-                        Exceptions
+                        <span>Exceptions</span>
                     </button>
                 </div>
 
                 <!-- Legend Pill (Mode geometry + Delay severity + Markers) -->
                 <div class="px-3 py-1.5 rounded-xl theme-card-elevated border theme-border shadow-lg backdrop-blur-md text-[10px] flex flex-wrap items-center justify-end gap-x-3 gap-y-1">
                     <span class="flex items-center gap-1 theme-text-secondary">
-                        <span class="w-3 h-0.5 bg-blue-500 rounded inline-block"></span> 🚢 Sea (Solid arc)
+                        <span class="w-3 h-0.5 bg-blue-500 rounded inline-block"></span>
+                        <x-mode-icon mode="SEA" class="w-3 h-3 text-blue-500" />
+                        <span>Sea (Solid arc)</span>
                     </span>
                     <span class="flex items-center gap-1 theme-text-secondary">
-                        <span class="w-3 h-0.5 border-b-2 border-dashed border-sky-400 inline-block"></span> ✈️ Air (Dashed high arc)
+                        <span class="w-3 h-0.5 border-b-2 border-dashed border-sky-400 inline-block"></span>
+                        <x-mode-icon mode="AIR" class="w-3 h-3 text-sky-400" />
+                        <span>Air (Dashed high arc)</span>
                     </span>
                     <span class="flex items-center gap-1 theme-text-secondary">
-                        <span class="w-3 h-0.5 bg-emerald-500 rounded inline-block"></span> 🚚 Road (Straight line)
+                        <span class="w-3 h-0.5 bg-emerald-500 rounded inline-block"></span>
+                        <x-mode-icon mode="ROAD" class="w-3 h-3 text-emerald-500" />
+                        <span>Road (Straight line)</span>
                     </span>
                     <span class="w-px h-3 bg-slate-300 dark:bg-slate-700 hidden sm:inline-block"></span>
                     <span class="flex items-center gap-1 theme-text-secondary">
@@ -347,7 +359,8 @@
                             onclick="window.CargoTrace && window.CargoTrace.setMapMode ? window.CargoTrace.setMapMode('3D') : null"
                             class="px-3.5 py-1 rounded-full text-xs font-semibold bg-blue-600 text-white shadow-md transition-all flex items-center gap-1.5 cursor-pointer"
                         >
-                            <span>🌐 3D</span>
+                            <x-mode-icon mode="GLOBE" class="w-3.5 h-3.5" />
+                            <span>3D</span>
                         </button>
                         <button
                             id="btn-mode-2d"
@@ -356,7 +369,8 @@
                             onclick="window.CargoTrace && window.CargoTrace.setMapMode ? window.CargoTrace.setMapMode('2D') : null"
                             class="px-3.5 py-1 rounded-full text-xs font-semibold theme-text-muted hover:text-cyan-400 transition-all flex items-center gap-1.5 cursor-pointer"
                         >
-                            <span>🗺️ 2D</span>
+                            <x-mode-icon mode="MAP" class="w-3.5 h-3.5" />
+                            <span>2D</span>
                         </button>
                     </div>
                 </div>
@@ -386,27 +400,32 @@
             </div>
         </div>
 
-        <!-- RIGHT 3 COLS: "Main Statistics" Stack (3 Cards) -->
+        <!-- RIGHT 3 COLS: "Main Statistics" Stack (Non-redundant operational insights) -->
         <div class="xl:col-span-3 flex flex-col justify-between gap-4 font-sans">
             <h2 class="text-sm font-bold theme-heading tracking-tight flex items-center justify-between font-sans">
                 <span>Main statistics</span>
-                <span class="text-[11px] theme-text-muted font-normal font-sans">Database aggregates</span>
+                <span class="text-[11px] theme-text-muted font-normal font-sans">Portfolio &amp; mode mix</span>
             </h2>
 
-            <!-- Card 1: Active Shipments & On-Time Rate Comparison -->
+            <!-- Card 1: Total Cargo Valuation & Volume -->
             <div class="p-5 rounded-3xl theme-card border flex flex-col justify-between flex-1 transition-colors duration-200">
-                <div class="flex items-center justify-between text-xs theme-text-secondary font-medium">
-                    <span>Active shipments</span>
-                    @if($onTimeComparison)
-                        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/25">
-                            {{ $onTimeComparison }}
-                        </span>
+                <div class="flex items-center justify-between gap-2 text-xs theme-text-secondary font-medium">
+                    <span title="Declared value converted to USD at the latest cached rate" class="cursor-help border-b border-dotted theme-border">
+                        Total cargo valuation
+                    </span>
+                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-cyan-500/15 text-cyan-600 dark:text-cyan-400 border border-cyan-500/25 font-mono tabular-nums whitespace-nowrap">
+                        {{ number_format($totalVolumeCbm, 0) }} CBM
+                    </span>
+                </div>
+                <div class="text-3xl font-extrabold theme-heading tracking-tight my-2 font-mono tabular-nums">
+                    @if($totalValueUsd >= 1000)
+                        ${{ number_format($totalValueUsd / 1000, 0) }}k
+                    @else
+                        ${{ number_format($totalValueUsd, 0) }}
                     @endif
+                    <span class="text-xs font-normal theme-text-muted font-sans">USD</span>
                 </div>
-                <div class="text-3xl font-extrabold theme-heading tracking-tight my-2 tabular-nums">
-                    {{ count($activeShipments) }} <span class="text-xs font-normal theme-text-muted font-sans">active</span>
-                </div>
-                <!-- Mini Sparkline SVG: 14-Day Shipment Creation (Real Database Data) -->
+                <!-- Mini Sparkline SVG: 14-Day Shipment Volume Created (Real Database Data) -->
                 <div class="h-10 w-full mt-2" title="Shipments created per day (last 14 days)">
                     @if($spark1Flat)
                         <div class="h-full w-full flex items-center justify-center text-[11px] theme-text-muted italic border border-dashed theme-border rounded-lg">
@@ -427,18 +446,23 @@
                 </div>
             </div>
 
-            <!-- Card 2: Total Cargo Valuation & Labeled Volume -->
+            <!-- Card 2: On-Time Delivery Rate -->
             <div class="p-5 rounded-3xl theme-card border flex flex-col justify-between flex-1 transition-colors duration-200">
-                <div class="flex items-center justify-between text-xs theme-text-secondary font-medium">
-                    <span title="Declared value converted to USD at the latest cached rate" class="cursor-help border-b border-dotted theme-border">
-                        Total cargo valuation
-                    </span>
-                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-cyan-500/15 text-cyan-600 dark:text-cyan-400 border border-cyan-500/25">
-                        Volume {{ number_format($totalVolumeCbm, 0) }} CBM
-                    </span>
+                <div class="flex items-center justify-between gap-2 text-xs theme-text-secondary font-medium">
+                    <span>On-time delivery rate</span>
+                    @if($onTimeComparison)
+                        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/25 font-mono tabular-nums whitespace-nowrap">
+                            {{ $onTimeComparison }}
+                        </span>
+                    @else
+                        <span class="text-[10px] font-mono theme-text-muted tabular-nums whitespace-nowrap">
+                            {{ number_format($delivered) }} delivered
+                        </span>
+                    @endif
                 </div>
-                <div class="text-3xl font-extrabold theme-heading tracking-tight my-2 tabular-nums">
-                    ${{ number_format($totalValueUsd / 1000, 0) }}k <span class="text-xs font-normal theme-text-muted font-sans">USD</span>
+                <div class="text-3xl font-extrabold theme-heading tracking-tight my-2 font-mono tabular-nums">
+                    {{ number_format($onTimeRate, 1) }}%
+                    <span class="text-xs font-normal theme-text-muted font-sans">on schedule</span>
                 </div>
                 <!-- Mini Sparkline SVG: 8-Week On-Time Rate (Real Database Data) -->
                 <div class="h-10 w-full mt-2" title="Weekly on-time performance (last 8 weeks)">
@@ -450,41 +474,54 @@
                         <svg class="w-full h-full overflow-visible" viewBox="0 0 200 40">
                             <defs>
                                 <linearGradient id="spark2" x1="0" y1="0" x2="0" y2="1">
-                                    <stop offset="0%" stop-color="#2563EB" stop-opacity="0.30"/>
-                                    <stop offset="100%" stop-color="#2563EB" stop-opacity="0"/>
+                                    <stop offset="0%" stop-color="#10B981" stop-opacity="0.30"/>
+                                    <stop offset="100%" stop-color="#10B981" stop-opacity="0"/>
                                 </linearGradient>
                             </defs>
                             <path d="{{ $sparkline2Area }}" fill="url(#spark2)"/>
-                            <path d="{{ $sparkline2Path }}" fill="none" class="stroke-blue-600 dark:stroke-blue-400" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            <path d="{{ $sparkline2Path }}" fill="none" class="stroke-emerald-500" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                         </svg>
                     @endif
                 </div>
             </div>
 
-            <!-- Card 3: Exception Rate (Real Database Metric) -->
-            <div class="p-5 rounded-3xl theme-card border flex items-center justify-between flex-1 transition-colors duration-200">
-                <div class="space-y-1">
-                    <span class="text-xs theme-text-secondary font-medium block">Exception rate</span>
-                    <div class="text-3xl font-extrabold theme-heading tabular-nums font-mono">
-                        {{ $exceptionRate }}%
-                    </div>
-                    <span class="text-[10px] theme-text-muted block font-sans">
-                        {{ $openExceptions }} open / {{ $activeShipmentsCount }} active
-                    </span>
+            <!-- Card 3: Mode Mix Breakdown (Sea vs Air vs Road) -->
+            <div class="p-5 rounded-3xl theme-card border flex flex-col justify-between flex-1 space-y-3 transition-colors duration-200">
+                <div class="flex items-center justify-between gap-2">
+                    <span class="text-xs theme-text-secondary font-medium">Mode mix</span>
+                    <span class="text-[11px] theme-text-muted font-sans">Active shipments by mode</span>
                 </div>
 
-                <!-- Semi-Circle Gauge SVG with real exceptionRate -->
-                <div class="relative w-24 h-16 flex items-center justify-center">
-                    <svg class="w-24 h-24 -rotate-90" viewBox="0 0 100 100">
-                        <!-- Background track -->
-                        <circle cx="50" cy="50" r="38" fill="none" stroke="currentColor" class="text-slate-200 dark:text-slate-800" stroke-width="8" stroke-dasharray="120 240" stroke-linecap="round"/>
-                        <!-- Filled track -->
-                        @php
-                            $gaugeDash = round(($exceptionRate / 100) * 120);
-                        @endphp
-                        <circle cx="50" cy="50" r="38" fill="none" stroke="{{ $exceptionRate > 0 ? '#F43F5E' : '#10B981' }}" stroke-width="8" stroke-dasharray="{{ max(3, min(120, $gaugeDash)) }} 240" stroke-linecap="round"/>
-                    </svg>
-                    <span class="absolute text-xs font-bold font-mono {{ $exceptionRate > 0 ? 'text-rose-500' : 'text-emerald-500' }}">{{ $exceptionRate }}%</span>
+                @php
+                    $seaShare = $modeMix['SEA']['share'] ?? 0;
+                    $airShare = $modeMix['AIR']['share'] ?? 0;
+                    $roadShare = $modeMix['ROAD']['share'] ?? 0;
+                @endphp
+
+                <!-- Segmented Multimodal Share Bar -->
+                <div class="w-full h-2 rounded-full bg-slate-200 dark:bg-slate-800 overflow-hidden flex" aria-label="Transport mode distribution bar">
+                    @if($totalShipments > 0)
+                        <div class="h-full bg-blue-600 transition-all" style="width: {{ $seaShare }}%" title="Sea: {{ number_format($seaShare, 1) }}%"></div>
+                        <div class="h-full bg-sky-400 transition-all" style="width: {{ $airShare }}%" title="Air: {{ number_format($airShare, 1) }}%"></div>
+                        <div class="h-full bg-emerald-500 transition-all" style="width: {{ $roadShare }}%" title="Road: {{ number_format($roadShare, 1) }}%"></div>
+                    @endif
+                </div>
+
+                <!-- Per-Mode Breakdown Rows -->
+                <div class="space-y-1.5 text-xs">
+                    @foreach(['SEA' => 'text-blue-600 dark:text-cyan-400', 'AIR' => 'text-sky-600 dark:text-sky-400', 'ROAD' => 'text-emerald-600 dark:text-emerald-400'] as $mixKey => $mixColor)
+                        @php $mixItem = $modeMix[$mixKey] ?? ['label' => ucfirst(strtolower($mixKey)), 'count' => 0, 'active' => 0, 'share' => 0]; @endphp
+                        <a href="{{ route('shipments.index', ['mode' => $mixKey]) }}" class="flex items-center justify-between py-1 px-2 -mx-2 rounded-lg hover:bg-blue-600/5 transition-colors">
+                            <span class="inline-flex items-center gap-2 font-medium theme-text-primary">
+                                <x-mode-icon :mode="$mixKey" class="w-3.5 h-3.5 {{ $mixColor }}" />
+                                <span>{{ $mixItem['label'] }}</span>
+                            </span>
+                            <span class="font-mono tabular-nums text-[11px]">
+                                <strong class="theme-heading">{{ number_format($mixItem['count']) }}</strong>
+                                <span class="theme-text-muted ml-1">({{ number_format($mixItem['share'], 1) }}%)</span>
+                            </span>
+                        </a>
+                    @endforeach
                 </div>
             </div>
         </div>
@@ -668,7 +705,6 @@
                             $curr = $s->currentLocation;
                             $hasExceptions = $s->exceptions->isNotEmpty();
                             $sMode = strtoupper($s->transport_mode ?? 'SEA');
-                            $modeIcon = $sMode === 'AIR' ? '✈️' : ($sMode === 'ROAD' ? '🚚' : '🚢');
                         @endphp
                         <tr
                             class="activity-row cursor-pointer hover:bg-blue-600/10 transition-colors duration-150 border-l-2 border-transparent"
@@ -682,7 +718,7 @@
                                 <div class="flex items-center space-x-3">
                                     <!-- Carrier/Mode Icon Capsule -->
                                     <div class="w-8 h-8 rounded-xl {{ $s->is_delayed ? 'bg-amber-500/15 text-amber-500' : ($sMode === 'AIR' ? 'bg-sky-500/15 text-sky-500' : ($sMode === 'ROAD' ? 'bg-emerald-500/15 text-emerald-500' : 'bg-blue-500/15 text-blue-500')) }} flex items-center justify-center font-bold text-xs shrink-0" title="Mode: {{ $sMode }}">
-                                        {{ $modeIcon }}
+                                        <x-mode-icon :mode="$sMode" class="w-4 h-4" />
                                     </div>
                                     <div>
                                         <div class="flex items-center gap-1.5">

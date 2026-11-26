@@ -23,6 +23,17 @@ export function getTileLayerConfig(theme = 'dark', overrides = {}) {
 }
 
 /**
+ * Normalize a longitude value into the standard [-180, 180] range.
+ */
+export function normalizeLongitude(lng) {
+    let val = Number(lng);
+    if (!Number.isFinite(val)) return 0;
+    while (val > 180) val -= 360;
+    while (val < -180) val += 360;
+    return val;
+}
+
+/**
  * Unwrap a longitude relative to a reference longitude so shortest-path routes
  * across the +/-180 antimeridian stay continuous instead of wrapping across the whole map.
  */
@@ -38,8 +49,81 @@ export function unwrapLongitudeNear(lng, refLng) {
 }
 
 /**
- * Compute a great-circle style arc (SEA, AIR) or straight unwrapped segment (ROAD)
- * with continuous longitude unwrapping at the antimeridian.
+ * Split an unwrapped [lat, lng] polyline at +/-180 antimeridian crossings so
+ * Leaflet renders bounded segments inside [-180, 180] without horizontal wrap artifacts.
+ */
+export function splitAntimeridianSegments(points) {
+    if (!Array.isArray(points) || points.length === 0) return [];
+
+    const segments = [];
+    let currentSegment = [];
+
+    const pushPoint = (lat, lng) => {
+        const clampedLat = Math.max(-72, Math.min(72, Number(lat)));
+        currentSegment.push([clampedLat, lng]);
+    };
+
+    const firstLat = Number(points[0][0]);
+    const firstLng = normalizeLongitude(points[0][1]);
+    pushPoint(firstLat, firstLng);
+
+    for (let i = 1; i < points.length; i++) {
+        const prevRawLat = Number(points[i - 1][0]);
+        const prevRawLng = Number(points[i - 1][1]);
+        const currRawLat = Number(points[i][0]);
+        const currRawLng = Number(points[i][1]);
+
+        const prevNorm = normalizeLongitude(prevRawLng);
+        const currUnwrapped = unwrapLongitudeNear(currRawLng, prevNorm);
+
+        if (currUnwrapped > 180) {
+            const denom = currUnwrapped - prevNorm;
+            const ratio = Math.abs(denom) > 1e-9 ? (180 - prevNorm) / denom : 0.5;
+            const crossLat = prevRawLat + (currRawLat - prevRawLat) * ratio;
+            pushPoint(crossLat, 180);
+            segments.push(currentSegment);
+            currentSegment = [];
+            pushPoint(crossLat, -180);
+            pushPoint(currRawLat, currUnwrapped - 360);
+        } else if (currUnwrapped < -180) {
+            const denom = currUnwrapped - prevNorm;
+            const ratio = Math.abs(denom) > 1e-9 ? (-180 - prevNorm) / denom : 0.5;
+            const crossLat = prevRawLat + (currRawLat - prevRawLat) * ratio;
+            pushPoint(crossLat, -180);
+            segments.push(currentSegment);
+            currentSegment = [];
+            pushPoint(crossLat, 180);
+            pushPoint(currRawLat, currUnwrapped + 360);
+        } else {
+            pushPoint(currRawLat, currUnwrapped);
+        }
+    }
+
+    if (currentSegment.length > 0) {
+        segments.push(currentSegment);
+    }
+
+    return segments.length === 1 ? segments[0] : segments;
+}
+
+/**
+ * Crisp monoline SVG icon markup for transport modes in Leaflet popups.
+ */
+export function getModeSvg(mode, size = 12) {
+    const normalized = String(mode || 'SEA').toUpperCase();
+    const common = `width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;flex-shrink:0;" aria-hidden="true"`;
+    if (normalized === 'AIR') {
+        return `<svg ${common}><path d="M21 16v-2l-8-5V3.5a1.5 1.5 0 00-3 0V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z"/></svg>`;
+    }
+    if (normalized === 'ROAD') {
+        return `<svg ${common}><path d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1M5 17a2 2 0 104 0m-4 0a2 2 0 114 0m6 0a2 2 0 104 0m-4 0a2 2 0 114 0"/></svg>`;
+    }
+    return `<svg ${common}><path d="M3 17l1.5-5h15L21 17M5 12V8a1 1 0 011-1h5V4h2v3h4a1 1 0 011 1v4M2 20c1.5 1 3.5 1 5 0s3.5-1 5 0 3.5 1 5 0 3.5-1 5 0"/></svg>`;
+}
+
+/**
+ * Compute a Mercator-bounded curved arc (SEA, AIR) or straight unwrapped segment (ROAD)
+ * so long-haul routes (e.g. Indonesia to US East Coast) arc smoothly without shooting off the top pole.
  */
 export function getGreatCircleArc(start, end, options = {}) {
     const lat1 = Number(start[0]);
@@ -50,6 +134,7 @@ export function getGreatCircleArc(start, end, options = {}) {
     const numPoints = options.numPoints || 64;
 
     const unwrappedEndLng = unwrapLongitudeNear(rawLng2, lng1);
+    const dLng = unwrappedEndLng - lng1;
 
     if (mode === 'ROAD') {
         return [
@@ -58,59 +143,24 @@ export function getGreatCircleArc(start, end, options = {}) {
         ];
     }
 
-    const toRad = (deg) => (deg * Math.PI) / 180;
-    const toDeg = (rad) => (rad * 180) / Math.PI;
-
-    const phi1 = toRad(lat1);
-    const lam1 = toRad(lng1);
-    const phi2 = toRad(lat2);
-    const lam2 = toRad(unwrappedEndLng);
-
-    const x1 = Math.cos(phi1) * Math.cos(lam1);
-    const y1 = Math.cos(phi1) * Math.sin(lam1);
-    const z1 = Math.sin(phi1);
-
-    const x2 = Math.cos(phi2) * Math.cos(lam2);
-    const y2 = Math.cos(phi2) * Math.sin(lam2);
-    const z2 = Math.sin(phi2);
-
-    const dot = Math.max(-1, Math.min(1, x1 * x2 + y1 * y2 + z1 * z2));
-    const omega = Math.acos(dot);
-    const sinOmega = Math.sin(omega);
-
-    const chordDeg = Math.hypot(lat2 - lat1, unwrappedEndLng - lng1);
+    const midLat = (lat1 + lat2) / 2;
+    const chordDeg = Math.hypot(lat2 - lat1, dLng);
     const loftDeg = mode === 'AIR'
-        ? Math.min(18, Math.max(4, chordDeg * 0.14))
-        : Math.min(7, Math.max(1.5, chordDeg * 0.05));
+        ? Math.min(16, Math.max(2.5, chordDeg * 0.09))
+        : Math.min(10, Math.max(1.5, chordDeg * 0.06));
+
+    // Gently loft the arc without pushing high-latitude Mercator routes off the viewport top
+    const direction = midLat < -12 ? -1 : 1;
+    const controlLat = Math.max(-56, Math.min(64, midLat + direction * loftDeg));
 
     const points = [];
-    let prevLng = lng1;
-
     for (let i = 0; i <= numPoints; i++) {
         const t = i / numPoints;
-        let lat;
-        let lng;
-
-        if (sinOmega < 1e-6) {
-            lat = lat1 + (lat2 - lat1) * t;
-            lng = lng1 + (unwrappedEndLng - lng1) * t;
-        } else {
-            const a = Math.sin((1 - t) * omega) / sinOmega;
-            const b = Math.sin(t * omega) / sinOmega;
-            const x = a * x1 + b * x2;
-            const y = a * y1 + b * y2;
-            const z = a * z1 + b * z2;
-
-            lat = toDeg(Math.atan2(z, Math.sqrt(x * x + y * y)));
-            lng = toDeg(Math.atan2(y, x));
-        }
-
-        lng = unwrapLongitudeNear(lng, prevLng);
-        prevLng = lng;
-
-        // Add subtle mode-specific arc loft while anchoring endpoints
-        const liftedLat = Math.max(-82, Math.min(82, lat + Math.sin(Math.PI * t) * loftDeg));
-        points.push([liftedLat, lng]);
+        const oneMinusT = 1 - t;
+        const rawLat = oneMinusT * oneMinusT * lat1 + 2 * oneMinusT * t * controlLat + t * t * lat2;
+        const boundedLat = Math.max(-64, Math.min(68, rawLat));
+        const lng = lng1 + dLng * t;
+        points.push([boundedLat, lng]);
     }
 
     return points;
@@ -225,10 +275,12 @@ export function initWorldMap(containerId, options = {}) {
     const interactive = options.interactive !== false;
 
     const map = createMap(containerId, {
-        center: options.center || [22, 18],
+        center: options.center || [20, 22],
         zoom: options.zoom || 2,
         minZoom: 2,
         maxZoom: 18,
+        maxBounds: [[-75, -180], [80, 180]],
+        maxBoundsViscosity: 0.7,
         zoomControl: interactive,
         attributionControl: true,
         scrollWheelZoom: interactive ? 'center' : false,
@@ -298,10 +350,11 @@ export function initWorldMap(containerId, options = {}) {
                 const mode = (s.transport_mode || s.carrier_mode || 'SEA').toUpperCase();
 
                 // Route styling per mode:
-                // Sea: solid arc
+                // Sea: solid curved arc
                 // Air: dashed higher curve
                 // Road: straight line
-                const points = mode === 'ROAD' ? [start, end] : getBezierCurve(start, end);
+                const rawPoints = getBezierCurve(start, end, 64, mode);
+                const polylinePoints = splitAntimeridianSegments(rawPoints);
 
                 const isDelayed = Boolean(s.is_delayed);
                 const hasException = Boolean(s.exceptions && s.exceptions.length > 0);
@@ -319,20 +372,20 @@ export function initWorldMap(containerId, options = {}) {
                     ? '6, 6'
                     : (mode === 'ROAD' ? null : (isDelayed ? '8, 6' : null));
 
-                const polyline = L.polyline(points, {
+                const polyline = L.polyline(polylinePoints, {
                     color: strokeColor,
                     weight: mode === 'ROAD' ? 2.8 : 2.4,
                     dashArray: dashArray,
                     opacity: 0.88,
                 });
 
-                const modeBadgeText = mode === 'AIR' ? '✈️ Air' : (mode === 'ROAD' ? '🚚 Road' : '🚢 Sea');
+                const modeLabel = mode === 'AIR' ? 'Air' : (mode === 'ROAD' ? 'Road' : 'Sea');
 
                 polyline.bindPopup(`
                     <div style="font-family: 'Inter', sans-serif; font-size: 11px;">
                         <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px;">
                             <span style="font-weight: 700; color: #0284C7;">${s.tracking_number}</span>
-                            <span style="font-size: 10px; font-weight: 600; padding: 2px 6px; border-radius: 9999px; background: rgba(2, 132, 199, 0.15);">${modeBadgeText}</span>
+                            <span style="display: inline-flex; align-items: center; gap: 4px; font-size: 10px; font-weight: 600; padding: 2px 6px; border-radius: 9999px; background: rgba(2, 132, 199, 0.15);">${getModeSvg(mode, 11)} <span>${modeLabel}</span></span>
                         </div>
                         <div style="color: #64748B; margin-top: 4px;">${orig.name} &rarr; ${dest.name}</div>
                         <div style="margin-top: 4px; font-weight: 600; color: ${strokeColor};">
@@ -433,12 +486,14 @@ export function initShipmentRouteMap(containerId, shipment) {
     // Sea: solid bezier arc
     // Air: dashed higher bezier arc
     // Road: straight direct line
+    let routePolyline = null;
     try {
         const mode = (shipment.transport_mode || shipment.carrier_mode || 'SEA').toUpperCase();
         const isRoad = mode === 'ROAD';
         const isAir = mode === 'AIR';
 
-        const curvePoints = isRoad ? [[origLat, origLng], [destLat, destLng]] : getBezierCurve([origLat, origLng], [destLat, destLng]);
+        const rawPoints = getBezierCurve([origLat, origLng], [destLat, destLng], 64, mode);
+        const curvePoints = splitAntimeridianSegments(rawPoints);
         const isDelayed = Boolean(shipment.is_delayed);
         const hasException = Boolean(shipment.exceptions && shipment.exceptions.length > 0);
 
@@ -453,7 +508,7 @@ export function initShipmentRouteMap(containerId, shipment) {
 
         const dashArray = isAir ? '6, 6' : (isDelayed ? '8, 6' : null);
 
-        L.polyline(curvePoints, {
+        routePolyline = L.polyline(curvePoints, {
             color: strokeColor,
             weight: isRoad ? 3.2 : 2.8,
             dashArray: dashArray,
@@ -464,7 +519,11 @@ export function initShipmentRouteMap(containerId, shipment) {
     }
 
     // Fit map bounds to show full route
-    map.fitBounds([[origLat, origLng], [destLat, destLng]], { padding: [50, 50] });
+    const routeBounds = L.latLngBounds([[origLat, origLng], [destLat, destLng]]);
+    if (routePolyline && routePolyline.getBounds().isValid()) {
+        routeBounds.extend(routePolyline.getBounds());
+    }
+    map.fitBounds(routeBounds, { padding: [50, 50], maxZoom: 6 });
 
     return map;
 }

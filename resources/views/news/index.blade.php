@@ -86,10 +86,10 @@
         @php
             $currentMode = $selectedMode ?? 'ALL';
             $modeChips = [
-                'ALL' => ['label' => 'All', 'icon' => '🌐', 'count' => $modeCounts['ALL'] ?? count($allNews)],
-                'SEA' => ['label' => 'Sea', 'icon' => '🚢', 'count' => $modeCounts['SEA'] ?? 0],
-                'AIR' => ['label' => 'Air', 'icon' => '✈️', 'count' => $modeCounts['AIR'] ?? 0],
-                'ROAD' => ['label' => 'Road', 'icon' => '🚚', 'count' => $modeCounts['ROAD'] ?? 0],
+                'ALL' => ['label' => 'All', 'count' => $modeCounts['ALL'] ?? count($allNews)],
+                'SEA' => ['label' => 'Sea', 'count' => $modeCounts['SEA'] ?? 0],
+                'AIR' => ['label' => 'Air', 'count' => $modeCounts['AIR'] ?? 0],
+                'ROAD' => ['label' => 'Road', 'count' => $modeCounts['ROAD'] ?? 0],
             ];
         @endphp
         @foreach($modeChips as $mKey => $mChip)
@@ -101,7 +101,7 @@
                 href="{{ route('news.index', $chipParams) }}"
                 class="px-3.5 py-1.5 rounded-full text-xs font-semibold transition whitespace-nowrap border inline-flex items-center gap-2 {{ $isActiveMode ? 'bg-blue-600 text-white border-blue-600 shadow-sm shadow-blue-500/20' : 'theme-card-elevated theme-border theme-text-secondary hover:theme-heading hover:border-blue-500' }}"
             >
-                <span>{{ $mChip['icon'] }}</span>
+                <x-mode-icon :mode="$mKey" class="w-3.5 h-3.5" />
                 <span>{{ $mChip['label'] }}</span>
                 <span class="px-1.5 py-0.2 rounded-full text-[10px] font-mono {{ $isActiveMode ? 'bg-white/20 text-white' : 'bg-slate-200 dark:bg-slate-800 theme-text-muted' }}">
                     {{ $mChip['count'] }}
@@ -118,7 +118,8 @@
                 href="{{ route('news.index', array_merge(request()->except(['relevant', 'page']), $onlyRelevant ? [] : ['relevant' => 1])) }}"
                 class="px-3.5 py-1.5 rounded-full text-xs font-medium transition whitespace-nowrap border flex items-center gap-1.5 {{ $onlyRelevant ? 'bg-cyan-600 text-white border-cyan-600 shadow-md shadow-cyan-500/20' : 'bg-cyan-500/10 border-cyan-500/30 text-cyan-700 dark:text-cyan-300 hover:bg-cyan-500/20' }}"
             >
-                <span>⭐ Relevant to your shipments</span>
+                <x-mode-icon mode="BOOKMARK" class="w-3.5 h-3.5" />
+                <span>Relevant to your shipments</span>
                 <span class="text-[10px] font-mono px-1.5 py-0.2 rounded-full bg-cyan-700/30 text-cyan-200">{{ $relevantCount }}</span>
             </a>
         @endif

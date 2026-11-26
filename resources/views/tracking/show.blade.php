@@ -151,7 +151,7 @@
                             <div class="flex items-center justify-between text-[11px] theme-text-muted font-mono pt-1">
                                 <span class="text-blue-600 dark:text-cyan-400">@ {{ $evt->location->name ?? 'Transit waypoint' }}@if($evt->location) ({{ $evt->location->display_code }})@endif</span>
                                 @if($evt->weather_snapshot)
-                                    <span>🌡️ {{ $evt->weather_snapshot['temperature_c'] ?? '' }}°C {{ $evt->weather_snapshot['condition'] ?? '' }}</span>
+                                    <span class="inline-flex items-center gap-1"><x-mode-icon mode="THERMOMETER" class="w-3.5 h-3.5" /> {{ $evt->weather_snapshot['temperature_c'] ?? '' }}°C {{ $evt->weather_snapshot['condition'] ?? '' }}</span>
                                 @endif
                             </div>
                         </div>

@@ -41,9 +41,9 @@
                 <div class="max-w-xs space-y-1.5">
                     <label for="transport_mode" class="uppercase text-[10px] tracking-wider theme-text-muted font-semibold block">Select Mode *</label>
                     <select name="transport_mode" id="transport_mode" onchange="updateModeUI()" required class="w-full px-3.5 py-2.5 rounded-xl theme-input border theme-border font-semibold text-xs focus:ring-1 focus:ring-blue-500 focus:outline-none transition">
-                        <option value="SEA" {{ old('transport_mode', 'SEA') === 'SEA' ? 'selected' : '' }}>🚢 Ocean Freight (SEA)</option>
-                        <option value="AIR" {{ old('transport_mode') === 'AIR' ? 'selected' : '' }}>✈️ Air Freight (AIR)</option>
-                        <option value="ROAD" {{ old('transport_mode') === 'ROAD' ? 'selected' : '' }}>🚚 Road Freight (ROAD)</option>
+                        <option value="SEA" {{ old('transport_mode', 'SEA') === 'SEA' ? 'selected' : '' }}>Ocean Freight (SEA)</option>
+                        <option value="AIR" {{ old('transport_mode') === 'AIR' ? 'selected' : '' }}>Air Freight (AIR)</option>
+                        <option value="ROAD" {{ old('transport_mode') === 'ROAD' ? 'selected' : '' }}>Road Freight (ROAD)</option>
                     </select>
                     @error('transport_mode')
                         <span class="text-[11px] text-rose-500 block">{{ $message }}</span>

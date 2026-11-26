@@ -18,12 +18,14 @@ return [
     | Hero Imagery Configuration
     |--------------------------------------------------------------------------
     |
-    | Dark theme uses bg-dark.webp by default. Light theme uses hero-light.webp
-    | if present on disk or specified here; otherwise falls back to a clean
-    | pale theme gradient with the SVG network motif.
+    | Dark theme defaults to hero-multimodal-dark.jpg (falling back to
+    | bg-dark.webp). Light theme defaults to hero-multimodal-light.jpg
+    | (falling back to hero-light.webp, bg-light.webp, or a clean pale
+    | gradient with the SVG network motif).
     |
     */
     'hero_images' => [
+        'dark' => env('CARGOTRACE_HERO_DARK_IMAGE', null),
         'light' => env('CARGOTRACE_HERO_LIGHT_IMAGE', null),
     ],
 
