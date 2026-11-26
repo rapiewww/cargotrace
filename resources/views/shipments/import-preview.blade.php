@@ -7,27 +7,27 @@
         <div>
             <div class="flex items-center gap-3">
                 <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight theme-heading font-sans">
-                    Import preview and verification
+                    {{ __('Import preview and verification') }}
                 </h1>
                 <span class="text-xs px-2.5 py-0.5 rounded-full bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 border border-cyan-500/20 font-mono">
-                    {{ $results['valid_count'] }} of {{ $results['total_rows'] }} valid
+                    {{ __(':valid of :total valid', ['valid' => $results['valid_count'], 'total' => $results['total_rows']]) }}
                 </span>
             </div>
             <p class="text-xs sm:text-sm theme-text-secondary mt-1">
-                Review parsed consignment data and validation results before committing records to the database.
+                {{ __('Review parsed consignment data and validation results before committing records to the database.') }}
             </p>
         </div>
 
         <div class="flex items-center gap-3">
             <a href="{{ route('shipments.import.index') }}" class="px-3.5 py-2 rounded-xl theme-card-elevated theme-text-secondary hover:theme-heading border theme-border text-xs font-semibold transition">
-                Upload different file
+                {{ __('Upload different file') }}
             </a>
             @if($results['valid_count'] > 0)
                 <form action="{{ route('shipments.import.confirm') }}" method="POST">
                     @csrf
-                    <button type="submit" class="px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs flex items-center gap-2 shadow-md shadow-blue-500/25 transition">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-                        Confirm and import {{ $results['valid_count'] }} {{ $results['valid_count'] === 1 ? 'shipment' : 'shipments' }}
+                    <button type="submit" class="px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs flex items-center gap-2 shadow-md shadow-blue-500/25 transition cursor-pointer">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                        {{ $results['valid_count'] === 1 ? __('Confirm and import :count shipment', ['count' => $results['valid_count']]) : __('Confirm and import :count shipments', ['count' => $results['valid_count']]) }}
                     </button>
                 </form>
             @endif
@@ -39,40 +39,40 @@
         <x-card class="p-4 sm:p-5">
             <div class="flex items-center justify-between">
                 <div>
-                    <p class="text-[11px] font-bold uppercase tracking-wider theme-text-muted">Total evaluated</p>
+                    <p class="text-[11px] font-bold uppercase tracking-wider theme-text-muted">{{ __('Total evaluated') }}</p>
                     <p class="text-2xl font-black theme-heading font-mono mt-1">{{ $results['total_rows'] }}</p>
                 </div>
                 <div class="w-10 h-10 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-600 dark:text-cyan-400">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
                 </div>
             </div>
-            <p class="text-[11px] theme-text-secondary mt-2">Manifest records in uploaded CSV.</p>
+            <p class="text-[11px] theme-text-secondary mt-2">{{ __('Manifest records in uploaded CSV.') }}</p>
         </x-card>
 
         <x-card class="p-4 sm:p-5">
             <div class="flex items-center justify-between">
                 <div>
-                    <p class="text-[11px] font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">Ready to import</p>
+                    <p class="text-[11px] font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">{{ __('Ready to import') }}</p>
                     <p class="text-2xl font-black text-emerald-600 dark:text-emerald-400 font-mono mt-1">{{ $results['valid_count'] }}</p>
                 </div>
                 <div class="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-600 dark:text-emerald-400">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
                 </div>
             </div>
-            <p class="text-[11px] theme-text-secondary mt-2">Passed all ISO 6346 and relational checks.</p>
+            <p class="text-[11px] theme-text-secondary mt-2">{{ __('Passed all ISO 6346 and relational checks.') }}</p>
         </x-card>
 
         <x-card class="p-4 sm:p-5">
             <div class="flex items-center justify-between">
                 <div>
-                    <p class="text-[11px] font-bold uppercase tracking-wider text-rose-600 dark:text-rose-400">Omitted with errors</p>
+                    <p class="text-[11px] font-bold uppercase tracking-wider text-rose-600 dark:text-rose-400">{{ __('Omitted with errors') }}</p>
                     <p class="text-2xl font-black text-rose-600 dark:text-rose-400 font-mono mt-1">{{ $results['invalid_count'] }}</p>
                 </div>
                 <div class="w-10 h-10 rounded-xl bg-rose-500/10 border border-rose-500/20 flex items-center justify-center text-rose-600 dark:text-rose-400">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
                 </div>
             </div>
-            <p class="text-[11px] theme-text-secondary mt-2">Will be excluded from the database transaction.</p>
+            <p class="text-[11px] theme-text-secondary mt-2">{{ __('Will be excluded from the database transaction.') }}</p>
         </x-card>
     </div>
 
@@ -82,9 +82,9 @@
             <div class="flex items-center justify-between">
                 <h2 class="text-base font-bold theme-heading flex items-center gap-2">
                     <span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
-                    Verified rows ready to commit ({{ $results['valid_count'] }})
+                    {{ __('Verified rows ready to commit (:count)', ['count' => $results['valid_count']]) }}
                 </h2>
-                <span class="text-xs font-mono theme-text-muted">Transaction scope: 1 atomic commit</span>
+                <span class="text-xs font-mono theme-text-muted">{{ __('Transaction scope: 1 atomic commit') }}</span>
             </div>
 
             <x-card :padded="false" class="overflow-hidden">
@@ -92,14 +92,14 @@
                     <table class="w-full text-left text-xs font-mono">
                         <thead class="theme-card-elevated theme-text-muted uppercase tracking-wider text-[10px] border-b theme-border font-sans font-semibold">
                             <tr>
-                                <th class="py-3 px-4">Line</th>
-                                <th class="py-3 px-4">Container ID</th>
-                                <th class="py-3 px-4">Tracking number</th>
-                                <th class="py-3 px-4">Shipping line</th>
-                                <th class="py-3 px-4">Corridor lane</th>
-                                <th class="py-3 px-4">Cargo type</th>
-                                <th class="py-3 px-4">Departure &rarr; Arrival</th>
-                                <th class="py-3 px-4 text-right">Declared value</th>
+                                <th class="py-3 px-4">{{ __('Line') }}</th>
+                                <th class="py-3 px-4">{{ __('Container ID') }}</th>
+                                <th class="py-3 px-4">{{ __('Tracking number') }}</th>
+                                <th class="py-3 px-4">{{ __('Shipping line') }}</th>
+                                <th class="py-3 px-4">{{ __('Corridor lane') }}</th>
+                                <th class="py-3 px-4">{{ __('Cargo type') }}</th>
+                                <th class="py-3 px-4">{{ __('Departure') }} &rarr; {{ __('Arrival') }}</th>
+                                <th class="py-3 px-4 text-right">{{ __('Declared value') }}</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y theme-border">
@@ -109,10 +109,10 @@
                                         #{{ $row['row_number'] }}
                                     </td>
                                     <td class="py-3.5 px-4 font-bold text-blue-600 dark:text-cyan-400">
-                                        {{ $row['container_number'] ?? 'Auto-assigned' }}
+                                        {{ $row['container_number'] ?? __('Auto-assigned') }}
                                     </td>
                                     <td class="py-3.5 px-4 theme-text-secondary">
-                                        {{ $row['tracking_number'] ?? 'Auto-generated' }}
+                                        {{ $row['tracking_number'] ?? __('Auto-generated') }}
                                     </td>
                                     <td class="py-3.5 px-4 font-sans theme-text-primary">
                                         {{ $row['carrier_name'] }}
@@ -125,7 +125,7 @@
                                             <span>{{ $row['destination_unlocode'] }}</span>
                                         </div>
                                         <span class="text-[10px] theme-text-muted block font-sans truncate max-w-xs">
-                                            {{ $row['origin_name'] }} to {{ $row['destination_name'] }}
+                                            {{ $row['origin_name'] }} {{ __('to') }} {{ $row['destination_name'] }}
                                         </span>
                                     </td>
                                     <td class="py-3.5 px-4 font-sans">
@@ -149,8 +149,8 @@
         </div>
     @else
         <div class="p-6 rounded-2xl theme-card-elevated border theme-border text-center space-y-2">
-            <p class="text-sm font-bold theme-heading">No valid rows to commit</p>
-            <p class="text-xs theme-text-secondary">All rows in the uploaded CSV contained validation errors. Please correct the flagged issues below and try again.</p>
+            <p class="text-sm font-bold theme-heading">{{ __('No valid rows to commit') }}</p>
+            <p class="text-xs theme-text-secondary">{{ __('All rows in the uploaded CSV contained validation errors. Please correct the flagged issues below and try again.') }}</p>
         </div>
     @endif
 
@@ -160,9 +160,9 @@
             <div class="flex items-center justify-between">
                 <h2 class="text-base font-bold text-rose-600 dark:text-rose-400 flex items-center gap-2">
                     <span class="w-2.5 h-2.5 rounded-full bg-rose-500"></span>
-                    Flagged rows with validation errors ({{ $results['invalid_count'] }})
+                    {{ __('Flagged rows with validation errors (:count)', ['count' => $results['invalid_count']]) }}
                 </h2>
-                <span class="text-xs theme-text-muted">Excluded from transaction</span>
+                <span class="text-xs theme-text-muted">{{ __('Excluded from transaction') }}</span>
             </div>
 
             <x-card :padded="false" class="overflow-hidden border-rose-500/30">
@@ -170,9 +170,9 @@
                     <table class="w-full text-left text-xs font-mono">
                         <thead class="bg-rose-500/5 text-rose-600 dark:text-rose-400 uppercase tracking-wider text-[10px] border-b theme-border font-sans font-semibold">
                             <tr>
-                                <th class="py-3 px-4 w-16">Line</th>
-                                <th class="py-3 px-4 w-64">Manifest reference</th>
-                                <th class="py-3 px-4">Validation failures</th>
+                                <th class="py-3 px-4 w-16">{{ __('Line') }}</th>
+                                <th class="py-3 px-4 w-64">{{ __('Manifest reference') }}</th>
+                                <th class="py-3 px-4">{{ __('Validation failures') }}</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y theme-border">
@@ -183,11 +183,11 @@
                                     </td>
                                     <td class="py-3.5 px-4 theme-text-secondary font-sans text-xs space-y-1">
                                         <div class="font-mono text-[11px] theme-heading">
-                                            {{ $invalid['data']['container_number'] ?? ($invalid['data']['tracking_number'] ?? 'Row '.$invalid['row_number']) }}
+                                            {{ $invalid['data']['container_number'] ?? ($invalid['data']['tracking_number'] ?? __('Row :num', ['num' => $invalid['row_number']])) }}
                                         </div>
                                         <div class="text-[11px] theme-text-muted font-mono">
-                                            Carrier: {{ $invalid['data']['carrier_code'] ?? ($invalid['data']['carrier'] ?? 'N/A') }} | 
-                                            Lane: {{ $invalid['data']['origin_unlocode'] ?? ($invalid['data']['origin'] ?? 'N/A') }} &rarr; {{ $invalid['data']['destination_unlocode'] ?? ($invalid['data']['destination'] ?? 'N/A') }}
+                                            {{ __('Carrier:') }} {{ $invalid['data']['carrier_code'] ?? ($invalid['data']['carrier'] ?? __('N/A')) }} |
+                                            {{ __('Lane:') }} {{ $invalid['data']['origin_unlocode'] ?? ($invalid['data']['origin'] ?? __('N/A')) }} &rarr; {{ $invalid['data']['destination_unlocode'] ?? ($invalid['data']['destination'] ?? __('N/A')) }}
                                         </div>
                                     </td>
                                     <td class="py-3.5 px-4 space-y-1">
@@ -210,15 +210,15 @@
     <!-- Footer Controls -->
     <div class="flex items-center justify-between pt-4 border-t theme-border">
         <a href="{{ route('shipments.import.index') }}" class="px-4 py-2 rounded-xl theme-card-elevated theme-text-secondary hover:theme-heading border theme-border text-xs font-semibold transition">
-            Cancel and start over
+            {{ __('Cancel and start over') }}
         </a>
 
         @if($results['valid_count'] > 0)
             <form action="{{ route('shipments.import.confirm') }}" method="POST">
                 @csrf
-                <button type="submit" class="px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs flex items-center gap-2 shadow-md shadow-blue-500/25 transition">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-                    Confirm and import {{ $results['valid_count'] }} {{ $results['valid_count'] === 1 ? 'shipment' : 'shipments' }}
+                <button type="submit" class="px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs flex items-center gap-2 shadow-md shadow-blue-500/25 transition cursor-pointer">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                    {{ $results['valid_count'] === 1 ? __('Confirm and import :count shipment', ['count' => $results['valid_count']]) : __('Confirm and import :count shipments', ['count' => $results['valid_count']]) }}
                 </button>
             </form>
         @endif

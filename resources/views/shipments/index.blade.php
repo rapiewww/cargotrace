@@ -7,32 +7,32 @@
         <div>
             <div class="flex items-center gap-3">
                 <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight theme-heading font-sans">
-                    Shipments Manifest
+                    {{ __('Shipments Manifest') }}
                 </h1>
                 <span class="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 border border-cyan-500/20 font-mono">
-                    {{ $shipments->total() }} Shipments
+                    {{ __(':count Shipments', ['count' => $shipments->total()]) }}
                 </span>
             </div>
             <p class="text-xs sm:text-sm theme-text-secondary mt-1">
-                Manage, track, and filter end-to-end global cargo movements across sea, air, and road corridors.
+                {{ __('Manage, track, and filter end-to-end global cargo movements across sea, air, and road corridors.') }}
             </p>
         </div>
 
-        <div class="flex items-center gap-3">
+        <div class="flex flex-wrap items-center gap-2 sm:gap-3">
             <a href="{{ route('shipments.export.csv', request()->query()) }}" class="px-4 py-2.5 rounded-xl theme-card-elevated hover:bg-slate-200 dark:hover:bg-slate-800 theme-text-primary border theme-border text-xs font-semibold flex items-center gap-1.5 transition">
-                <svg class="w-4 h-4 text-cyan-600 dark:text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
-                Export CSV
+                <svg class="w-4 h-4 text-cyan-600 dark:text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                {{ __('Export CSV') }}
             </a>
             @can('import', \App\Models\Shipment::class)
                 <a href="{{ route('shipments.import.index') }}" class="px-4 py-2.5 rounded-xl theme-card-elevated hover:bg-slate-200 dark:hover:bg-slate-800 theme-text-primary border theme-border text-xs font-semibold flex items-center gap-1.5 transition">
-                    <svg class="w-4 h-4 text-cyan-600 dark:text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
-                    Import CSV
+                    <svg class="w-4 h-4 text-cyan-600 dark:text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
+                    {{ __('Import CSV') }}
                 </a>
             @endcan
             @if(in_array(auth()->user()->role, ['admin', 'operator']))
                 <a href="{{ route('shipments.create') }}" class="px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs flex items-center gap-1.5 shadow-md shadow-blue-500/25 transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]">
-                    <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/></svg>
-                    New Shipment
+                    <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/></svg>
+                    {{ __('New Shipment') }}
                 </a>
             @endif
         </div>
@@ -43,10 +43,10 @@
         @php
             $currentMode = strtoupper(request('mode', 'ALL'));
             $modesList = [
-                'ALL' => ['label' => 'All modes', 'count' => $modeCounts['ALL'] ?? $shipments->total()],
-                'SEA' => ['label' => 'Sea', 'count' => $modeCounts['SEA'] ?? 0],
-                'AIR' => ['label' => 'Air', 'count' => $modeCounts['AIR'] ?? 0],
-                'ROAD' => ['label' => 'Road', 'count' => $modeCounts['ROAD'] ?? 0],
+                'ALL' => ['label' => __('All modes'), 'count' => $modeCounts['ALL'] ?? $shipments->total()],
+                'SEA' => ['label' => __('Sea'), 'count' => $modeCounts['SEA'] ?? 0],
+                'AIR' => ['label' => __('Air'), 'count' => $modeCounts['AIR'] ?? 0],
+                'ROAD' => ['label' => __('Road'), 'count' => $modeCounts['ROAD'] ?? 0],
             ];
         @endphp
         @foreach($modesList as $mKey => $mData)
@@ -79,15 +79,15 @@
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 text-xs">
                 <!-- Search -->
                 <div class="space-y-1.5">
-                    <label for="filter-search" class="text-[11px] theme-text-muted font-semibold block">Tracking or reference</label>
-                    <input id="filter-search" type="text" name="search" value="{{ request('search') }}" placeholder="e.g. CTG-SEA-2026..." class="w-full min-h-[40px] px-3.5 py-2 rounded-xl theme-input border font-mono text-xs focus:ring-1 focus:ring-cyan-500 focus:outline-none transition">
+                    <label for="filter-search" class="text-[11px] theme-text-muted font-semibold block">{{ __('Tracking or reference') }}</label>
+                    <input id="filter-search" type="text" name="search" value="{{ request('search') }}" placeholder="{{ __('e.g. CTG-SEA-2026...') }}" class="w-full min-h-[40px] px-3.5 py-2 rounded-xl theme-input border font-mono text-xs focus:ring-1 focus:ring-cyan-500 focus:outline-none transition">
                 </div>
 
                 <!-- Status Filter -->
                 <div class="space-y-1.5">
-                    <label for="filter-status" class="text-[11px] theme-text-muted font-semibold block">Lifecycle status</label>
+                    <label for="filter-status" class="text-[11px] theme-text-muted font-semibold block">{{ __('Lifecycle status') }}</label>
                     <select id="filter-status" name="status" class="w-full min-h-[40px] px-3.5 py-2 rounded-xl theme-input border text-xs focus:ring-1 focus:ring-cyan-500 focus:outline-none transition font-mono">
-                        <option value="">All statuses</option>
+                        <option value="">{{ __('All statuses') }}</option>
                         @foreach(['CREATED', 'BOOKED', 'PICKED_UP', 'IN_TRANSIT', 'DELIVERED'] as $st)
                             <option value="{{ $st }}" {{ strtoupper((string) request('status')) === $st ? 'selected' : '' }}>{{ $st }}</option>
                         @endforeach
@@ -96,9 +96,9 @@
 
                 <!-- Carrier Filter -->
                 <div class="space-y-1.5">
-                    <label for="filter-carrier" class="text-[11px] theme-text-muted font-semibold block">Carrier</label>
+                    <label for="filter-carrier" class="text-[11px] theme-text-muted font-semibold block">{{ __('Carrier') }}</label>
                     <select id="filter-carrier" name="carrier_id" class="w-full min-h-[40px] px-3.5 py-2 rounded-xl theme-input border text-xs focus:ring-1 focus:ring-cyan-500 focus:outline-none transition">
-                        <option value="">All carriers</option>
+                        <option value="">{{ __('All carriers') }}</option>
                         @foreach($carriers as $c)
                             <option value="{{ $c->id }}" {{ request('carrier_id') == $c->id ? 'selected' : '' }}>{{ $c->name }} ({{ $c->code }})</option>
                         @endforeach
@@ -107,11 +107,11 @@
 
                 <!-- Delay Filter -->
                 <div class="space-y-1.5">
-                    <label for="filter-delay" class="text-[11px] theme-text-muted font-semibold block">Delay status</label>
+                    <label for="filter-delay" class="text-[11px] theme-text-muted font-semibold block">{{ __('Delay status') }}</label>
                     <select id="filter-delay" name="is_delayed" class="w-full min-h-[40px] px-3.5 py-2 rounded-xl theme-input border text-xs focus:ring-1 focus:ring-cyan-500 focus:outline-none transition">
-                        <option value="">All (On-time &amp; delayed)</option>
-                        <option value="1" {{ request('is_delayed') === '1' ? 'selected' : '' }}>Delayed only</option>
-                        <option value="0" {{ request('is_delayed') === '0' ? 'selected' : '' }}>On-time only</option>
+                        <option value="">{{ __('All (On-time & delayed)') }}</option>
+                        <option value="1" {{ request('is_delayed') === '1' ? 'selected' : '' }}>{{ __('Delayed only') }}</option>
+                        <option value="0" {{ request('is_delayed') === '0' ? 'selected' : '' }}>{{ __('On-time only') }}</option>
                     </select>
                 </div>
             </div>
@@ -120,9 +120,9 @@
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 text-xs">
                 <!-- Origin Location -->
                 <div class="space-y-1.5">
-                    <label for="filter-origin" class="text-[11px] theme-text-muted font-semibold block">Origin location</label>
+                    <label for="filter-origin" class="text-[11px] theme-text-muted font-semibold block">{{ __('Origin location') }}</label>
                     <select id="filter-origin" name="origin_location_id" class="w-full min-h-[40px] px-3.5 py-2 rounded-xl theme-input border text-xs focus:ring-1 focus:ring-cyan-500 focus:outline-none transition">
-                        <option value="">All origins</option>
+                        <option value="">{{ __('All origins') }}</option>
                         @foreach($locations as $loc)
                             <option value="{{ $loc->id }}" {{ request('origin_location_id') == $loc->id ? 'selected' : '' }}>{{ $loc->short_name }} ({{ $loc->display_code }})</option>
                         @endforeach
@@ -131,9 +131,9 @@
 
                 <!-- Destination Location -->
                 <div class="space-y-1.5">
-                    <label for="filter-destination" class="text-[11px] theme-text-muted font-semibold block">Destination location</label>
+                    <label for="filter-destination" class="text-[11px] theme-text-muted font-semibold block">{{ __('Destination location') }}</label>
                     <select id="filter-destination" name="destination_location_id" class="w-full min-h-[40px] px-3.5 py-2 rounded-xl theme-input border text-xs focus:ring-1 focus:ring-cyan-500 focus:outline-none transition">
-                        <option value="">All destinations</option>
+                        <option value="">{{ __('All destinations') }}</option>
                         @foreach($locations as $loc)
                             <option value="{{ $loc->id }}" {{ request('destination_location_id') == $loc->id ? 'selected' : '' }}>{{ $loc->short_name }} ({{ $loc->display_code }})</option>
                         @endforeach
@@ -142,25 +142,25 @@
 
                 <!-- Date From -->
                 <div class="space-y-1.5">
-                    <label for="filter-date-from" class="text-[11px] theme-text-muted font-semibold block">Departure from</label>
+                    <label for="filter-date-from" class="text-[11px] theme-text-muted font-semibold block">{{ __('Departure from') }}</label>
                     <input id="filter-date-from" type="date" name="date_from" value="{{ request('date_from') }}" class="w-full min-h-[40px] px-3.5 py-2 rounded-xl theme-input border font-mono text-xs focus:ring-1 focus:ring-cyan-500 focus:outline-none transition">
                 </div>
 
                 <!-- Date To -->
                 <div class="space-y-1.5">
-                    <label for="filter-date-to" class="text-[11px] theme-text-muted font-semibold block">Arrival to</label>
+                    <label for="filter-date-to" class="text-[11px] theme-text-muted font-semibold block">{{ __('Arrival to') }}</label>
                     <input id="filter-date-to" type="date" name="date_to" value="{{ request('date_to') }}" class="w-full min-h-[40px] px-3.5 py-2 rounded-xl theme-input border font-mono text-xs focus:ring-1 focus:ring-cyan-500 focus:outline-none transition">
                 </div>
 
                 <!-- Sort Selector -->
                 <div class="space-y-1.5">
-                    <label for="filter-sort" class="text-[11px] theme-text-muted font-semibold block">Sort by</label>
+                    <label for="filter-sort" class="text-[11px] theme-text-muted font-semibold block">{{ __('Sort by') }}</label>
                     @php $activeSort = $currentSort ?? request('sort', 'newest'); @endphp
                     <select id="filter-sort" name="sort" class="w-full min-h-[40px] px-3.5 py-2 rounded-xl theme-input border text-xs focus:ring-1 focus:ring-cyan-500 focus:outline-none transition">
-                        <option value="newest" {{ $activeSort === 'newest' ? 'selected' : '' }}>Newest</option>
-                        <option value="eta_soonest" {{ $activeSort === 'eta_soonest' ? 'selected' : '' }}>ETA soonest</option>
-                        <option value="highest_value" {{ $activeSort === 'highest_value' ? 'selected' : '' }}>Highest value</option>
-                        <option value="most_delayed" {{ $activeSort === 'most_delayed' ? 'selected' : '' }}>Most delayed</option>
+                        <option value="newest" {{ $activeSort === 'newest' ? 'selected' : '' }}>{{ __('Newest') }}</option>
+                        <option value="eta_soonest" {{ $activeSort === 'eta_soonest' ? 'selected' : '' }}>{{ __('ETA soonest') }}</option>
+                        <option value="highest_value" {{ $activeSort === 'highest_value' ? 'selected' : '' }}>{{ __('Highest value') }}</option>
+                        <option value="most_delayed" {{ $activeSort === 'most_delayed' ? 'selected' : '' }}>{{ __('Most delayed') }}</option>
                     </select>
                 </div>
             </div>
@@ -168,21 +168,21 @@
             <div class="flex flex-wrap items-center justify-between gap-2 pt-3 border-t theme-border">
                 <div class="flex flex-wrap items-center gap-2">
                     <span class="text-xs theme-text-muted font-mono tabular-nums">
-                        Showing {{ $shipments->firstItem() ?? 0 }} - {{ $shipments->lastItem() ?? 0 }} of {{ $shipments->total() }} shipments
+                        {{ __('Showing :from - :to of :total shipments', ['from' => $shipments->firstItem() ?? 0, 'to' => $shipments->lastItem() ?? 0, 'total' => $shipments->total()]) }}
                     </span>
                     @if(request()->boolean('has_open_exceptions'))
                         <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-medium bg-rose-500/15 text-rose-600 dark:text-rose-400 border border-rose-500/25">
-                            <span>Open exceptions filter active</span>
-                            <a href="{{ request()->fullUrlWithQuery(['has_open_exceptions' => null, 'page' => null]) }}" class="underline hover:no-underline">Clear</a>
+                            <span>{{ __('Open exceptions filter active') }}</span>
+                            <a href="{{ request()->fullUrlWithQuery(['has_open_exceptions' => null, 'page' => null]) }}" class="underline hover:no-underline">{{ __('Clear') }}</a>
                         </span>
                     @endif
                 </div>
                 <div class="flex items-center space-x-2">
                     <a href="{{ route('shipments.index') }}" class="px-3 py-2 rounded-lg text-xs font-semibold theme-text-muted hover:theme-heading hover:bg-slate-200 dark:hover:bg-slate-800 transition min-h-[36px] inline-flex items-center">
-                        Reset Filters
+                        {{ __('Reset Filters') }}
                     </a>
                     <button type="submit" class="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs transition cursor-pointer min-h-[36px]">
-                        Apply Filter
+                        {{ __('Apply Filter') }}
                     </button>
                 </div>
             </div>
@@ -195,15 +195,15 @@
             <table class="w-full text-left text-xs border-collapse">
                 <thead>
                     <tr class="theme-card-elevated border-b theme-border theme-text-muted font-mono uppercase text-[10px] tracking-wider">
-                        <th class="py-3.5 px-4 font-semibold whitespace-nowrap">Tracking no.</th>
-                        <th class="py-3.5 px-4 font-semibold whitespace-nowrap">Mode</th>
-                        <th class="py-3.5 px-4 font-semibold whitespace-nowrap">Reference</th>
-                        <th class="py-3.5 px-4 font-semibold whitespace-nowrap">Carrier</th>
-                        <th class="py-3.5 px-4 font-semibold whitespace-nowrap">Origin &rarr; Destination</th>
-                        <th class="py-3.5 px-4 font-semibold whitespace-nowrap">Lifecycle Status</th>
-                        <th class="py-3.5 px-4 font-semibold whitespace-nowrap">Schedule Variance</th>
-                        <th class="py-3.5 px-4 font-semibold whitespace-nowrap text-right">Value</th>
-                        <th class="py-3.5 px-4 font-semibold whitespace-nowrap text-right">Action</th>
+                        <th class="py-3.5 px-4 font-semibold whitespace-nowrap">{{ __('Tracking no.') }}</th>
+                        <th class="py-3.5 px-4 font-semibold whitespace-nowrap">{{ __('Mode') }}</th>
+                        <th class="py-3.5 px-4 font-semibold whitespace-nowrap">{{ __('Reference') }}</th>
+                        <th class="py-3.5 px-4 font-semibold whitespace-nowrap">{{ __('Carrier') }}</th>
+                        <th class="py-3.5 px-4 font-semibold whitespace-nowrap">{{ __('Origin') }} &rarr; {{ __('Destination') }}</th>
+                        <th class="py-3.5 px-4 font-semibold whitespace-nowrap">{{ __('Lifecycle Status') }}</th>
+                        <th class="py-3.5 px-4 font-semibold whitespace-nowrap">{{ __('Schedule Variance') }}</th>
+                        <th class="py-3.5 px-4 font-semibold whitespace-nowrap text-right">{{ __('Value') }}</th>
+                        <th class="py-3.5 px-4 font-semibold whitespace-nowrap text-right">{{ __('Action') }}</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y theme-border">
@@ -215,7 +215,7 @@
                                     {{ $s->tracking_number }}
                                 </a>
                                 @if($s->reference_number)
-                                    <span class="text-[10px] font-mono theme-text-muted block whitespace-nowrap tabular-nums">Ref: {{ $s->reference_number }}</span>
+                                    <span class="text-[10px] font-mono theme-text-muted block whitespace-nowrap tabular-nums">{{ __('Ref:') }} {{ $s->reference_number }}</span>
                                 @endif
                                 @if(auth()->user()->role !== 'customer' && $s->customer)
                                     <span class="text-[10px] theme-text-secondary block truncate max-w-[180px]">{{ $s->customer->company_name ?? $s->customer->name }}</span>
@@ -231,19 +231,19 @@
                             <td class="py-4 px-4 font-mono text-xs whitespace-nowrap tabular-nums">
                                 @if(($s->transport_mode ?? 'SEA') === 'SEA')
                                     <span class="text-blue-600 dark:text-cyan-400 font-semibold block whitespace-nowrap tabular-nums">
-                                        <span class="theme-text-muted font-normal">Container:</span> {{ $s->formatted_container_number ?? $s->container_number ?? 'Not assigned' }}
+                                        <span class="theme-text-muted font-normal">{{ __('Container:') }}</span> {{ $s->formatted_container_number ?? $s->container_number ?? __('Not assigned') }}
                                     </span>
                                     @if($s->bill_of_lading_number)
                                         <span class="text-[10px] theme-text-muted block whitespace-nowrap tabular-nums">B/L: {{ $s->bill_of_lading_number }}</span>
                                     @endif
                                 @elseif(($s->transport_mode ?? 'SEA') === 'AIR')
                                     <span class="text-sky-600 dark:text-sky-400 font-semibold block whitespace-nowrap tabular-nums">
-                                        <span class="theme-text-muted font-normal">AWB:</span> {{ $s->formatted_awb_number ?? $s->awb_number ?? 'Not assigned' }}
+                                        <span class="theme-text-muted font-normal">AWB:</span> {{ $s->formatted_awb_number ?? $s->awb_number ?? __('Not assigned') }}
                                     </span>
-                                    <span class="text-[10px] theme-text-muted block whitespace-nowrap">Air waybill</span>
+                                    <span class="text-[10px] theme-text-muted block whitespace-nowrap">{{ __('Air waybill') }}</span>
                                 @elseif(($s->transport_mode ?? 'SEA') === 'ROAD')
                                     <span class="text-emerald-600 dark:text-emerald-400 font-semibold block whitespace-nowrap tabular-nums">
-                                        <span class="theme-text-muted font-normal">Plate:</span> {{ $s->vehicle_plate ?? 'Not assigned' }}
+                                        <span class="theme-text-muted font-normal">{{ __('Plate:') }}</span> {{ $s->vehicle_plate ?? __('Not assigned') }}
                                     </span>
                                     @if($s->cmr_number)
                                         <span class="text-[10px] theme-text-muted block whitespace-nowrap tabular-nums">CMR: {{ $s->cmr_number }}</span>
@@ -272,7 +272,7 @@
                                     <span class="font-bold theme-heading">{{ $s->destinationLocation->display_code }}</span>
                                 </div>
                                 <span class="text-[10px] theme-text-muted block truncate max-w-[200px] font-sans">
-                                    {{ $s->originLocation->short_name }} to {{ $s->destinationLocation->short_name }}
+                                    {{ $s->originLocation->short_name }} {{ __('to') }} {{ $s->destinationLocation->short_name }}
                                 </span>
                             </td>
 
@@ -291,11 +291,11 @@
                                 @else
                                     <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 font-mono whitespace-nowrap">
                                         <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
-                                        On Schedule
+                                        {{ __('On Schedule') }}
                                     </span>
                                 @endif
                                 <span class="text-[10px] theme-text-muted block mt-1 font-mono whitespace-nowrap tabular-nums">
-                                    ETA: {{ $s->estimated_arrival_at?->format('M d, H:i') ?? 'TBD' }}
+                                    ETA: {{ $s->estimated_arrival_at?->format('M d, H:i') ?? __('TBD') }}
                                 </span>
                             </td>
 
@@ -312,7 +312,7 @@
                             <!-- Action -->
                             <td class="py-4 px-4 text-right whitespace-nowrap">
                                 <a href="{{ route('shipments.show', $s) }}" class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-blue-500/10 hover:bg-blue-500/20 text-blue-600 dark:text-cyan-400 border border-blue-500/30 text-xs font-semibold transition whitespace-nowrap">
-                                    Details &rarr;
+                                    {{ __('Details') }} &rarr;
                                 </a>
                             </td>
                         </tr>
@@ -321,8 +321,7 @@
                             <td colspan="9" class="py-12">
                                 <x-empty-state
                                     title="No Shipments Found"
-                                    description="No cargo manifests match your current filter parameters."
-                                    icon="shipment"
+                                    message="No cargo manifests match your current filter parameters."
                                 />
                             </td>
                         </tr>

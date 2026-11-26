@@ -1,7 +1,7 @@
 @props([
     'percentage' => 50,
-    'origin' => 'Origin',
-    'destination' => 'Destination',
+    'origin' => __('Origin'),
+    'destination' => __('Destination'),
     'current' => null,
     'eta' => null,
     'delayed' => false,
@@ -9,9 +9,9 @@
 
 <div class="space-y-2 w-full">
     <div class="flex items-center justify-between text-[11px] theme-text-muted font-mono">
-        <span>From: <strong class="theme-heading">{{ $origin }}</strong></span>
+        <span>{{ __('From:') }} <strong class="theme-heading">{{ $origin }}</strong></span>
         @if($eta)
-            <span class="{{ $delayed ? 'text-amber-500 font-bold' : 'text-emerald-500' }}">ETA: {{ $eta }}</span>
+            <span class="{{ $delayed ? 'text-amber-500 font-bold' : 'text-emerald-500' }}">{{ __('ETA:') }} {{ $eta }}</span>
         @endif
     </div>
 

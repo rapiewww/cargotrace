@@ -7,29 +7,29 @@
         <div>
             <div class="flex items-center gap-3">
                 <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight theme-heading font-sans">
-                    Operational Exceptions
+                    {{ __('Operational Exceptions') }}
                 </h1>
                 <span class="text-xs px-2.5 py-0.5 rounded-full bg-rose-500/20 text-rose-600 dark:text-rose-300 border border-rose-500/30 font-mono">
-                    Incident Command
+                    {{ __('Incident Command') }}
                 </span>
             </div>
             <p class="text-xs sm:text-sm theme-text-secondary mt-1">
-                Manage customs holds, weather delays, and port congestion reports across all ocean routes.
+                {{ __('Manage customs holds, weather delays, and port congestion reports across all ocean routes.') }}
             </p>
         </div>
 
         <div class="flex items-center space-x-2.5 text-xs font-mono">
             <span class="px-3 py-1.5 rounded-xl bg-rose-500/15 border border-rose-500/30 text-rose-600 dark:text-rose-400 font-bold inline-flex items-center gap-2">
                 <span class="w-2 h-2 rounded-full bg-rose-400 animate-pulse"></span>
-                {{ $counts['open'] }} Open
+                {{ __(':count Open', ['count' => $counts['open']]) }}
             </span>
             <span class="px-3 py-1.5 rounded-xl bg-amber-500/15 border border-amber-500/30 text-amber-600 dark:text-amber-400 font-bold inline-flex items-center gap-2">
                 <span class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
-                {{ $counts['investigating'] }} Investigating
+                {{ __(':count Investigating', ['count' => $counts['investigating']]) }}
             </span>
             <span class="px-3 py-1.5 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-600 dark:text-emerald-400 font-bold inline-flex items-center gap-2">
                 <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
-                {{ $counts['resolved'] }} Resolved
+                {{ __(':count Resolved', ['count' => $counts['resolved']]) }}
             </span>
         </div>
     </div>
@@ -38,18 +38,18 @@
     <x-card>
         <form method="GET" action="{{ route('operations.exceptions') }}" class="grid grid-cols-1 sm:grid-cols-4 gap-4 text-xs">
             <div class="space-y-1.5">
-                <label class="uppercase text-[10px] tracking-wider theme-text-muted font-semibold block">Status</label>
+                <label class="uppercase text-[10px] tracking-wider theme-text-muted font-semibold block">{{ __('Status') }}</label>
                 <select name="status" class="w-full px-3.5 py-2.5 rounded-xl theme-input border font-mono focus:ring-1 focus:ring-cyan-500 focus:outline-none transition">
-                    <option value="">All Statuses</option>
+                    <option value="">{{ __('All Statuses') }}</option>
                     <option value="OPEN" {{ request('status') === 'OPEN' ? 'selected' : '' }}>OPEN</option>
                     <option value="INVESTIGATING" {{ request('status') === 'INVESTIGATING' ? 'selected' : '' }}>INVESTIGATING</option>
                     <option value="RESOLVED" {{ request('status') === 'RESOLVED' ? 'selected' : '' }}>RESOLVED</option>
                 </select>
             </div>
             <div class="space-y-1.5">
-                <label class="uppercase text-[10px] tracking-wider theme-text-muted font-semibold block">Severity</label>
+                <label class="uppercase text-[10px] tracking-wider theme-text-muted font-semibold block">{{ __('Severity') }}</label>
                 <select name="severity" class="w-full px-3.5 py-2.5 rounded-xl theme-input border font-mono focus:ring-1 focus:ring-cyan-500 focus:outline-none transition">
-                    <option value="">All Severities</option>
+                    <option value="">{{ __('All Severities') }}</option>
                     <option value="LOW" {{ request('severity') === 'LOW' ? 'selected' : '' }}>LOW</option>
                     <option value="MEDIUM" {{ request('severity') === 'MEDIUM' ? 'selected' : '' }}>MEDIUM</option>
                     <option value="HIGH" {{ request('severity') === 'HIGH' ? 'selected' : '' }}>HIGH</option>
@@ -57,9 +57,9 @@
                 </select>
             </div>
             <div class="space-y-1.5">
-                <label class="uppercase text-[10px] tracking-wider theme-text-muted font-semibold block">Exception Code</label>
+                <label class="uppercase text-[10px] tracking-wider theme-text-muted font-semibold block">{{ __('Exception Code') }}</label>
                 <select name="code" class="w-full px-3.5 py-2.5 rounded-xl theme-input border font-mono focus:ring-1 focus:ring-cyan-500 focus:outline-none transition">
-                    <option value="">All Codes</option>
+                    <option value="">{{ __('All Codes') }}</option>
                     <option value="CUSTOMS_HOLD" {{ request('code') === 'CUSTOMS_HOLD' ? 'selected' : '' }}>CUSTOMS_HOLD</option>
                     <option value="WEATHER_DELAY" {{ request('code') === 'WEATHER_DELAY' ? 'selected' : '' }}>WEATHER_DELAY</option>
                     <option value="PORT_CONGESTION" {{ request('code') === 'PORT_CONGESTION' ? 'selected' : '' }}>PORT_CONGESTION</option>
@@ -68,11 +68,11 @@
                 </select>
             </div>
             <div class="flex items-end space-x-2">
-                <button type="submit" class="w-full py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs transition">
-                    Filter Incidents
+                <button type="submit" class="w-full py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs transition cursor-pointer">
+                    {{ __('Filter Incidents') }}
                 </button>
                 <a href="{{ route('operations.exceptions') }}" class="px-3.5 py-2.5 rounded-xl theme-card-elevated theme-text-muted hover:theme-heading border theme-border transition">
-                    Reset
+                    {{ __('Reset') }}
                 </a>
             </div>
         </form>
@@ -84,12 +84,12 @@
             <table class="w-full text-left text-xs">
                 <thead class="theme-card-elevated theme-text-muted uppercase tracking-wider text-[10px] border-b theme-border font-mono">
                     <tr>
-                        <th class="py-3.5 px-4">Tracking no.</th>
-                        <th class="py-3.5 px-4">Code & Severity</th>
-                        <th class="py-3.5 px-4">Incident Title</th>
-                        <th class="py-3.5 px-4">Status</th>
-                        <th class="py-3.5 px-4">Detected At</th>
-                        <th class="py-3.5 px-4 text-right">Action / Resolution</th>
+                        <th class="py-3.5 px-4">{{ __('Tracking no.') }}</th>
+                        <th class="py-3.5 px-4">{{ __('Code & Severity') }}</th>
+                        <th class="py-3.5 px-4">{{ __('Incident Title') }}</th>
+                        <th class="py-3.5 px-4">{{ __('Status') }}</th>
+                        <th class="py-3.5 px-4">{{ __('Detected At') }}</th>
+                        <th class="py-3.5 px-4 text-right">{{ __('Action / Resolution') }}</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y theme-border">
@@ -100,7 +100,7 @@
                                     {{ $exc->shipment->tracking_number }}
                                 </a>
                                 <span class="text-[10px] theme-text-muted block font-sans mt-0.5">
-                                    {{ $exc->shipment->originLocation->short_name }} to {{ $exc->shipment->destinationLocation->short_name }} ({{ $exc->shipment->originLocation->display_code }} &rarr; {{ $exc->shipment->destinationLocation->display_code }})
+                                    {{ $exc->shipment->originLocation->short_name }} {{ __('to') }} {{ $exc->shipment->destinationLocation->short_name }} ({{ $exc->shipment->originLocation->display_code }} &rarr; {{ $exc->shipment->destinationLocation->display_code }})
                                 </span>
                             </td>
                             <td class="py-4 px-4 font-mono">
@@ -113,7 +113,7 @@
                                 <div class="font-bold theme-heading">{{ $exc->title }}</div>
                                 <div class="text-[11px] theme-text-secondary mt-0.5 max-w-sm">{{ Str::limit($exc->description, 100) }}</div>
                                 @if($exc->resolution_notes)
-                                    <div class="text-[10px] text-emerald-600 dark:text-emerald-400 mt-1 font-mono">Resolution: {{ $exc->resolution_notes }}</div>
+                                    <div class="text-[10px] text-emerald-600 dark:text-emerald-400 mt-1 font-mono">{{ __('Resolution:') }} {{ $exc->resolution_notes }}</div>
                                 @endif
                             </td>
                             <td class="py-4 px-4">
@@ -144,19 +144,19 @@
                                             @endif
                                             <option value="RESOLVED">RESOLVED</option>
                                         </select>
-                                        <input type="text" name="resolution_notes" placeholder="Resolution remark..." class="px-2.5 py-1.5 rounded-xl theme-input border text-[11px] w-36 focus:ring-1 focus:ring-cyan-500 focus:outline-none">
-                                        <button type="submit" class="px-3 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-[11px] transition">
-                                            Update
+                                        <input type="text" name="resolution_notes" placeholder="{{ __('Resolution remark...') }}" class="px-2.5 py-1.5 rounded-xl theme-input border text-[11px] w-36 focus:ring-1 focus:ring-cyan-500 focus:outline-none">
+                                        <button type="submit" class="px-3 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-[11px] transition cursor-pointer">
+                                            {{ __('Update') }}
                                         </button>
                                     </form>
                                 @else
-                                    <span class="text-emerald-600 dark:text-emerald-400 text-[11px] font-mono">Resolved &bull; {{ $exc->resolved_at?->format('M d') }}</span>
+                                    <span class="text-emerald-600 dark:text-emerald-400 text-[11px] font-mono">{{ __('Resolved') }} &bull; {{ $exc->resolved_at?->format('M d') }}</span>
                                 @endif
                             </td>
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="6" class="py-12 text-center theme-text-muted">No exceptions logged matching the filter.</td>
+                            <td colspan="6" class="py-12 text-center theme-text-muted">{{ __('No exceptions logged matching the filter.') }}</td>
                         </tr>
                     @endforelse
                 </tbody>

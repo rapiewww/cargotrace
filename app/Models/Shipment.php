@@ -349,25 +349,25 @@ class Shipment extends Model
 
         $labels = [
             'SEA' => [
-                'CREATED' => 'Created',
-                'BOOKED' => 'Vessel Space Booked',
-                'PICKED_UP' => 'Gated in at Origin Terminal',
-                'IN_TRANSIT' => 'At Sea / In Transit',
-                'DELIVERED' => 'Discharged & Delivered',
+                'CREATED' => __('Created'),
+                'BOOKED' => __('Vessel Space Booked'),
+                'PICKED_UP' => __('Gated in at Origin Terminal'),
+                'IN_TRANSIT' => __('At Sea / In Transit'),
+                'DELIVERED' => __('Discharged & Delivered'),
             ],
             'AIR' => [
-                'CREATED' => 'Created',
-                'BOOKED' => 'Flight Space Booked',
-                'PICKED_UP' => 'Received at Origin Airport',
-                'IN_TRANSIT' => 'In Flight / In Transit',
-                'DELIVERED' => 'Arrived & Delivered',
+                'CREATED' => __('Created'),
+                'BOOKED' => __('Flight Space Booked'),
+                'PICKED_UP' => __('Received at Origin Airport'),
+                'IN_TRANSIT' => __('In Flight / In Transit'),
+                'DELIVERED' => __('Arrived & Delivered'),
             ],
             'ROAD' => [
-                'CREATED' => 'Created',
-                'BOOKED' => 'Truck / Haulier Dispatched',
-                'PICKED_UP' => 'Loaded at Depot / Warehouse',
-                'IN_TRANSIT' => 'On Road / In Transit',
-                'DELIVERED' => 'Delivered to Consignee',
+                'CREATED' => __('Created'),
+                'BOOKED' => __('Truck / Haulier Dispatched'),
+                'PICKED_UP' => __('Loaded at Depot / Warehouse'),
+                'IN_TRANSIT' => __('On Road / In Transit'),
+                'DELIVERED' => __('Delivered to Consignee'),
             ],
         ];
 

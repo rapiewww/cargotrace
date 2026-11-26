@@ -21,15 +21,15 @@
             <div class="space-y-1">
                 <span class="text-xs font-semibold theme-text-secondary flex items-center gap-1.5">
                     <x-mode-icon mode="SEA" class="w-4 h-4 text-blue-600 dark:text-cyan-400" />
-                    <span>Ocean freight (Sea)</span>
+                    <span>{{ __('Ocean freight (Sea)') }}</span>
                 </span>
                 <div class="text-2xl font-extrabold theme-heading font-mono tabular-nums">
-                    {{ $activeModesCount['SEA'] ?? 0 }} <span class="text-xs font-normal theme-text-muted font-sans">active</span>
+                    {{ $activeModesCount['SEA'] ?? 0 }} <span class="text-xs font-normal theme-text-muted font-sans">{{ __('active') }}</span>
                 </div>
-                <span class="text-[10px] theme-text-muted block">Solid bezier maritime arcs</span>
+                <span class="text-[10px] theme-text-muted block">{{ __('Solid bezier maritime arcs') }}</span>
             </div>
             <span class="px-2.5 py-1 rounded-full text-xs font-bold font-mono bg-blue-500/15 text-blue-600 dark:text-cyan-400 border border-blue-500/25 group-hover:scale-105 transition-transform">
-                Sea &rarr;
+                {{ __('Sea') }} &rarr;
             </span>
         </a>
 
@@ -38,15 +38,15 @@
             <div class="space-y-1">
                 <span class="text-xs font-semibold theme-text-secondary flex items-center gap-1.5">
                     <x-mode-icon mode="AIR" class="w-4 h-4 text-sky-600 dark:text-sky-400" />
-                    <span>Air freight (Air)</span>
+                    <span>{{ __('Air freight (Air)') }}</span>
                 </span>
                 <div class="text-2xl font-extrabold theme-heading font-mono tabular-nums">
-                    {{ $activeModesCount['AIR'] ?? 0 }} <span class="text-xs font-normal theme-text-muted font-sans">active</span>
+                    {{ $activeModesCount['AIR'] ?? 0 }} <span class="text-xs font-normal theme-text-muted font-sans">{{ __('active') }}</span>
                 </div>
-                <span class="text-[10px] theme-text-muted block">Dashed high-altitude flight curves</span>
+                <span class="text-[10px] theme-text-muted block">{{ __('Dashed high-altitude flight curves') }}</span>
             </div>
             <span class="px-2.5 py-1 rounded-full text-xs font-bold font-mono bg-sky-500/15 text-sky-600 dark:text-sky-400 border border-sky-500/25 group-hover:scale-105 transition-transform">
-                Air &rarr;
+                {{ __('Air') }} &rarr;
             </span>
         </a>
 
@@ -55,65 +55,65 @@
             <div class="space-y-1">
                 <span class="text-xs font-semibold theme-text-secondary flex items-center gap-1.5">
                     <x-mode-icon mode="ROAD" class="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-                    <span>Road freight (Road)</span>
+                    <span>{{ __('Road freight (Road)') }}</span>
                 </span>
                 <div class="text-2xl font-extrabold theme-heading font-mono tabular-nums">
-                    {{ $activeModesCount['ROAD'] ?? 0 }} <span class="text-xs font-normal theme-text-muted font-sans">active</span>
+                    {{ $activeModesCount['ROAD'] ?? 0 }} <span class="text-xs font-normal theme-text-muted font-sans">{{ __('active') }}</span>
                 </div>
-                <span class="text-[10px] theme-text-muted block">Direct overland haul lines</span>
+                <span class="text-[10px] theme-text-muted block">{{ __('Direct overland haul lines') }}</span>
             </div>
             <span class="px-2.5 py-1 rounded-full text-xs font-bold font-mono bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/25 group-hover:scale-105 transition-transform">
-                Road &rarr;
+                {{ __('Road') }} &rarr;
             </span>
         </a>
     </div>
 
     <!-- Row 2: Compact Role-Scoped KPI Row -->
-    <section aria-label="Key shipment metrics">
+    <section aria-label="{{ __('Key shipment metrics') }}">
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
             <!-- KPI 1: Total Shipments -->
             <a href="{{ route('shipments.index') }}" data-kpi="total" class="p-4 rounded-2xl theme-card border hover:border-blue-500/50 transition-colors flex flex-col justify-between gap-1.5 min-h-[44px] cursor-pointer">
                 <div class="flex items-center justify-between gap-2">
-                    <span class="text-xs font-medium theme-text-secondary">Total shipments</span>
+                    <span class="text-xs font-medium theme-text-secondary">{{ __('Total shipments') }}</span>
                 </div>
                 <div class="text-2xl font-extrabold theme-heading font-mono tabular-nums">
                     {{ number_format($totalShipments) }}
                 </div>
                 <p class="text-[11px] theme-text-muted truncate">
-                    {{ $totalShipments > 0 ? $activeShipmentsCount.' active across all modes' : 'No consignments recorded yet' }}
+                    {{ $totalShipments > 0 ? __(':count active across all modes', ['count' => $activeShipmentsCount]) : __('No consignments recorded yet') }}
                 </p>
             </a>
 
             <!-- KPI 2: In Transit -->
             <a href="{{ route('shipments.index', ['status' => 'IN_TRANSIT']) }}" data-kpi="in_transit" class="p-4 rounded-2xl theme-card border hover:border-blue-500/50 transition-colors flex flex-col justify-between gap-1.5 min-h-[44px] cursor-pointer">
                 <div class="flex items-center justify-between gap-2">
-                    <span class="text-xs font-medium theme-text-secondary">In transit</span>
+                    <span class="text-xs font-medium theme-text-secondary">{{ __('In transit') }}</span>
                 </div>
                 <div class="text-2xl font-extrabold theme-heading font-mono tabular-nums">
                     {{ number_format($inTransit) }}
                 </div>
                 <p class="text-[11px] theme-text-muted truncate">
-                    Shipments currently moving on route
+                    {{ __('Shipments currently moving on route') }}
                 </p>
             </a>
 
             <!-- KPI 3: Delivered -->
             <a href="{{ route('shipments.index', ['status' => 'DELIVERED']) }}" data-kpi="delivered" class="p-4 rounded-2xl theme-card border hover:border-blue-500/50 transition-colors flex flex-col justify-between gap-1.5 min-h-[44px] cursor-pointer">
                 <div class="flex items-center justify-between gap-2">
-                    <span class="text-xs font-medium theme-text-secondary">Delivered</span>
+                    <span class="text-xs font-medium theme-text-secondary">{{ __('Delivered') }}</span>
                 </div>
                 <div class="text-2xl font-extrabold theme-heading font-mono tabular-nums">
                     {{ number_format($delivered) }}
                 </div>
                 <p class="text-[11px] theme-text-muted truncate">
-                    {{ $delivered > 0 ? number_format($onTimeRate, 1).'% delivered on schedule' : 'Completed consignments' }}
+                    {{ $delivered > 0 ? __(':rate% delivered on schedule', ['rate' => number_format($onTimeRate, 1)]) : __('Completed consignments') }}
                 </p>
             </a>
 
             <!-- KPI 4: Delayed + Delay Rate -->
             <a href="{{ route('shipments.index', ['is_delayed' => '1']) }}" data-kpi="delayed" class="p-4 rounded-2xl theme-card border hover:border-amber-500/50 transition-colors flex flex-col justify-between gap-1.5 min-h-[44px] cursor-pointer">
                 <div class="flex items-center justify-between gap-2">
-                    <span class="text-xs font-medium theme-text-secondary">Delayed</span>
+                    <span class="text-xs font-medium theme-text-secondary">{{ __('Delayed') }}</span>
                     <span class="px-2 py-0.5 rounded-full text-[10px] font-semibold font-mono tabular-nums {{ $delayRate > 0 ? 'bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/25' : 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/25' }}">
                         {{ number_format($delayRate, 1) }}%
                     </span>
@@ -122,14 +122,14 @@
                     {{ number_format($delayed) }}
                 </div>
                 <p class="text-[11px] theme-text-muted truncate">
-                    Delay rate: {{ number_format($delayRate, 1) }}% of {{ $activeShipmentsCount }} active
+                    {{ __('Delay rate: :rate% of :active active', ['rate' => number_format($delayRate, 1), 'active' => $activeShipmentsCount]) }}
                 </p>
             </a>
 
             <!-- KPI 5: Open Exceptions + Exception Rate -->
             <a href="{{ route('shipments.index', ['has_open_exceptions' => '1']) }}" data-kpi="open_exceptions" class="p-4 rounded-2xl theme-card border hover:border-rose-500/50 transition-colors flex flex-col justify-between gap-1.5 min-h-[44px] cursor-pointer">
                 <div class="flex items-center justify-between gap-2">
-                    <span class="text-xs font-medium theme-text-secondary">Open exceptions</span>
+                    <span class="text-xs font-medium theme-text-secondary">{{ __('Open exceptions') }}</span>
                     <span class="px-2 py-0.5 rounded-full text-[10px] font-semibold font-mono tabular-nums {{ $exceptionRate > 0 ? 'bg-rose-500/15 text-rose-600 dark:text-rose-400 border border-rose-500/25' : 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/25' }}">
                         {{ number_format($exceptionRate, 1) }}%
                     </span>
@@ -138,7 +138,7 @@
                     {{ number_format($openExceptions) }}
                 </div>
                 <p class="text-[11px] theme-text-muted truncate">
-                    Exception rate: {{ number_format($exceptionRate, 1) }}% of {{ $activeShipmentsCount }} active
+                    {{ __('Exception rate: :rate% of :active active', ['rate' => number_format($exceptionRate, 1), 'active' => $activeShipmentsCount]) }}
                 </p>
             </a>
         </div>
@@ -155,63 +155,63 @@
                     <div>
                         <div class="flex items-center gap-3">
                             <h1 class="text-3xl sm:text-4xl font-extrabold theme-heading tracking-tight font-sans">
-                                Global view
+                                {{ __('Global view') }}
                             </h1>
                             <span class="text-xs px-2.5 py-0.5 rounded-full bg-blue-500/10 text-cyan-600 dark:text-cyan-400 border border-blue-500/20 font-sans">
-                                Overview
+                                {{ __('Overview') }}
                             </span>
                         </div>
-                        <p class="text-xs theme-text-secondary mt-1">Global route map &bull; Operator-recorded checkpoints</p>
+                        <p class="text-xs theme-text-secondary mt-1">{{ __('Global route map • Operator-recorded checkpoints') }}</p>
                         <div class="flex items-center gap-3 mt-2">
                             <div class="flex items-center gap-1.5">
                                 <span class="relative flex h-2 w-2">
                                     <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
                                 </span>
                                 <span class="text-xs font-semibold text-emerald-600 dark:text-emerald-400 font-sans">
-                                    Verified milestones
+                                    {{ __('Verified milestones') }}
                                 </span>
                             </div>
 
                             <!-- "How delays are calculated" small popover -->
                             <details class="relative inline-block text-xs">
                                 <summary class="cursor-pointer text-blue-600 dark:text-cyan-400 hover:underline font-medium inline-flex items-center gap-1 focus:outline-none">
-                                    <span>How delays are calculated</span>
-                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                    <span>{{ __('How delays are calculated') }}</span>
+                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                                 </summary>
                                 <div class="absolute left-0 mt-2 w-72 p-3.5 rounded-2xl theme-card-elevated border theme-border shadow-2xl space-y-2.5 z-30 font-sans">
                                     <div class="flex items-center justify-between pb-1.5 border-b theme-border">
-                                        <span class="font-bold theme-heading text-xs">Delay evaluation rules</span>
-                                        <span class="text-[10px] theme-text-muted">Rule engine</span>
+                                        <span class="font-bold theme-heading text-xs">{{ __('Delay evaluation rules') }}</span>
+                                        <span class="text-[10px] theme-text-muted">{{ __('Rule engine') }}</span>
                                     </div>
                                     <p class="text-[11px] theme-text-secondary leading-relaxed">
-                                        Variance evaluation comparing ETA against expected arrival milestones using database thresholds.
+                                        {{ __('Variance evaluation comparing ETA against expected arrival milestones using database thresholds.') }}
                                     </p>
                                     <div class="grid grid-cols-3 gap-1.5 text-center text-[10px] font-mono">
                                         <div class="p-1.5 rounded-xl bg-amber-500/10 border border-amber-500/25">
-                                            <span class="block font-bold text-amber-600 dark:text-amber-400">Low</span>
+                                            <span class="block font-bold text-amber-600 dark:text-amber-400">{{ __('Low') }}</span>
                                             <span class="theme-text-muted">&le; {{ (int) $delayLowHours }}h</span>
                                         </div>
                                         <div class="p-1.5 rounded-xl bg-orange-500/10 border border-orange-500/25">
-                                            <span class="block font-bold text-orange-600 dark:text-orange-400">Medium</span>
+                                            <span class="block font-bold text-orange-600 dark:text-orange-400">{{ __('Medium') }}</span>
                                             <span class="theme-text-muted">&le; {{ (int) $delayMediumHours }}h</span>
                                         </div>
                                         <div class="p-1.5 rounded-xl bg-rose-500/10 border border-rose-500/25">
-                                            <span class="block font-bold text-rose-600 dark:text-rose-400">High</span>
+                                            <span class="block font-bold text-rose-600 dark:text-rose-400">{{ __('High') }}</span>
                                             <span class="theme-text-muted">&gt; {{ (int) $delayMediumHours }}h</span>
                                         </div>
                                     </div>
                                     <div class="pt-1">
                                         <a href="{{ route('shipments.index', ['is_delayed' => 1]) }}" class="w-full inline-flex items-center justify-center gap-1 px-3 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-semibold text-[11px] shadow-sm transition">
-                                            Filter delayed shipments ({{ $delayed ?? 0 }}) &rarr;
+                                            {{ __('Filter delayed shipments (:count)', ['count' => $delayed ?? 0]) }} &rarr;
                                         </a>
                                     </div>
                                 </div>
                             </details>
                         </div>
 
-                        <!-- Camera Center Coordinates Display: Relabeled honestly as Map center (lat, lng) -->
+                        <!-- Camera Center Coordinates Display -->
                         <div class="text-[11px] theme-text-muted pt-2 font-sans">
-                            Map center (lat, lng): <span id="map-coord-lat" class="font-mono text-cyan-600 dark:text-cyan-400 font-semibold">18.000000</span>, <span id="map-coord-lng" class="font-mono text-cyan-600 dark:text-cyan-400 font-semibold">110.000000</span>
+                            {{ __('Map center (lat, lng):') }} <span id="map-coord-lat" class="font-mono text-cyan-600 dark:text-cyan-400 font-semibold">18.000000</span>, <span id="map-coord-lng" class="font-mono text-cyan-600 dark:text-cyan-400 font-semibold">110.000000</span>
                         </div>
                     </div>
                 </div>
@@ -221,25 +221,25 @@
             <div id="globe-3d-canvas" class="absolute inset-0 w-full h-full z-10 cursor-grab active:cursor-grabbing"></div>
 
             <!-- 2D Leaflet Map Canvas (Alternative) -->
-            <div id="globe-2d-canvas" data-map-data-url="{{ route('dashboard.map-data') }}" role="region" aria-label="2D Leaflet shipment route map" class="absolute inset-0 w-full h-full z-10 hidden theme-page"></div>
+            <div id="globe-2d-canvas" data-map-data-url="{{ route('dashboard.map-data') }}" role="region" aria-label="{{ __('2D Leaflet shipment route map') }}" class="absolute inset-0 w-full h-full z-10 hidden theme-page"></div>
 
             <!-- Empty / Loading / Error States Inside Map -->
             <div id="map-empty-state" role="status" aria-live="polite" class="{{ count($mapData['shipments'] ?? []) === 0 ? '' : 'hidden ' }}absolute inset-0 z-20 flex items-center justify-center p-6 pointer-events-none">
                 <div class="px-5 py-4 rounded-2xl theme-card-elevated border theme-border shadow-xl backdrop-blur-md text-center max-w-xs space-y-1 pointer-events-auto">
-                    <p class="text-sm font-semibold theme-heading">No routes match this filter</p>
-                    <p class="text-xs theme-text-secondary">Select another mode or clear the active filter.</p>
+                    <p class="text-sm font-semibold theme-heading">{{ __('No routes match this filter') }}</p>
+                    <p class="text-xs theme-text-secondary">{{ __('Select another mode or clear the active filter.') }}</p>
                 </div>
             </div>
 
             <div id="map-loading-state" aria-live="polite" class="hidden absolute bottom-20 left-6 z-20 pointer-events-none">
                 <div class="px-3 py-1.5 rounded-xl theme-card-elevated border theme-border shadow-lg backdrop-blur-md text-[11px] font-medium theme-text-secondary">
-                    Updating routes...
+                    {{ __('Updating routes...') }}
                 </div>
             </div>
 
             <div id="map-error-state" role="alert" class="hidden absolute bottom-20 right-6 z-20 pointer-events-none">
                 <div class="px-3 py-1.5 rounded-xl theme-card-elevated border border-rose-500/40 shadow-lg backdrop-blur-md text-[11px] font-medium text-rose-500">
-                    Could not refresh live map routes. Showing cached routes.
+                    {{ __('Could not refresh live map routes. Showing cached routes.') }}
                 </div>
             </div>
 
@@ -254,7 +254,7 @@
                         aria-pressed="true"
                         class="px-2.5 py-1 rounded-xl font-semibold transition map-filter-tab bg-blue-600 text-white cursor-pointer inline-flex items-center gap-1"
                     >
-                        <span>All</span>
+                        <span>{{ __('All') }}</span>
                     </button>
                     <button
                         type="button"
@@ -264,7 +264,7 @@
                         class="px-2.5 py-1 rounded-xl font-semibold transition map-filter-tab theme-text-muted hover:theme-heading cursor-pointer inline-flex items-center gap-1"
                     >
                         <x-mode-icon mode="SEA" class="w-3.5 h-3.5" />
-                        <span>Sea</span>
+                        <span>{{ __('Sea') }}</span>
                     </button>
                     <button
                         type="button"
@@ -274,7 +274,7 @@
                         class="px-2.5 py-1 rounded-xl font-semibold transition map-filter-tab theme-text-muted hover:theme-heading cursor-pointer inline-flex items-center gap-1"
                     >
                         <x-mode-icon mode="AIR" class="w-3.5 h-3.5" />
-                        <span>Air</span>
+                        <span>{{ __('Air') }}</span>
                     </button>
                     <button
                         type="button"
@@ -284,7 +284,7 @@
                         class="px-2.5 py-1 rounded-xl font-semibold transition map-filter-tab theme-text-muted hover:theme-heading cursor-pointer inline-flex items-center gap-1"
                     >
                         <x-mode-icon mode="ROAD" class="w-3.5 h-3.5" />
-                        <span>Road</span>
+                        <span>{{ __('Road') }}</span>
                     </button>
                     <span class="w-px h-3.5 bg-slate-300 dark:bg-slate-700 mx-1"></span>
                     <button
@@ -294,7 +294,7 @@
                         aria-pressed="false"
                         class="px-2.5 py-1 rounded-xl font-semibold transition map-filter-tab theme-text-muted hover:text-amber-500 cursor-pointer inline-flex items-center gap-1"
                     >
-                        <span>Delayed</span>
+                        <span>{{ __('Delayed') }}</span>
                     </button>
                     <button
                         type="button"
@@ -303,7 +303,7 @@
                         aria-pressed="false"
                         class="px-2.5 py-1 rounded-xl font-semibold transition map-filter-tab theme-text-muted hover:text-rose-500 cursor-pointer inline-flex items-center gap-1"
                     >
-                        <span>Exceptions</span>
+                        <span>{{ __('Exceptions') }}</span>
                     </button>
                 </div>
 
@@ -312,37 +312,37 @@
                     <span class="flex items-center gap-1 theme-text-secondary">
                         <span class="w-3 h-0.5 bg-blue-500 rounded inline-block"></span>
                         <x-mode-icon mode="SEA" class="w-3 h-3 text-blue-500" />
-                        <span>Sea (Solid arc)</span>
+                        <span>{{ __('Sea (Solid arc)') }}</span>
                     </span>
                     <span class="flex items-center gap-1 theme-text-secondary">
                         <span class="w-3 h-0.5 border-b-2 border-dashed border-sky-400 inline-block"></span>
                         <x-mode-icon mode="AIR" class="w-3 h-3 text-sky-400" />
-                        <span>Air (Dashed high arc)</span>
+                        <span>{{ __('Air (Dashed high arc)') }}</span>
                     </span>
                     <span class="flex items-center gap-1 theme-text-secondary">
                         <span class="w-3 h-0.5 bg-emerald-500 rounded inline-block"></span>
                         <x-mode-icon mode="ROAD" class="w-3 h-3 text-emerald-500" />
-                        <span>Road (Straight line)</span>
+                        <span>{{ __('Road (Straight line)') }}</span>
                     </span>
                     <span class="w-px h-3 bg-slate-300 dark:bg-slate-700 hidden sm:inline-block"></span>
                     <span class="flex items-center gap-1 theme-text-secondary">
-                        <span class="w-2 h-2 rounded-full bg-emerald-500 inline-block"></span> On time
+                        <span class="w-2 h-2 rounded-full bg-emerald-500 inline-block"></span> {{ __('On time') }}
                     </span>
                     <span class="flex items-center gap-1 theme-text-secondary">
-                        <span class="w-2 h-2 rounded-full bg-amber-500 inline-block"></span> Low
+                        <span class="w-2 h-2 rounded-full bg-amber-500 inline-block"></span> {{ __('Low') }}
                     </span>
                     <span class="flex items-center gap-1 theme-text-secondary">
-                        <span class="w-2 h-2 rounded-full bg-orange-500 inline-block"></span> Medium
+                        <span class="w-2 h-2 rounded-full bg-orange-500 inline-block"></span> {{ __('Medium') }}
                     </span>
                     <span class="flex items-center gap-1 theme-text-secondary">
-                        <span class="w-2 h-2 rounded-full bg-rose-500 inline-block"></span> High / Exception
+                        <span class="w-2 h-2 rounded-full bg-rose-500 inline-block"></span> {{ __('High / Exception') }}
                     </span>
                     <span class="w-px h-3 bg-slate-300 dark:bg-slate-700 hidden sm:inline-block"></span>
                     <span class="flex items-center gap-1 theme-text-secondary">
-                        <span class="w-2 h-2 rounded-full bg-blue-600 inline-block"></span> Origin
+                        <span class="w-2 h-2 rounded-full bg-blue-600 inline-block"></span> {{ __('Origin') }}
                     </span>
                     <span class="flex items-center gap-1 theme-text-secondary">
-                        <span class="w-2 h-2 rounded-full bg-cyan-600 inline-block"></span> Destination
+                        <span class="w-2 h-2 rounded-full bg-cyan-600 inline-block"></span> {{ __('Destination') }}
                     </span>
                 </div>
             </div>
@@ -377,22 +377,22 @@
 
                 <!-- Zoom Controls - / + -->
                 <div class="flex items-center gap-1.5 pointer-events-auto theme-card-elevated border theme-border shadow-xl backdrop-blur-md p-1 rounded-full">
-                    <span class="text-[11px] font-semibold theme-text-muted pl-2">Zoom</span>
+                    <span class="text-[11px] font-semibold theme-text-muted pl-2">{{ __('Zoom') }}</span>
                     <button
                         type="button"
-                        aria-label="Zoom out"
+                        aria-label="{{ __('Zoom out') }}"
                         onclick="window.CargoTrace && window.CargoTrace.zoomMap ? window.CargoTrace.zoomMap('out') : null"
                         class="w-7 h-7 rounded-full bg-slate-200 dark:bg-slate-800 text-slate-800 dark:text-white flex items-center justify-center font-bold text-xs hover:bg-slate-300 dark:hover:bg-slate-700 transition cursor-pointer"
-                        title="Zoom out"
+                        title="{{ __('Zoom out') }}"
                     >
                         &minus;
                     </button>
                     <button
                         type="button"
-                        aria-label="Zoom in"
+                        aria-label="{{ __('Zoom in') }}"
                         onclick="window.CargoTrace && window.CargoTrace.zoomMap ? window.CargoTrace.zoomMap('in') : null"
                         class="w-7 h-7 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold text-xs hover:bg-blue-500 shadow-md transition cursor-pointer"
-                        title="Zoom in"
+                        title="{{ __('Zoom in') }}"
                     >
                         &#43;
                     </button>
@@ -403,15 +403,15 @@
         <!-- RIGHT 3 COLS: "Main Statistics" Stack (Non-redundant operational insights) -->
         <div class="xl:col-span-3 flex flex-col justify-between gap-4 font-sans">
             <h2 class="text-sm font-bold theme-heading tracking-tight flex items-center justify-between font-sans">
-                <span>Main statistics</span>
-                <span class="text-[11px] theme-text-muted font-normal font-sans">Portfolio &amp; mode mix</span>
+                <span>{{ __('Main statistics') }}</span>
+                <span class="text-[11px] theme-text-muted font-normal font-sans">{{ __('Portfolio & mode mix') }}</span>
             </h2>
 
             <!-- Card 1: Total Cargo Valuation & Volume -->
             <div class="p-5 rounded-3xl theme-card border flex flex-col justify-between flex-1 transition-colors duration-200">
                 <div class="flex items-center justify-between gap-2 text-xs theme-text-secondary font-medium">
-                    <span title="Declared value converted to USD at the latest cached rate" class="cursor-help border-b border-dotted theme-border">
-                        Total cargo valuation
+                    <span title="{{ __('Declared value converted to USD at the latest cached rate') }}" class="cursor-help border-b border-dotted theme-border">
+                        {{ __('Total cargo valuation') }}
                     </span>
                     <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-cyan-500/15 text-cyan-600 dark:text-cyan-400 border border-cyan-500/25 font-mono tabular-nums whitespace-nowrap">
                         {{ number_format($totalVolumeCbm, 0) }} CBM
@@ -426,10 +426,10 @@
                     <span class="text-xs font-normal theme-text-muted font-sans">USD</span>
                 </div>
                 <!-- Mini Sparkline SVG: 14-Day Shipment Volume Created (Real Database Data) -->
-                <div class="h-10 w-full mt-2" title="Shipments created per day (last 14 days)">
+                <div class="h-10 w-full mt-2" title="{{ __('Shipments created per day (last 14 days)') }}">
                     @if($spark1Flat)
                         <div class="h-full w-full flex items-center justify-center text-[11px] theme-text-muted italic border border-dashed theme-border rounded-lg">
-                            Not enough data yet
+                            {{ __('Not enough data yet') }}
                         </div>
                     @else
                         <svg class="w-full h-full overflow-visible" viewBox="0 0 200 40">
@@ -449,26 +449,26 @@
             <!-- Card 2: On-Time Delivery Rate -->
             <div class="p-5 rounded-3xl theme-card border flex flex-col justify-between flex-1 transition-colors duration-200">
                 <div class="flex items-center justify-between gap-2 text-xs theme-text-secondary font-medium">
-                    <span>On-time delivery rate</span>
+                    <span>{{ __('On-time delivery rate') }}</span>
                     @if($onTimeComparison)
                         <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/25 font-mono tabular-nums whitespace-nowrap">
                             {{ $onTimeComparison }}
                         </span>
                     @else
                         <span class="text-[10px] font-mono theme-text-muted tabular-nums whitespace-nowrap">
-                            {{ number_format($delivered) }} delivered
+                            {{ __(':count delivered', ['count' => number_format($delivered)]) }}
                         </span>
                     @endif
                 </div>
                 <div class="text-3xl font-extrabold theme-heading tracking-tight my-2 font-mono tabular-nums">
                     {{ number_format($onTimeRate, 1) }}%
-                    <span class="text-xs font-normal theme-text-muted font-sans">on schedule</span>
+                    <span class="text-xs font-normal theme-text-muted font-sans">{{ __('on schedule') }}</span>
                 </div>
                 <!-- Mini Sparkline SVG: 8-Week On-Time Rate (Real Database Data) -->
-                <div class="h-10 w-full mt-2" title="Weekly on-time performance (last 8 weeks)">
+                <div class="h-10 w-full mt-2" title="{{ __('Weekly on-time performance (last 8 weeks)') }}">
                     @if($spark2Flat)
                         <div class="h-full w-full flex items-center justify-center text-[11px] theme-text-muted italic border border-dashed theme-border rounded-lg">
-                            Not enough data yet
+                            {{ __('Not enough data yet') }}
                         </div>
                     @else
                         <svg class="w-full h-full overflow-visible" viewBox="0 0 200 40">
@@ -488,8 +488,8 @@
             <!-- Card 3: Mode Mix Breakdown (Sea vs Air vs Road) -->
             <div class="p-5 rounded-3xl theme-card border flex flex-col justify-between flex-1 space-y-3 transition-colors duration-200">
                 <div class="flex items-center justify-between gap-2">
-                    <span class="text-xs theme-text-secondary font-medium">Mode mix</span>
-                    <span class="text-[11px] theme-text-muted font-sans">Active shipments by mode</span>
+                    <span class="text-xs theme-text-secondary font-medium">{{ __('Mode mix') }}</span>
+                    <span class="text-[11px] theme-text-muted font-sans">{{ __('Active shipments by mode') }}</span>
                 </div>
 
                 @php
@@ -499,18 +499,18 @@
                 @endphp
 
                 <!-- Segmented Multimodal Share Bar -->
-                <div class="w-full h-2 rounded-full bg-slate-200 dark:bg-slate-800 overflow-hidden flex" aria-label="Transport mode distribution bar">
+                <div class="w-full h-2 rounded-full bg-slate-200 dark:bg-slate-800 overflow-hidden flex" aria-label="{{ __('Transport mode distribution bar') }}">
                     @if($totalShipments > 0)
-                        <div class="h-full bg-blue-600 transition-all" style="width: {{ $seaShare }}%" title="Sea: {{ number_format($seaShare, 1) }}%"></div>
-                        <div class="h-full bg-sky-400 transition-all" style="width: {{ $airShare }}%" title="Air: {{ number_format($airShare, 1) }}%"></div>
-                        <div class="h-full bg-emerald-500 transition-all" style="width: {{ $roadShare }}%" title="Road: {{ number_format($roadShare, 1) }}%"></div>
+                        <div class="h-full bg-blue-600 transition-all" style="width: {{ $seaShare }}%" title="{{ __('Sea') }}: {{ number_format($seaShare, 1) }}%"></div>
+                        <div class="h-full bg-sky-400 transition-all" style="width: {{ $airShare }}%" title="{{ __('Air') }}: {{ number_format($airShare, 1) }}%"></div>
+                        <div class="h-full bg-emerald-500 transition-all" style="width: {{ $roadShare }}%" title="{{ __('Road') }}: {{ number_format($roadShare, 1) }}%"></div>
                     @endif
                 </div>
 
                 <!-- Per-Mode Breakdown Rows -->
                 <div class="space-y-1.5 text-xs">
                     @foreach(['SEA' => 'text-blue-600 dark:text-cyan-400', 'AIR' => 'text-sky-600 dark:text-sky-400', 'ROAD' => 'text-emerald-600 dark:text-emerald-400'] as $mixKey => $mixColor)
-                        @php $mixItem = $modeMix[$mixKey] ?? ['label' => ucfirst(strtolower($mixKey)), 'count' => 0, 'active' => 0, 'share' => 0]; @endphp
+                        @php $mixItem = $modeMix[$mixKey] ?? ['label' => __(ucfirst(strtolower($mixKey))), 'count' => 0, 'active' => 0, 'share' => 0]; @endphp
                         <a href="{{ route('shipments.index', ['mode' => $mixKey]) }}" class="flex items-center justify-between py-1 px-2 -mx-2 rounded-lg hover:bg-blue-600/5 transition-colors">
                             <span class="inline-flex items-center gap-2 font-medium theme-text-primary">
                                 <x-mode-icon :mode="$mixKey" class="w-3.5 h-3.5 {{ $mixColor }}" />
@@ -532,28 +532,28 @@
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b theme-border">
             <div>
                 <h2 id="dashboard-charts-heading" class="text-lg font-bold theme-heading tracking-tight font-sans">
-                    Shipment distribution
+                    {{ __('Shipment distribution') }}
                 </h2>
                 <p class="text-xs theme-text-secondary mt-0.5">
-                    {{ $user->role === 'customer' ? 'Your shipments grouped by lifecycle status and carrier' : 'All shipments grouped by lifecycle status and carrier' }}
+                    {{ $user->role === 'customer' ? __('Your shipments grouped by lifecycle status and carrier') : __('All shipments grouped by lifecycle status and carrier') }}
                 </p>
             </div>
             <a href="{{ route('analytics.index') }}" class="text-xs font-semibold text-blue-600 dark:text-cyan-400 hover:underline inline-flex items-center gap-1 min-h-[44px] self-start sm:self-auto">
-                <span>Full analytics</span>
+                <span>{{ __('Full analytics') }}</span>
                 <span>&rarr;</span>
             </a>
         </div>
 
         @if($totalShipments === 0)
             <div id="dashboard-charts-empty-state" class="py-10 px-4 rounded-2xl theme-card-elevated border border-dashed theme-border text-center space-y-2">
-                <p class="text-sm font-semibold theme-heading">No shipments recorded yet</p>
+                <p class="text-sm font-semibold theme-heading">{{ __('No shipments recorded yet') }}</p>
                 <p class="text-xs theme-text-secondary max-w-md mx-auto">
-                    Status and carrier breakdowns appear automatically once consignments are added to the database.
+                    {{ __('Status and carrier breakdowns appear automatically once consignments are added to the database.') }}
                 </p>
                 @if(in_array($user->role, ['admin', 'operator'], true))
                     <div class="pt-2">
                         <a href="{{ route('shipments.create') }}" class="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-semibold text-xs transition min-h-[44px]">
-                            <span>New shipment</span>
+                            <span>{{ __('New shipment') }}</span>
                         </a>
                     </div>
                 @endif
@@ -563,22 +563,22 @@
                 <!-- Chart 1: Shipments by Status (Doughnut + Accessible Table Legend) -->
                 <div class="lg:col-span-5 space-y-4">
                     <div class="flex items-center justify-between">
-                        <h3 class="text-sm font-bold theme-heading font-sans">Shipments by status</h3>
-                        <span class="text-xs font-mono theme-text-muted tabular-nums">{{ number_format($totalShipments) }} total</span>
+                        <h3 class="text-sm font-bold theme-heading font-sans">{{ __('Shipments by status') }}</h3>
+                        <span class="text-xs font-mono theme-text-muted tabular-nums">{{ __(':count total', ['count' => number_format($totalShipments)]) }}</span>
                     </div>
 
                     <div class="h-52 w-full max-w-[240px] mx-auto">
-                        <canvas id="shipmentsStatusChart" role="img" aria-label="Doughnut chart of shipments by lifecycle status"></canvas>
+                        <canvas id="shipmentsStatusChart" role="img" aria-label="{{ __('Doughnut chart of shipments by lifecycle status') }}"></canvas>
                     </div>
 
                     <div class="overflow-x-auto">
-                        <table class="w-full text-xs border-collapse" aria-label="Shipments by status legend">
-                            <caption class="sr-only">Shipments by status breakdown</caption>
+                        <table class="w-full text-xs border-collapse" aria-label="{{ __('Shipments by status legend') }}">
+                            <caption class="sr-only">{{ __('Shipments by status breakdown') }}</caption>
                             <thead>
                                 <tr class="border-b theme-border theme-text-muted uppercase text-[10px] tracking-wider">
-                                    <th scope="col" class="py-2 pr-2 text-left font-semibold">Status</th>
-                                    <th scope="col" class="py-2 px-2 text-right font-semibold">Count</th>
-                                    <th scope="col" class="py-2 pl-2 text-right font-semibold">Share</th>
+                                    <th scope="col" class="py-2 pr-2 text-left font-semibold">{{ __('Status') }}</th>
+                                    <th scope="col" class="py-2 px-2 text-right font-semibold">{{ __('Count') }}</th>
+                                    <th scope="col" class="py-2 pl-2 text-right font-semibold">{{ __('Share') }}</th>
                                 </tr>
                             </thead>
                             <tbody class="divide-y theme-border">
@@ -612,22 +612,22 @@
                 <!-- Chart 2: Shipments by Carrier (Horizontal Bar Top 6 + Others + Accessible Table Legend) -->
                 <div class="lg:col-span-7 lg:border-l theme-border lg:pl-6 space-y-4">
                     <div class="flex items-center justify-between">
-                        <h3 class="text-sm font-bold theme-heading font-sans">Shipments by carrier</h3>
-                        <span class="text-xs theme-text-muted">Top 6 carriers plus others</span>
+                        <h3 class="text-sm font-bold theme-heading font-sans">{{ __('Shipments by carrier') }}</h3>
+                        <span class="text-xs theme-text-muted">{{ __('Top 6 carriers plus others') }}</span>
                     </div>
 
                     <div class="h-52 w-full">
-                        <canvas id="carrierBarChart" role="img" aria-label="Horizontal bar chart of shipments by carrier"></canvas>
+                        <canvas id="carrierBarChart" role="img" aria-label="{{ __('Horizontal bar chart of shipments by carrier') }}"></canvas>
                     </div>
 
                     <div class="overflow-x-auto">
-                        <table class="w-full text-xs border-collapse" aria-label="Shipments by carrier legend">
-                            <caption class="sr-only">Shipments by carrier breakdown</caption>
+                        <table class="w-full text-xs border-collapse" aria-label="{{ __('Shipments by carrier legend') }}">
+                            <caption class="sr-only">{{ __('Shipments by carrier breakdown') }}</caption>
                             <thead>
                                 <tr class="border-b theme-border theme-text-muted uppercase text-[10px] tracking-wider">
-                                    <th scope="col" class="py-2 pr-2 text-left font-semibold">Carrier</th>
-                                    <th scope="col" class="py-2 px-2 text-right font-semibold">Count</th>
-                                    <th scope="col" class="py-2 pl-2 text-right font-semibold">Share</th>
+                                    <th scope="col" class="py-2 pr-2 text-left font-semibold">{{ __('Carrier') }}</th>
+                                    <th scope="col" class="py-2 px-2 text-right font-semibold">{{ __('Count') }}</th>
+                                    <th scope="col" class="py-2 pl-2 text-right font-semibold">{{ __('Share') }}</th>
                                 </tr>
                             </thead>
                             <tbody class="divide-y theme-border">
@@ -643,7 +643,7 @@
                                             @else
                                                 <span class="inline-flex items-center gap-2 theme-text-secondary">
                                                     <span class="w-2.5 h-2.5 rounded-sm shrink-0 bg-slate-500 dark:bg-slate-400" aria-hidden="true"></span>
-                                                    <span>Others ({{ $c['carrier_count'] ?? 0 }} carriers)</span>
+                                                    <span>{{ __('Others (:count carriers)', ['count' => $c['carrier_count'] ?? 0]) }}</span>
                                                 </span>
                                             @endif
                                         </th>
@@ -664,9 +664,9 @@
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-3 border-b theme-border">
             <div>
                 <h2 class="text-lg font-bold theme-heading tracking-tight font-sans">
-                    Freight activities
+                    {{ __('Freight activities') }}
                 </h2>
-                <p class="text-xs theme-text-secondary mt-0.5">Click any consignment row to focus camera on the 3D globe or 2D map</p>
+                <p class="text-xs theme-text-secondary mt-0.5">{{ __('Click any consignment row to focus camera on the 3D globe or 2D map') }}</p>
             </div>
 
             <!-- Search Input in Header -->
@@ -674,12 +674,12 @@
                 <input
                     type="text"
                     id="activities-search-input"
-                    aria-label="Search freight activities"
-                    placeholder="Search tracking no., reference, hub..."
+                    aria-label="{{ __('Search freight activities') }}"
+                    placeholder="{{ __('Search tracking no., reference, hub...') }}"
                     onkeyup="filterActivitiesTable()"
                     class="w-full pl-9 pr-3 py-2 rounded-xl theme-input border text-xs focus:outline-none focus:border-cyan-500"
                 >
-                <svg class="w-4 h-4 theme-text-muted absolute left-3 top-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg class="w-4 h-4 theme-text-muted absolute left-3 top-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
                 </svg>
             </div>
@@ -690,11 +690,11 @@
             <table class="w-full min-w-[700px] text-left text-xs border-collapse" id="activities-table">
                 <thead>
                     <tr class="theme-text-muted uppercase text-[10px] font-semibold tracking-wider border-b theme-border">
-                        <th class="py-3 px-3">Cargo ID & Mode</th>
-                        <th class="py-3 px-4">Freight Route & Corridor</th>
-                        <th class="py-3 px-3">ETA Date</th>
-                        <th class="py-3 px-3">Status</th>
-                        <th class="py-3 px-2 text-right">Action</th>
+                        <th class="py-3 px-3">{{ __('Cargo ID & Mode') }}</th>
+                        <th class="py-3 px-4">{{ __('Freight Route & Corridor') }}</th>
+                        <th class="py-3 px-3">{{ __('ETA Date') }}</th>
+                        <th class="py-3 px-3">{{ __('Status') }}</th>
+                        <th class="py-3 px-2 text-right">{{ __('Action') }}</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y theme-border">
@@ -717,7 +717,7 @@
                             <td class="py-3.5 px-3">
                                 <div class="flex items-center space-x-3">
                                     <!-- Carrier/Mode Icon Capsule -->
-                                    <div class="w-8 h-8 rounded-xl {{ $s->is_delayed ? 'bg-amber-500/15 text-amber-500' : ($sMode === 'AIR' ? 'bg-sky-500/15 text-sky-500' : ($sMode === 'ROAD' ? 'bg-emerald-500/15 text-emerald-500' : 'bg-blue-500/15 text-blue-500')) }} flex items-center justify-center font-bold text-xs shrink-0" title="Mode: {{ $sMode }}">
+                                    <div class="w-8 h-8 rounded-xl {{ $s->is_delayed ? 'bg-amber-500/15 text-amber-500' : ($sMode === 'AIR' ? 'bg-sky-500/15 text-sky-500' : ($sMode === 'ROAD' ? 'bg-emerald-500/15 text-emerald-500' : 'bg-blue-500/15 text-blue-500')) }} flex items-center justify-center font-bold text-xs shrink-0" title="{{ __('Mode: :mode', ['mode' => $sMode]) }}">
                                         <x-mode-icon :mode="$sMode" class="w-4 h-4" />
                                     </div>
                                     <div>
@@ -728,7 +728,7 @@
                                             <x-mode-badge :mode="$sMode" size="xs" />
                                         </div>
                                         <span class="text-[11px] theme-text-muted block font-sans">
-                                            {{ $s->carrier->name ?? 'Freight Carrier' }}
+                                            {{ $s->carrier->name ?? __('Freight Carrier') }}
                                             &bull; <span class="font-mono text-cyan-600 dark:text-cyan-400 font-semibold">{{ $s->labeled_primary_reference }}</span>
                                         </span>
                                     </div>
@@ -740,8 +740,8 @@
                                 <div class="space-y-1 max-w-xs">
                                     <div class="flex items-center justify-between text-[11px] font-mono">
                                         <span class="font-bold theme-text-primary">{{ $orig->display_code ?? 'ORI' }}</span>
-                                        <span class="text-[10px] theme-text-muted font-mono" title="Great-circle distance between locations">
-                                            {{ $s->status === 'DELIVERED' ? 'Arrived' : ($s->great_circle_distance_nm ? number_format($s->great_circle_distance_nm) . ' nm' : ($sMode === 'ROAD' ? 'Road Leg' : 'Direct Corridor')) }}
+                                        <span class="text-[10px] theme-text-muted font-mono" title="{{ __('Great-circle distance between locations') }}">
+                                            {{ $s->status === 'DELIVERED' ? __('Arrived') : ($s->great_circle_distance_nm ? number_format($s->great_circle_distance_nm) . ' nm' : ($sMode === 'ROAD' ? __('Road Leg') : __('Direct Corridor'))) }}
                                         </span>
                                         <span class="font-bold theme-text-primary">{{ $dest->display_code ?? 'DST' }}</span>
                                     </div>
@@ -753,14 +753,14 @@
                                         ></div>
                                     </div>
                                     <div class="text-[10px] theme-text-muted truncate font-sans">
-                                        {{ $orig->short_name ?? 'Origin' }} to {{ $dest->short_name ?? 'Destination' }}
+                                        {{ $orig->short_name ?? __('Origin') }} {{ __('to') }} {{ $dest->short_name ?? __('Destination') }}
                                     </div>
                                 </div>
                             </td>
 
                             <!-- Arrival Date -->
                             <td class="py-3.5 px-3 font-mono text-xs theme-text-secondary whitespace-nowrap">
-                                {{ $s->estimated_arrival_at ? $s->estimated_arrival_at->format('M d, Y') : 'Confirmed' }}
+                                {{ $s->estimated_arrival_at ? $s->estimated_arrival_at->format('M d, Y') : __('Confirmed') }}
                             </td>
 
                             <!-- Status Pill -->
@@ -770,43 +770,43 @@
                                 @endphp
                                 @if($ftEval && $ftEval['is_over_limit'])
                                     <span class="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase font-mono bg-rose-500/15 text-rose-600 dark:text-rose-400 border border-rose-500/30" title="{{ $ftEval['badge_label'] }}">
-                                        Over free time (+{{ $ftEval['days_over'] }}d)
+                                        {{ __('Over free time (+:days d)', ['days' => $ftEval['days_over']]) }}
                                     </span>
                                 @elseif($hasExceptions)
                                     <span class="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase font-mono bg-rose-500/15 text-rose-600 dark:text-rose-400 border border-rose-500/30">
-                                        Alert
+                                        {{ __('Alert') }}
                                     </span>
                                 @elseif($s->is_delayed)
                                     @if($s->status === 'DELIVERED')
                                         <span class="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase font-mono bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30">
-                                            Delivered late (+{{ (int)$s->delay_hours }}h)
+                                            {{ __('Delivered late (+:hours h)', ['hours' => (int)$s->delay_hours]) }}
                                         </span>
                                     @else
                                         <span class="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase font-mono bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30">
-                                            Delayed (+{{ (int)$s->delay_hours }}h)
+                                            {{ __('Delayed (+:hours h)', ['hours' => (int)$s->delay_hours]) }}
                                         </span>
                                     @endif
                                 @elseif($s->status === 'DELIVERED')
                                     <span class="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase font-mono bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30">
-                                        Delivered
+                                        {{ __('Delivered') }}
                                     </span>
                                 @else
                                     <span class="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase font-mono bg-blue-500/15 text-blue-600 dark:text-cyan-400 border border-blue-500/30">
-                                        {{ $s->status }}
+                                        {{ $s->status_display_label }}
                                     </span>
                                 @endif
                             </td>
 
                             <!-- Action Quick Link -->
                             <td class="py-3.5 px-2 text-right">
-                                <a href="{{ route('shipments.show', $s) }}" class="p-2 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-800 theme-text-muted hover:theme-heading inline-flex items-center justify-center min-w-[44px] min-h-[44px]" aria-label="View shipment {{ $s->tracking_number }}" title="Inspect consignment">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                                <a href="{{ route('shipments.show', $s) }}" class="p-2 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-800 theme-text-muted hover:theme-heading inline-flex items-center justify-center min-w-[44px] min-h-[44px]" aria-label="{{ __('View shipment :number', ['number' => $s->tracking_number]) }}" title="{{ __('Inspect consignment') }}">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
                                 </a>
                             </td>
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="5" class="py-8 text-center theme-text-muted">No freight activities found.</td>
+                            <td colspan="5" class="py-8 text-center theme-text-muted">{{ __('No freight activities found.') }}</td>
                         </tr>
                     @endforelse
                 </tbody>
@@ -822,11 +822,11 @@
                 <div class="flex items-center gap-2">
                     <span class="w-2.5 h-2.5 rounded-full bg-rose-500 animate-pulse"></span>
                     <h2 class="text-sm font-bold theme-heading tracking-tight font-sans">
-                        Terminal dwell attention &bull; {{ $overFreeTimeShipments->count() }} {{ $overFreeTimeShipments->count() === 1 ? 'consignment exceeds' : 'consignments exceed' }} free-time limit
+                        {{ $overFreeTimeShipments->count() === 1 ? __('Terminal dwell attention • :count consignment exceeds free-time limit', ['count' => $overFreeTimeShipments->count()]) : __('Terminal dwell attention • :count consignments exceed free-time limit', ['count' => $overFreeTimeShipments->count()]) }}
                     </h2>
                 </div>
                 <span class="text-[11px] font-mono text-rose-600 dark:text-rose-400">
-                    Standard free time: {{ (int) (\App\Models\Setting::get('free_days_after_arrival') ?? 5) }} days
+                    {{ __('Standard free time: :days days', ['days' => (int) (\App\Models\Setting::get('free_days_after_arrival') ?? 5)]) }}
                 </span>
             </div>
 
@@ -846,24 +846,24 @@
                                     <x-mode-badge :mode="$ofs->transport_mode ?? 'SEA'" size="xs" />
                                 </div>
                                 <span class="text-[11px] theme-text-muted block font-sans">
-                                    {{ $ofs->carrier->name ?? 'Carrier' }} &bull; {{ $ofs->originLocation->short_name ?? 'Origin' }} to {{ $ofs->destinationLocation->short_name ?? 'Destination' }} ({{ $ofs->originLocation->display_code ?? 'ORI' }} &rarr; {{ $ofs->destinationLocation->display_code ?? 'DST' }})
+                                    {{ $ofs->carrier->name ?? __('Carrier') }} &bull; {{ $ofs->originLocation->short_name ?? __('Origin') }} {{ __('to') }} {{ $ofs->destinationLocation->short_name ?? __('Destination') }} ({{ $ofs->originLocation->display_code ?? 'ORI' }} &rarr; {{ $ofs->destinationLocation->display_code ?? 'DST' }})
                                 </span>
                             </div>
                             <span class="px-2 py-0.5 rounded-full text-[10px] font-bold font-mono bg-rose-500/15 text-rose-600 dark:text-rose-400 border border-rose-500/30 whitespace-nowrap">
-                                +{{ $eval['days_over'] }}d over limit
+                                {{ __('+:days d over limit', ['days' => $eval['days_over']]) }}
                             </span>
                         </div>
 
                         <div class="text-[11px] font-mono theme-text-secondary flex flex-wrap items-center gap-x-3 gap-y-0.5">
                             @foreach($refParts as $part)
-                                <span><span class="theme-text-muted">{{ $part['label'] }}:</span> {{ $part['value'] }}</span>
+                                <span><span class="theme-text-muted">{{ __($part['label']) }}:</span> {{ __($part['value']) }}</span>
                             @endforeach
                         </div>
 
                         <div class="flex items-center justify-between pt-1 border-t theme-border text-[10px] font-mono theme-text-muted">
-                            <span>Arrived {{ $eval['arrival_at']?->format('M d, Y') }}</span>
+                            <span>{{ __('Arrived :date', ['date' => $eval['arrival_at']?->format('M d, Y')]) }}</span>
                             <a href="{{ route('shipments.show', $ofs) }}" class="text-blue-600 dark:text-cyan-400 hover:underline font-sans">
-                                Details &rarr;
+                                {{ __('Details') }} &rarr;
                             </a>
                         </div>
                     </div>
@@ -892,16 +892,16 @@
         @endphp
         <div class="p-6 rounded-3xl theme-card border theme-border shadow-xl space-y-4 transition-colors duration-200">
             <div class="flex items-center justify-between pb-2 border-b theme-border">
-                <span class="text-xs font-semibold theme-heading font-sans">Location weather</span>
+                <span class="text-xs font-semibold theme-heading font-sans">{{ __('Location weather') }}</span>
                 <div class="flex items-center gap-1.5">
                     <x-data-source-badge :source="$selectedPort['data_source'] ?? 'live'" />
                     @if(isset($selectedPort['weather']['recorded_at']) && $selectedPort['weather']['recorded_at'])
                         <span class="text-[10px] theme-text-muted font-sans">
-                            Updated {{ \Carbon\Carbon::parse($selectedPort['weather']['recorded_at'])->format('H:i') }}
+                            {{ __('Updated :time', ['time' => \Carbon\Carbon::parse($selectedPort['weather']['recorded_at'])->format('H:i')]) }}
                         </span>
                     @endif
-                    <a href="{{ route('weather.index') }}" class="text-[10px] font-semibold px-2 py-0.5 rounded theme-card-elevated border theme-border hover:border-blue-500 theme-heading font-sans transition inline-flex items-center gap-1" title="Open location weather hub">
-                        <span>Hub</span>
+                    <a href="{{ route('weather.index') }}" class="text-[10px] font-semibold px-2 py-0.5 rounded theme-card-elevated border theme-border hover:border-blue-500 theme-heading font-sans transition inline-flex items-center gap-1" title="{{ __('Open location weather hub') }}">
+                        <span>{{ __('Hub') }}</span>
                         <span>&rarr;</span>
                     </a>
                 </div>
@@ -911,7 +911,7 @@
                 <div class="flex items-center justify-between">
                     <div>
                         <h3 class="text-base font-extrabold theme-heading font-sans">{{ $selectedPort['city'] ?? 'Singapore' }}</h3>
-                        <span class="text-[11px] theme-text-muted font-mono" title="{{ $selectedPort['code_type'] ?? 'UN/LOCODE' }}: {{ $selectedPort['code'] ?? $selectedPort['unlocode'] ?? 'SGSIN' }}">{{ $selectedPort['facility_title'] ?? 'Port' }} &bull; {{ $selectedPort['code'] ?? $selectedPort['unlocode'] ?? 'SGSIN' }}</span>
+                        <span class="text-[11px] theme-text-muted font-mono" title="{{ $selectedPort['code_type'] ?? 'UN/LOCODE' }}: {{ $selectedPort['code'] ?? $selectedPort['unlocode'] ?? 'SGSIN' }}">{{ __($selectedPort['facility_title'] ?? 'Port') }} &bull; {{ $selectedPort['code'] ?? $selectedPort['unlocode'] ?? 'SGSIN' }}</span>
                     </div>
                     <div class="text-right">
                         <span class="text-3xl font-black theme-heading tabular-nums font-mono">
@@ -924,26 +924,26 @@
                 </div>
 
                 <div class="grid grid-cols-2 gap-2 text-xs theme-text-secondary pt-3 border-t theme-border font-sans">
-                    <div>Wind speed: <b class="theme-heading font-mono">{{ $selectedPort['weather']['wind_kph'] ?? '14.5' }} km/h</b></div>
-                    <div>Relative humidity: <b class="theme-heading font-mono">{{ $selectedPort['weather']['humidity'] ?? '68' }}%</b></div>
+                    <div>{{ __('Wind speed:') }} <b class="theme-heading font-mono">{{ $selectedPort['weather']['wind_kph'] ?? '14.5' }} km/h</b></div>
+                    <div>{{ __('Relative humidity:') }} <b class="theme-heading font-mono">{{ $selectedPort['weather']['humidity'] ?? '68' }}%</b></div>
                 </div>
-                <p class="text-[10px] theme-text-muted">Context only, not a delay prediction.</p>
+                <p class="text-[10px] theme-text-muted">{{ __('Context only, not a delay prediction.') }}</p>
             </div>
         </div>
 
         <!-- 2. Two-Way Global Currency Converter Widget -->
         <div class="p-5 rounded-3xl theme-card border space-y-3 transition-colors duration-200">
             <div class="flex items-center justify-between pb-2 border-b theme-border">
-                <span class="text-xs font-semibold theme-heading font-sans">Currency converter</span>
+                <span class="text-xs font-semibold theme-heading font-sans">{{ __('Currency converter') }}</span>
                 <div class="flex items-center gap-1.5">
                     <x-data-source-badge :source="$currencyData['data_source'] ?? 'live'" />
                     @if(isset($currencyData['time_last_update_utc']) && $currencyData['time_last_update_utc'])
                         <span class="text-[10px] theme-text-muted font-sans">
-                            Updated {{ \Carbon\Carbon::parse($currencyData['time_last_update_utc'])->format('H:i') }}
+                            {{ __('Updated :time', ['time' => \Carbon\Carbon::parse($currencyData['time_last_update_utc'])->format('H:i')]) }}
                         </span>
                     @endif
-                    <a href="{{ route('currency.index') }}" class="text-[10px] text-cyan-600 dark:text-cyan-400 hover:underline font-sans" title="Open full currency converter">
-                        Full rates &rarr;
+                    <a href="{{ route('currency.index') }}" class="text-[10px] text-cyan-600 dark:text-cyan-400 hover:underline font-sans" title="{{ __('Open full currency converter') }}">
+                        {{ __('Full rates') }} &rarr;
                     </a>
                 </div>
             </div>
@@ -952,14 +952,14 @@
                 <input
                     type="number"
                     id="two-way-amount"
-                    aria-label="Currency amount"
+                    aria-label="{{ __('Currency amount') }}"
                     value="1000"
                     oninput="calculateTwoWayCurrency()"
                     class="col-span-2 px-3 py-2 rounded-xl theme-input border text-xs tabular-nums focus:outline-none focus:border-cyan-500 font-mono min-h-[44px]"
                 >
                 <select
                     id="two-way-from"
-                    aria-label="From currency"
+                    aria-label="{{ __('From currency') }}"
                     onchange="calculateTwoWayCurrency()"
                     class="col-span-1 px-1 py-2 rounded-xl theme-input border text-xs font-mono focus:outline-none min-h-[44px]"
                 >
@@ -973,17 +973,17 @@
 
                 <button
                     type="button"
-                    aria-label="Swap currencies"
+                    aria-label="{{ __('Swap currencies') }}"
                     onclick="swapCurrencies()"
                     class="col-span-1 p-2 rounded-xl bg-blue-600/15 hover:bg-blue-600 text-blue-600 dark:text-cyan-400 hover:text-white transition flex items-center justify-center font-bold min-h-[44px] cursor-pointer"
-                    title="Swap currencies"
+                    title="{{ __('Swap currencies') }}"
                 >
                     &rlarr;
                 </button>
 
                 <select
                     id="two-way-to"
-                    aria-label="To currency"
+                    aria-label="{{ __('To currency') }}"
                     onchange="calculateTwoWayCurrency()"
                     class="col-span-1 px-1 py-2 rounded-xl theme-input border text-xs font-mono focus:outline-none min-h-[44px]"
                 >
@@ -997,7 +997,7 @@
             </div>
 
             <div class="p-3 rounded-2xl theme-card-elevated border theme-border flex items-center justify-between font-sans">
-                <span class="text-xs theme-text-secondary">Converted amount:</span>
+                <span class="text-xs theme-text-secondary">{{ __('Converted amount:') }}</span>
                 <span id="two-way-result" class="text-sm font-bold font-mono text-cyan-600 dark:text-cyan-400">
                     Rp 15,873,000 IDR
                 </span>
@@ -1007,16 +1007,16 @@
         <!-- 3. Live Freight News Feed -->
         <div class="p-5 rounded-3xl theme-card border space-y-3 transition-colors duration-200 font-sans">
             <div class="flex items-center justify-between pb-2 border-b theme-border">
-                <span class="text-xs font-semibold theme-heading font-sans">Freight news</span>
+                <span class="text-xs font-semibold theme-heading font-sans">{{ __('Freight news') }}</span>
                 <div class="flex items-center gap-1.5">
                     <x-data-source-badge :source="$news[0]['data_source'] ?? 'live'" />
                     @if(isset($news[0]['published_at']) && $news[0]['published_at'])
                         <span class="text-[10px] theme-text-muted font-sans">
-                            Updated {{ \Carbon\Carbon::parse($news[0]['published_at'])->format('H:i') }}
+                            {{ __('Updated :time', ['time' => \Carbon\Carbon::parse($news[0]['published_at'])->format('H:i')]) }}
                         </span>
                     @endif
-                    <a href="{{ route('news.index') }}" class="text-[10px] text-cyan-600 dark:text-cyan-400 hover:underline font-sans" title="Open all freight news">
-                        All news &rarr;
+                    <a href="{{ route('news.index') }}" class="text-[10px] text-cyan-600 dark:text-cyan-400 hover:underline font-sans" title="{{ __('Open all freight news') }}">
+                        {{ __('All news') }} &rarr;
                     </a>
                 </div>
             </div>
@@ -1040,7 +1040,7 @@
                                     </span>
                                     @if(!empty($n['is_relevant']))
                                         <span class="px-1.5 py-0.5 rounded text-[9px] font-sans font-medium bg-blue-500/20 text-cyan-400 border border-blue-400/30">
-                                            Related
+                                            {{ __('Related') }}
                                         </span>
                                     @endif
                                 </div>
@@ -1054,7 +1054,7 @@
                         </div>
                     </div>
                 @empty
-                    <div class="text-center py-4 text-xs theme-text-muted">No news feeds available</div>
+                    <div class="text-center py-4 text-xs theme-text-muted">{{ __('No news feeds available') }}</div>
                 @endforelse
             </div>
         </div>

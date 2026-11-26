@@ -18,7 +18,7 @@
                 type="button"
                 onclick="document.getElementById('{{ $id }}').classList.add('hidden')"
                 class="text-slate-400 hover:text-white text-xl leading-none p-1 rounded-lg hover:bg-white/5 transition"
-                aria-label="Close modal"
+                aria-label="{{ __('Close modal') }}"
             >&times;</button>
         </div>
 

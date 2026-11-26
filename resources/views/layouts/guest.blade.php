@@ -7,7 +7,7 @@
     <meta name="map-tile-url" content="{{ config('cargotrace.map.tile_url') }}">
     <meta name="map-tile-attribution" content="{{ config('cargotrace.map.attribution') }}">
 
-    <title>{{ $title ?? 'CargoTrace: Global spice freight by sea, air and road' }}</title>
+    <title>{{ $title ?? __('CargoTrace: Global spice freight by sea, air and road') }}</title>
 
     <!-- Theme Initialization Script (Zero-Flicker, prefers-color-scheme fallback) -->
     <script>
@@ -33,6 +33,11 @@
     @stack('styles')
 </head>
 <body class="theme-page font-sans antialiased min-h-full flex flex-col selection:bg-blue-600 selection:text-white transition-colors duration-200">
+    @if(!View::hasSection('has-locale-switcher'))
+        <div class="fixed top-4 right-4 z-50">
+            <x-locale-switcher size="sm" />
+        </div>
+    @endif
     @yield('content')
 
     @stack('scripts')

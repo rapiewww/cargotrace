@@ -8,29 +8,29 @@
             <div class="flex flex-wrap items-center gap-2.5 mb-2">
                 @if($isCustomer)
                     <span class="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-cyan-500/15 text-cyan-600 dark:text-cyan-400 border border-cyan-500/25">
-                        Customer consignments scope
+                        {{ __('Customer consignments scope') }}
                     </span>
                 @else
                     <span class="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-blue-600/15 text-blue-600 dark:text-cyan-400 border border-blue-500/25">
-                        Fleet-wide operations scope
+                        {{ __('Fleet-wide operations scope') }}
                     </span>
                 @endif
                 <span class="text-xs theme-text-muted">
-                    Window: {{ $from->format('M d, Y') }} to {{ $to->format('M d, Y') }}
+                    {{ __('Window: :from to :to', ['from' => $from->format('M d, Y'), 'to' => $to->format('M d, Y')]) }}
                 </span>
             </div>
             <h1 class="text-2xl sm:text-3xl font-extrabold theme-heading tracking-tight">
                 @if($isCustomer)
-                    Consignment analytics summary
+                    {{ __('Consignment analytics summary') }}
                 @else
-                    Operations and fleet analytics
+                    {{ __('Operations and fleet analytics') }}
                 @endif
             </h1>
             <p class="text-xs sm:text-sm theme-text-secondary mt-1 max-w-3xl">
                 @if($isCustomer)
-                    Performance indicators, carrier reliability, and corridor metrics for your contracted sea, air, and road shipments.
+                    {{ __('Performance indicators, carrier reliability, and corridor metrics for your contracted sea, air, and road shipments.') }}
                 @else
-                    Carrier reliability metrics, corridor delay variance, weekly throughput, and exception resolution velocity across multimodal operations.
+                    {{ __('Carrier reliability metrics, corridor delay variance, weekly throughput, and exception resolution velocity across multimodal operations.') }}
                 @endif
             </p>
         </div>
@@ -38,7 +38,7 @@
         <!-- Date Range Filter Form -->
         <form method="GET" action="{{ route('analytics.index') }}" class="flex flex-wrap items-center gap-3 p-3 rounded-2xl theme-card border theme-border">
             <div class="flex items-center gap-2">
-                <label for="filter-from" class="text-xs font-medium theme-text-secondary">From</label>
+                <label for="filter-from" class="text-xs font-medium theme-text-secondary">{{ __('From') }}</label>
                 <input
                     type="date"
                     id="filter-from"
@@ -49,7 +49,7 @@
             </div>
 
             <div class="flex items-center gap-2">
-                <label for="filter-to" class="text-xs font-medium theme-text-secondary">To</label>
+                <label for="filter-to" class="text-xs font-medium theme-text-secondary">{{ __('To') }}</label>
                 <input
                     type="date"
                     id="filter-to"
@@ -62,16 +62,16 @@
             <div class="flex items-center gap-2">
                 <button
                     type="submit"
-                    class="px-3.5 py-1.5 rounded-xl text-xs font-semibold bg-blue-600 hover:bg-blue-700 text-white transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-blue-500/40"
+                    class="px-3.5 py-1.5 rounded-xl text-xs font-semibold bg-blue-600 hover:bg-blue-700 text-white transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-blue-500/40 cursor-pointer"
                 >
-                    Apply filter
+                    {{ __('Apply filter') }}
                 </button>
                 <a
                     href="{{ route('analytics.index') }}"
-                    title="Reset to default 90 days"
+                    title="{{ __('Reset to default 90 days') }}"
                     class="px-3 py-1.5 rounded-xl text-xs font-medium theme-card-elevated border theme-border theme-text-secondary hover:theme-heading transition-colors duration-150"
                 >
-                    Reset
+                    {{ __('Reset') }}
                 </a>
             </div>
         </form>
@@ -79,7 +79,7 @@
 
     <!-- Quick Date Range Presets -->
     <div class="flex flex-wrap items-center gap-2 text-xs theme-text-secondary">
-        <span class="font-medium mr-1">Quick presets:</span>
+        <span class="font-medium mr-1">{{ __('Quick presets:') }}</span>
         @php
             $today = \Carbon\Carbon::now()->toDateString();
             $d30 = \Carbon\Carbon::now()->subDays(30)->toDateString();
@@ -87,56 +87,56 @@
             $d180 = \Carbon\Carbon::now()->subDays(180)->toDateString();
             $ytd = \Carbon\Carbon::now()->startOfYear()->toDateString();
         @endphp
-        <a href="{{ route('analytics.index', ['from' => $d30, 'to' => $today]) }}" class="px-2.5 py-1 rounded-lg theme-card border theme-border hover:theme-heading transition-colors">Last 30 days</a>
-        <a href="{{ route('analytics.index', ['from' => $d90, 'to' => $today]) }}" class="px-2.5 py-1 rounded-lg theme-card border theme-border hover:theme-heading transition-colors">Last 90 days</a>
-        <a href="{{ route('analytics.index', ['from' => $d180, 'to' => $today]) }}" class="px-2.5 py-1 rounded-lg theme-card border theme-border hover:theme-heading transition-colors">Last 180 days</a>
-        <a href="{{ route('analytics.index', ['from' => $ytd, 'to' => $today]) }}" class="px-2.5 py-1 rounded-lg theme-card border theme-border hover:theme-heading transition-colors">Year to date</a>
+        <a href="{{ route('analytics.index', ['from' => $d30, 'to' => $today]) }}" class="px-2.5 py-1 rounded-lg theme-card border theme-border hover:theme-heading transition-colors">{{ __('Last 30 days') }}</a>
+        <a href="{{ route('analytics.index', ['from' => $d90, 'to' => $today]) }}" class="px-2.5 py-1 rounded-lg theme-card border theme-border hover:theme-heading transition-colors">{{ __('Last 90 days') }}</a>
+        <a href="{{ route('analytics.index', ['from' => $d180, 'to' => $today]) }}" class="px-2.5 py-1 rounded-lg theme-card border theme-border hover:theme-heading transition-colors">{{ __('Last 180 days') }}</a>
+        <a href="{{ route('analytics.index', ['from' => $ytd, 'to' => $today]) }}" class="px-2.5 py-1 rounded-lg theme-card border theme-border hover:theme-heading transition-colors">{{ __('Year to date') }}</a>
     </div>
 
     <!-- 2. High-Level KPI Summary Cards -->
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <!-- KPI 1: Total Shipments & On-Time Rate -->
         <div class="p-5 rounded-2xl theme-card border theme-border flex flex-col justify-between">
-            <span class="text-xs font-medium theme-text-secondary">Total shipments</span>
+            <span class="text-xs font-medium theme-text-secondary">{{ __('Total shipments') }}</span>
             <div class="flex items-baseline justify-between mt-2">
                 <div class="text-3xl font-extrabold theme-heading font-mono">
                     {{ number_format($summary['total_shipments']) }}
                 </div>
                 <div class="text-xs font-semibold px-2 py-0.5 rounded-full {{ $summary['on_time_rate'] >= 80 ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/25' : 'bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/25' }}">
-                    {{ $summary['on_time_rate'] }}% on-time
+                    {{ __(':rate% on-time', ['rate' => $summary['on_time_rate']]) }}
                 </div>
             </div>
             <div class="mt-2 text-xs theme-text-muted flex items-center justify-between">
-                <span>{{ number_format($summary['on_time_count']) }} on-time</span>
-                <span>{{ number_format($summary['delayed_count']) }} delayed</span>
+                <span>{{ __(':count on-time', ['count' => number_format($summary['on_time_count'])]) }}</span>
+                <span>{{ __(':count delayed', ['count' => number_format($summary['delayed_count'])]) }}</span>
             </div>
         </div>
 
         <!-- KPI 2: Average Delay Hours -->
         <div class="p-5 rounded-2xl theme-card border theme-border flex flex-col justify-between">
-            <span class="text-xs font-medium theme-text-secondary">Average delay (delayed cargo)</span>
+            <span class="text-xs font-medium theme-text-secondary">{{ __('Average delay (delayed cargo)') }}</span>
             <div class="flex items-baseline justify-between mt-2">
                 <div class="text-3xl font-extrabold theme-heading font-mono">
-                    {{ $summary['avg_delay_hours'] }}<span class="text-sm font-normal theme-text-muted font-sans ml-1">hours</span>
+                    {{ $summary['avg_delay_hours'] }}<span class="text-sm font-normal theme-text-muted font-sans ml-1">{{ __('hours') }}</span>
                 </div>
                 @if($summary['delayed_count'] > 0)
                     <span class="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/25">
-                        {{ $summary['delayed_count'] }} delayed consignments
+                        {{ __(':count delayed consignments', ['count' => $summary['delayed_count']]) }}
                     </span>
                 @else
                     <span class="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/25">
-                        Zero delays
+                        {{ __('Zero delays') }}
                     </span>
                 @endif
             </div>
             <div class="mt-2 text-xs theme-text-muted">
-                Calculated across delayed consignments in range
+                {{ __('Calculated across delayed consignments in range') }}
             </div>
         </div>
 
         <!-- KPI 3: Cargo Valuation & Volume -->
         <div class="p-5 rounded-2xl theme-card border theme-border flex flex-col justify-between">
-            <span class="text-xs font-medium theme-text-secondary">Total cargo valuation</span>
+            <span class="text-xs font-medium theme-text-secondary">{{ __('Total cargo valuation') }}</span>
             <div class="flex items-baseline justify-between mt-2">
                 <div class="text-3xl font-extrabold theme-heading font-mono">
                     ${{ number_format($summary['total_value_usd'] / 1000, 0) }}k <span class="text-xs font-normal theme-text-muted font-sans">USD</span>
@@ -146,30 +146,30 @@
                 </span>
             </div>
             <div class="mt-2 text-xs theme-text-muted">
-                Converted to USD at transaction rates
+                {{ __('Converted to USD at transaction rates') }}
             </div>
         </div>
 
         <!-- KPI 4: Exceptions Raised & Resolution -->
         <div class="p-5 rounded-2xl theme-card border theme-border flex flex-col justify-between">
-            <span class="text-xs font-medium theme-text-secondary">Exceptions logged</span>
+            <span class="text-xs font-medium theme-text-secondary">{{ __('Exceptions logged') }}</span>
             <div class="flex items-baseline justify-between mt-2">
                 <div class="text-3xl font-extrabold theme-heading font-mono">
                     {{ number_format($summary['total_exceptions']) }}
                 </div>
                 @if($summary['open_exceptions'] > 0)
                     <span class="text-xs font-semibold px-2 py-0.5 rounded-full bg-rose-500/15 text-rose-600 dark:text-rose-400 border border-rose-500/25">
-                        {{ $summary['open_exceptions'] }} open / investigating
+                        {{ __(':count open / investigating', ['count' => $summary['open_exceptions']]) }}
                     </span>
                 @else
                     <span class="text-xs font-semibold px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/25">
-                        All resolved
+                        {{ __('All resolved') }}
                     </span>
                 @endif
             </div>
             <div class="mt-2 text-xs theme-text-muted flex items-center justify-between">
-                <span>{{ number_format($summary['resolved_exceptions']) }} resolved</span>
-                <span>{{ $resolutionTime['overall_avg_hours'] !== null ? $resolutionTime['overall_avg_hours'].'h avg resolution' : 'No resolutions' }}</span>
+                <span>{{ __(':count resolved', ['count' => number_format($summary['resolved_exceptions'])]) }}</span>
+                <span>{{ $resolutionTime['overall_avg_hours'] !== null ? __(':hours h avg resolution', ['hours' => $resolutionTime['overall_avg_hours']]) : __('No resolutions') }}</span>
             </div>
         </div>
     </div>
@@ -178,20 +178,20 @@
         <!-- Empty State When No Data in Range -->
         <div class="p-12 rounded-3xl theme-card border theme-border text-center flex flex-col items-center justify-center my-8">
             <div class="w-14 h-14 rounded-2xl bg-slate-500/10 border theme-border flex items-center justify-center text-slate-400 mb-4">
-                <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
                 </svg>
             </div>
-            <h3 class="text-lg font-bold theme-heading">No shipment activity found in selected date range</h3>
+            <h3 class="text-lg font-bold theme-heading">{{ __('No shipment activity found in selected date range') }}</h3>
             <p class="text-xs sm:text-sm theme-text-secondary mt-1.5 max-w-md">
-                There are no consignments or exception events recorded between {{ $from->format('M d, Y') }} and {{ $to->format('M d, Y') }}. Try widening the filter or resetting to the last 90 days.
+                {{ __('There are no consignments or exception events recorded between :from and :to. Try widening the filter or resetting to the last 90 days.', ['from' => $from->format('M d, Y'), 'to' => $to->format('M d, Y')]) }}
             </p>
             <div class="mt-5">
                 <a
                     href="{{ route('analytics.index', ['from' => $d90, 'to' => $today]) }}"
                     class="px-4 py-2 rounded-xl text-xs font-semibold bg-blue-600 hover:bg-blue-700 text-white transition-colors"
                 >
-                    Reset to last 90 days
+                    {{ __('Reset to last 90 days') }}
                 </a>
             </div>
         </div>
@@ -200,17 +200,17 @@
         <div class="p-6 rounded-3xl theme-card border theme-border space-y-6">
             <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b theme-border">
                 <div>
-                    <h2 class="text-lg font-bold theme-heading">Carrier reliability and on-time performance</h2>
+                    <h2 class="text-lg font-bold theme-heading">{{ __('Carrier reliability and on-time performance') }}</h2>
                     <p class="text-xs theme-text-secondary mt-0.5">
-                        Performance aggregates by sea, air, and road carriers operating across active corridors.
+                        {{ __('Performance aggregates by sea, air, and road carriers operating across active corridors.') }}
                     </p>
                 </div>
                 <a
                     href="{{ route('analytics.export', ['table' => 'carriers', 'from' => $from->toDateString(), 'to' => $to->toDateString()]) }}"
                     class="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-medium theme-card-elevated border theme-border theme-text-secondary hover:theme-heading transition-colors"
                 >
-                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
-                    <span>Export CSV</span>
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                    <span>{{ __('Export CSV') }}</span>
                 </a>
             </div>
 
@@ -221,22 +221,22 @@
                         <canvas id="analyticsCarrierChart"></canvas>
                     </div>
                     <p class="text-[11px] theme-text-muted text-center italic">
-                        Color indicator: green for 85%+ on-time, cyan for 70%-84%, amber under 70%.
+                        {{ __('Color indicator: green for 85%+ on-time, cyan for 70%-84%, amber under 70%.') }}
                     </p>
                 </div>
 
                 <!-- Accessible Data Table (Right col-span-7) -->
                 <div class="lg:col-span-7 overflow-x-auto">
                     <table class="w-full text-left border-collapse text-xs">
-                        <caption class="sr-only">Carrier on-time performance statistics table</caption>
+                        <caption class="sr-only">{{ __('Carrier on-time performance statistics table') }}</caption>
                         <thead>
                             <tr class="border-b theme-border theme-text-secondary">
-                                <th scope="col" class="py-2.5 px-3 font-semibold uppercase tracking-wider font-mono text-[10px]">Code</th>
-                                <th scope="col" class="py-2.5 px-3 font-semibold">Carrier name</th>
-                                <th scope="col" class="py-2.5 px-3 font-semibold text-right">Shipments</th>
-                                <th scope="col" class="py-2.5 px-3 font-semibold text-right">On-time</th>
-                                <th scope="col" class="py-2.5 px-3 font-semibold text-right">Delayed</th>
-                                <th scope="col" class="py-2.5 px-3 font-semibold text-right">Rate</th>
+                                <th scope="col" class="py-2.5 px-3 font-semibold uppercase tracking-wider font-mono text-[10px]">{{ __('Code') }}</th>
+                                <th scope="col" class="py-2.5 px-3 font-semibold">{{ __('Carrier name') }}</th>
+                                <th scope="col" class="py-2.5 px-3 font-semibold text-right">{{ __('Shipments') }}</th>
+                                <th scope="col" class="py-2.5 px-3 font-semibold text-right">{{ __('On-time') }}</th>
+                                <th scope="col" class="py-2.5 px-3 font-semibold text-right">{{ __('Delayed') }}</th>
+                                <th scope="col" class="py-2.5 px-3 font-semibold text-right">{{ __('Rate') }}</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y theme-border">
@@ -265,7 +265,7 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="6" class="py-4 text-center theme-text-muted">No carrier records available.</td>
+                                    <td colspan="6" class="py-4 text-center theme-text-muted">{{ __('No carrier records available.') }}</td>
                                 </tr>
                             @endforelse
                         </tbody>
@@ -278,17 +278,17 @@
         <div class="p-6 rounded-3xl theme-card border theme-border space-y-6">
             <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b theme-border">
                 <div>
-                    <h2 class="text-lg font-bold theme-heading">12-week throughput and performance trend</h2>
+                    <h2 class="text-lg font-bold theme-heading">{{ __('12-week throughput and performance trend') }}</h2>
                     <p class="text-xs theme-text-secondary mt-0.5">
-                        Weekly consignment creations comparing on-time arrivals against transit delays.
+                        {{ __('Weekly consignment creations comparing on-time arrivals against transit delays.') }}
                     </p>
                 </div>
                 <a
                     href="{{ route('analytics.export', ['table' => 'weekly', 'from' => $from->toDateString(), 'to' => $to->toDateString()]) }}"
                     class="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-medium theme-card-elevated border theme-border theme-text-secondary hover:theme-heading transition-colors"
                 >
-                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
-                    <span>Export CSV</span>
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                    <span>{{ __('Export CSV') }}</span>
                 </a>
             </div>
 
@@ -299,21 +299,21 @@
                         <canvas id="analyticsWeeklyChart"></canvas>
                     </div>
                     <p class="text-[11px] theme-text-muted text-center italic">
-                        Stacked columns represent total weekly consignment creations (green: on-time, amber: delayed).
+                        {{ __('Stacked columns represent total weekly consignment creations (green: on-time, amber: delayed).') }}
                     </p>
                 </div>
 
                 <!-- Accessible Weekly Table (Right col-span-6) -->
                 <div class="lg:col-span-6 overflow-x-auto">
                     <table class="w-full text-left border-collapse text-xs">
-                        <caption class="sr-only">12-week shipment throughput data table</caption>
+                        <caption class="sr-only">{{ __('12-week shipment throughput data table') }}</caption>
                         <thead>
                             <tr class="border-b theme-border theme-text-secondary">
-                                <th scope="col" class="py-2.5 px-3 font-semibold">Week period</th>
-                                <th scope="col" class="py-2.5 px-3 font-semibold text-right">Volume</th>
-                                <th scope="col" class="py-2.5 px-3 font-semibold text-right">On-time</th>
-                                <th scope="col" class="py-2.5 px-3 font-semibold text-right">Delayed</th>
-                                <th scope="col" class="py-2.5 px-3 font-semibold text-right">Rate</th>
+                                <th scope="col" class="py-2.5 px-3 font-semibold">{{ __('Week period') }}</th>
+                                <th scope="col" class="py-2.5 px-3 font-semibold text-right">{{ __('Volume') }}</th>
+                                <th scope="col" class="py-2.5 px-3 font-semibold text-right">{{ __('On-time') }}</th>
+                                <th scope="col" class="py-2.5 px-3 font-semibold text-right">{{ __('Delayed') }}</th>
+                                <th scope="col" class="py-2.5 px-3 font-semibold text-right">{{ __('Rate') }}</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y theme-border font-mono">
@@ -333,7 +333,7 @@
                                     </td>
                                     <td class="py-2 px-3 text-right font-sans">
                                         <span class="inline-block px-1.5 py-0.5 rounded text-[10px] font-mono font-semibold {{ $week['total'] == 0 ? 'theme-text-muted' : ($week['on_time_rate'] >= 80 ? 'text-emerald-600 dark:text-emerald-400' : 'text-amber-600 dark:text-amber-400') }}">
-                                            {{ $week['total'] > 0 ? $week['on_time_rate'].'%' : '—' }}
+                                            {{ $week['total'] > 0 ? $week['on_time_rate'].'%' : '-' }}
                                         </span>
                                     </td>
                                 </tr>
@@ -350,17 +350,17 @@
             <div class="lg:col-span-7 p-6 rounded-3xl theme-card border theme-border space-y-6">
                 <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b theme-border">
                     <div>
-                        <h2 class="text-lg font-bold theme-heading">Exceptions by operational category</h2>
+                        <h2 class="text-lg font-bold theme-heading">{{ __('Exceptions by operational category') }}</h2>
                         <p class="text-xs theme-text-secondary mt-0.5">
-                            Frequency and severity classifications logged across customs, weather, and terminal points.
+                            {{ __('Frequency and severity classifications logged across customs, weather, and terminal points.') }}
                         </p>
                     </div>
                     <a
                         href="{{ route('analytics.export', ['table' => 'exceptions', 'from' => $from->toDateString(), 'to' => $to->toDateString()]) }}"
                         class="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-medium theme-card-elevated border theme-border theme-text-secondary hover:theme-heading transition-colors"
                     >
-                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
-                        <span>Export CSV</span>
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                        <span>{{ __('Export CSV') }}</span>
                     </a>
                 </div>
 
@@ -371,44 +371,44 @@
 
                     <div class="sm:col-span-7 overflow-x-auto">
                         <table class="w-full text-left border-collapse text-xs">
-                            <caption class="sr-only">Exceptions distribution table by type</caption>
+                            <caption class="sr-only">{{ __('Exceptions distribution table by type') }}</caption>
                             <thead>
                                 <tr class="border-b theme-border theme-text-secondary">
-                                    <th scope="col" class="py-2 px-2.5 font-semibold">Category</th>
-                                    <th scope="col" class="py-2 px-2.5 font-semibold text-right">Count</th>
-                                    <th scope="col" class="py-2 px-2.5 font-semibold text-center">Severity</th>
-                                    <th scope="col" class="py-2 px-2.5 font-semibold text-right">Status</th>
+                                    <th scope="col" class="py-2 px-2.5 font-semibold">{{ __('Category') }}</th>
+                                    <th scope="col" class="py-2 px-2.5 font-semibold text-right">{{ __('Count') }}</th>
+                                    <th scope="col" class="py-2 px-2.5 font-semibold text-center">{{ __('Severity') }}</th>
+                                    <th scope="col" class="py-2 px-2.5 font-semibold text-right">{{ __('Status') }}</th>
                                 </tr>
                             </thead>
                             <tbody class="divide-y theme-border">
                                 @forelse($exceptionsByType as $ex)
                                     <tr class="hover:bg-slate-500/5 transition-colors">
                                         <th scope="row" class="py-2 px-2.5 font-medium theme-heading">
-                                            {{ $ex->label }}
+                                            {{ __($ex->label) }}
                                         </th>
                                         <td class="py-2 px-2.5 text-right font-mono font-bold theme-heading">
                                             {{ $ex->count }}
                                         </td>
                                         <td class="py-2 px-2.5 text-center">
                                             <span class="inline-flex gap-1 text-[10px] font-mono">
-                                                @if($ex->low_count > 0)<span class="px-1 rounded bg-slate-500/20 text-slate-400" title="Low severity">{{ $ex->low_count }}L</span>@endif
-                                                @if($ex->medium_count > 0)<span class="px-1 rounded bg-amber-500/20 text-amber-500 font-semibold" title="Medium severity">{{ $ex->medium_count }}M</span>@endif
-                                                @if($ex->high_count > 0)<span class="px-1 rounded bg-rose-500/20 text-rose-500 font-bold" title="High severity">{{ $ex->high_count }}H</span>@endif
+                                                @if($ex->low_count > 0)<span class="px-1 rounded bg-slate-500/20 text-slate-400" title="{{ __('Low severity') }}">{{ $ex->low_count }}L</span>@endif
+                                                @if($ex->medium_count > 0)<span class="px-1 rounded bg-amber-500/20 text-amber-500 font-semibold" title="{{ __('Medium severity') }}">{{ $ex->medium_count }}M</span>@endif
+                                                @if($ex->high_count > 0)<span class="px-1 rounded bg-rose-500/20 text-rose-500 font-bold" title="{{ __('High severity') }}">{{ $ex->high_count }}H</span>@endif
                                             </span>
                                         </td>
                                         <td class="py-2 px-2.5 text-right font-mono text-[11px]">
                                             @if($ex->open_count > 0)
-                                                <span class="text-rose-500 font-semibold">{{ $ex->open_count }} open</span>
+                                                <span class="text-rose-500 font-semibold">{{ __(':count open', ['count' => $ex->open_count]) }}</span>
                                             @elseif($ex->investigating_count > 0)
-                                                <span class="text-amber-500 font-semibold">{{ $ex->investigating_count }} inv.</span>
+                                                <span class="text-amber-500 font-semibold">{{ __(':count inv.', ['count' => $ex->investigating_count]) }}</span>
                                             @else
-                                                <span class="text-emerald-500">all resolved</span>
+                                                <span class="text-emerald-500">{{ __('all resolved') }}</span>
                                             @endif
                                         </td>
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="4" class="py-4 text-center theme-text-muted">No exception records in range.</td>
+                                        <td colspan="4" class="py-4 text-center theme-text-muted">{{ __('No exception records in range.') }}</td>
                                     </tr>
                                 @endforelse
                             </tbody>
@@ -422,48 +422,48 @@
                 <div>
                     <div class="flex items-center justify-between pb-4 border-b theme-border">
                         <div>
-                            <h2 class="text-lg font-bold theme-heading">Resolution velocity</h2>
+                            <h2 class="text-lg font-bold theme-heading">{{ __('Resolution velocity') }}</h2>
                             <p class="text-xs theme-text-secondary mt-0.5">
-                                Mean duration to clear and resolve incident tickets.
+                                {{ __('Mean duration to clear and resolve incident tickets.') }}
                             </p>
                         </div>
                         <a
                             href="{{ route('analytics.export', ['table' => 'resolution', 'from' => $from->toDateString(), 'to' => $to->toDateString()]) }}"
                             class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-xs font-medium theme-card-elevated border theme-border theme-text-secondary hover:theme-heading transition-colors"
                         >
-                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
                             <span>CSV</span>
                         </a>
                     </div>
 
                     <div class="mt-4 p-4 rounded-2xl theme-card-elevated border theme-border flex items-center justify-between">
                         <div>
-                            <span class="text-[11px] theme-text-secondary font-medium">Mean resolution time</span>
+                            <span class="text-[11px] theme-text-secondary font-medium">{{ __('Mean resolution time') }}</span>
                             <div class="text-2xl font-black font-mono theme-heading mt-0.5">
-                                {{ $resolutionTime['overall_avg_hours'] !== null ? $resolutionTime['overall_avg_hours'].' hours' : 'No resolved items' }}
+                                {{ $resolutionTime['overall_avg_hours'] !== null ? __(':hours hours', ['hours' => $resolutionTime['overall_avg_hours']]) : __('No resolved items') }}
                             </div>
                         </div>
                         <span class="px-2.5 py-1 rounded-full text-xs font-mono font-bold bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/25">
-                            {{ $resolutionTime['resolved_total'] }} resolved
+                            {{ __(':count resolved', ['count' => $resolutionTime['resolved_total']]) }}
                         </span>
                     </div>
 
                     <div class="mt-4 overflow-x-auto">
                         <table class="w-full text-left border-collapse text-xs">
-                            <caption class="sr-only">Average resolution time per exception type</caption>
+                            <caption class="sr-only">{{ __('Average resolution time per exception type') }}</caption>
                             <thead>
                                 <tr class="border-b theme-border theme-text-secondary">
-                                    <th scope="col" class="py-2 px-2.5 font-semibold">Incident type</th>
-                                    <th scope="col" class="py-2 px-2.5 font-semibold text-right">Resolved</th>
-                                    <th scope="col" class="py-2 px-2.5 font-semibold text-right">Avg (h)</th>
-                                    <th scope="col" class="py-2 px-2.5 font-semibold text-right">Max (h)</th>
+                                    <th scope="col" class="py-2 px-2.5 font-semibold">{{ __('Incident type') }}</th>
+                                    <th scope="col" class="py-2 px-2.5 font-semibold text-right">{{ __('Resolved') }}</th>
+                                    <th scope="col" class="py-2 px-2.5 font-semibold text-right">{{ __('Avg (h)') }}</th>
+                                    <th scope="col" class="py-2 px-2.5 font-semibold text-right">{{ __('Max (h)') }}</th>
                                 </tr>
                             </thead>
                             <tbody class="divide-y theme-border font-mono">
                                 @forelse($resolutionTime['by_type'] as $row)
                                     <tr class="hover:bg-slate-500/5 transition-colors">
                                         <th scope="row" class="py-2 px-2.5 font-sans font-medium theme-heading">
-                                            {{ $row->label }}
+                                            {{ __($row->label) }}
                                         </th>
                                         <td class="py-2 px-2.5 text-right text-emerald-600 dark:text-emerald-400">
                                             {{ $row->resolved_count }}
@@ -477,7 +477,7 @@
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="4" class="py-4 text-center font-sans theme-text-muted">No resolution events recorded in range.</td>
+                                        <td colspan="4" class="py-4 text-center font-sans theme-text-muted">{{ __('No resolution events recorded in range.') }}</td>
                                     </tr>
                                 @endforelse
                             </tbody>
@@ -486,7 +486,7 @@
                 </div>
 
                 <div class="text-[11px] theme-text-muted italic border-t theme-border pt-3">
-                    Calculated from initial timestamp of detection to formal resolver sign-off.
+                    {{ __('Calculated from initial timestamp of detection to formal resolver sign-off.') }}
                 </div>
             </div>
         </div>
@@ -495,9 +495,9 @@
         <div class="p-6 rounded-3xl theme-card border theme-border space-y-6">
             <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b theme-border">
                 <div>
-                    <h2 class="text-lg font-bold theme-heading">Freight lanes and delay variance</h2>
+                    <h2 class="text-lg font-bold theme-heading">{{ __('Freight lanes and delay variance') }}</h2>
                     <p class="text-xs theme-text-secondary mt-0.5">
-                        Corridor routing metrics comparing scheduled arrivals to actual hub arrivals across sea, air, and road lanes.
+                        {{ __('Corridor routing metrics comparing scheduled arrivals to actual hub arrivals across sea, air, and road lanes.') }}
                     </p>
                 </div>
                 <div class="flex items-center gap-2">
@@ -505,15 +505,15 @@
                         href="{{ route('analytics.export', ['table' => 'top_delayed', 'from' => $from->toDateString(), 'to' => $to->toDateString()]) }}"
                         class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-medium theme-card-elevated border theme-border theme-text-secondary hover:theme-heading transition-colors"
                     >
-                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
-                        <span>Export top delayed</span>
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                        <span>{{ __('Export top delayed') }}</span>
                     </a>
                     <a
                         href="{{ route('analytics.export', ['table' => 'lanes', 'from' => $from->toDateString(), 'to' => $to->toDateString()]) }}"
                         class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-medium theme-card-elevated border theme-border theme-text-secondary hover:theme-heading transition-colors"
                     >
-                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
-                        <span>Export all lanes</span>
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                        <span>{{ __('Export all lanes') }}</span>
                     </a>
                 </div>
             </div>
@@ -522,29 +522,29 @@
                 <!-- Top 5 Delayed Lanes Chart (Left col-span-5) -->
                 <div class="lg:col-span-5 space-y-2">
                     <div class="flex items-center justify-between">
-                        <span class="text-xs font-semibold theme-heading">Top 5 delayed corridors</span>
-                        <span class="text-[10px] theme-text-muted">Average delay hours</span>
+                        <span class="text-xs font-semibold theme-heading">{{ __('Top 5 delayed corridors') }}</span>
+                        <span class="text-[10px] theme-text-muted">{{ __('Average delay hours') }}</span>
                     </div>
                     <div class="h-64 sm:h-72 w-full">
                         <canvas id="analyticsLaneChart"></canvas>
                     </div>
                     <p class="text-[11px] theme-text-muted text-center italic">
-                        Corridors identified with highest mean delay hours.
+                        {{ __('Corridors identified with highest mean delay hours.') }}
                     </p>
                 </div>
 
                 <!-- Comprehensive Lanes Table (Right col-span-7) -->
                 <div class="lg:col-span-7 overflow-x-auto max-h-[380px] overflow-y-auto pr-1">
                     <table class="w-full text-left border-collapse text-xs">
-                        <caption class="sr-only">All shipping lane performance statistics table</caption>
+                        <caption class="sr-only">{{ __('All shipping lane performance statistics table') }}</caption>
                         <thead class="sticky top-0 theme-card z-10">
                             <tr class="border-b theme-border theme-text-secondary">
-                                <th scope="col" class="py-2.5 px-3 font-semibold uppercase tracking-wider font-mono text-[10px]">Corridor</th>
-                                <th scope="col" class="py-2.5 px-3 font-semibold">Origin & destination</th>
-                                <th scope="col" class="py-2.5 px-3 font-semibold text-right">Shipments</th>
-                                <th scope="col" class="py-2.5 px-3 font-semibold text-right">On-time</th>
-                                <th scope="col" class="py-2.5 px-3 font-semibold text-right">Avg delay</th>
-                                <th scope="col" class="py-2.5 px-3 font-semibold text-right">Max delay</th>
+                                <th scope="col" class="py-2.5 px-3 font-semibold uppercase tracking-wider font-mono text-[10px]">{{ __('Corridor') }}</th>
+                                <th scope="col" class="py-2.5 px-3 font-semibold">{{ __('Origin & destination') }}</th>
+                                <th scope="col" class="py-2.5 px-3 font-semibold text-right">{{ __('Shipments') }}</th>
+                                <th scope="col" class="py-2.5 px-3 font-semibold text-right">{{ __('On-time') }}</th>
+                                <th scope="col" class="py-2.5 px-3 font-semibold text-right">{{ __('Avg delay') }}</th>
+                                <th scope="col" class="py-2.5 px-3 font-semibold text-right">{{ __('Max delay') }}</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y theme-border">
@@ -573,7 +573,7 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="6" class="py-4 text-center theme-text-muted">No lane transit records in range.</td>
+                                    <td colspan="6" class="py-4 text-center theme-text-muted">{{ __('No lane transit records in range.') }}</td>
                                 </tr>
                             @endforelse
                         </tbody>

@@ -6,11 +6,11 @@
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b theme-border">
         <div>
             <div class="flex items-center space-x-2 text-xs theme-text-secondary mb-1.5 font-mono">
-                <a href="{{ route('shipments.index') }}" class="hover:text-cyan-500 transition-colors">Shipments</a>
+                <a href="{{ route('shipments.index') }}" class="hover:text-cyan-500 transition-colors">{{ __('Shipments') }}</a>
                 <span>&rarr;</span>
                 <span class="text-cyan-500 font-bold">{{ $shipment->tracking_number }}</span>
             </div>
-            <div class="flex items-center space-x-3.5">
+            <div class="flex flex-wrap items-center gap-3">
                 <h1 class="text-2xl sm:text-3xl font-extrabold font-mono theme-heading tracking-tight">{{ $shipment->tracking_number }}</h1>
                 <x-mode-badge :mode="$shipment->transport_mode ?? 'SEA'" size="sm" />
                 @php
@@ -31,16 +31,16 @@
         </div>
 
         <!-- Delay / Schedule Pill & Actions -->
-        <div class="flex items-center space-x-3">
+        <div class="flex flex-wrap items-center gap-2 sm:gap-3">
             @if($shipment->is_delayed)
                 <div class="px-3.5 py-1.5 rounded-xl bg-amber-500/15 border border-amber-500/30 text-amber-600 dark:text-amber-300 text-xs flex items-center gap-2 font-mono">
                     <span class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
-                    <span>Delay: <strong>+{{ (int)$shipment->delay_hours }}h</strong> ({{ $shipment->delay_severity }})</span>
+                    <span>{{ __('Delay:') }} <strong>+{{ (int)$shipment->delay_hours }}h</strong> ({{ $shipment->delay_severity }})</span>
                 </div>
             @else
                 <div class="px-3.5 py-1.5 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-600 dark:text-emerald-300 text-xs flex items-center gap-2 font-mono">
                     <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
-                    <span>On Schedule &bull; Zero Delay</span>
+                    <span>{{ __('On Schedule • Zero Delay') }}</span>
                 </div>
             @endif
 
@@ -60,17 +60,17 @@
 
             @if(in_array(auth()->user()->role, ['admin', 'operator']))
                 <a href="{{ route('shipments.edit', $shipment) }}" class="px-3.5 py-1.5 rounded-xl bg-blue-500/15 hover:bg-blue-500/25 border border-blue-500/30 text-blue-600 dark:text-cyan-400 text-xs font-semibold flex items-center gap-1.5 transition">
-                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
-                    Edit Shipment
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                    {{ __('Edit Shipment') }}
                 </a>
             @endif
 
             @if(auth()->user()->role === 'admin')
-                <form action="{{ route('shipments.destroy', $shipment) }}" method="POST" onsubmit="return confirm('Are you sure you want to delete this shipment?');">
+                <form action="{{ route('shipments.destroy', $shipment) }}" method="POST" onsubmit="return confirm(@js(__('Are you sure you want to delete this shipment?')));">
                     @csrf
                     @method('DELETE')
-                    <button type="submit" class="p-2 rounded-xl theme-text-muted hover:text-rose-500 hover:bg-rose-500/10 border theme-border transition" title="Delete Shipment">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                    <button type="submit" class="p-2 rounded-xl theme-text-muted hover:text-rose-500 hover:bg-rose-500/10 border theme-border transition cursor-pointer" title="{{ __('Delete Shipment') }}" aria-label="{{ __('Delete Shipment') }}">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
                     </button>
                 </form>
             @endif
@@ -80,8 +80,8 @@
     <!-- Full Visual Lifecycle Stepper -->
     <x-card class="space-y-3">
         <div class="flex items-center justify-between pb-2">
-            <span class="uppercase text-[10px] tracking-wider theme-text-muted font-semibold block">Transit Progression</span>
-            <span class="text-xs font-mono theme-text-secondary">Current Phase: <strong class="theme-heading">{{ $shipment->status_display_label }} ({{ $shipment->status }})</strong></span>
+            <span class="uppercase text-[10px] tracking-wider theme-text-muted font-semibold block">{{ __('Transit Progression') }}</span>
+            <span class="text-xs font-mono theme-text-secondary">{{ __('Current Phase:') }} <strong class="theme-heading">{{ $shipment->status_display_label }} ({{ $shipment->status }})</strong></span>
         </div>
         <x-status-stepper :status="$shipment->status" :mode="$shipment->transport_mode ?? 'SEA'" :compact="false" />
     </x-card>
@@ -94,7 +94,7 @@
             <x-card :padded="false" class="overflow-hidden relative">
                 <div id="shipment-route-map" class="w-full h-80 sm:h-96 z-10 theme-page"></div>
                 <div class="absolute top-3 left-3 z-20 px-3 py-1.5 rounded-xl theme-card-elevated border theme-border text-xs theme-heading font-mono shadow-md">
-                    {{ $shipment->originLocation->short_name ?? 'Origin' }} ({{ $shipment->originLocation->display_code ?? 'ORIG' }}) &rarr; {{ $shipment->destinationLocation->short_name ?? 'Destination' }} ({{ $shipment->destinationLocation->display_code ?? 'DEST' }}) &bull; {{ $shipment->cargo_type }}
+                    {{ $shipment->originLocation->short_name ?? __('Origin') }} ({{ $shipment->originLocation->display_code ?? 'ORIG' }}) &rarr; {{ $shipment->destinationLocation->short_name ?? __('Destination') }} ({{ $shipment->destinationLocation->display_code ?? 'DEST' }}) &bull; {{ $shipment->cargo_type }}
                 </div>
             </x-card>
 
@@ -102,50 +102,50 @@
             <x-card class="space-y-3">
                 <div class="flex items-center justify-between pb-2 border-b theme-border">
                     <div class="flex items-center gap-2">
-                        <span class="uppercase text-[10px] tracking-wider theme-text-muted font-semibold block">Consignment Reference</span>
+                        <span class="uppercase text-[10px] tracking-wider theme-text-muted font-semibold block">{{ __('Consignment Reference') }}</span>
                         <x-mode-badge :mode="$shipment->transport_mode ?? 'SEA'" size="xs" />
                     </div>
-                    <span class="text-xs font-mono theme-text-secondary font-semibold">Carrier: {{ $shipment->carrier?->name }} ({{ $shipment->carrier?->code }})</span>
+                    <span class="text-xs font-mono theme-text-secondary font-semibold">{{ __('Carrier:') }} {{ $shipment->carrier?->name }} ({{ $shipment->carrier?->code }})</span>
                 </div>
                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs font-mono">
                     @if(($shipment->transport_mode ?? 'SEA') === 'SEA')
                         <div class="p-3 rounded-xl theme-card-elevated border theme-border">
-                            <span class="uppercase text-[10px] tracking-wider theme-text-muted font-semibold block">Container</span>
-                            <span class="font-bold text-blue-600 dark:text-cyan-400 text-sm">{{ $shipment->formatted_container_number ?? $shipment->container_number ?? 'Not assigned' }}</span>
+                            <span class="uppercase text-[10px] tracking-wider theme-text-muted font-semibold block">{{ __('Container') }}</span>
+                            <span class="font-bold text-blue-600 dark:text-cyan-400 text-sm">{{ $shipment->formatted_container_number ?? $shipment->container_number ?? __('Not assigned') }}</span>
                         </div>
                         <div class="p-3 rounded-xl theme-card-elevated border theme-border">
-                            <span class="uppercase text-[10px] tracking-wider theme-text-muted font-semibold block">Bill of Lading (B/L)</span>
-                            <span class="font-bold theme-heading text-sm">{{ $shipment->bill_of_lading_number ?? $shipment->reference_number ?? 'Pending issuance' }}</span>
+                            <span class="uppercase text-[10px] tracking-wider theme-text-muted font-semibold block">{{ __('Bill of Lading (B/L)') }}</span>
+                            <span class="font-bold theme-heading text-sm">{{ $shipment->bill_of_lading_number ?? $shipment->reference_number ?? __('Pending issuance') }}</span>
                         </div>
                         <div class="p-3 rounded-xl theme-card-elevated border theme-border">
-                            <span class="uppercase text-[10px] tracking-wider theme-text-muted font-semibold block">Vessel / Voyage Reference</span>
-                            <span class="font-bold theme-heading text-sm">{{ $shipment->reference_number ?? 'Direct Sea Leg' }}</span>
+                            <span class="uppercase text-[10px] tracking-wider theme-text-muted font-semibold block">{{ __('Vessel / Voyage Reference') }}</span>
+                            <span class="font-bold theme-heading text-sm">{{ $shipment->reference_number ?? __('Direct Sea Leg') }}</span>
                         </div>
                     @elseif(($shipment->transport_mode ?? 'SEA') === 'AIR')
                         <div class="p-3 rounded-xl theme-card-elevated border theme-border">
-                            <span class="uppercase text-[10px] tracking-wider theme-text-muted font-semibold block">Air Waybill (AWB)</span>
-                            <span class="font-bold text-sky-600 dark:text-sky-400 text-sm">{{ $shipment->formatted_awb_number ?? $shipment->awb_number ?? 'Not assigned' }}</span>
+                            <span class="uppercase text-[10px] tracking-wider theme-text-muted font-semibold block">{{ __('Air Waybill (AWB)') }}</span>
+                            <span class="font-bold text-sky-600 dark:text-sky-400 text-sm">{{ $shipment->formatted_awb_number ?? $shipment->awb_number ?? __('Not assigned') }}</span>
                         </div>
                         <div class="p-3 rounded-xl theme-card-elevated border theme-border">
-                            <span class="uppercase text-[10px] tracking-wider theme-text-muted font-semibold block">Flight / Booking Reference</span>
-                            <span class="font-bold theme-heading text-sm">{{ $shipment->reference_number ?? 'Flight Scheduled' }}</span>
+                            <span class="uppercase text-[10px] tracking-wider theme-text-muted font-semibold block">{{ __('Flight / Booking Reference') }}</span>
+                            <span class="font-bold theme-heading text-sm">{{ $shipment->reference_number ?? __('Flight Scheduled') }}</span>
                         </div>
                         <div class="p-3 rounded-xl theme-card-elevated border theme-border">
-                            <span class="uppercase text-[10px] tracking-wider theme-text-muted font-semibold block">Cargo Type & Handling</span>
-                            <span class="font-bold theme-heading text-sm">{{ $shipment->cargo_type }} &bull; Priority Air</span>
+                            <span class="uppercase text-[10px] tracking-wider theme-text-muted font-semibold block">{{ __('Cargo Type & Handling') }}</span>
+                            <span class="font-bold theme-heading text-sm">{{ $shipment->cargo_type }} &bull; {{ __('Priority Air') }}</span>
                         </div>
                     @elseif(($shipment->transport_mode ?? 'SEA') === 'ROAD')
                         <div class="p-3 rounded-xl theme-card-elevated border theme-border">
-                            <span class="uppercase text-[10px] tracking-wider theme-text-muted font-semibold block">Vehicle License Plate</span>
-                            <span class="font-bold text-emerald-600 dark:text-emerald-400 text-sm">{{ $shipment->vehicle_plate ?? 'Not assigned' }}</span>
+                            <span class="uppercase text-[10px] tracking-wider theme-text-muted font-semibold block">{{ __('Vehicle License Plate') }}</span>
+                            <span class="font-bold text-emerald-600 dark:text-emerald-400 text-sm">{{ $shipment->vehicle_plate ?? __('Not assigned') }}</span>
                         </div>
                         <div class="p-3 rounded-xl theme-card-elevated border theme-border">
-                            <span class="uppercase text-[10px] tracking-wider theme-text-muted font-semibold block">CMR / Consignment Note</span>
-                            <span class="font-bold theme-heading text-sm">{{ $shipment->cmr_number ?? 'Pending' }}</span>
+                            <span class="uppercase text-[10px] tracking-wider theme-text-muted font-semibold block">{{ __('CMR / Consignment Note') }}</span>
+                            <span class="font-bold theme-heading text-sm">{{ $shipment->cmr_number ?? __('Pending') }}</span>
                         </div>
                         <div class="p-3 rounded-xl theme-card-elevated border theme-border">
-                            <span class="uppercase text-[10px] tracking-wider theme-text-muted font-semibold block">Road Consignment Ref</span>
-                            <span class="font-bold theme-heading text-sm">{{ $shipment->reference_number ?? 'Regional Haul' }}</span>
+                            <span class="uppercase text-[10px] tracking-wider theme-text-muted font-semibold block">{{ __('Road Consignment Ref') }}</span>
+                            <span class="font-bold theme-heading text-sm">{{ $shipment->reference_number ?? __('Regional Haul') }}</span>
                         </div>
                     @endif
                 </div>
@@ -153,25 +153,25 @@
 
             <!-- Route Summary & Delay Analysis Panel -->
             <x-card class="space-y-4">
-                <span class="uppercase text-[10px] tracking-wider theme-text-muted font-semibold block">Schedule & Delay Analysis</span>
+                <span class="uppercase text-[10px] tracking-wider theme-text-muted font-semibold block">{{ __('Schedule & Delay Analysis') }}</span>
                 <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs font-mono">
                     <div class="p-3 rounded-xl theme-card-elevated border theme-border">
-                        <span class="uppercase text-[10px] tracking-wider theme-text-muted font-semibold block">Departure</span>
-                        <span class="font-bold theme-heading">{{ $shipment->expected_departure_at?->format('M d, H:i') ?? 'N/A' }}</span>
+                        <span class="uppercase text-[10px] tracking-wider theme-text-muted font-semibold block">{{ __('Departure') }}</span>
+                        <span class="font-bold theme-heading">{{ $shipment->expected_departure_at?->format('M d, H:i') ?? __('N/A') }}</span>
                     </div>
                     <div class="p-3 rounded-xl theme-card-elevated border theme-border">
-                        <span class="uppercase text-[10px] tracking-wider theme-text-muted font-semibold block">Expected ETA</span>
-                        <span class="font-bold theme-heading">{{ $shipment->expected_arrival_at?->format('M d, H:i') ?? 'N/A' }}</span>
+                        <span class="uppercase text-[10px] tracking-wider theme-text-muted font-semibold block">{{ __('Expected ETA') }}</span>
+                        <span class="font-bold theme-heading">{{ $shipment->expected_arrival_at?->format('M d, H:i') ?? __('N/A') }}</span>
                     </div>
                     <div class="p-3 rounded-xl theme-card-elevated border theme-border">
-                        <span class="uppercase text-[10px] tracking-wider theme-text-muted font-semibold block">Estimated Arrival</span>
+                        <span class="uppercase text-[10px] tracking-wider theme-text-muted font-semibold block">{{ __('Estimated Arrival') }}</span>
                         <span class="font-bold {{ $shipment->is_delayed ? 'text-amber-500' : 'text-emerald-500' }}">
-                            {{ $shipment->estimated_arrival_at?->format('M d, H:i') ?? 'On Track' }}
+                            {{ $shipment->estimated_arrival_at?->format('M d, H:i') ?? __('On Track') }}
                         </span>
                     </div>
                     <div class="p-3 rounded-xl theme-card-elevated border theme-border">
-                        <span class="uppercase text-[10px] tracking-wider theme-text-muted font-semibold block">Actual Arrival</span>
-                        <span class="font-bold theme-heading">{{ $shipment->actual_arrival_at?->format('M d, H:i') ?? 'In Transit' }}</span>
+                        <span class="uppercase text-[10px] tracking-wider theme-text-muted font-semibold block">{{ __('Actual Arrival') }}</span>
+                        <span class="font-bold theme-heading">{{ $shipment->actual_arrival_at?->format('M d, H:i') ?? __('In Transit') }}</span>
                     </div>
                 </div>
 
@@ -179,9 +179,9 @@
                     <div class="p-3.5 rounded-xl bg-amber-500/10 border border-amber-500/25 text-xs text-amber-200 space-y-1">
                         <div class="font-bold text-amber-300 flex items-center gap-1.5">
                             <span class="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse"></span>
-                            <span>Delay Reason Recorded</span>
+                            <span>{{ __('Delay Reason Recorded') }}</span>
                         </div>
-                        <p class="text-[11px] text-amber-200/80">{{ $shipment->delay_reason ?? 'Adverse berth/transit weather condition.' }}</p>
+                        <p class="text-[11px] text-amber-200/80">{{ $shipment->delay_reason ?? __('Adverse berth/transit weather condition.') }}</p>
                     </div>
                 @endif
 
@@ -190,14 +190,14 @@
                         <div class="flex items-center justify-between font-mono">
                             <span class="font-bold flex items-center gap-1.5 {{ $freeTime['is_over_limit'] ? 'text-rose-400' : 'text-cyan-400' }}">
                                 <span class="w-1.5 h-1.5 rounded-full {{ $freeTime['is_over_limit'] ? 'bg-rose-400 animate-pulse' : 'bg-cyan-400' }}"></span>
-                                <span>Terminal Free Time</span>
+                                <span>{{ __('Terminal Free Time') }}</span>
                             </span>
                             <span class="font-bold uppercase text-[10px] {{ $freeTime['is_over_limit'] ? 'text-rose-400' : 'text-cyan-400' }}">
                                 {{ $freeTime['badge_label'] }}
                             </span>
                         </div>
                         <p class="text-[11px] theme-text-secondary leading-relaxed font-sans">
-                            {{ $freeTime['description'] }} Dwell allowance: {{ $freeTime['free_days_allowed'] }} calendar days (arrival {{ $freeTime['arrival_at']?->format('M d, Y H:i') }} &bull; deadline {{ $freeTime['free_time_ends_at']?->format('M d, Y') }}).
+                            {{ $freeTime['description'] }} {{ __('Dwell allowance: :days calendar days (arrival :arrival • deadline :deadline).', ['days' => $freeTime['free_days_allowed'], 'arrival' => $freeTime['arrival_at']?->format('M d, Y H:i'), 'deadline' => $freeTime['free_time_ends_at']?->format('M d, Y')]) }}
                         </p>
                     </div>
                 @endif
@@ -210,10 +210,10 @@
                         <div>
                             <div class="flex flex-wrap items-center gap-2">
                                 <span class="text-xs font-semibold theme-heading block">
-                                    Location weather at latest {{ $latestLocation->facility_kind_label }}
+                                    {{ __('Location weather at latest :facility', ['facility' => __($latestLocation->facility_kind_label)]) }}
                                 </span>
                                 <span class="text-[11px] px-2 py-0.5 rounded-full bg-slate-500/10 text-slate-500 dark:text-slate-400 border border-slate-500/20 font-medium">
-                                    context only, not a delay prediction
+                                    {{ __('context only, not a delay prediction') }}
                                 </span>
                             </div>
                             <h3 class="text-sm font-bold theme-heading mt-0.5">
@@ -224,7 +224,7 @@
                             <x-data-source-badge :source="$locationWeather['data_source'] ?? 'live'" />
                             @if(isset($locationWeather['recorded_at']) && $locationWeather['recorded_at'])
                                 <span class="text-[11px] theme-text-muted">
-                                    Updated {{ \Carbon\Carbon::parse($locationWeather['recorded_at'])->format('M d, H:i') }}
+                                    {{ __('Updated :time', ['time' => \Carbon\Carbon::parse($locationWeather['recorded_at'])->format('M d, H:i')]) }}
                                 </span>
                             @endif
                         </div>
@@ -232,50 +232,50 @@
 
                     <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
                         <div class="p-3 rounded-xl theme-card-elevated border theme-border">
-                            <span class="text-[11px] theme-text-muted font-medium block">Temperature</span>
+                            <span class="text-[11px] theme-text-muted font-medium block">{{ __('Temperature') }}</span>
                             <span class="text-base font-bold font-mono theme-heading">{{ $locationWeather['temperature_c'] }}°C</span>
                             <span class="text-xs text-cyan-600 dark:text-cyan-400 block truncate">{{ $locationWeather['condition'] }}</span>
                         </div>
                         <div class="p-3 rounded-xl theme-card-elevated border theme-border">
-                            <span class="text-[11px] theme-text-muted font-medium block">Wind speed</span>
+                            <span class="text-[11px] theme-text-muted font-medium block">{{ __('Wind speed') }}</span>
                             <span class="text-base font-bold font-mono theme-heading">{{ $locationWeather['wind_kph'] }} km/h</span>
                             @if($latestLocation->isSeaport() && $beaufortScale)
-                                <span class="text-xs theme-text-secondary block">Force {{ $beaufortScale['force'] ?? 1 }} &bull; {{ $beaufortScale['desc'] ?? 'Breeze' }}</span>
+                                <span class="text-xs theme-text-secondary block">{{ __('Force :force', ['force' => $beaufortScale['force'] ?? 1]) }} &bull; {{ $beaufortScale['desc'] ?? 'Breeze' }}</span>
                             @else
-                                <span class="text-xs theme-text-secondary block">Humidity: {{ $locationWeather['humidity'] ?? '-' }}%</span>
+                                <span class="text-xs theme-text-secondary block">{{ __('Humidity:') }} {{ $locationWeather['humidity'] ?? '-' }}%</span>
                             @endif
                         </div>
                         @if($latestLocation->isSeaport())
                             <div class="p-3 rounded-xl theme-card-elevated border theme-border">
-                                <span class="text-[11px] theme-text-muted font-medium block">Wave height</span>
+                                <span class="text-[11px] theme-text-muted font-medium block">{{ __('Wave height') }}</span>
                                 @if(!empty($locationMarine['has_marine_data']) && $locationMarine['wave_height'] !== null)
                                     <span class="text-base font-bold font-mono theme-heading">{{ number_format($locationMarine['wave_height'], 2) }} m</span>
-                                    <span class="text-xs theme-text-secondary block">Period: {{ $locationMarine['wave_period'] ?? 'N/A' }}s</span>
+                                    <span class="text-xs theme-text-secondary block">{{ __('Period:') }} {{ $locationMarine['wave_period'] ?? __('N/A') }}s</span>
                                 @else
-                                    <span class="text-xs font-medium theme-text-secondary block pt-1">No marine data</span>
+                                    <span class="text-xs font-medium theme-text-secondary block pt-1">{{ __('No marine data') }}</span>
                                 @endif
                             </div>
                             <div class="p-3 rounded-xl theme-card-elevated border theme-border">
-                                <span class="text-[11px] theme-text-muted font-medium block"><span class="sr-only">STS Crane Advisory</span>Crane advisory</span>
+                                <span class="text-[11px] theme-text-muted font-medium block"><span class="sr-only">{{ __('STS Crane Advisory') }}</span>{{ __('Crane advisory') }}</span>
                                 <span class="text-xs font-bold font-mono block pt-1
                                     {{ ($craneAdvisory['color'] ?? '') === 'emerald' ? 'text-emerald-500' : (($craneAdvisory['color'] ?? '') === 'amber' ? 'text-amber-500' : 'text-rose-500') }}">
-                                    {{ $craneAdvisory['status'] ?? 'Full Clearance' }}
+                                    {{ $craneAdvisory['status'] ?? __('Full Clearance') }}
                                 </span>
-                                <span class="text-[10px] theme-text-muted block">Rule-based</span>
+                                <span class="text-[10px] theme-text-muted block">{{ __('Rule-based') }}</span>
                             </div>
                         @else
                             <div class="p-3 rounded-xl theme-card-elevated border theme-border">
-                                <span class="text-[11px] theme-text-muted font-medium block">Rain</span>
+                                <span class="text-[11px] theme-text-muted font-medium block">{{ __('Rain') }}</span>
                                 <span class="text-base font-bold font-mono theme-heading">{{ number_format((float) ($locationWeather['rain_mm'] ?? 0), 1) }} mm</span>
-                                <span class="text-xs theme-text-secondary block">Current precipitation</span>
+                                <span class="text-xs theme-text-secondary block">{{ __('Current precipitation') }}</span>
                             </div>
                             <div class="p-3 rounded-xl theme-card-elevated border theme-border">
-                                <span class="text-[11px] theme-text-muted font-medium block">Visibility</span>
+                                <span class="text-[11px] theme-text-muted font-medium block">{{ __('Visibility') }}</span>
                                 @if(isset($locationWeather['visibility_km']) && $locationWeather['visibility_km'] !== null)
                                     <span class="text-base font-bold font-mono theme-heading">{{ $locationWeather['visibility_km'] }} km</span>
-                                    <span class="text-xs theme-text-secondary block">{{ $locationWeather['visibility_km'] >= 10 ? 'Clear' : 'Reduced' }}</span>
+                                    <span class="text-xs theme-text-secondary block">{{ $locationWeather['visibility_km'] >= 10 ? __('Clear') : __('Reduced') }}</span>
                                 @else
-                                    <span class="text-xs font-medium theme-text-secondary block pt-1">Not reported</span>
+                                    <span class="text-xs font-medium theme-text-secondary block pt-1">{{ __('Not reported') }}</span>
                                 @endif
                             </div>
                         @endif
@@ -286,19 +286,19 @@
             <!-- Manifest Cargo Items -->
             <x-card class="space-y-4">
                 <div class="flex items-center justify-between pb-3 border-b border-white/10">
-                    <span class="uppercase text-[10px] tracking-wider text-slate-500 font-semibold block">Manifest Items ({{ count($shipment->items) }})</span>
-                    <span class="text-xs font-mono text-slate-400">Total: {{ $shipment->items->sum('quantity') }} pkgs</span>
+                    <span class="uppercase text-[10px] tracking-wider text-slate-500 font-semibold block">{{ __('Manifest Items (:count)', ['count' => count($shipment->items)]) }}</span>
+                    <span class="text-xs font-mono text-slate-400">{{ __('Total:') }} {{ $shipment->items->sum('quantity') }} {{ __('pkgs') }}</span>
                 </div>
 
                 <div class="overflow-x-auto">
                     <table class="w-full text-left text-xs">
                         <thead>
                             <tr class="border-b border-white/5 text-slate-500 uppercase text-[10px] font-mono">
-                                <th class="pb-2">Description</th>
-                                <th class="pb-2">{{ strtoupper($shipment->transport_mode ?? 'SEA') === 'SEA' ? 'Container / SKU' : 'Item SKU' }}</th>
-                                <th class="pb-2 text-right">Qty</th>
-                                <th class="pb-2 text-right">Weight (KG)</th>
-                                <th class="pb-2 text-right">Volume (CBM)</th>
+                                <th class="pb-2">{{ __('Description') }}</th>
+                                <th class="pb-2">{{ strtoupper($shipment->transport_mode ?? 'SEA') === 'SEA' ? __('Container / SKU') : __('Item SKU') }}</th>
+                                <th class="pb-2 text-right">{{ __('Qty') }}</th>
+                                <th class="pb-2 text-right">{{ __('Weight (KG)') }}</th>
+                                <th class="pb-2 text-right">{{ __('Volume (CBM)') }}</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-white/5 font-mono">
@@ -318,7 +318,7 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="5" class="py-4 text-center text-slate-500">No specific line items recorded.</td>
+                                    <td colspan="5" class="py-4 text-center text-slate-500">{{ __('No specific line items recorded.') }}</td>
                                 </tr>
                             @endforelse
                         </tbody>
@@ -330,8 +330,8 @@
             @if(count($shipment->exceptions) > 0)
                 <x-card class="space-y-3">
                     <div class="flex items-center justify-between pb-3 border-b border-white/10">
-                        <span class="uppercase text-[10px] tracking-wider text-rose-400 font-semibold block">Incident Reports & Holds</span>
-                        <span class="text-xs font-mono text-rose-400">{{ count($shipment->exceptions) }} Logged</span>
+                        <span class="uppercase text-[10px] tracking-wider text-rose-400 font-semibold block">{{ __('Incident Reports & Holds') }}</span>
+                        <span class="text-xs font-mono text-rose-400">{{ __(':count Logged', ['count' => count($shipment->exceptions)]) }}</span>
                     </div>
 
                     <div class="space-y-3">
@@ -345,14 +345,14 @@
                                 </div>
                                 <p class="text-slate-300 text-[11px]">{{ $ex->description }}</p>
                                 <div class="flex items-center justify-between text-[10px] text-slate-500 pt-1 font-mono">
-                                    <span>Detected: {{ $ex->detected_at?->diffForHumans() }}</span>
+                                    <span>{{ __('Detected:') }} {{ $ex->detected_at?->diffForHumans() }}</span>
                                     @if(in_array(auth()->user()->role, ['admin', 'operator']) && $ex->status !== 'RESOLVED')
                                         <form action="{{ route('operations.exceptions.update', $ex) }}" method="POST">
                                             @csrf
                                             @method('PATCH')
                                             <input type="hidden" name="status" value="RESOLVED">
                                             <input type="hidden" name="resolution_notes" value="Resolved via Shipment Detail view">
-                                            <button type="submit" class="text-teal-300 hover:text-white font-bold underline">Mark Resolved &rarr;</button>
+                                            <button type="submit" class="text-teal-300 hover:text-white font-bold underline cursor-pointer">{{ __('Mark Resolved') }} &rarr;</button>
                                         </form>
                                     @endif
                                 </div>
@@ -367,10 +367,10 @@
                 <x-card class="space-y-4">
                     <div class="flex items-center justify-between pb-3 border-b theme-border">
                         <div>
-                            <span class="uppercase text-[10px] tracking-wider text-cyan-600 dark:text-cyan-400 font-semibold block font-mono">Corridor Intelligence</span>
-                            <h3 class="text-base font-bold theme-heading">Related Freight News</h3>
+                            <span class="uppercase text-[10px] tracking-wider text-cyan-600 dark:text-cyan-400 font-semibold block font-mono">{{ __('Corridor Intelligence') }}</span>
+                            <h3 class="text-base font-bold theme-heading">{{ __('Related Freight News') }}</h3>
                         </div>
-                        <a href="{{ route('news.index') }}" class="text-xs font-mono text-blue-600 dark:text-cyan-400 hover:underline">All News &rarr;</a>
+                        <a href="{{ route('news.index') }}" class="text-xs font-mono text-blue-600 dark:text-cyan-400 hover:underline">{{ __('All News') }} &rarr;</a>
                     </div>
 
                     <div class="space-y-3">
@@ -406,10 +406,10 @@
             <x-card class="space-y-4">
                 <div class="flex items-center justify-between pb-3 border-b theme-border">
                     <div>
-                        <span class="uppercase text-[10px] tracking-wider theme-text-muted font-semibold block">Milestone Ledger</span>
-                        <h3 class="text-base font-bold theme-heading">Tracking Checkpoints</h3>
+                        <span class="uppercase text-[10px] tracking-wider theme-text-muted font-semibold block">{{ __('Milestone Ledger') }}</span>
+                        <h3 class="text-base font-bold theme-heading">{{ __('Tracking Checkpoints') }}</h3>
                     </div>
-                    <span class="text-xs font-mono text-blue-600 dark:text-cyan-400">{{ count($shipment->trackingEvents) }} Events</span>
+                    <span class="text-xs font-mono text-blue-600 dark:text-cyan-400">{{ __(':count Events', ['count' => count($shipment->trackingEvents)]) }}</span>
                 </div>
 
                 <!-- Timeline List -->
@@ -430,7 +430,7 @@
                                 </div>
 
                                 <div class="flex items-center justify-between text-[11px] theme-text-muted font-mono pt-1">
-                                    <span class="text-blue-600 dark:text-cyan-400">@ {{ $evt->location->name ?? 'Transit waypoint' }}@if($evt->location) ({{ $evt->location->display_code }})@endif</span>
+                                    <span class="text-blue-600 dark:text-cyan-400">@ {{ $evt->location->name ?? __('Transit waypoint') }}@if($evt->location) ({{ $evt->location->display_code }})@endif</span>
                                     @if($evt->weather_snapshot)
                                         <span class="theme-text-muted">{{ $evt->weather_snapshot['temperature_c'] ?? '' }}°C {{ $evt->weather_snapshot['condition'] ?? '' }}</span>
                                     @endif
@@ -439,7 +439,7 @@
                         </div>
                     @empty
                         <div class="py-6 text-center theme-text-muted text-xs">
-                            No milestone checkpoints recorded yet.
+                            {{ __('No milestone checkpoints recorded yet.') }}
                         </div>
                     @endforelse
                 </div>
@@ -447,7 +447,7 @@
                 <!-- Operator Action: Record New Checkpoint -->
                 @if(in_array(auth()->user()->role, ['admin', 'operator']))
                     <div class="pt-4 border-t theme-border space-y-3">
-                        <span class="uppercase text-[10px] tracking-wider theme-text-muted font-semibold block">Record New Checkpoint</span>
+                        <span class="uppercase text-[10px] tracking-wider theme-text-muted font-semibold block">{{ __('Record New Checkpoint') }}</span>
                         <form action="{{ route('shipments.add-tracking', $shipment) }}" method="POST" class="space-y-3">
                             @csrf
                             <div class="grid grid-cols-2 gap-2 text-xs">
@@ -464,9 +464,9 @@
                                     @endforeach
                                 </select>
                             </div>
-                            <input type="text" name="description" placeholder="Checkpoint remark (e.g. Cleared customs gate 3)" required class="w-full px-3 py-2 rounded-xl theme-input border theme-border text-xs focus:ring-1 focus:ring-blue-500">
-                            <button type="submit" class="w-full py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs uppercase tracking-wider transition">
-                                Add Checkpoint & Evaluate ETA
+                            <input type="text" name="description" placeholder="{{ __('Checkpoint remark (e.g. Cleared customs gate 3)') }}" required class="w-full px-3 py-2 rounded-xl theme-input border theme-border text-xs focus:ring-1 focus:ring-blue-500">
+                            <button type="submit" class="w-full py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs uppercase tracking-wider transition cursor-pointer">
+                                {{ __('Add Checkpoint & Evaluate ETA') }}
                             </button>
                         </form>
                     </div>
@@ -477,43 +477,40 @@
             @if(in_array(auth()->user()->role, ['admin', 'operator']))
                 @php
                     $shipMode = strtoupper($shipment->transport_mode ?? 'SEA');
-                    // Common exceptions: CUSTOMS_HOLD, WEATHER_DELAY, PORT_CONGESTION, DAMAGED, MISROUTED, DOCUMENTATION_ISSUE
-                    // Air only: FLIGHT_OFFLOAD
-                    // Road only: BORDER_QUEUE, VEHICLE_BREAKDOWN
                     $allowedExceptions = match($shipMode) {
                         'AIR' => [
-                            'CUSTOMS_HOLD' => 'Customs hold',
-                            'WEATHER_DELAY' => 'Weather delay',
-                            'PORT_CONGESTION' => 'Airport congestion / Ramp hold',
-                            'DAMAGED' => 'Damaged cargo',
-                            'MISROUTED' => 'Misrouted cargo',
-                            'DOCUMENTATION_ISSUE' => 'Documentation issue',
-                            'FLIGHT_OFFLOAD' => 'Flight offload',
+                            'CUSTOMS_HOLD' => __('Customs hold'),
+                            'WEATHER_DELAY' => __('Weather delay'),
+                            'PORT_CONGESTION' => __('Airport congestion / Ramp hold'),
+                            'DAMAGED' => __('Damaged cargo'),
+                            'MISROUTED' => __('Misrouted cargo'),
+                            'DOCUMENTATION_ISSUE' => __('Documentation issue'),
+                            'FLIGHT_OFFLOAD' => __('Flight offload'),
                         ],
                         'ROAD' => [
-                            'CUSTOMS_HOLD' => 'Customs hold',
-                            'WEATHER_DELAY' => 'Weather delay',
-                            'PORT_CONGESTION' => 'Border / Terminal congestion',
-                            'DAMAGED' => 'Damaged cargo',
-                            'MISROUTED' => 'Misrouted cargo',
-                            'DOCUMENTATION_ISSUE' => 'Documentation issue',
-                            'BORDER_QUEUE' => 'Border crossing queue',
-                            'VEHICLE_BREAKDOWN' => 'Vehicle mechanical breakdown',
+                            'CUSTOMS_HOLD' => __('Customs hold'),
+                            'WEATHER_DELAY' => __('Weather delay'),
+                            'PORT_CONGESTION' => __('Border / Terminal congestion'),
+                            'DAMAGED' => __('Damaged cargo'),
+                            'MISROUTED' => __('Misrouted cargo'),
+                            'DOCUMENTATION_ISSUE' => __('Documentation issue'),
+                            'BORDER_QUEUE' => __('Border crossing queue'),
+                            'VEHICLE_BREAKDOWN' => __('Vehicle mechanical breakdown'),
                         ],
                         default => [
-                            'CUSTOMS_HOLD' => 'Customs hold',
-                            'WEATHER_DELAY' => 'Weather delay',
-                            'PORT_CONGESTION' => 'Seaport congestion / Berth delay',
-                            'DAMAGED' => 'Damaged cargo',
-                            'MISROUTED' => 'Misrouted cargo',
-                            'DOCUMENTATION_ISSUE' => 'Documentation issue',
+                            'CUSTOMS_HOLD' => __('Customs hold'),
+                            'WEATHER_DELAY' => __('Weather delay'),
+                            'PORT_CONGESTION' => __('Seaport congestion / Berth delay'),
+                            'DAMAGED' => __('Damaged cargo'),
+                            'MISROUTED' => __('Misrouted cargo'),
+                            'DOCUMENTATION_ISSUE' => __('Documentation issue'),
                         ],
                     };
                 @endphp
                 <x-card class="space-y-3">
                     <div class="flex items-center justify-between">
-                        <span class="uppercase text-[10px] tracking-wider text-rose-500 dark:text-rose-400 font-semibold block">Log Exception Incident</span>
-                        <span class="text-[10px] theme-text-muted font-mono">{{ $shipMode }} Mode Allowed Types</span>
+                        <span class="uppercase text-[10px] tracking-wider text-rose-500 dark:text-rose-400 font-semibold block">{{ __('Log Exception Incident') }}</span>
+                        <span class="text-[10px] theme-text-muted font-mono">{{ __(':mode Mode Allowed Types', ['mode' => $shipMode]) }}</span>
                     </div>
                     <form action="{{ route('shipments.report-exception', $shipment) }}" method="POST" class="space-y-3">
                         @csrf
@@ -530,10 +527,10 @@
                                 <option value="CRITICAL">CRITICAL</option>
                             </select>
                         </div>
-                        <input type="text" name="title" placeholder="Incident Title (e.g. Flight delay / Berth congestion)" required class="w-full px-3 py-2 rounded-xl theme-input border theme-border text-xs focus:ring-1 focus:ring-rose-500">
-                        <textarea name="description" rows="2" placeholder="Full incident context and impact..." class="w-full px-3 py-2 rounded-xl theme-input border theme-border text-xs focus:ring-1 focus:ring-rose-500"></textarea>
-                        <button type="submit" class="w-full py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs uppercase tracking-wider transition">
-                            Record Incident Notice
+                        <input type="text" name="title" placeholder="{{ __('Incident Title (e.g. Flight delay / Berth congestion)') }}" required class="w-full px-3 py-2 rounded-xl theme-input border theme-border text-xs focus:ring-1 focus:ring-rose-500">
+                        <textarea name="description" rows="2" placeholder="{{ __('Full incident context and impact...') }}" class="w-full px-3 py-2 rounded-xl theme-input border theme-border text-xs focus:ring-1 focus:ring-rose-500"></textarea>
+                        <button type="submit" class="w-full py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs uppercase tracking-wider transition cursor-pointer">
+                            {{ __('Record Incident Notice') }}
                         </button>
                     </form>
                 </x-card>

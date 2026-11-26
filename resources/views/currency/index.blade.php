@@ -7,12 +7,12 @@
         <div>
             <div class="flex flex-wrap items-center gap-2.5">
                 <span class="text-xs font-medium text-cyan-600 dark:text-cyan-400 px-2 py-0.5 rounded-md bg-cyan-500/10 border border-cyan-500/20">
-                    Daily reference rates
+                    {{ __('Daily reference rates') }}
                 </span>
                 <x-data-source-badge :source="$dataSource" />
                 @if($timeLastUpdateUtc)
                     <span class="text-xs theme-text-muted">
-                        Updated {{ $timeLastUpdateUtc }}
+                        {{ __('Updated :time', ['time' => $timeLastUpdateUtc]) }}
                     </span>
                 @endif
                 <a
@@ -22,20 +22,20 @@
                     class="text-xs theme-text-muted hover:text-cyan-500 transition underline underline-offset-2 flex items-center gap-1 font-sans"
                 >
                     <span>{{ $attributionText }}</span>
-                    <svg class="w-3 h-3 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+                    <svg class="w-3 h-3 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
                 </a>
             </div>
             <h1 class="text-2xl sm:text-3xl font-black theme-heading tracking-tight mt-1.5">
-                Currency Converter &amp; Reference Rates
+                {{ __('Currency Converter & Reference Rates') }}
             </h1>
             <p class="text-xs sm:text-sm theme-text-secondary mt-1">
-                Global currency valuations for sea, air, and road consignments, manifest reconciliation, and portfolio valuation.
+                {{ __('Global currency valuations for sea, air, and road consignments, manifest reconciliation, and portfolio valuation.') }}
             </p>
         </div>
 
         <!-- Base Matrix Quick Switcher -->
         <div class="flex items-center gap-2">
-            <span class="text-xs theme-text-secondary font-medium">Base matrix:</span>
+            <span class="text-xs theme-text-secondary font-medium">{{ __('Base matrix:') }}</span>
             <div class="flex items-center gap-1.5">
                 @foreach(['USD', 'EUR', 'INR', 'IDR'] as $b)
                     <a
@@ -53,11 +53,11 @@
         <!-- Failure State Error Banner -->
         <div class="p-6 rounded-2xl bg-amber-500/10 border border-dashed border-amber-500/40 text-amber-900 dark:text-amber-200 space-y-3">
             <div class="flex items-center gap-3">
-                <svg class="w-6 h-6 text-amber-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg class="w-6 h-6 text-amber-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
                 </svg>
                 <div>
-                    <h3 class="text-sm font-bold uppercase tracking-wider">Exchange Rate Service Notice</h3>
+                    <h3 class="text-sm font-bold uppercase tracking-wider">{{ __('Exchange Rate Service Notice') }}</h3>
                     <p class="text-xs mt-0.5">{{ $error }}</p>
                 </div>
             </div>
@@ -65,9 +65,9 @@
                 <button
                     type="button"
                     onclick="window.location.reload()"
-                    class="px-4 py-2 rounded-xl bg-amber-600 hover:bg-amber-500 text-white text-xs font-bold transition shadow-sm"
+                    class="px-4 py-2 rounded-xl bg-amber-600 hover:bg-amber-500 text-white text-xs font-bold transition shadow-sm cursor-pointer"
                 >
-                    Retry Connection
+                    {{ __('Retry Connection') }}
                 </button>
             </div>
         </div>
@@ -80,10 +80,10 @@
         <div class="lg:col-span-7 p-6 sm:p-8 rounded-3xl theme-card border space-y-6 transition-colors duration-200">
             <div class="flex items-center justify-between pb-3 border-b theme-border">
                 <div class="space-y-0.5">
-                    <span class="text-xs font-semibold theme-heading">Currency converter</span>
-                    <span class="text-xs theme-text-secondary block">Convert consignments across world currencies with daily reference rates</span>
+                    <span class="text-xs font-semibold theme-heading">{{ __('Currency converter') }}</span>
+                    <span class="text-xs theme-text-secondary block">{{ __('Convert consignments across world currencies with daily reference rates') }}</span>
                 </div>
-                <span class="text-xs text-cyan-600 dark:text-cyan-400 font-medium">Daily reference rates</span>
+                <span class="text-xs text-cyan-600 dark:text-cyan-400 font-medium">{{ __('Daily reference rates') }}</span>
             </div>
 
             <!-- Inputs & Swap Button with Searchable Comboboxes -->
@@ -91,7 +91,7 @@
                 <div class="grid grid-cols-1 sm:grid-cols-12 gap-3 items-end">
                     <!-- Amount Input (4 cols) -->
                     <div class="sm:col-span-4 space-y-1">
-                        <label for="calc-amount" class="text-xs font-medium theme-text-secondary block">Amount</label>
+                        <label for="calc-amount" class="text-xs font-medium theme-text-secondary block">{{ __('Amount') }}</label>
                         <input
                             type="number"
                             id="calc-amount"
@@ -105,7 +105,7 @@
 
                     <!-- From Combobox (3.5 cols) -->
                     <div class="sm:col-span-3 space-y-1 relative">
-                        <label for="from-search" class="text-xs font-medium theme-text-secondary block">From</label>
+                        <label for="from-search" class="text-xs font-medium theme-text-secondary block">{{ __('From') }}</label>
                         <div class="relative">
                             <input
                                 type="text"
@@ -131,17 +131,17 @@
                         <button
                             type="button"
                             onclick="swapFullCurrencies()"
-                            class="w-10 h-10 rounded-xl bg-blue-600/15 hover:bg-blue-600 text-blue-600 dark:text-cyan-400 hover:text-white transition flex items-center justify-center font-black text-base shadow-sm"
-                            title="Swap Currencies"
-                            aria-label="Swap Currencies"
+                            class="w-10 h-10 rounded-xl bg-blue-600/15 hover:bg-blue-600 text-blue-600 dark:text-cyan-400 hover:text-white transition flex items-center justify-center font-black text-base shadow-sm cursor-pointer"
+                            title="{{ __('Swap Currencies') }}"
+                            aria-label="{{ __('Swap Currencies') }}"
                         >
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/></svg>
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/></svg>
                         </button>
                     </div>
 
                     <!-- To Combobox (3.5 cols) -->
                     <div class="sm:col-span-4 space-y-1 relative">
-                        <label for="to-search" class="text-xs font-medium theme-text-secondary block">To</label>
+                        <label for="to-search" class="text-xs font-medium theme-text-secondary block">{{ __('To') }}</label>
                         <div class="relative">
                             <input
                                 type="text"
@@ -170,12 +170,12 @@
             <!-- Converted Big Display Output -->
             <div class="p-6 rounded-2xl theme-card-elevated border theme-border flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
                 <div class="space-y-1">
-                    <span class="text-xs theme-text-secondary">Converted Consignment Valuation:</span>
+                    <span class="text-xs theme-text-secondary">{{ __('Converted Consignment Valuation:') }}</span>
                     <span id="full-calc-details" class="text-xs font-mono font-bold text-slate-400 dark:text-slate-300 block">
                         1 USD = 15,873.00 IDR
                     </span>
                     <span class="text-[10px] theme-text-muted font-mono block">
-                        Net equivalent valuation at latest reference rates
+                        {{ __('Net equivalent valuation at latest reference rates') }}
                     </span>
                 </div>
                 <div class="text-left sm:text-right">
@@ -192,8 +192,8 @@
             <div id="history-chart-card" class="space-y-3 pt-2">
                 <div class="flex items-center justify-between pb-2 border-b theme-border">
                     <div class="flex items-center gap-2">
-                        <span class="text-xs font-semibold theme-heading">30-Day reference rate trend</span>
-                        <span class="text-xs text-cyan-600 dark:text-cyan-400 font-medium">ECB via Frankfurter</span>
+                        <span class="text-xs font-semibold theme-heading">{{ __('30-Day reference rate trend') }}</span>
+                        <span class="text-xs text-cyan-600 dark:text-cyan-400 font-medium">{{ __('ECB via Frankfurter') }}</span>
                     </div>
                     <span id="history-pair-label" class="text-xs font-mono theme-text-muted">USD / EUR</span>
                 </div>
@@ -203,7 +203,7 @@
             </div>
 
             <div id="history-unavailable-notice" class="hidden p-3 rounded-xl theme-card-elevated border theme-border text-xs theme-text-secondary text-center">
-                Historical 30-day ECB chart is available for reference currency pairs (USD, EUR, INR, IDR, SGD, GBP, JPY, etc.).
+                {{ __('Historical 30-day ECB chart is available for reference currency pairs (USD, EUR, INR, IDR, SGD, GBP, JPY, etc.).') }}
             </div>
         </div>
 
@@ -211,26 +211,26 @@
         <div class="lg:col-span-5 p-6 sm:p-8 rounded-3xl theme-card border space-y-6 transition-colors duration-200">
             <div class="space-y-1 pb-3 border-b theme-border">
                 <div class="flex items-center justify-between">
-                    <span class="text-xs font-semibold theme-heading">Portfolio value by currency</span>
+                    <span class="text-xs font-semibold theme-heading">{{ __('Portfolio value by currency') }}</span>
                     <span class="text-xs font-medium text-cyan-600 dark:text-cyan-400">
-                        {{ auth()->user()->role === 'customer' ? 'My Shipments' : 'Global Consignments' }}
+                        {{ auth()->user()->role === 'customer' ? __('My Shipments') : __('Global Consignments') }}
                     </span>
                 </div>
                 <p class="text-xs theme-text-secondary">
-                    Aggregated declared manifest valuation of your consignments grouped by original sovereign currency.
+                    {{ __('Aggregated declared manifest valuation of your consignments grouped by original sovereign currency.') }}
                 </p>
             </div>
 
             <!-- Portfolio Summary KPI -->
             <div class="p-4 rounded-2xl theme-card-elevated border theme-border flex items-center justify-between">
                 <div>
-                    <span class="text-xs text-slate-400 font-medium block">Total converted value</span>
+                    <span class="text-xs text-slate-400 font-medium block">{{ __('Total converted value') }}</span>
                     <span class="text-2xl font-black font-mono text-blue-600 dark:text-cyan-400 tabular-nums">
                         ${{ number_format($totalPortfolioUsd, 2) }} <span class="text-xs text-slate-400 font-sans">USD</span>
                     </span>
                 </div>
                 <div class="text-right">
-                    <span class="text-xs text-slate-400 font-medium block">Consignments</span>
+                    <span class="text-xs text-slate-400 font-medium block">{{ __('Consignments') }}</span>
                     <span class="text-lg font-bold font-mono theme-heading tabular-nums">
                         {{ $totalShipmentsCount }}
                     </span>
@@ -240,10 +240,10 @@
             <!-- Currency Breakdown List -->
             @if($portfolioByCurrency->isEmpty())
                 <div class="p-8 text-center rounded-2xl theme-card-elevated border theme-border space-y-2">
-                    <span class="text-xs theme-text-secondary block">No consignments on record in your portfolio.</span>
+                    <span class="text-xs theme-text-secondary block">{{ __('No consignments on record in your portfolio.') }}</span>
                     @if(in_array(auth()->user()->role, ['admin', 'operator']))
                         <a href="{{ route('shipments.create') }}" class="inline-block mt-2 px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold transition">
-                            Create First Consignment &rarr;
+                            {{ __('Create First Consignment') }} &rarr;
                         </a>
                     @endif
                 </div>
@@ -261,7 +261,7 @@
                                     </span>
                                     <div>
                                         <span class="font-bold theme-heading block">{{ $row->currency_code }}</span>
-                                        <span class="text-[10px] theme-text-muted">{{ $row->shipments_count }} {{ Str::plural('shipment', $row->shipments_count) }}</span>
+                                        <span class="text-[10px] theme-text-muted">{{ $row->shipments_count === 1 ? __(':count shipment', ['count' => $row->shipments_count]) : __(':count shipments', ['count' => $row->shipments_count]) }}</span>
                                     </div>
                                 </div>
                                 <div class="text-right">
@@ -284,7 +284,7 @@
             @endif
 
             <div class="p-3 rounded-xl theme-card-elevated border theme-border text-[11px] theme-text-secondary">
-                <span>All values converted at current official exchange reference rates with database audit integrity.</span>
+                <span>{{ __('All values converted at current official exchange reference rates with database audit integrity.') }}</span>
             </div>
         </div>
 
@@ -294,12 +294,12 @@
     <div class="p-6 sm:p-8 rounded-3xl theme-card border space-y-5 transition-colors duration-200">
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-3 border-b theme-border">
             <div>
-                <h3 class="text-base font-bold theme-heading">Freight cross-rate matrix</h3>
-                <span class="text-xs theme-text-secondary">Select 3 to 8 currencies to configure the multi-currency conversion grid</span>
+                <h3 class="text-base font-bold theme-heading">{{ __('Freight cross-rate matrix') }}</h3>
+                <span class="text-xs theme-text-secondary">{{ __('Select 3 to 8 currencies to configure the multi-currency conversion grid') }}</span>
             </div>
             <div class="flex items-center gap-2">
                 <span class="text-xs font-mono text-cyan-600 dark:text-cyan-400 font-medium">
-                    Matrix base: {{ $baseCurrency }}
+                    {{ __('Matrix base: :currency', ['currency' => $baseCurrency]) }}
                 </span>
             </div>
         </div>
@@ -307,7 +307,7 @@
         <!-- Matrix Currency Selector Pills (Pick 3 - 8) -->
         <div class="space-y-2">
             <span class="text-xs text-slate-400 block font-medium">
-                Included matrix currencies (pick 3 to 8):
+                {{ __('Included matrix currencies (pick 3 to 8):') }}
             </span>
             <div class="flex flex-wrap items-center gap-2">
                 @php
@@ -320,7 +320,7 @@
                     <button
                         type="button"
                         onclick="toggleMatrixCurrency('{{ $cur }}')"
-                        class="px-3 py-1 rounded-xl text-xs font-mono font-bold transition border {{ $isSelected ? 'bg-blue-600 text-white border-blue-600 shadow-sm' : 'theme-card-elevated theme-border theme-text-secondary hover:theme-heading hover:border-blue-500' }}"
+                        class="px-3 py-1 rounded-xl text-xs font-mono font-bold transition border cursor-pointer {{ $isSelected ? 'bg-blue-600 text-white border-blue-600 shadow-sm' : 'theme-card-elevated theme-border theme-text-secondary hover:theme-heading hover:border-blue-500' }}"
                     >
                         {{ $cur }} {{ $isSelected ? '✓' : '+' }}
                     </button>
@@ -333,9 +333,9 @@
             <table class="w-full text-xs text-left border-collapse">
                 <thead>
                     <tr class="border-b theme-border text-[11px] font-mono uppercase text-slate-400">
-                        <th class="py-2.5 px-3">Currency</th>
+                        <th class="py-2.5 px-3">{{ __('Currency') }}</th>
                         @foreach($matrixCurrencies as $col)
-                            <th class="py-2.5 px-3 text-right">Per 1 {{ $col }}</th>
+                            <th class="py-2.5 px-3 text-right">{{ __('Per 1 :code', ['code' => $col]) }}</th>
                         @endforeach
                     </tr>
                 </thead>
@@ -366,9 +366,22 @@
     const frankfurterCurrencies = @json($frankfurterCurrencies);
     let activeMatrixCurrencies = @json($matrixCurrencies);
 
+    @php
+        $fxI18n = [
+            'popular' => __('Popular'),
+            'allCurrencies' => __('All currencies'),
+            'noMatchingCurrency' => __('No matching currency'),
+            'recentPairs' => __('Recent pairs:'),
+            'minCurrenciesAlert' => __('A minimum of 3 currencies is required for the cross-rate matrix.'),
+            'maxCurrenciesAlert' => __('A maximum of 8 currencies can be selected in the matrix.'),
+            'rateLabel' => __('Rate'),
+        ];
+    @endphp
+    const fxI18n = @json($fxI18n);
+
     let displayNames;
     try {
-        displayNames = new Intl.DisplayNames(['en'], { type: 'currency' });
+        displayNames = new Intl.DisplayNames([@json(app()->getLocale())], { type: 'currency' });
     } catch (e) {
         displayNames = { of: (c) => c };
     }
@@ -397,7 +410,7 @@
         });
 
         if (matchingPinned.length > 0) {
-            html += `<div class="px-3 py-1.5 text-xs font-semibold theme-text-muted bg-slate-500/10">Popular</div>`;
+            html += `<div class="px-3 py-1.5 text-xs font-semibold theme-text-muted bg-slate-500/10">${fxI18n.popular}</div>`;
             matchingPinned.forEach(c => {
                 const isSelected = c === currentVal;
                 html += `
@@ -416,7 +429,7 @@
         });
 
         if (matchingAll.length > 0) {
-            html += `<div class="px-3 py-1.5 text-xs font-semibold theme-text-muted bg-slate-500/10">All currencies (${matchingAll.length})</div>`;
+            html += `<div class="px-3 py-1.5 text-xs font-semibold theme-text-muted bg-slate-500/10">${fxI18n.allCurrencies} (${matchingAll.length})</div>`;
             matchingAll.forEach(c => {
                 const isSelected = c === currentVal;
                 html += `
@@ -429,7 +442,7 @@
         }
 
         if (matchingPinned.length === 0 && matchingAll.length === 0) {
-            html = `<div class="p-3 text-xs text-slate-400 text-center font-sans">No matching currency</div>`;
+            html = `<div class="p-3 text-xs text-slate-400 text-center font-sans">${fxI18n.noMatchingCurrency}</div>`;
         }
 
         dropdown.innerHTML = html;
@@ -583,7 +596,7 @@
 
         let html = `
             <div class="flex flex-wrap items-center gap-2 text-xs">
-                <span class="text-xs theme-text-muted font-medium">Recent pairs:</span>
+                <span class="text-xs theme-text-muted font-medium">${fxI18n.recentPairs}</span>
         `;
         pairs.forEach(p => {
             html += `
@@ -661,13 +674,13 @@
         let current = [...activeMatrixCurrencies];
         if (current.includes(code)) {
             if (current.length <= 3) {
-                alert('A minimum of 3 currencies is required for the cross-rate matrix.');
+                alert(fxI18n.minCurrenciesAlert);
                 return;
             }
             current = current.filter(c => c !== code);
         } else {
             if (current.length >= 8) {
-                alert('A maximum of 8 currencies can be selected in the matrix.');
+                alert(fxI18n.maxCurrenciesAlert);
                 return;
             }
             current.push(code);
@@ -754,7 +767,7 @@
                         mode: 'index',
                         intersect: false,
                         callbacks: {
-                            label: (ctx) => `Rate: ${ctx.parsed.y.toFixed(4)}`
+                            label: (ctx) => `${fxI18n.rateLabel}: ${ctx.parsed.y.toFixed(4)}`
                         }
                     }
                 },

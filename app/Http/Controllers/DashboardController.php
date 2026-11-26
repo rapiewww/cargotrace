@@ -146,7 +146,7 @@ class DashboardController extends Controller
         if ($currPeriodRate !== null && $prevPeriodRate !== null) {
             $diff = round($currPeriodRate - $prevPeriodRate, 1);
             $sign = $diff >= 0 ? '+' : '';
-            $onTimeComparison = "{$sign}{$diff}% vs prev 30d";
+            $onTimeComparison = __(':sign:diff% vs prev 30d', ['sign' => $sign, 'diff' => $diff]);
         }
 
         // Featured shipment (prefer active in-transit with exceptions or delay)
@@ -298,7 +298,7 @@ class DashboardController extends Controller
         ];
 
         $modeMix = [];
-        foreach (['SEA' => 'Sea', 'AIR' => 'Air', 'ROAD' => 'Road'] as $modeKey => $modeLabel) {
+        foreach (['SEA' => __('Sea'), 'AIR' => __('Air'), 'ROAD' => __('Road')] as $modeKey => $modeLabel) {
             $cnt = $totalModesCount[$modeKey];
             $modeMix[$modeKey] = [
                 'code' => $modeKey,

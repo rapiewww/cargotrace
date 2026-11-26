@@ -8,17 +8,17 @@
 
     $config = match($normalizedMode) {
         'AIR' => [
-            'label' => 'Air',
+            'label' => __('Air'),
             'badgeClass' => 'bg-sky-500/15 text-sky-700 dark:text-sky-300 border-sky-500/30',
             'dotClass' => 'bg-sky-400',
         ],
         'ROAD' => [
-            'label' => 'Road',
+            'label' => __('Road'),
             'badgeClass' => 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border-emerald-500/30',
             'dotClass' => 'bg-emerald-400',
         ],
         default => [
-            'label' => 'Sea',
+            'label' => __('Sea'),
             'badgeClass' => 'bg-blue-500/15 text-blue-700 dark:text-cyan-300 border-blue-500/30',
             'dotClass' => 'bg-blue-400 dark:bg-cyan-400',
         ],
@@ -37,7 +37,7 @@
     };
 @endphp
 
-<span {{ $attributes->merge(['class' => "rounded-full font-semibold border inline-flex items-center whitespace-nowrap {$sizeClasses} {$config['badgeClass']} font-sans"]) }} title="Transport mode: {{ $config['label'] }}">
+<span {{ $attributes->merge(['class' => "rounded-full font-semibold border inline-flex items-center whitespace-nowrap {$sizeClasses} {$config['badgeClass']} font-sans"]) }} title="{{ __('Transport mode: :mode', ['mode' => $config['label']]) }}">
     <x-mode-icon :mode="$normalizedMode" :class="$iconSize" />
     <span>{{ $config['label'] }}</span>
 </span>

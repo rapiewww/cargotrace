@@ -58,9 +58,9 @@ class FreeTimeService
                 'days_remaining' => $allowedDays,
                 'days_over' => 0,
                 'is_over_limit' => false,
-                'badge_label' => 'Pending arrival',
+                'badge_label' => __('Pending arrival'),
                 'badge_type' => 'neutral',
-                'description' => 'Estimated free-time countdown begins upon confirmed port arrival.',
+                'description' => __('Estimated free-time countdown begins upon confirmed port arrival.'),
             ];
         }
 
@@ -76,24 +76,30 @@ class FreeTimeService
             $isOverLimit = false;
 
             if ($daysRemaining === 0) {
-                $badgeLabel = 'Estimated 0 days remaining (last free day)';
+                $badgeLabel = __('Estimated 0 days remaining (last free day)');
                 $badgeType = 'warning';
-                $desc = 'Estimated last day of standard terminal free time before detention.';
+                $desc = __('Estimated last day of standard terminal free time before detention.');
             } else {
-                $dayWord = $daysRemaining === 1 ? 'day' : 'days';
-                $badgeLabel = "Estimated {$daysRemaining} {$dayWord} free time remaining";
+                $badgeLabel = $daysRemaining === 1
+                    ? __('Estimated :days day free time remaining', ['days' => $daysRemaining])
+                    : __('Estimated :days days free time remaining', ['days' => $daysRemaining]);
                 $badgeType = 'safe';
-                $desc = "Estimated {$daysRemaining} {$dayWord} remaining within standard terminal dwell allowance.";
+                $desc = $daysRemaining === 1
+                    ? __('Estimated :days day remaining within standard terminal dwell allowance.', ['days' => $daysRemaining])
+                    : __('Estimated :days days remaining within standard terminal dwell allowance.', ['days' => $daysRemaining]);
             }
         } else {
             $daysRemaining = 0;
             $daysOver = $daysElapsed - $allowedDays;
             $isOverLimit = true;
 
-            $dayWord = $daysOver === 1 ? 'day' : 'days';
-            $badgeLabel = "Estimated {$daysOver} {$dayWord} over free time limit";
+            $badgeLabel = $daysOver === 1
+                ? __('Estimated :days day over free time limit', ['days' => $daysOver])
+                : __('Estimated :days days over free time limit', ['days' => $daysOver]);
             $badgeType = 'danger';
-            $desc = "Estimated {$daysOver} {$dayWord} exceeded past standard terminal free-time allowance.";
+            $desc = $daysOver === 1
+                ? __('Estimated :days day exceeded past standard terminal free-time allowance.', ['days' => $daysOver])
+                : __('Estimated :days days exceeded past standard terminal free-time allowance.', ['days' => $daysOver]);
         }
 
         return [

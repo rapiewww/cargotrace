@@ -11,8 +11,8 @@
         </svg>
     </div>
     <div class="space-y-1">
-        <h4 class="text-sm font-bold text-white">{{ $title }}</h4>
-        <p class="text-xs text-slate-400 max-w-sm">{{ $message }}</p>
+        <h4 class="text-sm font-bold theme-heading">{{ __($title) }}</h4>
+        <p class="text-xs theme-text-secondary max-w-sm">{{ __($message) }}</p>
     </div>
     @if($action)
         <div class="pt-2">

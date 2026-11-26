@@ -21,6 +21,6 @@
         <span class="w-2 h-2 rounded-full {{ $style['dot'] }} animate-pulse"></span>
         <span class="font-medium">{{ $message ?? $slot }}</span>
     </div>
-    <button type="button" onclick="this.closest('.p-4').remove()" class="text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white text-base leading-none pl-4 cursor-pointer" aria-label="Dismiss">&times;</button>
+    <button type="button" onclick="this.closest('.p-4').remove()" class="text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white text-base leading-none pl-4 cursor-pointer" aria-label="{{ __('Dismiss') }}">&times;</button>
 </div>
 

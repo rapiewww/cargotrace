@@ -16,6 +16,8 @@ use App\Http\Controllers\UserManagementWebController;
 use App\Http\Controllers\WeatherWebController;
 use App\Http\Controllers\WebAuthController;
 use App\Http\Controllers\WelcomeController;
+use App\Http\Middleware\SetLocale;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -26,6 +28,15 @@ use Illuminate\Support\Facades\Route;
 
 // Public Landing & Live Tracking
 Route::get('/', [WelcomeController::class, 'index'])->name('welcome');
+Route::get('/locale/{locale}', function (Request $request, string $locale) {
+    if (! in_array($locale, SetLocale::SUPPORTED_LOCALES, true)) {
+        abort(404);
+    }
+
+    $request->session()->put('locale', $locale);
+
+    return redirect()->back(fallback: route('welcome'));
+})->name('locale.switch');
 Route::get('/track/{tracking_number}', [PublicTrackingController::class, 'show'])
     ->name('public.track')
     ->middleware('throttle:30,1');

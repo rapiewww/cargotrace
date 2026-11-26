@@ -6,21 +6,21 @@
         <div>
             <div class="flex items-center gap-3">
                 <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight theme-heading font-sans">
-                    Global Locations & Checkpoints
+                    {{ __('Global Locations & Checkpoints') }}
                 </h1>
                 <span class="text-xs px-2.5 py-0.5 rounded-full bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 border border-cyan-500/20 font-mono">
-                    Location Network ({{ count($locations) }})
+                    {{ __('Location Network (:count)', ['count' => count($locations)]) }}
                 </span>
             </div>
             <p class="text-xs sm:text-sm theme-text-secondary mt-1">
-                Seaports (UN/LOCODE), airports (IATA), and depots or borders (internal codes) with coordinates and local weather.
+                {{ __('Seaports (UN/LOCODE), airports (IATA), and depots or borders (internal codes) with coordinates and local weather.') }}
             </p>
         </div>
 
         @if(auth()->user()->role === 'admin')
-            <button type="button" onclick="document.getElementById('add-location-modal').classList.remove('hidden')" class="px-4 py-2.5 rounded-xl bg-gradient-to-r from-amber-400 via-orange-400 to-amber-500 hover:from-amber-300 hover:to-orange-400 text-slate-950 font-bold text-xs flex items-center gap-1.5 transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] shadow-lg shadow-amber-500/20">
-                <svg class="w-4 h-4 text-slate-950" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/></svg>
-                Register Location
+            <button type="button" onclick="document.getElementById('add-location-modal').classList.remove('hidden')" class="px-4 py-2.5 rounded-xl bg-gradient-to-r from-amber-400 via-orange-400 to-amber-500 hover:from-amber-300 hover:to-orange-400 text-slate-950 font-bold text-xs flex items-center gap-1.5 transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] shadow-lg shadow-amber-500/20 cursor-pointer">
+                <svg class="w-4 h-4 text-slate-950" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/></svg>
+                {{ __('Register Location') }}
             </button>
         @endif
     </div>
@@ -47,18 +47,18 @@
                     <!-- Weather & Currency Snapshot -->
                     <div class="p-3 rounded-xl theme-card-elevated border theme-border space-y-2 text-xs">
                         <div class="flex items-center justify-between theme-text-secondary text-[11px] font-mono">
-                            <span>Currency: <strong class="theme-heading">{{ $loc->currency_code }}</strong></span>
-                            <span>TZ: <strong class="theme-text-primary">{{ $loc->timezone }}</strong></span>
+                            <span>{{ __('Currency:') }} <strong class="theme-heading">{{ $loc->currency_code }}</strong></span>
+                            <span>{{ __('TZ:') }} <strong class="theme-text-primary">{{ $loc->timezone }}</strong></span>
                         </div>
                         <div class="flex items-center justify-between text-[11px] pt-1.5 border-t theme-border font-mono">
                             <span class="theme-text-muted">GPS: {{ number_format($loc->latitude, 2) }}, {{ number_format($loc->longitude, 2) }}</span>
-                            <a href="{{ route('welcome') }}#network" class="text-cyan-600 dark:text-cyan-400 hover:underline">View Map</a>
+                            <a href="{{ route('welcome') }}#network" class="text-cyan-600 dark:text-cyan-400 hover:underline">{{ __('View Map') }}</a>
                         </div>
                     </div>
                 </div>
 
                 <div class="pt-3 border-t theme-border flex items-center justify-between text-xs font-mono">
-                    <span class="uppercase text-[10px] tracking-wider theme-text-muted font-semibold">Origin Manifests</span>
+                    <span class="uppercase text-[10px] tracking-wider theme-text-muted font-semibold">{{ __('Origin Manifests') }}</span>
                     <span class="font-bold theme-heading text-sm">{{ $loc->origin_shipments_count ?? 0 }}</span>
                 </div>
             </x-card>
@@ -70,75 +70,75 @@
 <div id="add-location-modal" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
     <div class="theme-card border theme-border rounded-2xl max-w-md w-full p-6 shadow-2xl relative space-y-4">
         <div class="flex items-center justify-between border-b theme-border pb-3">
-            <h3 class="text-base font-bold theme-heading tracking-tight">Register Location</h3>
-            <button onclick="document.getElementById('add-location-modal').classList.add('hidden')" class="theme-text-muted hover:theme-heading text-xl leading-none">&times;</button>
+            <h3 class="text-base font-bold theme-heading tracking-tight">{{ __('Register Location') }}</h3>
+            <button onclick="document.getElementById('add-location-modal').classList.add('hidden')" class="theme-text-muted hover:theme-heading text-xl leading-none cursor-pointer" aria-label="{{ __('Close modal') }}">&times;</button>
         </div>
 
         <form action="{{ route('operations.locations.store') }}" method="POST" class="space-y-4 text-xs">
             @csrf
             <div class="grid grid-cols-2 gap-3">
                 <div class="space-y-1.5">
-                    <label class="uppercase text-[10px] tracking-wider theme-text-muted font-semibold block">Location Code *</label>
+                    <label class="uppercase text-[10px] tracking-wider theme-text-muted font-semibold block">{{ __('Location Code') }} *</label>
                     <input type="text" name="unlocode" required placeholder="IDJKT / CGK / DEP-MES" class="w-full px-3.5 py-2.5 rounded-xl theme-input border font-mono uppercase focus:ring-1 focus:ring-cyan-500">
                 </div>
                 <div class="space-y-1.5">
-                    <label class="uppercase text-[10px] tracking-wider theme-text-muted font-semibold block">Location Type *</label>
+                    <label class="uppercase text-[10px] tracking-wider theme-text-muted font-semibold block">{{ __('Location Type') }} *</label>
                     <select name="type" required class="w-full px-3.5 py-2.5 rounded-xl theme-input border focus:ring-1 focus:ring-cyan-500 font-mono">
-                        <option value="PORT" selected>PORT (Seaport)</option>
-                        <option value="AIRPORT">AIRPORT</option>
-                        <option value="DEPOT">DEPOT</option>
-                        <option value="WAREHOUSE">WAREHOUSE</option>
-                        <option value="BORDER">BORDER</option>
-                        <option value="HUB">HUB (Distribution)</option>
-                        <option value="CUSTOMS">CUSTOMS</option>
+                        <option value="PORT" selected>{{ __('PORT (Seaport)') }}</option>
+                        <option value="AIRPORT">{{ __('AIRPORT') }}</option>
+                        <option value="DEPOT">{{ __('DEPOT') }}</option>
+                        <option value="WAREHOUSE">{{ __('WAREHOUSE') }}</option>
+                        <option value="BORDER">{{ __('BORDER') }}</option>
+                        <option value="HUB">{{ __('HUB (Distribution)') }}</option>
+                        <option value="CUSTOMS">{{ __('CUSTOMS') }}</option>
                     </select>
                 </div>
             </div>
 
             <div class="space-y-1.5">
-                <label class="uppercase text-[10px] tracking-wider theme-text-muted font-semibold block">Location Name *</label>
+                <label class="uppercase text-[10px] tracking-wider theme-text-muted font-semibold block">{{ __('Location Name') }} *</label>
                 <input type="text" name="name" required placeholder="Port of Tanjung Priok / Kualanamu Airport / Medan Depot" class="w-full px-3.5 py-2.5 rounded-xl theme-input border focus:ring-1 focus:ring-cyan-500">
             </div>
 
             <div class="grid grid-cols-2 gap-3">
                 <div class="space-y-1.5">
-                    <label class="uppercase text-[10px] tracking-wider theme-text-muted font-semibold block">City *</label>
+                    <label class="uppercase text-[10px] tracking-wider theme-text-muted font-semibold block">{{ __('City') }} *</label>
                     <input type="text" name="city" required placeholder="Jakarta" class="w-full px-3.5 py-2.5 rounded-xl theme-input border focus:ring-1 focus:ring-cyan-500">
                 </div>
                 <div class="space-y-1.5">
-                    <label class="uppercase text-[10px] tracking-wider theme-text-muted font-semibold block">Country (2 letters) *</label>
+                    <label class="uppercase text-[10px] tracking-wider theme-text-muted font-semibold block">{{ __('Country (2 letters)') }} *</label>
                     <input type="text" name="country" required maxlength="2" placeholder="ID" class="w-full px-3.5 py-2.5 rounded-xl theme-input border font-mono uppercase focus:ring-1 focus:ring-cyan-500">
                 </div>
             </div>
 
             <div class="grid grid-cols-2 gap-3">
                 <div class="space-y-1.5">
-                    <label class="uppercase text-[10px] tracking-wider theme-text-muted font-semibold block">Latitude *</label>
+                    <label class="uppercase text-[10px] tracking-wider theme-text-muted font-semibold block">{{ __('Latitude') }} *</label>
                     <input type="number" step="0.000001" name="latitude" required placeholder="-6.1018" class="w-full px-3.5 py-2.5 rounded-xl theme-input border font-mono focus:ring-1 focus:ring-cyan-500">
                 </div>
                 <div class="space-y-1.5">
-                    <label class="uppercase text-[10px] tracking-wider theme-text-muted font-semibold block">Longitude *</label>
+                    <label class="uppercase text-[10px] tracking-wider theme-text-muted font-semibold block">{{ __('Longitude') }} *</label>
                     <input type="number" step="0.000001" name="longitude" required placeholder="106.8833" class="w-full px-3.5 py-2.5 rounded-xl theme-input border font-mono focus:ring-1 focus:ring-cyan-500">
                 </div>
             </div>
 
             <div class="grid grid-cols-2 gap-3">
                 <div class="space-y-1.5">
-                    <label class="uppercase text-[10px] tracking-wider theme-text-muted font-semibold block">Timezone</label>
+                    <label class="uppercase text-[10px] tracking-wider theme-text-muted font-semibold block">{{ __('Timezone') }}</label>
                     <input type="text" name="timezone" placeholder="Asia/Jakarta" class="w-full px-3.5 py-2.5 rounded-xl theme-input border font-mono focus:ring-1 focus:ring-cyan-500">
                 </div>
                 <div class="space-y-1.5">
-                    <label class="uppercase text-[10px] tracking-wider theme-text-muted font-semibold block">Currency Code</label>
+                    <label class="uppercase text-[10px] tracking-wider theme-text-muted font-semibold block">{{ __('Currency Code') }}</label>
                     <input type="text" name="currency_code" maxlength="3" placeholder="IDR" class="w-full px-3.5 py-2.5 rounded-xl theme-input border font-mono uppercase focus:ring-1 focus:ring-cyan-500">
                 </div>
             </div>
 
             <div class="pt-2 flex justify-end space-x-3">
-                <button type="button" onclick="document.getElementById('add-location-modal').classList.add('hidden')" class="px-4 py-2 rounded-xl theme-text-muted hover:theme-heading border theme-border font-semibold">
-                    Cancel
+                <button type="button" onclick="document.getElementById('add-location-modal').classList.add('hidden')" class="px-4 py-2 rounded-xl theme-text-muted hover:theme-heading border theme-border font-semibold cursor-pointer">
+                    {{ __('Cancel') }}
                 </button>
-                <button type="submit" class="px-5 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold transition">
-                    Save Location
+                <button type="submit" class="px-5 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold transition cursor-pointer">
+                    {{ __('Save Location') }}
                 </button>
             </div>
         </form>

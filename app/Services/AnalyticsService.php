@@ -207,11 +207,11 @@ class AnalyticsService
 
         $canonicalOrder = ['CREATED', 'BOOKED', 'PICKED_UP', 'IN_TRANSIT', 'DELIVERED'];
         $labels = [
-            'CREATED' => 'Created',
-            'BOOKED' => 'Booked',
-            'PICKED_UP' => 'Picked up',
-            'IN_TRANSIT' => 'In transit',
-            'DELIVERED' => 'Delivered',
+            'CREATED' => __('Created'),
+            'BOOKED' => __('Booked'),
+            'PICKED_UP' => __('Picked up'),
+            'IN_TRANSIT' => __('In transit'),
+            'DELIVERED' => __('Delivered'),
         ];
 
         $orderedCounts = [];

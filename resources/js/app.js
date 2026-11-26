@@ -50,7 +50,7 @@ export function applyTheme(theme) {
 
     // Update accessible switch buttons
     const isDark = validTheme === 'dark';
-    document.querySelectorAll('#theme-toggle-btn, #welcome-theme-toggle, #login-theme-toggle, #register-theme-toggle, button[role="switch"]').forEach(btn => {
+    document.querySelectorAll('#theme-toggle-btn, #welcome-theme-toggle, #login-theme-toggle, #register-theme-toggle, #tracking-theme-toggle, button[role="switch"]').forEach(btn => {
         btn.setAttribute('aria-checked', isDark ? 'true' : 'false');
         btn.setAttribute('aria-pressed', isDark ? 'true' : 'false');
     });
