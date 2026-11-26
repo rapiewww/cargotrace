@@ -56,7 +56,7 @@
                         @endif
                     </div>
                     <div class="hidden sm:block">
-                        <span class="text-[11px] font-semibold block leading-tight {{ $isCurrent ? 'text-amber-500' : ($isPassed ? 'theme-heading' : 'theme-text-muted') }}">
+                        <span class="text-[11px] font-semibold block leading-tight {{ $isCurrent ? 'text-amber-700 dark:text-amber-400' : ($isPassed ? 'theme-heading' : 'theme-text-muted') }}">
                             {{ $stages[$st]['label'] }}
                         </span>
                         <span class="text-[9px] uppercase tracking-wider theme-text-muted font-mono">{{ $st }}</span>

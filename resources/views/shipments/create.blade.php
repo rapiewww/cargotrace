@@ -46,7 +46,7 @@
                         <option value="ROAD" {{ old('transport_mode') === 'ROAD' ? 'selected' : '' }}>{{ __('Road Freight (ROAD)') }}</option>
                     </select>
                     @error('transport_mode')
-                        <span class="text-[11px] text-rose-500 block">{{ $message }}</span>
+                        <span class="text-[11px] text-rose-700 dark:text-rose-400 block">{{ $message }}</span>
                     @enderror
                 </div>
             </div>
@@ -66,7 +66,7 @@
                         <input type="text" name="container_number" id="container_number" value="{{ old('container_number', 'MSKU 123456 5') }}" placeholder="MSKU 123456 5" class="w-full px-3.5 py-2.5 rounded-xl theme-input border theme-border font-mono text-xs focus:ring-1 focus:ring-blue-500 focus:outline-none transition">
                         <span class="text-[10px] theme-text-muted block">{{ __('4 letters (owner code + U/J/Z) + 6 digits + 1 check digit') }}</span>
                         @error('container_number')
-                            <span class="text-[11px] text-rose-500 block">{{ $message }}</span>
+                            <span class="text-[11px] text-rose-700 dark:text-rose-400 block">{{ $message }}</span>
                         @enderror
                     </div>
                     <div class="space-y-1.5">
@@ -75,7 +75,7 @@
                         </label>
                         <input type="text" name="bill_of_lading_number" id="bill_of_lading_number" value="{{ old('bill_of_lading_number') }}" placeholder="B/L-MAEU-2026-99" class="w-full px-3.5 py-2.5 rounded-xl theme-input border theme-border font-mono text-xs focus:ring-1 focus:ring-blue-500 focus:outline-none transition">
                         @error('bill_of_lading_number')
-                            <span class="text-[11px] text-rose-500 block">{{ $message }}</span>
+                            <span class="text-[11px] text-rose-700 dark:text-rose-400 block">{{ $message }}</span>
                         @enderror
                     </div>
                 </div>
@@ -89,7 +89,7 @@
                         <input type="text" name="awb_number" id="awb_number" value="{{ old('awb_number') }}" placeholder="126-12345675" class="w-full px-3.5 py-2.5 rounded-xl theme-input border theme-border font-mono text-xs focus:ring-1 focus:ring-blue-500 focus:outline-none transition">
                         <span class="text-[10px] theme-text-muted block">{{ __('11 digits (3-digit airline prefix + 7-digit serial + 1 check digit equal to serial mod 7)') }}</span>
                         @error('awb_number')
-                            <span class="text-[11px] text-rose-500 block">{{ $message }}</span>
+                            <span class="text-[11px] text-rose-700 dark:text-rose-400 block">{{ $message }}</span>
                         @enderror
                     </div>
                 </div>
@@ -102,7 +102,7 @@
                         </label>
                         <input type="text" name="vehicle_plate" id="vehicle_plate" value="{{ old('vehicle_plate') }}" placeholder="B 9876 TX" class="w-full px-3.5 py-2.5 rounded-xl theme-input border theme-border font-mono text-xs focus:ring-1 focus:ring-blue-500 focus:outline-none transition">
                         @error('vehicle_plate')
-                            <span class="text-[11px] text-rose-500 block">{{ $message }}</span>
+                            <span class="text-[11px] text-rose-700 dark:text-rose-400 block">{{ $message }}</span>
                         @enderror
                     </div>
                     <div class="space-y-1.5">
@@ -111,7 +111,7 @@
                         </label>
                         <input type="text" name="cmr_number" id="cmr_number" value="{{ old('cmr_number') }}" placeholder="CMR-2026-0089" class="w-full px-3.5 py-2.5 rounded-xl theme-input border theme-border font-mono text-xs focus:ring-1 focus:ring-blue-500 focus:outline-none transition">
                         @error('cmr_number')
-                            <span class="text-[11px] text-rose-500 block">{{ $message }}</span>
+                            <span class="text-[11px] text-rose-700 dark:text-rose-400 block">{{ $message }}</span>
                         @enderror
                     </div>
                 </div>
@@ -130,7 +130,7 @@
                             <!-- Populated dynamically via JS -->
                         </select>
                         @error('carrier_id')
-                            <span class="text-[11px] text-rose-500 block">{{ $message }}</span>
+                            <span class="text-[11px] text-rose-700 dark:text-rose-400 block">{{ $message }}</span>
                         @enderror
                     </div>
 
@@ -153,7 +153,7 @@
                             <!-- Populated dynamically via JS -->
                         </select>
                         @error('origin_location_id')
-                            <span class="text-[11px] text-rose-500 block">{{ $message }}</span>
+                            <span class="text-[11px] text-rose-700 dark:text-rose-400 block">{{ $message }}</span>
                         @enderror
                     </div>
 
@@ -164,7 +164,7 @@
                             <!-- Populated dynamically via JS -->
                         </select>
                         @error('destination_location_id')
-                            <span class="text-[11px] text-rose-500 block">{{ $message }}</span>
+                            <span class="text-[11px] text-rose-700 dark:text-rose-400 block">{{ $message }}</span>
                         @enderror
                     </div>
                 </div>
@@ -217,7 +217,7 @@
                         <label class="uppercase text-[10px] tracking-wider theme-text-muted font-semibold block">{{ __('Expected Departure') }} *</label>
                         <input type="datetime-local" name="expected_departure_at" required value="{{ old('expected_departure_at', now()->addDay()->format('Y-m-d\TH:i')) }}" class="w-full px-3.5 py-2.5 rounded-xl theme-input border theme-border focus:ring-1 focus:ring-blue-500 focus:outline-none transition font-mono text-xs">
                         @error('expected_departure_at')
-                            <span class="text-[11px] text-rose-500 block">{{ $message }}</span>
+                            <span class="text-[11px] text-rose-700 dark:text-rose-400 block">{{ $message }}</span>
                         @enderror
                     </div>
 
@@ -225,7 +225,7 @@
                         <label class="uppercase text-[10px] tracking-wider theme-text-muted font-semibold block">{{ __('Expected Arrival (ETA)') }} *</label>
                         <input type="datetime-local" name="expected_arrival_at" required value="{{ old('expected_arrival_at', now()->addDays(10)->format('Y-m-d\TH:i')) }}" class="w-full px-3.5 py-2.5 rounded-xl theme-input border theme-border focus:ring-1 focus:ring-blue-500 focus:outline-none transition font-mono text-xs">
                         @error('expected_arrival_at')
-                            <span class="text-[11px] text-rose-500 block">{{ $message }}</span>
+                            <span class="text-[11px] text-rose-700 dark:text-rose-400 block">{{ $message }}</span>
                         @enderror
                     </div>
 
@@ -394,7 +394,7 @@
                     <label class="uppercase text-[10px] tracking-wider theme-text-muted font-semibold block">{{ __('Volume (CBM)') }}</label>
                     <input type="number" step="0.01" name="items[${itemIdx}][volume_cbm]" value="0.5" required class="w-full px-3 py-1.5 rounded-lg theme-input border theme-border font-mono text-xs focus:ring-1 focus:ring-blue-500 focus:outline-none">
                 </div>
-                <button type="button" onclick="this.closest('.item-row').remove()" class="ml-2 mb-1 text-rose-500 hover:text-rose-400 font-bold cursor-pointer" aria-label="{{ __('Remove item') }}">&times;</button>
+                <button type="button" onclick="this.closest('.item-row').remove()" class="ml-2 mb-1 text-rose-700 dark:text-rose-400 hover:text-rose-500 font-bold cursor-pointer" aria-label="{{ __('Remove item') }}">&times;</button>
             </div>
         `;
         container.appendChild(row);

@@ -171,7 +171,7 @@
             <div class="p-6 rounded-2xl theme-card-elevated border theme-border flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
                 <div class="space-y-1">
                     <span class="text-xs theme-text-secondary">{{ __('Converted Consignment Valuation:') }}</span>
-                    <span id="full-calc-details" class="text-xs font-mono font-bold text-slate-400 dark:text-slate-300 block">
+                    <span id="full-calc-details" class="text-xs font-mono font-bold theme-text-secondary block">
                         1 USD = 15,873.00 IDR
                     </span>
                     <span class="text-[10px] theme-text-muted font-mono block">
@@ -179,7 +179,7 @@
                     </span>
                 </div>
                 <div class="text-left sm:text-right">
-                    <span id="full-calc-result" class="text-2xl sm:text-3xl font-black font-mono text-cyan-600 dark:text-cyan-400 tabular-nums block">
+                    <span id="full-calc-result" class="text-2xl sm:text-3xl font-black font-mono text-cyan-700 dark:text-cyan-400 tabular-nums block">
                         Rp 45,238,050
                     </span>
                     <span id="full-calc-currency-name" class="text-[11px] theme-text-muted font-sans font-medium block">
@@ -224,13 +224,13 @@
             <!-- Portfolio Summary KPI -->
             <div class="p-4 rounded-2xl theme-card-elevated border theme-border flex items-center justify-between">
                 <div>
-                    <span class="text-xs text-slate-400 font-medium block">{{ __('Total converted value') }}</span>
+                    <span class="text-xs theme-text-secondary font-medium block">{{ __('Total converted value') }}</span>
                     <span class="text-2xl font-black font-mono text-blue-600 dark:text-cyan-400 tabular-nums">
-                        ${{ number_format($totalPortfolioUsd, 2) }} <span class="text-xs text-slate-400 font-sans">USD</span>
+                        ${{ number_format($totalPortfolioUsd, 2) }} <span class="text-xs theme-text-muted font-sans">USD</span>
                     </span>
                 </div>
                 <div class="text-right">
-                    <span class="text-xs text-slate-400 font-medium block">{{ __('Consignments') }}</span>
+                    <span class="text-xs theme-text-secondary font-medium block">{{ __('Consignments') }}</span>
                     <span class="text-lg font-bold font-mono theme-heading tabular-nums">
                         {{ $totalShipmentsCount }}
                     </span>
@@ -306,7 +306,7 @@
 
         <!-- Matrix Currency Selector Pills (Pick 3 - 8) -->
         <div class="space-y-2">
-            <span class="text-xs text-slate-400 block font-medium">
+            <span class="text-xs theme-text-secondary block font-medium">
                 {{ __('Included matrix currencies (pick 3 to 8):') }}
             </span>
             <div class="flex flex-wrap items-center gap-2">
@@ -332,7 +332,7 @@
         <div class="overflow-x-auto">
             <table class="w-full text-xs text-left border-collapse">
                 <thead>
-                    <tr class="border-b theme-border text-[11px] font-mono uppercase text-slate-400">
+                    <tr class="border-b theme-border text-[11px] font-mono uppercase theme-text-secondary">
                         <th class="py-2.5 px-3">{{ __('Currency') }}</th>
                         @foreach($matrixCurrencies as $col)
                             <th class="py-2.5 px-3 text-right">{{ __('Per 1 :code', ['code' => $col]) }}</th>
@@ -341,12 +341,12 @@
                 </thead>
                 <tbody class="divide-y theme-border font-mono">
                     @foreach($matrixCurrencies as $row)
-                        <tr class="hover:bg-slate-800/10 dark:hover:bg-slate-800/30 transition">
+                        <tr class="hover:bg-blue-600/5 transition">
                             <td class="py-3 px-3 font-bold theme-heading">
                                 1 {{ $row }}
                             </td>
                             @foreach($matrixCurrencies as $col)
-                                <td class="py-3 px-3 text-right tabular-nums {{ $row === $col ? 'text-slate-400 font-normal bg-slate-500/5' : 'font-semibold text-cyan-600 dark:text-cyan-400' }}">
+                                <td class="py-3 px-3 text-right tabular-nums {{ $row === $col ? 'theme-text-muted font-normal bg-slate-500/5' : 'font-semibold text-cyan-700 dark:text-cyan-400' }}">
                                     {{ in_array($col, ['IDR', 'JPY', 'KRW', 'VND'], true) ? number_format($crossMatrix[$row][$col] ?? 1, 0) : number_format($crossMatrix[$row][$col] ?? 1, 4) }}
                                 </td>
                             @endforeach
@@ -442,7 +442,7 @@
         }
 
         if (matchingPinned.length === 0 && matchingAll.length === 0) {
-            html = `<div class="p-3 text-xs text-slate-400 text-center font-sans">${fxI18n.noMatchingCurrency}</div>`;
+            html = `<div class="p-3 text-xs theme-text-muted text-center font-sans">${fxI18n.noMatchingCurrency}</div>`;
         }
 
         dropdown.innerHTML = html;
@@ -791,6 +791,10 @@
         setupKeyboardCombobox('to');
         renderRecentPairs();
         runFullCurrencyCalculation();
+        loadHistoricalTrend();
+    });
+
+    window.addEventListener('cargotrace:theme-change', () => {
         loadHistoricalTrend();
     });
 </script>

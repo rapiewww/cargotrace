@@ -1028,7 +1028,7 @@
                             alt=""
                             width="80"
                             height="64"
-                            class="w-16 h-14 sm:w-20 sm:h-16 rounded-lg object-cover flex-shrink-0 bg-slate-800 border border-white/5 group-hover:opacity-90 transition"
+                            class="w-16 h-14 sm:w-20 sm:h-16 rounded-lg object-cover flex-shrink-0 bg-slate-200 dark:bg-slate-800 border theme-border group-hover:opacity-90 transition"
                             loading="lazy"
                             onerror="this.onerror=null;this.src='{{ asset('images/news-placeholder.svg') }}';"
                         >
@@ -1039,7 +1039,7 @@
                                         {{ $n['source'] ?? 'Freight Wire' }}
                                     </span>
                                     @if(!empty($n['is_relevant']))
-                                        <span class="px-1.5 py-0.5 rounded text-[9px] font-sans font-medium bg-blue-500/20 text-cyan-400 border border-blue-400/30">
+                                        <span class="px-1.5 py-0.5 rounded text-[9px] font-sans font-medium bg-blue-500/20 text-blue-700 dark:text-cyan-400 border border-blue-400/30">
                                             {{ __('Related') }}
                                         </span>
                                     @endif

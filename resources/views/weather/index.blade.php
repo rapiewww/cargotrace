@@ -37,9 +37,9 @@
                             type="text"
                             id="location-filter-input"
                             placeholder="{{ __('Filter ports, airports, or depots...') }}"
-                            class="w-full pl-8 pr-3 py-2 rounded-xl theme-card-elevated border theme-border text-xs theme-heading placeholder:text-slate-400 focus:outline-none focus:border-cyan-500"
+                            class="w-full pl-8 pr-3 py-2 rounded-xl theme-input border theme-border text-xs focus:outline-none focus:border-cyan-500"
                         />
-                        <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-2.5 text-slate-400">
+                        <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-2.5 theme-text-muted">
                             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
                         </div>
                     </div>
@@ -49,7 +49,7 @@
                 <select
                     id="location-selector"
                     onchange="window.location.href = '?location=' + encodeURIComponent(this.value)"
-                    class="mt-2 w-full pl-3 pr-8 py-2 rounded-xl theme-card-elevated border theme-border text-xs font-semibold theme-heading focus:outline-none focus:border-cyan-500 appearance-none cursor-pointer"
+                    class="mt-2 w-full pl-3 pr-8 py-2 rounded-xl theme-input border theme-border text-xs font-semibold focus:outline-none focus:border-cyan-500 appearance-none cursor-pointer"
                 >
                     @if($activeRoutePorts->isNotEmpty())
                         <optgroup label="{{ __('Locations on active routes') }}">
@@ -164,12 +164,12 @@
                             <span class="text-xs font-bold uppercase tracking-wider theme-heading">
                                 {{ __('Ship-to-Shore (STS) Quay Crane Advisory') }}
                             </span>
-                            <span class="text-[10px] font-mono font-medium px-1.5 py-0.5 rounded bg-slate-500/10 text-slate-500 dark:text-slate-400">
+                            <span class="text-[10px] font-mono font-medium px-1.5 py-0.5 rounded bg-slate-500/10 theme-text-secondary">
                                 {{ $craneStatus['basis'] }}
                             </span>
                         </div>
                         <span class="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold uppercase border
-                            {{ $craneStatus['color'] === 'emerald' ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/30' : ($craneStatus['color'] === 'amber' ? 'bg-amber-500/15 text-amber-700 dark:text-amber-300 border-amber-500/30' : 'bg-rose-500/15 text-rose-600 dark:text-rose-300 border-rose-500/30') }}">
+                            {{ $craneStatus['color'] === 'emerald' ? 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border-emerald-500/30' : ($craneStatus['color'] === 'amber' ? 'bg-amber-500/15 text-amber-700 dark:text-amber-300 border-amber-500/30' : 'bg-rose-500/15 text-rose-700 dark:text-rose-300 border-rose-500/30') }}">
                             {{ $craneStatus['status'] }}
                         </span>
                     </div>

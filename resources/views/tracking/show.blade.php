@@ -91,17 +91,17 @@
                 </div>
 
                 <div class="flex flex-col items-start sm:items-end gap-2">
-                    <span class="px-3.5 py-1.5 rounded-full text-xs font-bold font-mono uppercase tracking-wider border {{ $shipment->status === 'DELIVERED' ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/30' : 'bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-500/30' }}">
+                    <span class="px-3.5 py-1.5 rounded-full text-xs font-bold font-mono uppercase tracking-wider border {{ $shipment->status === 'DELIVERED' ? 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border-emerald-500/30' : 'bg-amber-500/15 text-amber-700 dark:text-amber-400 border-amber-500/30' }}">
                         {{ $shipment->status_display_label }}
                     </span>
 
                     @if($shipment->is_delayed)
-                        <span class="text-xs font-mono text-amber-600 dark:text-amber-400 flex items-center gap-1.5">
+                        <span class="text-xs font-mono text-amber-700 dark:text-amber-400 flex items-center gap-1.5">
                             <span class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span>
                             {{ __('Variance: +:hours h Delay', ['hours' => $shipment->delay_hours]) }}
                         </span>
                     @else
-                        <span class="text-xs font-mono text-emerald-600 dark:text-emerald-400 flex items-center gap-1.5">
+                        <span class="text-xs font-mono text-emerald-700 dark:text-emerald-400 flex items-center gap-1.5">
                             <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
                             {{ __('On Schedule') }}
                         </span>
@@ -109,11 +109,11 @@
 
                     @if(isset($freeTime) && $freeTime['has_arrived'])
                         @if($freeTime['is_over_limit'])
-                            <span class="px-2.5 py-1 rounded-full text-[11px] font-mono font-bold uppercase bg-rose-500/15 text-rose-600 dark:text-rose-400 border border-rose-500/30">
+                            <span class="px-2.5 py-1 rounded-full text-[11px] font-mono font-bold uppercase bg-rose-500/15 text-rose-700 dark:text-rose-400 border border-rose-500/30">
                                 {{ $freeTime['badge_label'] }}
                             </span>
                         @else
-                            <span class="px-2.5 py-1 rounded-full text-[11px] font-mono font-bold uppercase bg-blue-500/15 text-blue-600 dark:text-cyan-400 border border-blue-500/30">
+                            <span class="px-2.5 py-1 rounded-full text-[11px] font-mono font-bold uppercase bg-blue-500/15 text-blue-700 dark:text-cyan-400 border border-blue-500/30">
                                 {{ $freeTime['badge_label'] }}
                             </span>
                         @endif
@@ -135,7 +135,7 @@
                 </div>
                 <div class="p-3 rounded-xl theme-card-elevated border theme-border">
                     <span class="text-[10px] theme-text-muted uppercase block">{{ __('Estimated Arrival (ETA)') }}</span>
-                    <span class="font-bold {{ $shipment->is_delayed ? 'text-amber-600 dark:text-amber-400' : 'text-emerald-600 dark:text-emerald-400' }}">
+                    <span class="font-bold {{ $shipment->is_delayed ? 'text-amber-700 dark:text-amber-400' : 'text-emerald-700 dark:text-emerald-400' }}">
                         {{ $shipment->estimated_arrival_at?->format('M d, Y H:i') ?? __('On Schedule') }}
                     </span>
                 </div>
@@ -148,7 +148,7 @@
 
         <!-- Interactive Map Container -->
         <div class="rounded-2xl overflow-hidden border theme-border shadow-2xl theme-card space-y-2 p-2">
-            <div id="public-tracking-map" class="w-full h-80 sm:h-96 rounded-xl bg-slate-900"></div>
+            <div id="public-tracking-map" class="w-full h-80 sm:h-96 rounded-xl theme-page"></div>
             <div class="px-3 py-2 flex items-center justify-between text-[11px] theme-text-muted font-mono">
                 <span>{{ $shipment->originLocation->short_name }} {{ __('to') }} {{ $shipment->destinationLocation->short_name }} ({{ $shipment->originLocation->display_code }} &rarr; {{ $shipment->destinationLocation->display_code }})</span>
                 <span>{{ __('Milestone Geodesic Plot') }}</span>

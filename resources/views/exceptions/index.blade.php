@@ -9,7 +9,7 @@
                 <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight theme-heading font-sans">
                     {{ __('Operational Exceptions') }}
                 </h1>
-                <span class="text-xs px-2.5 py-0.5 rounded-full bg-rose-500/20 text-rose-600 dark:text-rose-300 border border-rose-500/30 font-mono">
+                <span class="text-xs px-2.5 py-0.5 rounded-full bg-rose-500/20 text-rose-700 dark:text-rose-300 border border-rose-500/30 font-mono">
                     {{ __('Incident Command') }}
                 </span>
             </div>
@@ -19,16 +19,16 @@
         </div>
 
         <div class="flex items-center space-x-2.5 text-xs font-mono">
-            <span class="px-3 py-1.5 rounded-xl bg-rose-500/15 border border-rose-500/30 text-rose-600 dark:text-rose-400 font-bold inline-flex items-center gap-2">
-                <span class="w-2 h-2 rounded-full bg-rose-400 animate-pulse"></span>
+            <span class="px-3 py-1.5 rounded-xl bg-rose-500/15 border border-rose-500/30 text-rose-700 dark:text-rose-400 font-bold inline-flex items-center gap-2">
+                <span class="w-2 h-2 rounded-full bg-rose-500 animate-pulse"></span>
                 {{ __(':count Open', ['count' => $counts['open']]) }}
             </span>
-            <span class="px-3 py-1.5 rounded-xl bg-amber-500/15 border border-amber-500/30 text-amber-600 dark:text-amber-400 font-bold inline-flex items-center gap-2">
-                <span class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
+            <span class="px-3 py-1.5 rounded-xl bg-amber-500/15 border border-amber-500/30 text-amber-700 dark:text-amber-400 font-bold inline-flex items-center gap-2">
+                <span class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span>
                 {{ __(':count Investigating', ['count' => $counts['investigating']]) }}
             </span>
-            <span class="px-3 py-1.5 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-600 dark:text-emerald-400 font-bold inline-flex items-center gap-2">
-                <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+            <span class="px-3 py-1.5 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-700 dark:text-emerald-400 font-bold inline-flex items-center gap-2">
+                <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
                 {{ __(':count Resolved', ['count' => $counts['resolved']]) }}
             </span>
         </div>
@@ -95,7 +95,7 @@
                 <tbody class="divide-y theme-border">
                     @forelse($exceptions as $exc)
                         <tr class="hover:bg-blue-600/5 transition-colors">
-                            <td class="py-4 px-4 font-mono font-bold text-cyan-600 dark:text-cyan-400">
+                            <td class="py-4 px-4 font-mono font-bold text-cyan-700 dark:text-cyan-400">
                                 <a href="{{ route('shipments.show', $exc->shipment) }}" class="hover:underline">
                                     {{ $exc->shipment->tracking_number }}
                                 </a>
@@ -105,7 +105,7 @@
                             </td>
                             <td class="py-4 px-4 font-mono">
                                 <span class="font-semibold block theme-heading">{{ $exc->exception_code }}</span>
-                                <span class="text-[10px] px-2 py-0.5 rounded font-bold uppercase inline-block mt-1 {{ $exc->severity === 'HIGH' || $exc->severity === 'CRITICAL' ? 'bg-rose-500/20 text-rose-600 dark:text-rose-300 border border-rose-500/30' : ($exc->severity === 'MEDIUM' ? 'bg-amber-500/20 text-amber-600 dark:text-amber-300 border border-amber-500/30' : 'bg-blue-500/20 text-blue-600 dark:text-blue-300 border border-blue-500/30') }}">
+                                <span class="text-[10px] px-2 py-0.5 rounded font-bold uppercase inline-block mt-1 {{ $exc->severity === 'HIGH' || $exc->severity === 'CRITICAL' ? 'bg-rose-500/20 text-rose-700 dark:text-rose-300 border border-rose-500/30' : ($exc->severity === 'MEDIUM' ? 'bg-amber-500/20 text-amber-700 dark:text-amber-300 border border-amber-500/30' : 'bg-blue-500/20 text-blue-700 dark:text-blue-300 border border-blue-500/30') }}">
                                     {{ $exc->severity }}
                                 </span>
                             </td>
@@ -113,15 +113,15 @@
                                 <div class="font-bold theme-heading">{{ $exc->title }}</div>
                                 <div class="text-[11px] theme-text-secondary mt-0.5 max-w-sm">{{ Str::limit($exc->description, 100) }}</div>
                                 @if($exc->resolution_notes)
-                                    <div class="text-[10px] text-emerald-600 dark:text-emerald-400 mt-1 font-mono">{{ __('Resolution:') }} {{ $exc->resolution_notes }}</div>
+                                    <div class="text-[10px] text-emerald-700 dark:text-emerald-400 mt-1 font-mono">{{ __('Resolution:') }} {{ $exc->resolution_notes }}</div>
                                 @endif
                             </td>
                             <td class="py-4 px-4">
                                 @php
                                     $stClass = match($exc->status) {
-                                        'OPEN' => 'bg-rose-500/15 text-rose-600 dark:text-rose-300 border-rose-500/30',
-                                        'INVESTIGATING' => 'bg-amber-500/15 text-amber-600 dark:text-amber-300 border-amber-500/30',
-                                        'RESOLVED' => 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-300 border-emerald-500/30',
+                                        'OPEN' => 'bg-rose-500/15 text-rose-700 dark:text-rose-300 border-rose-500/30',
+                                        'INVESTIGATING' => 'bg-amber-500/15 text-amber-700 dark:text-amber-300 border-amber-500/30',
+                                        'RESOLVED' => 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border-emerald-500/30',
                                         default => 'bg-slate-500/15 theme-text-secondary'
                                     };
                                 @endphp
@@ -150,7 +150,7 @@
                                         </button>
                                     </form>
                                 @else
-                                    <span class="text-emerald-600 dark:text-emerald-400 text-[11px] font-mono">{{ __('Resolved') }} &bull; {{ $exc->resolved_at?->format('M d') }}</span>
+                                    <span class="text-emerald-700 dark:text-emerald-400 text-[11px] font-mono">{{ __('Resolved') }} &bull; {{ $exc->resolved_at?->format('M d') }}</span>
                                 @endif
                             </td>
                         </tr>

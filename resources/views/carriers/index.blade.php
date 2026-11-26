@@ -8,7 +8,7 @@
                 <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight theme-heading font-sans">
                     {{ __('Freight Carriers') }}
                 </h1>
-                <span class="text-xs px-2.5 py-0.5 rounded-full bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 border border-cyan-500/20 font-mono">
+                <span class="text-xs px-2.5 py-0.5 rounded-full bg-cyan-500/10 text-cyan-700 dark:text-cyan-400 border border-cyan-500/20 font-mono">
                     {{ __(':count Carriers', ['count' => count($carriers)]) }}
                 </span>
             </div>
@@ -32,10 +32,10 @@
                 <div class="space-y-3">
                     <div class="flex items-start justify-between">
                         <div>
-                            <span class="text-xs font-mono font-bold text-amber-500 dark:text-amber-400 block">{{ $c->code }}</span>
+                            <span class="text-xs font-mono font-bold text-amber-700 dark:text-amber-400 block">{{ $c->code }}</span>
                             <h3 class="text-lg font-bold theme-heading tracking-tight">{{ $c->name }}</h3>
                         </div>
-                        <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider font-mono bg-blue-500/15 text-blue-600 dark:text-blue-300 border border-blue-500/30">
+                        <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider font-mono bg-blue-500/15 text-blue-700 dark:text-blue-300 border border-blue-500/30">
                             {{ $c->mode }}
                         </span>
                     </div>
@@ -52,7 +52,7 @@
                         @if($c->website)
                             <div class="flex justify-between">
                                 <span class="theme-text-muted">{{ __('Website:') }}</span>
-                                <a href="{{ $c->website }}" target="_blank" class="text-cyan-600 dark:text-cyan-400 hover:underline font-mono truncate max-w-[180px]">{{ $c->website }}</a>
+                                <a href="{{ $c->website }}" target="_blank" class="text-cyan-700 dark:text-cyan-400 hover:underline font-mono truncate max-w-[180px]">{{ $c->website }}</a>
                             </div>
                         @endif
                     </div>
@@ -68,7 +68,7 @@
 </div>
 
 <!-- Add Carrier Modal -->
-<div id="add-carrier-modal" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
+<div id="add-carrier-modal" class="hidden fixed inset-0 z-50 bg-slate-950/60 dark:bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
     <div class="theme-card border theme-border rounded-2xl max-w-md w-full p-6 shadow-2xl relative space-y-4">
         <div class="flex items-center justify-between border-b theme-border pb-3">
             <h3 class="text-base font-bold theme-heading tracking-tight">{{ __('Register Carrier Partner') }}</h3>

@@ -10,7 +10,7 @@
                     {{ __('Notifications and alerts') }}
                 </h1>
                 @if($unreadCount > 0)
-                    <span class="text-xs px-2.5 py-0.5 rounded-full bg-amber-400/20 text-amber-600 dark:text-amber-300 border border-amber-400/30 font-mono">
+                    <span class="text-xs px-2.5 py-0.5 rounded-full bg-amber-400/20 text-amber-700 dark:text-amber-300 border border-amber-400/30 font-mono">
                         {{ __(':count unread', ['count' => $unreadCount]) }}
                     </span>
                 @endif
@@ -49,9 +49,9 @@
                 <div class="flex items-start space-x-3.5">
                     @php
                         $iconClass = match($notif->type) {
-                            'SHIPMENT_DELAY_ALERT' => 'bg-amber-500/15 text-amber-600 dark:text-amber-300 border-amber-500/30',
-                            'EXCEPTION_DETECTED' => 'bg-rose-500/15 text-rose-600 dark:text-rose-300 border-rose-500/30',
-                            default => 'bg-blue-500/15 text-blue-600 dark:text-cyan-300 border-blue-500/30',
+                            'SHIPMENT_DELAY_ALERT' => 'bg-amber-500/15 text-amber-700 dark:text-amber-300 border-amber-500/30',
+                            'EXCEPTION_DETECTED' => 'bg-rose-500/15 text-rose-700 dark:text-rose-300 border-rose-500/30',
+                            default => 'bg-blue-500/15 text-blue-700 dark:text-cyan-300 border-blue-500/30',
                         };
                     @endphp
                     <div class="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 border {{ $iconClass }}">

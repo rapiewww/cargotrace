@@ -6,9 +6,9 @@
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b theme-border">
         <div>
             <div class="flex items-center space-x-2 text-xs theme-text-secondary mb-1.5 font-mono">
-                <a href="{{ route('shipments.index') }}" class="hover:text-cyan-500 transition-colors">{{ __('Shipments') }}</a>
+                <a href="{{ route('shipments.index') }}" class="hover:text-blue-600 dark:hover:text-cyan-400 transition-colors">{{ __('Shipments') }}</a>
                 <span>&rarr;</span>
-                <span class="text-cyan-500 font-bold">{{ $shipment->tracking_number }}</span>
+                <span class="text-blue-600 dark:text-cyan-400 font-bold">{{ $shipment->tracking_number }}</span>
             </div>
             <div class="flex flex-wrap items-center gap-3">
                 <h1 class="text-2xl sm:text-3xl font-extrabold font-mono theme-heading tracking-tight">{{ $shipment->tracking_number }}</h1>
@@ -165,7 +165,7 @@
                     </div>
                     <div class="p-3 rounded-xl theme-card-elevated border theme-border">
                         <span class="uppercase text-[10px] tracking-wider theme-text-muted font-semibold block">{{ __('Estimated Arrival') }}</span>
-                        <span class="font-bold {{ $shipment->is_delayed ? 'text-amber-500' : 'text-emerald-500' }}">
+                        <span class="font-bold {{ $shipment->is_delayed ? 'text-amber-700 dark:text-amber-400' : 'text-emerald-700 dark:text-emerald-400' }}">
                             {{ $shipment->estimated_arrival_at?->format('M d, H:i') ?? __('On Track') }}
                         </span>
                     </div>
@@ -176,23 +176,23 @@
                 </div>
 
                 @if($shipment->is_delayed)
-                    <div class="p-3.5 rounded-xl bg-amber-500/10 border border-amber-500/25 text-xs text-amber-200 space-y-1">
-                        <div class="font-bold text-amber-300 flex items-center gap-1.5">
-                            <span class="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse"></span>
+                    <div class="p-3.5 rounded-xl bg-amber-500/10 border border-amber-500/25 text-xs text-amber-900 dark:text-amber-200 space-y-1">
+                        <div class="font-bold text-amber-800 dark:text-amber-300 flex items-center gap-1.5">
+                            <span class="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span>
                             <span>{{ __('Delay Reason Recorded') }}</span>
                         </div>
-                        <p class="text-[11px] text-amber-200/80">{{ $shipment->delay_reason ?? __('Adverse berth/transit weather condition.') }}</p>
+                        <p class="text-[11px] text-amber-900/90 dark:text-amber-200/80">{{ $shipment->delay_reason ?? __('Adverse berth/transit weather condition.') }}</p>
                     </div>
                 @endif
 
                 @if(isset($freeTime) && $freeTime['has_arrived'])
                     <div class="p-3.5 rounded-xl {{ $freeTime['is_over_limit'] ? 'bg-rose-500/10 border border-rose-500/25' : 'bg-blue-500/10 border border-blue-500/20' }} text-xs space-y-1.5 font-sans">
                         <div class="flex items-center justify-between font-mono">
-                            <span class="font-bold flex items-center gap-1.5 {{ $freeTime['is_over_limit'] ? 'text-rose-400' : 'text-cyan-400' }}">
-                                <span class="w-1.5 h-1.5 rounded-full {{ $freeTime['is_over_limit'] ? 'bg-rose-400 animate-pulse' : 'bg-cyan-400' }}"></span>
+                            <span class="font-bold flex items-center gap-1.5 {{ $freeTime['is_over_limit'] ? 'text-rose-700 dark:text-rose-400' : 'text-blue-700 dark:text-cyan-400' }}">
+                                <span class="w-1.5 h-1.5 rounded-full {{ $freeTime['is_over_limit'] ? 'bg-rose-500 animate-pulse' : 'bg-blue-500 dark:bg-cyan-400' }}"></span>
                                 <span>{{ __('Terminal Free Time') }}</span>
                             </span>
-                            <span class="font-bold uppercase text-[10px] {{ $freeTime['is_over_limit'] ? 'text-rose-400' : 'text-cyan-400' }}">
+                            <span class="font-bold uppercase text-[10px] {{ $freeTime['is_over_limit'] ? 'text-rose-700 dark:text-rose-400' : 'text-blue-700 dark:text-cyan-400' }}">
                                 {{ $freeTime['badge_label'] }}
                             </span>
                         </div>
@@ -258,7 +258,7 @@
                             <div class="p-3 rounded-xl theme-card-elevated border theme-border">
                                 <span class="text-[11px] theme-text-muted font-medium block"><span class="sr-only">{{ __('STS Crane Advisory') }}</span>{{ __('Crane advisory') }}</span>
                                 <span class="text-xs font-bold font-mono block pt-1
-                                    {{ ($craneAdvisory['color'] ?? '') === 'emerald' ? 'text-emerald-500' : (($craneAdvisory['color'] ?? '') === 'amber' ? 'text-amber-500' : 'text-rose-500') }}">
+                                    {{ ($craneAdvisory['color'] ?? '') === 'emerald' ? 'text-emerald-700 dark:text-emerald-400' : (($craneAdvisory['color'] ?? '') === 'amber' ? 'text-amber-700 dark:text-amber-400' : 'text-rose-700 dark:text-rose-400') }}">
                                     {{ $craneAdvisory['status'] ?? __('Full Clearance') }}
                                 </span>
                                 <span class="text-[10px] theme-text-muted block">{{ __('Rule-based') }}</span>
@@ -285,15 +285,15 @@
 
             <!-- Manifest Cargo Items -->
             <x-card class="space-y-4">
-                <div class="flex items-center justify-between pb-3 border-b border-white/10">
-                    <span class="uppercase text-[10px] tracking-wider text-slate-500 font-semibold block">{{ __('Manifest Items (:count)', ['count' => count($shipment->items)]) }}</span>
-                    <span class="text-xs font-mono text-slate-400">{{ __('Total:') }} {{ $shipment->items->sum('quantity') }} {{ __('pkgs') }}</span>
+                <div class="flex items-center justify-between pb-3 border-b theme-border">
+                    <span class="uppercase text-[10px] tracking-wider theme-text-muted font-semibold block">{{ __('Manifest Items (:count)', ['count' => count($shipment->items)]) }}</span>
+                    <span class="text-xs font-mono theme-text-secondary">{{ __('Total:') }} {{ $shipment->items->sum('quantity') }} {{ __('pkgs') }}</span>
                 </div>
 
                 <div class="overflow-x-auto">
                     <table class="w-full text-left text-xs">
                         <thead>
-                            <tr class="border-b border-white/5 text-slate-500 uppercase text-[10px] font-mono">
+                            <tr class="border-b theme-border theme-text-muted uppercase text-[10px] font-mono">
                                 <th class="pb-2">{{ __('Description') }}</th>
                                 <th class="pb-2">{{ strtoupper($shipment->transport_mode ?? 'SEA') === 'SEA' ? __('Container / SKU') : __('Item SKU') }}</th>
                                 <th class="pb-2 text-right">{{ __('Qty') }}</th>
@@ -301,24 +301,24 @@
                                 <th class="pb-2 text-right">{{ __('Volume (CBM)') }}</th>
                             </tr>
                         </thead>
-                        <tbody class="divide-y divide-white/5 font-mono">
+                        <tbody class="divide-y theme-border font-mono">
                             @forelse($shipment->items as $item)
                                 <tr>
                                     <td class="py-2.5 font-sans font-semibold theme-heading">{{ $item->description }}</td>
-                                    <td class="py-2.5 text-slate-400 font-mono">
+                                    <td class="py-2.5 theme-text-secondary font-mono">
                                         @if(strtoupper($shipment->transport_mode ?? 'SEA') === 'SEA' && ($item->container_number || \App\Support\Iso6346::isValid((string) $item->sku)))
                                             <span class="text-blue-600 dark:text-cyan-400 font-semibold">{{ $item->formatted_container_number }}</span>
                                         @else
                                             <span>{{ $item->sku ?? '-' }}</span>
                                         @endif
                                     </td>
-                                    <td class="py-2.5 text-right text-slate-200">{{ $item->quantity }}</td>
-                                    <td class="py-2.5 text-right text-slate-200">{{ number_format($item->weight_kg, 1) }}</td>
-                                    <td class="py-2.5 text-right text-slate-200">{{ number_format($item->volume_cbm, 2) }}</td>
+                                    <td class="py-2.5 text-right theme-text-primary">{{ $item->quantity }}</td>
+                                    <td class="py-2.5 text-right theme-text-primary">{{ number_format($item->weight_kg, 1) }}</td>
+                                    <td class="py-2.5 text-right theme-text-primary">{{ number_format($item->volume_cbm, 2) }}</td>
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="5" class="py-4 text-center text-slate-500">{{ __('No specific line items recorded.') }}</td>
+                                    <td colspan="5" class="py-4 text-center theme-text-muted">{{ __('No specific line items recorded.') }}</td>
                                 </tr>
                             @endforelse
                         </tbody>
@@ -329,22 +329,22 @@
             <!-- Active Exceptions Section -->
             @if(count($shipment->exceptions) > 0)
                 <x-card class="space-y-3">
-                    <div class="flex items-center justify-between pb-3 border-b border-white/10">
-                        <span class="uppercase text-[10px] tracking-wider text-rose-400 font-semibold block">{{ __('Incident Reports & Holds') }}</span>
-                        <span class="text-xs font-mono text-rose-400">{{ __(':count Logged', ['count' => count($shipment->exceptions)]) }}</span>
+                    <div class="flex items-center justify-between pb-3 border-b theme-border">
+                        <span class="uppercase text-[10px] tracking-wider text-rose-700 dark:text-rose-400 font-semibold block">{{ __('Incident Reports & Holds') }}</span>
+                        <span class="text-xs font-mono text-rose-700 dark:text-rose-400">{{ __(':count Logged', ['count' => count($shipment->exceptions)]) }}</span>
                     </div>
 
                     <div class="space-y-3">
                         @foreach($shipment->exceptions as $ex)
                             <div class="p-3.5 rounded-xl bg-rose-500/10 border border-rose-500/20 text-xs space-y-1.5">
                                 <div class="flex items-center justify-between">
-                                    <span class="font-bold text-rose-300 font-mono">{{ $ex->exception_code }}</span>
-                                    <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase font-mono {{ $ex->status === 'RESOLVED' ? 'bg-emerald-500/20 text-emerald-300' : 'bg-rose-500/20 text-rose-300' }}">
+                                    <span class="font-bold text-rose-700 dark:text-rose-300 font-mono">{{ $ex->exception_code }}</span>
+                                    <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase font-mono {{ $ex->status === 'RESOLVED' ? 'bg-emerald-500/20 text-emerald-700 dark:text-emerald-300' : 'bg-rose-500/20 text-rose-700 dark:text-rose-300' }}">
                                         {{ $ex->status }} &bull; {{ $ex->severity }}
                                     </span>
                                 </div>
-                                <p class="text-slate-300 text-[11px]">{{ $ex->description }}</p>
-                                <div class="flex items-center justify-between text-[10px] text-slate-500 pt-1 font-mono">
+                                <p class="theme-text-secondary text-[11px]">{{ $ex->description }}</p>
+                                <div class="flex items-center justify-between text-[10px] theme-text-muted pt-1 font-mono">
                                     <span>{{ __('Detected:') }} {{ $ex->detected_at?->diffForHumans() }}</span>
                                     @if(in_array(auth()->user()->role, ['admin', 'operator']) && $ex->status !== 'RESOLVED')
                                         <form action="{{ route('operations.exceptions.update', $ex) }}" method="POST">
@@ -352,7 +352,7 @@
                                             @method('PATCH')
                                             <input type="hidden" name="status" value="RESOLVED">
                                             <input type="hidden" name="resolution_notes" value="Resolved via Shipment Detail view">
-                                            <button type="submit" class="text-teal-300 hover:text-white font-bold underline cursor-pointer">{{ __('Mark Resolved') }} &rarr;</button>
+                                            <button type="submit" class="text-blue-700 dark:text-cyan-300 hover:underline font-bold underline cursor-pointer">{{ __('Mark Resolved') }} &rarr;</button>
                                         </form>
                                     @endif
                                 </div>

@@ -15,12 +15,12 @@
     };
 
     $variantStyles = match($variant) {
-        'primary' => 'bg-gradient-to-r from-amber-400 via-orange-400 to-amber-500 hover:from-amber-300 hover:to-orange-400 text-slate-950 shadow-lg shadow-amber-500/20',
-        'secondary' => 'bg-slate-900/80 hover:bg-slate-800 text-slate-200 border border-slate-700/80 hover:text-white',
-        'teal' => 'bg-gradient-to-r from-teal-400 to-teal-500 hover:from-teal-300 hover:to-teal-400 text-slate-950 shadow-lg shadow-teal-500/20',
-        'danger' => 'bg-rose-500/15 hover:bg-rose-500/25 text-rose-300 border border-rose-500/30 hover:border-rose-500/50',
-        'ghost' => 'bg-transparent hover:bg-white/5 text-slate-400 hover:text-white',
-        default => 'bg-white/10 hover:bg-white/20 text-white',
+        'primary' => 'bg-blue-600 hover:bg-blue-500 text-white shadow-md shadow-blue-500/20',
+        'secondary' => 'theme-card-elevated hover:bg-slate-200 dark:hover:bg-slate-800 theme-text-primary border theme-border',
+        'teal' => 'bg-cyan-600 hover:bg-cyan-500 text-white shadow-md shadow-cyan-500/20',
+        'danger' => 'bg-rose-500/15 hover:bg-rose-500/25 text-rose-700 dark:text-rose-300 border border-rose-500/30 hover:border-rose-500/50',
+        'ghost' => 'bg-transparent hover:bg-slate-500/10 theme-text-secondary hover:theme-heading',
+        default => 'theme-card-elevated hover:bg-slate-200 dark:hover:bg-slate-800 theme-text-primary border theme-border',
     };
 @endphp
 

@@ -57,7 +57,7 @@
                     <button
                         type="button"
                         onclick="window.CargoTrace && window.CargoTrace.toggleSidebar ? window.CargoTrace.toggleSidebar() : null"
-                        class="lg:hidden p-2 rounded-xl theme-card-elevated border theme-border text-slate-400 hover:text-cyan-400 transition cursor-pointer"
+                        class="lg:hidden p-2 rounded-xl theme-card-elevated border theme-border theme-text-secondary hover:text-blue-600 dark:hover:text-cyan-400 transition cursor-pointer"
                         aria-label="{{ __('Open navigation menu') }}"
                         title="{{ __('Open menu') }}"
                     >
@@ -70,7 +70,7 @@
                     <button
                         type="button"
                         onclick="window.CargoTrace && window.CargoTrace.toggleSidebarCollapse ? window.CargoTrace.toggleSidebarCollapse() : null"
-                        class="hidden lg:flex p-2 rounded-xl theme-card-elevated border theme-border text-slate-400 hover:text-cyan-400 transition cursor-pointer"
+                        class="hidden lg:flex p-2 rounded-xl theme-card-elevated border theme-border theme-text-secondary hover:text-blue-600 dark:hover:text-cyan-400 transition cursor-pointer"
                         aria-label="{{ __('Toggle sidebar width') }}"
                         title="{{ __('Toggle sidebar rail') }}"
                     >
@@ -110,7 +110,7 @@
                     <x-locale-switcher size="md" />
 
                     <!-- Public Portal link -->
-                    <a href="{{ route('welcome') }}" target="_blank" class="hidden md:inline-flex items-center text-xs theme-text-secondary hover:text-cyan-400 transition-colors whitespace-nowrap">
+                    <a href="{{ route('welcome') }}" target="_blank" class="hidden md:inline-flex items-center text-xs theme-text-secondary hover:text-blue-600 dark:hover:text-cyan-400 transition-colors whitespace-nowrap">
                         <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
                         {{ __('Public Portal') }}
                     </a>
@@ -129,7 +129,7 @@
                     <div class="flex items-center gap-2 p-1 sm:p-1.5 sm:pr-3 rounded-full theme-card-elevated border theme-border">
                         <div class="relative w-7 h-7 rounded-full bg-gradient-to-tr from-cyan-500 to-blue-600 flex items-center justify-center text-white text-[11px] font-bold shrink-0">
                             {{ strtoupper(substr(auth()->user()->name, 0, 2)) }}
-                            <span class="absolute -bottom-0.5 -right-0.5 w-2 h-2 rounded-full bg-emerald-400 border border-slate-900"></span>
+                            <span class="absolute -bottom-0.5 -right-0.5 w-2 h-2 rounded-full bg-emerald-400 border border-white dark:border-slate-900"></span>
                         </div>
                         <span class="hidden sm:inline text-xs font-semibold theme-text-primary truncate max-w-[110px]">
                             {{ auth()->user()->name }}
@@ -203,12 +203,12 @@
                 <div class="max-w-[1600px] mx-auto px-6 sm:px-8 flex flex-col sm:flex-row items-center justify-between gap-4">
                     <div class="flex items-center space-x-2">
                         <span class="font-bold theme-text-primary">{{ __('CargoTrace • Multimodal Freight Visibility Platform') }}</span>
-                        <span class="text-slate-500">&bull;</span>
-                        <span class="text-[11px] text-cyan-500 dark:text-cyan-400 font-mono">{{ __('Sea, Air & Road Tracking') }}</span>
+                        <span class="theme-text-muted">&bull;</span>
+                        <span class="text-[11px] text-cyan-700 dark:text-cyan-400 font-mono">{{ __('Sea, Air & Road Tracking') }}</span>
                     </div>
                     <div class="flex items-center space-x-4 theme-text-muted text-[11px]">
                         <span>{{ __('Interactive 3D Earth Globe • Operator Checkpoints') }}</span>
-                        <a href="{{ route('welcome') }}" class="hover:text-cyan-400 transition">{{ __('Public Portal') }}</a>
+                        <a href="{{ route('welcome') }}" class="hover:text-blue-600 dark:hover:text-cyan-400 transition">{{ __('Public Portal') }}</a>
                     </div>
                 </div>
             </footer>

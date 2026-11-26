@@ -48,7 +48,7 @@
                         <option value="ROAD" {{ old('transport_mode', $shipment->transport_mode ?? 'SEA') === 'ROAD' ? 'selected' : '' }}>{{ __('Road Freight (ROAD)') }}</option>
                     </select>
                     @error('transport_mode')
-                        <span class="text-[11px] text-rose-500 block">{{ $message }}</span>
+                        <span class="text-[11px] text-rose-700 dark:text-rose-400 block">{{ $message }}</span>
                     @enderror
                 </div>
             </div>
@@ -68,7 +68,7 @@
                         <input type="text" name="container_number" id="container_number" value="{{ old('container_number', $shipment->formatted_container_number ?? $shipment->container_number) }}" placeholder="MSKU 123456 5" class="w-full px-3.5 py-2.5 rounded-xl theme-input border theme-border font-mono text-xs focus:ring-1 focus:ring-blue-500">
                         <span class="text-[10px] theme-text-muted block">{{ __('ISO 6346 compliant format') }}</span>
                         @error('container_number')
-                            <span class="text-[11px] text-rose-500 block">{{ $message }}</span>
+                            <span class="text-[11px] text-rose-700 dark:text-rose-400 block">{{ $message }}</span>
                         @enderror
                     </div>
                     <div class="space-y-1.5">
@@ -77,7 +77,7 @@
                         </label>
                         <input type="text" name="bill_of_lading_number" id="bill_of_lading_number" value="{{ old('bill_of_lading_number', $shipment->bill_of_lading_number) }}" placeholder="B/L-MAEU-2026-99" class="w-full px-3.5 py-2.5 rounded-xl theme-input border theme-border font-mono text-xs focus:ring-1 focus:ring-blue-500">
                         @error('bill_of_lading_number')
-                            <span class="text-[11px] text-rose-500 block">{{ $message }}</span>
+                            <span class="text-[11px] text-rose-700 dark:text-rose-400 block">{{ $message }}</span>
                         @enderror
                     </div>
                 </div>
@@ -91,7 +91,7 @@
                         <input type="text" name="awb_number" id="awb_number" value="{{ old('awb_number', $shipment->formatted_awb_number ?? $shipment->awb_number) }}" placeholder="126-12345675" class="w-full px-3.5 py-2.5 rounded-xl theme-input border theme-border font-mono text-xs focus:ring-1 focus:ring-blue-500">
                         <span class="text-[10px] theme-text-muted block">{{ __('11-digit AWB (airline prefix + serial + mod 7 check digit)') }}</span>
                         @error('awb_number')
-                            <span class="text-[11px] text-rose-500 block">{{ $message }}</span>
+                            <span class="text-[11px] text-rose-700 dark:text-rose-400 block">{{ $message }}</span>
                         @enderror
                     </div>
                 </div>
@@ -104,7 +104,7 @@
                         </label>
                         <input type="text" name="vehicle_plate" id="vehicle_plate" value="{{ old('vehicle_plate', $shipment->vehicle_plate) }}" placeholder="B 9876 TX" class="w-full px-3.5 py-2.5 rounded-xl theme-input border theme-border font-mono text-xs focus:ring-1 focus:ring-blue-500">
                         @error('vehicle_plate')
-                            <span class="text-[11px] text-rose-500 block">{{ $message }}</span>
+                            <span class="text-[11px] text-rose-700 dark:text-rose-400 block">{{ $message }}</span>
                         @enderror
                     </div>
                     <div class="space-y-1.5">
@@ -113,7 +113,7 @@
                         </label>
                         <input type="text" name="cmr_number" id="cmr_number" value="{{ old('cmr_number', $shipment->cmr_number) }}" placeholder="CMR-2026-0089" class="w-full px-3.5 py-2.5 rounded-xl theme-input border theme-border font-mono text-xs focus:ring-1 focus:ring-blue-500">
                         @error('cmr_number')
-                            <span class="text-[11px] text-rose-500 block">{{ $message }}</span>
+                            <span class="text-[11px] text-rose-700 dark:text-rose-400 block">{{ $message }}</span>
                         @enderror
                     </div>
                 </div>
@@ -132,7 +132,7 @@
                             <!-- Populated dynamically via JS -->
                         </select>
                         @error('carrier_id')
-                            <span class="text-[11px] text-rose-500 block">{{ $message }}</span>
+                            <span class="text-[11px] text-rose-700 dark:text-rose-400 block">{{ $message }}</span>
                         @enderror
                     </div>
 
@@ -155,7 +155,7 @@
                             <!-- Populated dynamically via JS -->
                         </select>
                         @error('origin_location_id')
-                            <span class="text-[11px] text-rose-500 block">{{ $message }}</span>
+                            <span class="text-[11px] text-rose-700 dark:text-rose-400 block">{{ $message }}</span>
                         @enderror
                     </div>
 
@@ -166,7 +166,7 @@
                             <!-- Populated dynamically via JS -->
                         </select>
                         @error('destination_location_id')
-                            <span class="text-[11px] text-rose-500 block">{{ $message }}</span>
+                            <span class="text-[11px] text-rose-700 dark:text-rose-400 block">{{ $message }}</span>
                         @enderror
                     </div>
                 </div>

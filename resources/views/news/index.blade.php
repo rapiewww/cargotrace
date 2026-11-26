@@ -42,9 +42,9 @@
                     name="q"
                     value="{{ $searchQuery }}"
                     placeholder="{{ __('Search freight news...') }}"
-                    class="w-full pl-8 pr-3 py-2 rounded-xl theme-card-elevated border theme-border text-xs theme-heading focus:outline-none focus:border-cyan-500 placeholder:text-slate-500"
+                    class="w-full pl-8 pr-3 py-2 rounded-xl theme-input border theme-border text-xs focus:outline-none focus:border-cyan-500"
                 >
-                <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-2.5 text-slate-400">
+                <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-2.5 theme-text-muted">
                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
                 </div>
             </div>
@@ -53,7 +53,7 @@
             <select
                 name="source"
                 onchange="this.form.submit()"
-                class="px-3 py-2 rounded-xl theme-card-elevated border theme-border text-xs font-medium theme-heading focus:outline-none focus:border-cyan-500 cursor-pointer"
+                class="px-3 py-2 rounded-xl theme-input border theme-border text-xs font-medium focus:outline-none focus:border-cyan-500 cursor-pointer"
             >
                 <option value="all">{{ __('All sources') }}</option>
                 @foreach($sources as $s)
@@ -120,7 +120,7 @@
             >
                 <x-mode-icon mode="BOOKMARK" class="w-3.5 h-3.5" />
                 <span>{{ __('Relevant to your shipments') }}</span>
-                <span class="text-[10px] font-mono px-1.5 py-0.2 rounded-full bg-cyan-700/30 text-cyan-200">{{ $relevantCount }}</span>
+                <span class="text-[10px] font-mono px-1.5 py-0.2 rounded-full {{ $onlyRelevant ? 'bg-white/20 text-white' : 'bg-cyan-600/15 text-cyan-800 dark:text-cyan-200' }}">{{ $relevantCount }}</span>
             </a>
         @endif
 
@@ -205,7 +205,7 @@
                     <div class="p-6 flex-1 flex flex-col justify-between space-y-4">
                         <div class="space-y-2">
                             <div class="flex items-center justify-between text-xs">
-                                <span class="font-semibold text-cyan-600 dark:text-cyan-400">
+                                <span class="font-semibold text-cyan-700 dark:text-cyan-400">
                                     {{ $item['source'] ?? __('Freight wire') }}
                                 </span>
                                 <span class="theme-text-muted font-mono text-[11px]">

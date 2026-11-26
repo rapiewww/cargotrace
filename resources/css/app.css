@@ -61,6 +61,7 @@
 :root,
 html[data-theme="dark"],
 html.dark {
+    color-scheme: dark;
     --bg-page: #050B14;
     --bg-surface: #0B1728;
     --bg-surface-elevated: #11233B;
@@ -86,6 +87,7 @@ html.dark {
 
 html[data-theme="light"],
 html.light {
+    color-scheme: light;
     --bg-page: #F4F7FB;
     --bg-surface: #FFFFFF;
     --bg-surface-elevated: #F8FAFC;
@@ -187,6 +189,10 @@ html, body {
     color: var(--text-heading) !important;
 }
 
+.hover\:theme-heading:hover {
+    color: var(--text-heading) !important;
+}
+
 .theme-text-primary {
     color: var(--text-primary) !important;
 }
@@ -211,6 +217,12 @@ html, body {
 
 .theme-input::placeholder {
     color: var(--text-muted) !important;
+}
+
+.theme-input option,
+.theme-input optgroup {
+    background-color: var(--bg-surface);
+    color: var(--text-primary);
 }
 
 .theme-table {
@@ -316,6 +328,20 @@ html.light .leaflet-control-attribution a {
 }
 
 /* Focus and accessibility (R-32, R-39) */
+a[href],
+button:not(:disabled),
+summary,
+select:not(:disabled),
+label[for],
+input[type="checkbox"]:not(:disabled),
+input[type="radio"]:not(:disabled) {
+    cursor: pointer;
+}
+
+:disabled {
+    cursor: not-allowed;
+}
+
 :focus-visible {
     outline: 2px solid var(--accent-cyan);
     outline-offset: 2px;

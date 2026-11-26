@@ -15,7 +15,7 @@
     <span class="w-1.5 h-1.5 rounded-full {{ $style['dot'] }} {{ $style['label'] === 'LIVE' ? 'animate-pulse' : '' }}"></span>
     <span>{{ $style['label'] }}</span>
     @if($type)
-        <span class="text-slate-400 font-sans font-normal">&bull; {{ $type }}</span>
+        <span class="theme-text-muted font-sans font-normal">&bull; {{ $type }}</span>
     @endif
 </span>
 

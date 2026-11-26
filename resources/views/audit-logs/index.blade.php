@@ -8,7 +8,7 @@
                 <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight theme-heading font-sans">
                     {{ __('System Audit Trail') }}
                 </h1>
-                <span class="text-xs px-2.5 py-0.5 rounded-full bg-amber-500/15 text-amber-600 dark:text-amber-300 border border-amber-500/30 font-mono">
+                <span class="text-xs px-2.5 py-0.5 rounded-full bg-amber-500/15 text-amber-700 dark:text-amber-300 border border-amber-500/30 font-mono">
                     {{ __('Immutable Trail') }}
                 </span>
             </div>
@@ -66,14 +66,14 @@
                                 {{ $l->created_at?->format('Y-m-d H:i:s') }}
                             </td>
                             <td class="py-4 px-4">
-                                <span class="px-2 py-0.5 rounded theme-card-elevated border theme-border text-[10px] font-bold text-amber-600 dark:text-amber-400">
+                                <span class="px-2 py-0.5 rounded theme-card-elevated border theme-border text-[10px] font-bold text-amber-700 dark:text-amber-400">
                                     {{ $l->action }}
                                 </span>
                             </td>
                             <td class="py-4 px-4 font-sans">
                                 @if($l->user)
                                     <span class="font-bold theme-heading block">{{ $l->user->name }}</span>
-                                    <span class="text-[10px] text-cyan-600 dark:text-cyan-400 uppercase font-mono">{{ __(ucfirst($l->user->role)) }}</span>
+                                    <span class="text-[10px] text-cyan-700 dark:text-cyan-400 uppercase font-mono">{{ __(ucfirst($l->user->role)) }}</span>
                                 @else
                                     <span class="theme-text-muted italic">{{ __('System Automation') }}</span>
                                 @endif

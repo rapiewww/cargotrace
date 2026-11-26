@@ -5,32 +5,32 @@
     'breadcrumbs' => [],
 ])
 
-<div {{ $attributes->merge(['class' => 'flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-white/10']) }}>
+<div {{ $attributes->merge(['class' => 'flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b theme-border']) }}>
     <div>
         @if(count($breadcrumbs) > 0)
-            <div class="flex items-center space-x-2 text-xs text-slate-400 mb-1.5 font-mono">
+            <div class="flex items-center space-x-2 text-xs theme-text-muted mb-1.5 font-mono">
                 @foreach($breadcrumbs as $label => $url)
                     @if($url)
-                        <a href="{{ $url }}" class="hover:text-teal-300 transition-colors">{{ $label }}</a>
+                        <a href="{{ $url }}" class="hover:text-blue-600 dark:hover:text-cyan-400 transition-colors">{{ $label }}</a>
                         <span>&rarr;</span>
                     @else
-                        <span class="text-teal-300">{{ $label }}</span>
+                        <span class="text-blue-600 dark:text-cyan-400">{{ $label }}</span>
                     @endif
                 @endforeach
             </div>
         @endif
 
         <div class="flex items-center space-x-3">
-            <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight text-white">{{ $title }}</h1>
+            <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight theme-heading">{{ $title }}</h1>
             @if($badge)
-                <span class="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-teal-400/10 text-teal-300 border border-teal-400/20">
+                <span class="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-cyan-500/10 text-cyan-700 dark:text-cyan-300 border border-cyan-500/25">
                     {{ $badge }}
                 </span>
             @endif
         </div>
 
         @if($description)
-            <p class="text-xs sm:text-sm text-slate-400 mt-1 max-w-2xl leading-relaxed">{{ $description }}</p>
+            <p class="text-xs sm:text-sm theme-text-secondary mt-1 max-w-2xl leading-relaxed">{{ $description }}</p>
         @endif
     </div>
 

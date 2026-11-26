@@ -6,12 +6,12 @@
 
 @php
     $style = match(strtoupper((string) $variant)) {
-        'DELIVERED', 'RESOLVED', 'EMERALD', 'ON_TIME' => ['bg' => 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30', 'dot' => 'bg-emerald-400'],
-        'IN_TRANSIT', 'AMBER', 'WARNING', 'MEDIUM', 'DELAYED' => ['bg' => 'bg-amber-500/15 text-amber-300 border-amber-500/30', 'dot' => 'bg-amber-400'],
-        'HIGH', 'ROSE', 'DANGER', 'EXCEPTION', 'CRITICAL' => ['bg-rose-500/15 text-rose-300 border-rose-500/30', 'dot' => 'bg-rose-400'],
-        'BOOKED', 'PICKED_UP', 'TEAL', 'INFO', 'LOW' => ['bg' => 'bg-teal-500/15 text-teal-300 border-teal-500/30', 'dot' => 'bg-teal-400'],
-        'CREATED', 'SLATE' => ['bg' => 'bg-slate-500/15 text-slate-300 border-slate-500/30', 'dot' => 'bg-slate-400'],
-        default => ['bg' => 'bg-white/10 text-slate-200 border-white/15', 'dot' => 'bg-slate-300'],
+        'DELIVERED', 'RESOLVED', 'EMERALD', 'ON_TIME' => ['bg' => 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border-emerald-500/30', 'dot' => 'bg-emerald-500'],
+        'IN_TRANSIT', 'AMBER', 'WARNING', 'MEDIUM', 'DELAYED' => ['bg' => 'bg-amber-500/15 text-amber-700 dark:text-amber-300 border-amber-500/30', 'dot' => 'bg-amber-500'],
+        'HIGH', 'ROSE', 'DANGER', 'EXCEPTION', 'CRITICAL' => ['bg' => 'bg-rose-500/15 text-rose-700 dark:text-rose-300 border-rose-500/30', 'dot' => 'bg-rose-500'],
+        'BOOKED', 'PICKED_UP', 'TEAL', 'INFO', 'LOW' => ['bg' => 'bg-cyan-500/15 text-cyan-700 dark:text-cyan-300 border-cyan-500/30', 'dot' => 'bg-cyan-500'],
+        'CREATED', 'SLATE' => ['bg' => 'bg-slate-500/15 text-slate-700 dark:text-slate-300 border-slate-500/30', 'dot' => 'bg-slate-400'],
+        default => ['bg' => 'theme-card-elevated theme-text-secondary theme-border', 'dot' => 'bg-slate-400'],
     };
 
     $sizeClasses = match($size) {
@@ -29,4 +29,3 @@
     @endif
     <span>{{ $slot }}</span>
 </span>
-

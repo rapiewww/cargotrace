@@ -8,7 +8,7 @@
                 <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight theme-heading font-sans">
                     {{ __('Global Locations & Checkpoints') }}
                 </h1>
-                <span class="text-xs px-2.5 py-0.5 rounded-full bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 border border-cyan-500/20 font-mono">
+                <span class="text-xs px-2.5 py-0.5 rounded-full bg-cyan-500/10 text-cyan-700 dark:text-cyan-400 border border-cyan-500/20 font-mono">
                     {{ __('Location Network (:count)', ['count' => count($locations)]) }}
                 </span>
             </div>
@@ -33,13 +33,13 @@
                     <div class="flex items-start justify-between">
                         <div>
                             <div class="flex items-center gap-2">
-                                <span class="text-xs font-mono font-bold text-amber-500 dark:text-amber-400">{{ $loc->display_code }}</span>
+                                <span class="text-xs font-mono font-bold text-amber-700 dark:text-amber-400">{{ $loc->display_code }}</span>
                                 <span class="text-[10px] theme-text-muted font-sans">{{ $loc->code_type_label }}</span>
                             </div>
                             <h3 class="text-base font-bold theme-heading leading-tight mt-0.5 tracking-tight">{{ $loc->name }}</h3>
                             <span class="text-xs theme-text-secondary">{{ $loc->city }}, {{ $loc->country }}</span>
                         </div>
-                        <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase font-mono bg-blue-500/15 text-blue-600 dark:text-blue-300 border border-blue-500/30">
+                        <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase font-mono bg-blue-500/15 text-blue-700 dark:text-blue-300 border border-blue-500/30">
                             {{ $loc->type }}
                         </span>
                     </div>
@@ -52,7 +52,7 @@
                         </div>
                         <div class="flex items-center justify-between text-[11px] pt-1.5 border-t theme-border font-mono">
                             <span class="theme-text-muted">GPS: {{ number_format($loc->latitude, 2) }}, {{ number_format($loc->longitude, 2) }}</span>
-                            <a href="{{ route('welcome') }}#network" class="text-cyan-600 dark:text-cyan-400 hover:underline">{{ __('View Map') }}</a>
+                            <a href="{{ route('welcome') }}#network" class="text-cyan-700 dark:text-cyan-400 hover:underline">{{ __('View Map') }}</a>
                         </div>
                     </div>
                 </div>
@@ -67,7 +67,7 @@
 </div>
 
 <!-- Add Location Modal -->
-<div id="add-location-modal" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
+<div id="add-location-modal" class="hidden fixed inset-0 z-50 bg-slate-950/60 dark:bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
     <div class="theme-card border theme-border rounded-2xl max-w-md w-full p-6 shadow-2xl relative space-y-4">
         <div class="flex items-center justify-between border-b theme-border pb-3">
             <h3 class="text-base font-bold theme-heading tracking-tight">{{ __('Register Location') }}</h3>

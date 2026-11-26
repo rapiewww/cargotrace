@@ -11,7 +11,7 @@
     <div class="flex items-center justify-between text-[11px] theme-text-muted font-mono">
         <span>{{ __('From:') }} <strong class="theme-heading">{{ $origin }}</strong></span>
         @if($eta)
-            <span class="{{ $delayed ? 'text-amber-500 font-bold' : 'text-emerald-500' }}">{{ __('ETA:') }} {{ $eta }}</span>
+            <span class="{{ $delayed ? 'text-amber-700 dark:text-amber-400 font-bold' : 'text-emerald-700 dark:text-emerald-400' }}">{{ __('ETA:') }} {{ $eta }}</span>
         @endif
     </div>
 

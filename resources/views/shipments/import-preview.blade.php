@@ -52,10 +52,10 @@
         <x-card class="p-4 sm:p-5">
             <div class="flex items-center justify-between">
                 <div>
-                    <p class="text-[11px] font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">{{ __('Ready to import') }}</p>
-                    <p class="text-2xl font-black text-emerald-600 dark:text-emerald-400 font-mono mt-1">{{ $results['valid_count'] }}</p>
+                    <p class="text-[11px] font-bold uppercase tracking-wider text-emerald-700 dark:text-emerald-400">{{ __('Ready to import') }}</p>
+                    <p class="text-2xl font-black text-emerald-700 dark:text-emerald-400 font-mono mt-1">{{ $results['valid_count'] }}</p>
                 </div>
-                <div class="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-600 dark:text-emerald-400">
+                <div class="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-700 dark:text-emerald-400">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
                 </div>
             </div>
@@ -65,10 +65,10 @@
         <x-card class="p-4 sm:p-5">
             <div class="flex items-center justify-between">
                 <div>
-                    <p class="text-[11px] font-bold uppercase tracking-wider text-rose-600 dark:text-rose-400">{{ __('Omitted with errors') }}</p>
-                    <p class="text-2xl font-black text-rose-600 dark:text-rose-400 font-mono mt-1">{{ $results['invalid_count'] }}</p>
+                    <p class="text-[11px] font-bold uppercase tracking-wider text-rose-700 dark:text-rose-400">{{ __('Omitted with errors') }}</p>
+                    <p class="text-2xl font-black text-rose-700 dark:text-rose-400 font-mono mt-1">{{ $results['invalid_count'] }}</p>
                 </div>
-                <div class="w-10 h-10 rounded-xl bg-rose-500/10 border border-rose-500/20 flex items-center justify-center text-rose-600 dark:text-rose-400">
+                <div class="w-10 h-10 rounded-xl bg-rose-500/10 border border-rose-500/20 flex items-center justify-center text-rose-700 dark:text-rose-400">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
                 </div>
             </div>
@@ -158,7 +158,7 @@
     @if($results['invalid_count'] > 0)
         <div class="space-y-3">
             <div class="flex items-center justify-between">
-                <h2 class="text-base font-bold text-rose-600 dark:text-rose-400 flex items-center gap-2">
+                <h2 class="text-base font-bold text-rose-700 dark:text-rose-400 flex items-center gap-2">
                     <span class="w-2.5 h-2.5 rounded-full bg-rose-500"></span>
                     {{ __('Flagged rows with validation errors (:count)', ['count' => $results['invalid_count']]) }}
                 </h2>
@@ -168,7 +168,7 @@
             <x-card :padded="false" class="overflow-hidden border-rose-500/30">
                 <div class="overflow-x-auto">
                     <table class="w-full text-left text-xs font-mono">
-                        <thead class="bg-rose-500/5 text-rose-600 dark:text-rose-400 uppercase tracking-wider text-[10px] border-b theme-border font-sans font-semibold">
+                        <thead class="bg-rose-500/5 text-rose-700 dark:text-rose-400 uppercase tracking-wider text-[10px] border-b theme-border font-sans font-semibold">
                             <tr>
                                 <th class="py-3 px-4 w-16">{{ __('Line') }}</th>
                                 <th class="py-3 px-4 w-64">{{ __('Manifest reference') }}</th>
@@ -178,7 +178,7 @@
                         <tbody class="divide-y theme-border">
                             @foreach($results['invalid_rows'] as $invalid)
                                 <tr class="hover:bg-rose-500/5 transition-colors">
-                                    <td class="py-3.5 px-4 font-bold text-rose-500">
+                                    <td class="py-3.5 px-4 font-bold text-rose-700 dark:text-rose-400">
                                         #{{ $invalid['row_number'] }}
                                     </td>
                                     <td class="py-3.5 px-4 theme-text-secondary font-sans text-xs space-y-1">
@@ -192,7 +192,7 @@
                                     </td>
                                     <td class="py-3.5 px-4 space-y-1">
                                         @foreach($invalid['errors'] as $msg)
-                                            <div class="text-[11px] text-rose-600 dark:text-rose-400 flex items-start gap-1.5 font-sans">
+                                            <div class="text-[11px] text-rose-700 dark:text-rose-400 flex items-start gap-1.5 font-sans">
                                                 <span class="text-rose-500 font-bold shrink-0">&bull;</span>
                                                 <span>{{ $msg }}</span>
                                             </div>

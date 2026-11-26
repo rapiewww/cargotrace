@@ -44,7 +44,7 @@
             <button
                 type="button"
                 onclick="window.CargoTrace && window.CargoTrace.toggleSidebarCollapse ? window.CargoTrace.toggleSidebarCollapse() : null"
-                class="hidden lg:flex p-1.5 rounded-lg text-slate-400 hover:text-cyan-400 hover:bg-slate-500/10 transition sidebar-full-only cursor-pointer"
+                class="hidden lg:flex p-1.5 rounded-lg theme-text-secondary hover:text-blue-600 dark:hover:text-cyan-400 hover:bg-slate-500/10 transition sidebar-full-only cursor-pointer"
                 title="{{ __('Collapse sidebar to icon rail') }}"
                 aria-label="{{ __('Collapse sidebar') }}"
             >
@@ -57,7 +57,7 @@
             <button
                 type="button"
                 onclick="window.CargoTrace && window.CargoTrace.toggleSidebarCollapse ? window.CargoTrace.toggleSidebarCollapse() : null"
-                class="hidden sidebar-collapsed-only p-1.5 rounded-lg text-slate-400 hover:text-cyan-400 hover:bg-slate-500/10 transition cursor-pointer"
+                class="hidden sidebar-collapsed-only p-1.5 rounded-lg theme-text-secondary hover:text-blue-600 dark:hover:text-cyan-400 hover:bg-slate-500/10 transition cursor-pointer"
                 title="{{ __('Expand sidebar') }}"
                 aria-label="{{ __('Expand sidebar') }}"
             >
@@ -70,7 +70,7 @@
             <button
                 type="button"
                 onclick="window.CargoTrace && window.CargoTrace.closeSidebar ? window.CargoTrace.closeSidebar() : null"
-                class="lg:hidden p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition cursor-pointer"
+                class="lg:hidden p-1.5 rounded-lg theme-text-secondary hover:theme-heading hover:bg-slate-200 dark:hover:bg-slate-800 transition cursor-pointer"
                 aria-label="{{ __('Close navigation') }}"
             >
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
@@ -83,7 +83,7 @@
         <nav class="space-y-5 overflow-y-auto max-h-[calc(100vh-220px)] pr-1 focus:outline-none">
             <!-- GROUP 1: OPERATIONS -->
             <div class="space-y-1">
-                <span class="sidebar-full-only px-3 text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 font-mono block mb-1.5">
+                <span class="sidebar-full-only px-3 text-[10px] font-bold uppercase tracking-wider theme-text-muted font-mono block mb-1.5">
                     {{ __('Operations') }}
                 </span>
                 <div class="sidebar-collapsed-only hidden w-full h-[1px] bg-slate-500/20 my-2"></div>
@@ -148,7 +148,7 @@
 
             <!-- GROUP 2: INTELLIGENCE -->
             <div class="space-y-1">
-                <span class="sidebar-full-only px-3 text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 font-mono block mb-1.5">
+                <span class="sidebar-full-only px-3 text-[10px] font-bold uppercase tracking-wider theme-text-muted font-mono block mb-1.5">
                     {{ __('Intelligence') }}
                 </span>
                 <div class="sidebar-collapsed-only hidden w-full h-[1px] bg-slate-500/20 my-2"></div>
@@ -193,7 +193,7 @@
             <!-- GROUP 3: MASTER DATA (Admin & Operator only) -->
             @if(in_array($role, ['admin', 'operator']))
                 <div class="space-y-1">
-                    <span class="sidebar-full-only px-3 text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 font-mono block mb-1.5">
+                    <span class="sidebar-full-only px-3 text-[10px] font-bold uppercase tracking-wider theme-text-muted font-mono block mb-1.5">
                         {{ __('Master Data') }}
                     </span>
                     <div class="sidebar-collapsed-only hidden w-full h-[1px] bg-slate-500/20 my-2"></div>
@@ -228,7 +228,7 @@
             <!-- GROUP 4: ADMINISTRATION (Admin only) -->
             @if($role === 'admin')
                 <div class="space-y-1">
-                    <span class="sidebar-full-only px-3 text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 font-mono block mb-1.5">
+                    <span class="sidebar-full-only px-3 text-[10px] font-bold uppercase tracking-wider theme-text-muted font-mono block mb-1.5">
                         {{ __('Administration') }}
                     </span>
                     <div class="sidebar-collapsed-only hidden w-full h-[1px] bg-slate-500/20 my-2"></div>
@@ -284,7 +284,7 @@
                 <div class="relative w-8 h-8 rounded-lg bg-gradient-to-tr from-cyan-500 to-blue-600 flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
                     {{ strtoupper(substr($user->name ?? 'User', 0, 2)) }}
                     @if($unreadNotificationsCount > 0)
-                        <span class="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-cyan-400 border border-slate-900"></span>
+                        <span class="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-cyan-400 border border-white dark:border-slate-900"></span>
                     @endif
                 </div>
                 <div class="sidebar-full-only min-w-0 flex-1">

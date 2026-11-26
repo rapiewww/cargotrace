@@ -44,7 +44,7 @@
                     id="filter-from"
                     name="from"
                     value="{{ $from->toDateString() }}"
-                    class="px-2.5 py-1.5 rounded-xl theme-card-elevated border theme-border text-xs font-mono theme-heading focus:outline-none focus:border-cyan-500"
+                    class="px-2.5 py-1.5 rounded-xl theme-input border theme-border text-xs font-mono focus:outline-none focus:border-cyan-500"
                 />
             </div>
 
@@ -55,7 +55,7 @@
                     id="filter-to"
                     name="to"
                     value="{{ $to->toDateString() }}"
-                    class="px-2.5 py-1.5 rounded-xl theme-card-elevated border theme-border text-xs font-mono theme-heading focus:outline-none focus:border-cyan-500"
+                    class="px-2.5 py-1.5 rounded-xl theme-input border theme-border text-xs font-mono focus:outline-none focus:border-cyan-500"
                 />
             </div>
 
@@ -177,7 +177,7 @@
     @if(!$summary['has_data'])
         <!-- Empty State When No Data in Range -->
         <div class="p-12 rounded-3xl theme-card border theme-border text-center flex flex-col items-center justify-center my-8">
-            <div class="w-14 h-14 rounded-2xl bg-slate-500/10 border theme-border flex items-center justify-center text-slate-400 mb-4">
+            <div class="w-14 h-14 rounded-2xl bg-slate-500/10 border theme-border flex items-center justify-center theme-text-muted mb-4">
                 <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
                 </svg>
@@ -391,18 +391,18 @@
                                         </td>
                                         <td class="py-2 px-2.5 text-center">
                                             <span class="inline-flex gap-1 text-[10px] font-mono">
-                                                @if($ex->low_count > 0)<span class="px-1 rounded bg-slate-500/20 text-slate-400" title="{{ __('Low severity') }}">{{ $ex->low_count }}L</span>@endif
-                                                @if($ex->medium_count > 0)<span class="px-1 rounded bg-amber-500/20 text-amber-500 font-semibold" title="{{ __('Medium severity') }}">{{ $ex->medium_count }}M</span>@endif
-                                                @if($ex->high_count > 0)<span class="px-1 rounded bg-rose-500/20 text-rose-500 font-bold" title="{{ __('High severity') }}">{{ $ex->high_count }}H</span>@endif
+                                                @if($ex->low_count > 0)<span class="px-1 rounded bg-slate-500/20 theme-text-secondary" title="{{ __('Low severity') }}">{{ $ex->low_count }}L</span>@endif
+                                                @if($ex->medium_count > 0)<span class="px-1 rounded bg-amber-500/20 text-amber-700 dark:text-amber-400 font-semibold" title="{{ __('Medium severity') }}">{{ $ex->medium_count }}M</span>@endif
+                                                @if($ex->high_count > 0)<span class="px-1 rounded bg-rose-500/20 text-rose-700 dark:text-rose-400 font-bold" title="{{ __('High severity') }}">{{ $ex->high_count }}H</span>@endif
                                             </span>
                                         </td>
                                         <td class="py-2 px-2.5 text-right font-mono text-[11px]">
                                             @if($ex->open_count > 0)
-                                                <span class="text-rose-500 font-semibold">{{ __(':count open', ['count' => $ex->open_count]) }}</span>
+                                                <span class="text-rose-700 dark:text-rose-400 font-semibold">{{ __(':count open', ['count' => $ex->open_count]) }}</span>
                                             @elseif($ex->investigating_count > 0)
-                                                <span class="text-amber-500 font-semibold">{{ __(':count inv.', ['count' => $ex->investigating_count]) }}</span>
+                                                <span class="text-amber-700 dark:text-amber-400 font-semibold">{{ __(':count inv.', ['count' => $ex->investigating_count]) }}</span>
                                             @else
-                                                <span class="text-emerald-500">{{ __('all resolved') }}</span>
+                                                <span class="text-emerald-700 dark:text-emerald-400">{{ __('all resolved') }}</span>
                                             @endif
                                         </td>
                                     </tr>
