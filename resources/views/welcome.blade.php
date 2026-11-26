@@ -97,36 +97,38 @@
     <section class="relative min-h-[600px] sm:min-h-[680px] lg:min-h-[760px] flex items-center overflow-hidden border-b theme-border bg-[#EEF5FB] dark:bg-[#060D1A] transition-colors duration-300 ease-in-out">
         <!-- Background Imagery: Both themes share identical positioned box and crossfade via opacity -->
         <div class="absolute inset-0 z-0 overflow-hidden pointer-events-none">
-            <div class="hero-artwork-frame absolute inset-0 lg:inset-y-0 lg:left-auto lg:right-0 lg:h-full lg:w-auto lg:aspect-[2752/1536]">
-                {{-- Dark Theme Background Photography --}}
-                <img
-                    src="{{ asset($heroDarkImage) }}"
-                    alt="Multimodal spice freight terminal at night with container ship, cargo aircraft, and haulage truck"
-                    width="{{ $heroDarkIsMultimodal ? 2752 : 2560 }}"
-                    height="{{ $heroDarkIsMultimodal ? 1536 : 1440 }}"
-                    fetchpriority="high"
-                    loading="eager"
-                    decoding="sync"
-                    class="absolute inset-0 w-full h-full object-cover [object-position:76%_center] lg:object-contain lg:object-right opacity-0 dark:opacity-100 transition-opacity duration-300 ease-in-out filter brightness-100 contrast-100"
-                >
-
-                {{-- Light Theme Background Photography (or pale gradient + SVG motif fallback) --}}
-                @if($heroLightImage)
+            <div class="hero-artwork-frame absolute inset-0 overflow-hidden lg:inset-y-0 lg:left-auto lg:right-0 lg:h-full lg:w-auto lg:aspect-[2752/1536]">
+                <div class="hero-artwork-stage absolute inset-0">
+                    {{-- Dark Theme Background Photography --}}
                     <img
-                        src="{{ asset($heroLightImage) }}"
-                        alt="Daytime multimodal freight operations showing container vessel, cargo plane, and road transport"
-                        width="{{ $heroLightIsMultimodal ? 2752 : 2560 }}"
-                        height="{{ $heroLightIsMultimodal ? 1536 : 1440 }}"
+                        src="{{ asset($heroDarkImage) }}"
+                        alt="Multimodal spice freight terminal at night with container ship, cargo aircraft, and haulage truck"
+                        width="{{ $heroDarkIsMultimodal ? 2752 : 2560 }}"
+                        height="{{ $heroDarkIsMultimodal ? 1536 : 1440 }}"
                         fetchpriority="high"
                         loading="eager"
-                        decoding="async"
-                        class="absolute inset-0 w-full h-full object-cover [object-position:76%_center] lg:object-contain lg:object-right opacity-100 dark:opacity-0 transition-opacity duration-300 ease-in-out filter brightness-100 contrast-100"
+                        decoding="sync"
+                        class="absolute inset-0 w-full h-full object-cover [object-position:76%_center] lg:object-contain lg:object-right opacity-0 dark:opacity-100 transition-opacity duration-300 ease-in-out filter brightness-100 contrast-100"
                     >
-                @else
-                    <div class="absolute inset-0 w-full h-full bg-gradient-to-br from-[#EEF5FB] via-sky-50 to-slate-200 opacity-100 dark:opacity-0 transition-opacity duration-300 ease-in-out">
-                        <x-svg-network-motif class="text-slate-500 opacity-10" />
-                    </div>
-                @endif
+
+                    {{-- Light Theme Background Photography (or pale gradient + SVG motif fallback) --}}
+                    @if($heroLightImage)
+                        <img
+                            src="{{ asset($heroLightImage) }}"
+                            alt="Daytime multimodal freight operations showing container vessel, cargo plane, and road transport"
+                            width="{{ $heroLightIsMultimodal ? 2752 : 2560 }}"
+                            height="{{ $heroLightIsMultimodal ? 1536 : 1440 }}"
+                            fetchpriority="high"
+                            loading="eager"
+                            decoding="sync"
+                            class="absolute inset-0 w-full h-full object-cover [object-position:76%_center] lg:object-contain lg:object-right {{ $heroLightIsMultimodal ? 'hero-light-aligned' : '' }} opacity-100 dark:opacity-0 transition-opacity duration-300 ease-in-out filter brightness-100 contrast-100"
+                        >
+                    @else
+                        <div class="absolute inset-0 w-full h-full bg-gradient-to-br from-[#EEF5FB] via-sky-50 to-slate-200 opacity-100 dark:opacity-0 transition-opacity duration-300 ease-in-out">
+                            <x-svg-network-motif class="text-slate-500 opacity-10" />
+                        </div>
+                    @endif
+                </div>
             </div>
 
             <!-- Dark Theme Gradient Scrim (crossfades smoothly, protects left typography while keeping right artwork uncropped) -->

@@ -24,6 +24,8 @@ test('landing page renders multimodal hero assets, 3-column capability highlight
         ->assertSee('lg:min-h-[760px]', false)
         ->assertSee('bg-[#EEF5FB] dark:bg-[#060D1A]', false)
         ->assertSee('hero-artwork-frame', false)
+        ->assertSee('hero-artwork-stage', false)
+        ->assertSee('hero-light-aligned', false)
         ->assertSee('lg:object-contain lg:object-right', false)
         ->assertSee('transition-opacity duration-300 ease-in-out', false)
         ->assertSee('opacity-0 dark:opacity-100', false)
