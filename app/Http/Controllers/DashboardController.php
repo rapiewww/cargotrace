@@ -379,6 +379,26 @@ class DashboardController extends Controller
     }
 
     /**
+     * Validate that a latitude/longitude pair is finite, in range, and not Null Island (0, 0).
+     */
+    protected function isValidCoordinate(?float $lat, ?float $lng): bool
+    {
+        if ($lat === null || $lng === null || ! is_finite($lat) || ! is_finite($lng)) {
+            return false;
+        }
+
+        if ($lat < -90.0 || $lat > 90.0 || $lng < -180.0 || $lng > 180.0) {
+            return false;
+        }
+
+        if (abs($lat) < 0.0001 && abs($lng) < 0.0001) {
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
      * Build the unified, role-scoped shipment route and location payload for map views.
      *
      * @return array<string, mixed>
@@ -424,11 +444,13 @@ class DashboardController extends Controller
         $shipments = $query->latest()->get();
 
         $locationsById = [];
-        $registerLocation = static function (?Location $loc) use (&$locationsById): void {
+        $registerLocation = function (?Location $loc) use (&$locationsById): void {
             if (! $loc || isset($locationsById[$loc->id])) {
                 return;
             }
-            if ($loc->latitude === null || $loc->longitude === null) {
+            $lat = $loc->latitude !== null ? (float) $loc->latitude : null;
+            $lng = $loc->longitude !== null ? (float) $loc->longitude : null;
+            if (! $this->isValidCoordinate($lat, $lng)) {
                 return;
             }
 
@@ -444,12 +466,16 @@ class DashboardController extends Controller
                 'city' => $loc->city,
                 'country' => $loc->country,
                 'type' => $loc->type,
-                'latitude' => (float) $loc->latitude,
-                'longitude' => (float) $loc->longitude,
+                'latitude' => $lat,
+                'longitude' => $lng,
             ];
         };
 
-        $formatEndpoint = static function (?Location $loc, string $fallbackName, string $fallbackCode): array {
+        $formatEndpoint = function (?Location $loc, string $fallbackName, string $fallbackCode): array {
+            $lat = $loc?->latitude !== null ? (float) $loc->latitude : null;
+            $lng = $loc?->longitude !== null ? (float) $loc->longitude : null;
+            $valid = $this->isValidCoordinate($lat, $lng);
+
             return [
                 'id' => $loc?->id ? (int) $loc->id : null,
                 'name' => $loc?->name ?? $fallbackName,
@@ -459,93 +485,107 @@ class DashboardController extends Controller
                 'unlocode' => $loc?->display_code ?? $fallbackCode,
                 'city' => $loc?->city ?? '',
                 'country' => $loc?->country ?? '',
-                'lat' => $loc?->latitude !== null ? (float) $loc->latitude : null,
-                'lng' => $loc?->longitude !== null ? (float) $loc->longitude : null,
+                'lat' => $valid ? $lat : null,
+                'lng' => $valid ? $lng : null,
             ];
         };
 
-        $mappedShipments = $shipments->map(function (Shipment $s) use ($registerLocation, $formatEndpoint): array {
-            $modeCode = strtoupper((string) ($s->transport_mode ?? 'SEA'));
-            $modeLabel = match ($modeCode) {
-                'AIR' => 'Air',
-                'ROAD' => 'Road',
-                default => 'Sea',
-            };
+        $mappedShipments = $shipments
+            ->filter(function (Shipment $s): bool {
+                $origLat = $s->originLocation?->latitude !== null ? (float) $s->originLocation->latitude : null;
+                $origLng = $s->originLocation?->longitude !== null ? (float) $s->originLocation->longitude : null;
+                $destLat = $s->destinationLocation?->latitude !== null ? (float) $s->destinationLocation->latitude : null;
+                $destLng = $s->destinationLocation?->longitude !== null ? (float) $s->destinationLocation->longitude : null;
 
-            $registerLocation($s->originLocation);
-            $registerLocation($s->destinationLocation);
-            $registerLocation($s->currentLocation);
-            $registerLocation($s->latestTrackingEvent?->location);
+                return $this->isValidCoordinate($origLat, $origLng)
+                    && $this->isValidCoordinate($destLat, $destLng);
+            })
+            ->map(function (Shipment $s) use ($registerLocation, $formatEndpoint): array {
+                $modeCode = strtoupper((string) ($s->transport_mode ?? 'SEA'));
+                $modeLabel = match ($modeCode) {
+                    'AIR' => 'Air',
+                    'ROAD' => 'Road',
+                    default => 'Sea',
+                };
 
-            $openExceptions = $s->exceptions
-                ->filter(fn (ShipmentException $e) => in_array($e->status, ['OPEN', 'INVESTIGATING'], true))
-                ->values();
+                $registerLocation($s->originLocation);
+                $registerLocation($s->destinationLocation);
+                $registerLocation($s->currentLocation);
+                $registerLocation($s->latestTrackingEvent?->location);
 
-            $latestEvent = $s->latestTrackingEvent;
-            $eventLocation = $latestEvent?->location ?? $s->currentLocation;
+                $openExceptions = $s->exceptions
+                    ->filter(fn (ShipmentException $e) => in_array($e->status, ['OPEN', 'INVESTIGATING'], true))
+                    ->values();
 
-            $trackingLat = $latestEvent?->latitude !== null
-                ? (float) $latestEvent->latitude
-                : ($eventLocation?->latitude !== null ? (float) $eventLocation->latitude : null);
-            $trackingLng = $latestEvent?->longitude !== null
-                ? (float) $latestEvent->longitude
-                : ($eventLocation?->longitude !== null ? (float) $eventLocation->longitude : null);
+                $latestEvent = $s->latestTrackingEvent;
+                $eventLocation = $latestEvent?->location ?? $s->currentLocation;
 
-            $latestTracking = ($trackingLat !== null && $trackingLng !== null) ? [
-                'location_name' => $eventLocation?->name ?? $latestEvent?->title ?? 'Latest checkpoint',
-                'short_name' => $eventLocation?->short_name ?? $eventLocation?->name ?? 'Latest checkpoint',
-                'code' => $eventLocation?->display_code ?? '',
-                'code_type' => $eventLocation?->code_type_label ?? 'Code',
-                'lat' => $trackingLat,
-                'lng' => $trackingLng,
-                'occurred_at' => $latestEvent?->occurred_at?->toIso8601String(),
-                'occurred_at_formatted' => $latestEvent?->occurred_at?->format('M d, Y H:i'),
-                'title' => $latestEvent?->title ?? $s->status_display_label,
-                'status' => $latestEvent?->status ?? $s->status,
-                'event_type' => $latestEvent?->event_type,
-            ] : null;
+                $trackingLat = $latestEvent?->latitude !== null
+                    ? (float) $latestEvent->latitude
+                    : ($eventLocation?->latitude !== null ? (float) $eventLocation->latitude : null);
+                $trackingLng = $latestEvent?->longitude !== null
+                    ? (float) $latestEvent->longitude
+                    : ($eventLocation?->longitude !== null ? (float) $eventLocation->longitude : null);
 
-            $currentPoint = $latestTracking ? [
-                'name' => $latestTracking['location_name'],
-                'short_name' => $latestTracking['short_name'],
-                'code' => $latestTracking['code'],
-                'code_type' => $latestTracking['code_type'],
-                'unlocode' => $latestTracking['code'],
-                'lat' => $latestTracking['lat'],
-                'lng' => $latestTracking['lng'],
-            ] : null;
+                $hasValidTracking = $this->isValidCoordinate($trackingLat, $trackingLng);
 
-            return [
-                'id' => (int) $s->id,
-                'tracking_number' => $s->tracking_number,
-                'mode' => $modeCode,
-                'mode_label' => $modeLabel,
-                'transport_mode' => $modeCode,
-                'primary_reference' => $s->primary_reference,
-                'primary_reference_label' => $s->primary_reference_label,
-                'labeled_primary_reference' => $s->labeled_primary_reference,
-                'status' => $s->status,
-                'status_label' => $s->status_display_label,
-                'is_delayed' => (bool) $s->is_delayed,
-                'delay_hours' => (float) $s->delay_hours,
-                'delay_severity' => strtoupper((string) ($s->delay_severity ?? 'NONE')),
-                'open_exceptions_count' => $openExceptions->count(),
-                'has_exception' => $openExceptions->isNotEmpty(),
-                'carrier' => $s->carrier?->name ?? 'Carrier',
-                'carrier_mode' => $s->carrier?->mode ?? $modeCode,
-                'origin' => $formatEndpoint($s->originLocation, 'Origin', 'ORI'),
-                'destination' => $formatEndpoint($s->destinationLocation, 'Destination', 'DST'),
-                'latest_tracking' => $latestTracking,
-                'current' => $currentPoint,
-                'exceptions' => $openExceptions->map(fn (ShipmentException $e) => [
-                    'code' => $e->exception_code,
-                    'severity' => $e->severity,
-                    'status' => $e->status,
-                    'description' => $e->description,
-                ])->toArray(),
-                'url' => route('shipments.show', $s),
-            ];
-        })->values()->toArray();
+                $latestTracking = $hasValidTracking ? [
+                    'location_name' => $eventLocation?->name ?? $latestEvent?->title ?? 'Latest checkpoint',
+                    'short_name' => $eventLocation?->short_name ?? $eventLocation?->name ?? 'Latest checkpoint',
+                    'code' => $eventLocation?->display_code ?? '',
+                    'code_type' => $eventLocation?->code_type_label ?? 'Code',
+                    'lat' => $trackingLat,
+                    'lng' => $trackingLng,
+                    'occurred_at' => $latestEvent?->occurred_at?->toIso8601String(),
+                    'occurred_at_formatted' => $latestEvent?->occurred_at?->format('M d, Y H:i'),
+                    'title' => $latestEvent?->title ?? $s->status_display_label,
+                    'status' => $latestEvent?->status ?? $s->status,
+                    'event_type' => $latestEvent?->event_type,
+                ] : null;
+
+                $currentPoint = $latestTracking ? [
+                    'name' => $latestTracking['location_name'],
+                    'short_name' => $latestTracking['short_name'],
+                    'code' => $latestTracking['code'],
+                    'code_type' => $latestTracking['code_type'],
+                    'unlocode' => $latestTracking['code'],
+                    'lat' => $latestTracking['lat'],
+                    'lng' => $latestTracking['lng'],
+                ] : null;
+
+                return [
+                    'id' => (int) $s->id,
+                    'tracking_number' => $s->tracking_number,
+                    'mode' => $modeCode,
+                    'mode_label' => $modeLabel,
+                    'transport_mode' => $modeCode,
+                    'primary_reference' => $s->primary_reference,
+                    'primary_reference_label' => $s->primary_reference_label,
+                    'labeled_primary_reference' => $s->labeled_primary_reference,
+                    'status' => $s->status,
+                    'status_label' => $s->status_display_label,
+                    'is_delayed' => (bool) $s->is_delayed,
+                    'delay_hours' => (float) $s->delay_hours,
+                    'delay_severity' => strtoupper((string) ($s->delay_severity ?? 'NONE')),
+                    'open_exceptions_count' => $openExceptions->count(),
+                    'has_exception' => $openExceptions->isNotEmpty(),
+                    'carrier' => $s->carrier?->name ?? 'Carrier',
+                    'carrier_mode' => $s->carrier?->mode ?? $modeCode,
+                    'origin' => $formatEndpoint($s->originLocation, 'Origin', 'ORI'),
+                    'destination' => $formatEndpoint($s->destinationLocation, 'Destination', 'DST'),
+                    'latest_tracking' => $latestTracking,
+                    'current' => $currentPoint,
+                    'exceptions' => $openExceptions->map(fn (ShipmentException $e) => [
+                        'code' => $e->exception_code,
+                        'severity' => $e->severity,
+                        'status' => $e->status,
+                        'description' => $e->description,
+                    ])->toArray(),
+                    'url' => route('shipments.show', $s),
+                ];
+            })
+            ->values()
+            ->toArray();
 
         return [
             'shipments' => $mappedShipments,

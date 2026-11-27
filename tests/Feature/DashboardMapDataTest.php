@@ -2,7 +2,10 @@
 
 namespace Tests\Feature;
 
+use App\Models\Carrier;
+use App\Models\Location;
 use App\Models\Shipment;
+use App\Models\TrackingEvent;
 use App\Models\User;
 use Database\Seeders\DatabaseSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -185,4 +188,136 @@ test('dashboard page contains 2d leaflet container, config tile meta, empty stat
     if ($customer2Tracking) {
         $res->assertDontSee($customer2Tracking);
     }
+});
+
+test('map data endpoint excludes zero or invalid coordinates from shipments, locations, and tracking points', function () {
+    $operator = User::where('role', 'operator')->firstOrFail();
+    $customer = User::where('role', 'customer')->firstOrFail();
+    $carrier = Carrier::firstOrFail();
+    $validOrigin = Location::where('unlocode', 'IDJKT')->firstOrFail();
+    $validDestination = Location::where('unlocode', 'NLRTM')->firstOrFail();
+
+    $nullIslandLoc = Location::create([
+        'unlocode' => 'ZZ000',
+        'name' => 'Null Island Invalid Port',
+        'city' => 'Null Island',
+        'country' => 'Atlantic',
+        'country_code' => 'ZZ',
+        'currency_code' => 'USD',
+        'type' => 'PORT',
+        'latitude' => 0.0,
+        'longitude' => 0.0,
+    ]);
+
+    $invalidRouteShipment = Shipment::create([
+        'tracking_number' => 'CTG-SEA-2026-99001',
+        'transport_mode' => 'SEA',
+        'customer_id' => $customer->id,
+        'carrier_id' => $carrier->id,
+        'origin_location_id' => $validOrigin->id,
+        'destination_location_id' => $nullIslandLoc->id,
+        'current_location_id' => $nullIslandLoc->id,
+        'cargo_type' => 'FCL',
+        'total_weight_kg' => 1000,
+        'total_volume_cbm' => 10,
+        'declared_value' => 5000,
+        'currency_code' => 'USD',
+        'shipping_cost' => 1000,
+        'exchange_rate_to_usd' => 1,
+        'converted_value_usd' => 5000,
+        'status' => 'IN_TRANSIT',
+        'expected_departure_at' => now()->subDays(2),
+        'expected_arrival_at' => now()->addDays(5),
+    ]);
+
+    $invalidEventShipment = Shipment::create([
+        'tracking_number' => 'CTG-SEA-2026-99002',
+        'transport_mode' => 'SEA',
+        'customer_id' => $customer->id,
+        'carrier_id' => $carrier->id,
+        'origin_location_id' => $validOrigin->id,
+        'destination_location_id' => $validDestination->id,
+        'current_location_id' => $nullIslandLoc->id,
+        'cargo_type' => 'FCL',
+        'total_weight_kg' => 1200,
+        'total_volume_cbm' => 12,
+        'declared_value' => 6000,
+        'currency_code' => 'USD',
+        'shipping_cost' => 1100,
+        'exchange_rate_to_usd' => 1,
+        'converted_value_usd' => 6000,
+        'status' => 'IN_TRANSIT',
+        'expected_departure_at' => now()->subDays(2),
+        'expected_arrival_at' => now()->addDays(6),
+    ]);
+
+    TrackingEvent::create([
+        'shipment_id' => $invalidEventShipment->id,
+        'location_id' => $nullIslandLoc->id,
+        'status' => 'IN_TRANSIT',
+        'event_type' => 'NORMAL',
+        'title' => 'Invalid Checkpoint',
+        'latitude' => 0.0,
+        'longitude' => 0.0,
+        'occurred_at' => now(),
+    ]);
+
+    $res = $this->actingAs($operator)->getJson('/dashboard/map-data');
+    $res->assertStatus(200);
+
+    $payload = $res->json('data');
+    $shipments = collect($payload['shipments']);
+    $locations = collect($payload['locations']);
+
+    expect($payload['meta']['total'])->toBe($shipments->count())
+        ->and($shipments->pluck('tracking_number')->all())->not->toContain($invalidRouteShipment->tracking_number)
+        ->and($locations->pluck('code')->all())->not->toContain('ZZ000');
+
+    $matched = $shipments->firstWhere('tracking_number', $invalidEventShipment->tracking_number);
+    expect($matched)->not->toBeNull()
+        ->and($matched['latest_tracking'])->toBeNull()
+        ->and($matched['current'])->toBeNull();
+});
+
+test('landing page excludes zero or invalid coordinates from world map payload', function () {
+    $customer = User::where('role', 'customer')->firstOrFail();
+    $carrier = Carrier::firstOrFail();
+    $validOrigin = Location::where('unlocode', 'IDJKT')->firstOrFail();
+
+    $nullIslandLoc = Location::create([
+        'unlocode' => 'ZZ999',
+        'name' => 'Null Island Landing Port',
+        'city' => 'Null Island',
+        'country' => 'Atlantic',
+        'country_code' => 'ZZ',
+        'currency_code' => 'USD',
+        'type' => 'PORT',
+        'latitude' => 0.0,
+        'longitude' => 0.0,
+    ]);
+
+    $invalidLandingShipment = Shipment::create([
+        'tracking_number' => 'CTG-SEA-2026-99003',
+        'transport_mode' => 'SEA',
+        'customer_id' => $customer->id,
+        'carrier_id' => $carrier->id,
+        'origin_location_id' => $validOrigin->id,
+        'destination_location_id' => $nullIslandLoc->id,
+        'cargo_type' => 'FCL',
+        'total_weight_kg' => 900,
+        'total_volume_cbm' => 9,
+        'declared_value' => 4000,
+        'currency_code' => 'USD',
+        'shipping_cost' => 900,
+        'exchange_rate_to_usd' => 1,
+        'converted_value_usd' => 4000,
+        'status' => 'IN_TRANSIT',
+        'expected_departure_at' => now()->subDays(1),
+        'expected_arrival_at' => now()->addDays(4),
+    ]);
+
+    $res = $this->get('/');
+    $res->assertStatus(200)
+        ->assertDontSee('ZZ999')
+        ->assertDontSee($invalidLandingShipment->tracking_number);
 });

@@ -705,13 +705,15 @@
                             $curr = $s->currentLocation;
                             $hasExceptions = $s->exceptions->isNotEmpty();
                             $sMode = strtoupper($s->transport_mode ?? 'SEA');
+                            $focusLat = $curr?->latitude !== null ? (float) $curr->latitude : ($orig?->latitude !== null ? (float) $orig->latitude : null);
+                            $focusLng = $curr?->longitude !== null ? (float) $curr->longitude : ($orig?->longitude !== null ? (float) $orig->longitude : null);
                         @endphp
                         <tr
                             class="activity-row cursor-pointer hover:bg-blue-600/10 transition-colors duration-150 border-l-2 border-transparent"
                             tabindex="0"
                             data-tracking="{{ $s->tracking_number }}"
-                            onclick="if (event.target.closest('a, button')) return; window.CargoTrace && window.CargoTrace.focusMaritimeEntity ? window.CargoTrace.focusMaritimeEntity({{ $curr->latitude ?? $orig->latitude ?? 0 }}, {{ $curr->longitude ?? $orig->longitude ?? 0 }}, '{{ $s->tracking_number }}') : null"
-                            onkeydown="if ((event.key === 'Enter' || event.key === ' ') && !event.target.closest('a, button')) { event.preventDefault(); window.CargoTrace && window.CargoTrace.focusMaritimeEntity ? window.CargoTrace.focusMaritimeEntity({{ $curr->latitude ?? $orig->latitude ?? 0 }}, {{ $curr->longitude ?? $orig->longitude ?? 0 }}, '{{ $s->tracking_number }}') : null; }"
+                            onclick="if (event.target.closest('a, button')) return; window.CargoTrace && window.CargoTrace.focusMaritimeEntity ? window.CargoTrace.focusMaritimeEntity(@json($focusLat), @json($focusLng), '{{ $s->tracking_number }}') : null"
+                            onkeydown="if ((event.key === 'Enter' || event.key === ' ') && !event.target.closest('a, button')) { event.preventDefault(); window.CargoTrace && window.CargoTrace.focusMaritimeEntity ? window.CargoTrace.focusMaritimeEntity(@json($focusLat), @json($focusLng), '{{ $s->tracking_number }}') : null; }"
                         >
                             <!-- Cargo ID & Carrier Icon -->
                             <td class="py-3.5 px-3">

@@ -1,14 +1,17 @@
 import Globe from 'globe.gl';
 import L from 'leaflet';
 import {
+    computeGlobeArcAltitude,
+    computeRouteGeometry,
+    hexToRgba,
+    isValidCoordinatePair,
+    normalizeMapDataset,
+} from './geo';
+import {
     createMap,
-    getGreatCircleArc,
     getModeSvg,
     getSeverityColor,
     getSeverityLabel,
-    normalizeLongitude,
-    splitAntimeridianSegments,
-    unwrapLongitudeNear,
 } from './map';
 
 /**
@@ -22,13 +25,15 @@ let leafletRouteLayer = null;
 let currentMode = '3D'; // '3D' or '2D'
 let activeFilter = 'ALL';
 let mapDataUrl = null;
-let initialDataset = { shipments: [], locations: [], meta: {} };
-let currentDataset = { shipments: [], locations: [], meta: {} };
+let initialDataset = { routes: [], shipments: [], locations: [], meta: {} };
+let currentDataset = { routes: [], shipments: [], locations: [], meta: {} };
 let routeRegistry = new Map();
 let pendingFocusTracking = null;
 let activeFetchController = null;
 let windowListenersAttached = false;
 let resizeTimer = null;
+let containerResizeObserver = null;
+let resizeRafId = null;
 
 function isFiniteCoord(value) {
     return value !== null && value !== undefined && value !== '' && Number.isFinite(Number(value));
@@ -64,22 +69,6 @@ function getCurrentTheme() {
         || (document.documentElement.classList.contains('light') ? 'light' : 'dark');
 }
 
-function normalizeDataset(options = {}) {
-    if (options.initialData && Array.isArray(options.initialData.shipments)) {
-        return {
-            shipments: options.initialData.shipments || [],
-            locations: options.initialData.locations || [],
-            meta: options.initialData.meta || {},
-        };
-    }
-
-    return {
-        shipments: options.shipments || [],
-        locations: options.locations || [],
-        meta: options.meta || {},
-    };
-}
-
 function getModeDisplay(mode) {
     const normalized = String(mode || 'SEA').toUpperCase();
     if (normalized === 'AIR') return { code: 'AIR', svg: getModeSvg('AIR', 11), label: 'Air' };
@@ -89,16 +78,6 @@ function getModeDisplay(mode) {
 
 function getLocCode(loc) {
     return loc?.display_code || loc?.code || loc?.unlocode || '';
-}
-
-function getLocCodeType(loc) {
-    if (loc?.code_type_label || loc?.code_type) {
-        return loc.code_type_label || loc.code_type;
-    }
-    const type = (loc?.type || '').toUpperCase();
-    if (type === 'AIRPORT') return 'IATA';
-    if (type === 'PORT' || type === 'SEAPORT') return 'UN/LOCODE';
-    return 'Internal code';
 }
 
 function updateEmptyState(isEmpty) {
@@ -131,23 +110,23 @@ function setErrorState(hasError) {
     }
 }
 
-function buildShipmentPopupHtml(shipment, pointRole, locationName, locationCode = '') {
-    const modeInfo = getModeDisplay(shipment.mode || shipment.transport_mode);
-    const hasException = Boolean(shipment.has_exception || (shipment.exceptions && shipment.exceptions.length > 0));
-    const severityColor = getSeverityColor(shipment.delay_severity, hasException);
-    const severityText = getSeverityLabel(shipment.delay_severity, hasException);
-    const statusLabel = shipment.status_label || shipment.status || 'IN_TRANSIT';
-    const lastEvent = shipment.latest_tracking;
+function buildShipmentPopupHtml(route, pointRole, locationName, locationCode = '') {
+    const raw = route.raw || route;
+    const modeInfo = getModeDisplay(route.mode);
+    const severityColor = getSeverityColor(route.delay_severity, route.has_exception);
+    const severityText = getSeverityLabel(route.delay_severity, route.has_exception);
+    const statusLabel = route.status_label || route.status || 'IN_TRANSIT';
+    const lastEvent = raw.latest_tracking;
     const lastEventTime = lastEvent?.occurred_at_formatted || lastEvent?.occurred_at || 'No events recorded';
-    const lastEventLocation = lastEvent?.location_name || shipment.current?.name || '';
+    const lastEventLocation = lastEvent?.location_name || route.currentMeta?.name || '';
     const codeSuffix = locationCode ? ` (${escapeHtml(locationCode)})` : '';
-    const detailUrl = shipment.url ? escapeHtml(shipment.url) : '#';
+    const detailUrl = route.url ? escapeHtml(route.url) : '#';
 
     return `
         <div style="font-family: 'Inter', sans-serif; font-size: 11px; min-width: 210px; max-width: 260px; line-height: 1.45;">
             <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 6px;">
                 <a href="${detailUrl}" style="font-family: 'JetBrains Mono', monospace; font-weight: 700; color: #38BDF8; text-decoration: none;">
-                    ${escapeHtml(shipment.tracking_number)}
+                    ${escapeHtml(route.tracking_number)}
                 </a>
                 <span style="display: inline-flex; align-items: center; gap: 4px; font-size: 10px; font-weight: 600; padding: 2px 7px; border-radius: 9999px; background: rgba(37, 99, 235, 0.16); border: 1px solid rgba(56, 189, 248, 0.25); white-space: nowrap;">
                     ${modeInfo.svg} <span>${modeInfo.label}</span>
@@ -177,7 +156,7 @@ function getGlobeThemeConfig(theme) {
             globeImage: '/images/globe/earth-blue-marble.jpg',
             bumpImage: '/images/globe/earth-topology.png',
             atmosphereColor: '#38BDF8',
-            atmosphereAltitude: 0.15,
+            atmosphereAltitude: 0.14,
             labelColor: 'rgba(15, 23, 42, 0.95)',
         };
     }
@@ -185,13 +164,13 @@ function getGlobeThemeConfig(theme) {
         globeImage: '/images/globe/earth-night.jpg',
         bumpImage: '/images/globe/earth-topology.png',
         atmosphereColor: '#2563EB',
-        atmosphereAltitude: 0.18,
+        atmosphereAltitude: 0.16,
         labelColor: 'rgba(255, 255, 255, 0.85)',
     };
 }
 
 /**
- * Update 3D Globe texture when theme switches
+ * Update 3D Globe texture and arc opacity when theme switches
  */
 export function updateMaritimeGlobeTheme(theme) {
     if (!globeInstance) return;
@@ -201,109 +180,103 @@ export function updateMaritimeGlobeTheme(theme) {
         .atmosphereColor(cfg.atmosphereColor)
         .atmosphereAltitude(cfg.atmosphereAltitude)
         .labelColor(() => cfg.labelColor);
+
+    renderGlobeData(currentDataset);
 }
 
 /**
- * Render dataset onto the 3D Globe
+ * Render normalized dataset onto the 3D Globe
  */
 function renderGlobeData(dataset) {
     if (!globeInstance) return;
 
-    const shipments = dataset.shipments || [];
+    const routes = dataset.routes || [];
     const locations = dataset.locations || [];
+    const isLight = getCurrentTheme() === 'light';
 
     const arcsData = [];
     const vesselMarkers = [];
 
-    shipments.forEach(s => {
-        runLayerSafely(`3D route ${s?.tracking_number || s?.id || 'unknown'}`, () => {
-            const orig = s.origin_location || s.originLocation || s.origin;
-            const dest = s.destination_location || s.destinationLocation || s.destination;
+    routes.forEach(route => {
+        runLayerSafely(`3D route ${route.tracking_number || route.id || 'unknown'}`, () => {
+            const [sLat, sLng] = route.origin;
+            const [eLat, eLng] = route.destination;
 
-            const startLat = orig?.latitude ?? orig?.lat;
-            const startLng = orig?.longitude ?? orig?.lng;
-            const endLat = dest?.latitude ?? dest?.lat;
-            const endLng = dest?.longitude ?? dest?.lng;
+            const modeInfo = getModeDisplay(route.mode);
+            const severityColor = getSeverityColor(route.delay_severity, route.has_exception);
+            const severityText = getSeverityLabel(route.delay_severity, route.has_exception);
+            const isAlert = route.is_delayed || route.has_exception;
 
-            if (!isFiniteCoord(startLat) || !isFiniteCoord(startLng) || !isFiniteCoord(endLat) || !isFiniteCoord(endLng)) {
-                return;
-            }
+            const arcAltitude = computeGlobeArcAltitude(route.mode, route.origin, route.destination);
+            const arcStroke = route.mode === 'ROAD' ? 0.26 : (route.mode === 'AIR' ? 0.30 : 0.36);
+            const arcDashLength = route.mode === 'AIR' ? 0.25 : 1.0;
+            const arcDashGap = route.mode === 'AIR' ? 0.12 : 0;
 
-            const sLat = Number(startLat);
-            const sLng = Number(startLng);
-            const eLat = Number(endLat);
-            const eLng = Number(endLng);
+            const startAlpha = isAlert ? (isLight ? 0.84 : 0.78) : (isLight ? 0.65 : 0.55);
+            const endAlpha = isAlert ? (isLight ? 0.98 : 0.95) : (isLight ? 0.85 : 0.78);
 
-            const isDelayed = Boolean(s.is_delayed);
-            const hasException = Boolean(s.has_exception || (s.exceptions && s.exceptions.length > 0));
-            const modeInfo = getModeDisplay(s.mode || s.transport_mode || s.carrier_mode);
-            const severityColor = getSeverityColor(s.delay_severity, hasException);
-
-            const arcAltitude = modeInfo.code === 'AIR' ? 0.45 : (modeInfo.code === 'ROAD' ? 0.05 : 0.22);
-            const arcDashLength = modeInfo.code === 'AIR' ? 0.3 : 1.0;
-            const arcDashGap = modeInfo.code === 'AIR' ? 0.15 : 0;
+            const origCode = getLocCode(route.originMeta) || 'ORI';
+            const destCode = getLocCode(route.destinationMeta) || 'DST';
 
             arcsData.push({
-                shipmentId: s.id,
-                trackingNumber: s.tracking_number,
+                shipmentId: route.id,
+                trackingNumber: route.tracking_number,
                 transportMode: modeInfo.code,
-                carrier: s.carrier || 'Carrier',
+                modeLabel: modeInfo.label,
+                carrier: route.carrier || 'Carrier',
+                origLabel: `${route.originMeta?.short_name || route.originMeta?.name || 'Origin'} (${origCode})`,
+                destLabel: `${route.destinationMeta?.short_name || route.destinationMeta?.name || 'Destination'} (${destCode})`,
                 startLat: sLat,
                 startLng: sLng,
                 endLat: eLat,
                 endLng: eLng,
-                color: [severityColor, severityColor],
+                color: [hexToRgba(severityColor, startAlpha), hexToRgba(severityColor, endAlpha)],
                 altitude: arcAltitude,
+                stroke: arcStroke,
                 dashLength: arcDashLength,
                 dashGap: arcDashGap,
-                status: s.status_label || s.status,
-                isDelayed,
-                hasException,
+                status: route.status_label,
+                severityText,
+                severityColor,
+                isDelayed: route.is_delayed,
+                hasException: route.has_exception,
             });
 
-            const trackingPoint = s.latest_tracking || s.current;
-            const markerLat = isFiniteCoord(trackingPoint?.lat) ? Number(trackingPoint.lat) : (sLat + eLat) / 2;
-            const markerLng = isFiniteCoord(trackingPoint?.lng) ? Number(trackingPoint.lng) : (sLng + eLng) / 2;
-
-            vesselMarkers.push({
-                shipmentId: s.id,
-                trackingNumber: s.tracking_number,
-                transportMode: modeInfo.code,
-                lat: markerLat,
-                lng: markerLng,
-                carrier: s.carrier || 'Freight',
-                status: s.status_label || s.status,
-                isDelayed,
-                color: severityColor,
-                name: `[${modeInfo.label}] ${s.tracking_number} (${getLocCode(orig) || 'ORI'} -> ${getLocCode(dest) || 'DST'})`,
-            });
+            if (route.current && isValidCoordinatePair(route.current[0], route.current[1])) {
+                vesselMarkers.push({
+                    shipmentId: route.id,
+                    trackingNumber: route.tracking_number,
+                    transportMode: modeInfo.code,
+                    lat: route.current[0],
+                    lng: route.current[1],
+                    carrier: route.carrier || 'Freight',
+                    status: route.status_label,
+                    isDelayed: route.is_delayed,
+                    color: severityColor,
+                    name: `[${modeInfo.label}] ${route.tracking_number} (${origCode} -> ${destCode})`,
+                });
+            }
         });
     });
 
-    const pointsData = [];
-    locations.forEach(loc => {
-        runLayerSafely(`3D location ${loc?.code || loc?.name || 'unknown'}`, () => {
-            if (!isFiniteCoord(loc.latitude) || !isFiniteCoord(loc.longitude)) return;
-            pointsData.push({
-                id: loc.id,
-                name: loc.name,
-                code: getLocCode(loc),
-                codeType: getLocCodeType(loc),
-                unlocode: getLocCode(loc),
-                country: loc.country,
-                lat: Number(loc.latitude),
-                lng: Number(loc.longitude),
-                size: 0.8,
-                color: '#2DD4BF',
-            });
-        });
-    });
+    const pointsData = locations.map(loc => ({
+        id: loc.id,
+        name: loc.name,
+        code: loc.code,
+        codeType: loc.codeType,
+        unlocode: loc.unlocode,
+        country: loc.country,
+        lat: loc.lat,
+        lng: loc.lng,
+        size: 0.42,
+        color: '#2DD4BF',
+    }));
 
     const labelsData = pointsData.map(p => ({
         lat: p.lat,
         lng: p.lng,
         text: p.code,
-        size: 1.1,
+        size: 0.95,
     }));
 
     runLayerSafely('3D globe layer commit', () => {
@@ -314,7 +287,58 @@ function renderGlobeData(dataset) {
             .ringsData(vesselMarkers);
     });
 
-    updateEmptyState(shipments.length === 0);
+    updateEmptyState(routes.length === 0);
+}
+
+/**
+ * Resize and recenter 3D Globe and 2D Leaflet cleanly when the sidebar or window changes size.
+ */
+function syncMapContainerSize() {
+    const shellEl = document.getElementById('dashboard-map-shell');
+    const measureEl = shellEl || globeContainerEl || leafletContainerEl;
+    if (!measureEl) return;
+
+    const width = measureEl.clientWidth;
+    const height = measureEl.clientHeight || 520;
+    if (!width || width <= 0) return;
+
+    if (globeInstance && globeContainerEl) {
+        const targetWidth = globeContainerEl.clientWidth || width;
+        const targetHeight = globeContainerEl.clientHeight || height;
+        if (targetWidth > 0) {
+            globeInstance.width(targetWidth);
+            globeInstance.height(targetHeight);
+            const controls = globeInstance.controls();
+            if (controls && typeof controls.update === 'function') {
+                controls.update();
+            }
+        }
+    }
+
+    if (currentMode === '2D' && leafletMapInstance && leafletContainerEl && leafletContainerEl.offsetWidth > 0) {
+        leafletMapInstance.invalidateSize({ animate: false });
+    }
+}
+
+function attachContainerResizeObserver() {
+    if (typeof ResizeObserver === 'undefined') return;
+    const targetEl = document.getElementById('dashboard-map-shell') || globeContainerEl || leafletContainerEl;
+    if (!targetEl) return;
+
+    if (containerResizeObserver) {
+        containerResizeObserver.disconnect();
+    }
+
+    containerResizeObserver = new ResizeObserver(() => {
+        if (resizeRafId) {
+            cancelAnimationFrame(resizeRafId);
+        }
+        resizeRafId = requestAnimationFrame(() => {
+            syncMapContainerSize();
+        });
+    });
+
+    containerResizeObserver.observe(targetEl);
 }
 
 /**
@@ -331,7 +355,7 @@ export function initMaritimeGlobe(containerId, options = {}) {
         || shellEl?.getAttribute('data-map-data-url')
         || mapDataUrl;
 
-    initialDataset = normalizeDataset(options);
+    initialDataset = normalizeMapDataset(options);
     currentDataset = initialDataset;
 
     el.innerHTML = '';
@@ -347,16 +371,25 @@ export function initMaritimeGlobe(containerId, options = {}) {
         .showAtmosphere(true)
         .arcColor('color')
         .arcAltitude('altitude')
-        .arcStroke(1.8)
+        .arcAltitudeAutoScale(0.22)
+        .arcStroke('stroke')
+        .arcCurveResolution(64)
         .arcDashLength('dashLength')
         .arcDashGap('dashGap')
         .arcDashInitialGap(() => Math.random())
-        .arcDashAnimateTime(prefersReducedMotion() ? 0 : 2200)
+        .arcDashAnimateTime(prefersReducedMotion() ? 0 : 3600)
+        .arcLabel(d => `
+            <div style="font-family: 'Inter', sans-serif; background: var(--bg-surface, #0B1728); border: 1px solid var(--border-color, rgba(255,255,255,0.1)); border-radius: 8px; padding: 6px 10px; color: var(--text-primary, #E6EEF8); font-size: 11px; box-shadow: 0 4px 12px rgba(0,0,0,0.3);">
+                <div style="font-family: 'JetBrains Mono', monospace; font-weight: 700; color: #38BDF8;">${escapeHtml(d.trackingNumber)} &bull; ${escapeHtml(d.modeLabel)}</div>
+                <div style="margin-top: 2px;">${escapeHtml(d.origLabel)} &rarr; ${escapeHtml(d.destLabel)}</div>
+                <div style="margin-top: 2px; font-weight: 600; color: ${d.severityColor};">${escapeHtml(d.status)} (${escapeHtml(d.severityText)})</div>
+            </div>
+        `)
         .pointLat('lat')
         .pointLng('lng')
         .pointColor('color')
-        .pointAltitude(0.015)
-        .pointRadius(0.65)
+        .pointAltitude(0.004)
+        .pointRadius(0.42)
         .pointLabel(d => `
             <div style="font-family: 'Inter', sans-serif; background: var(--bg-surface, #0B1728); border: 1px solid var(--border-color, rgba(255,255,255,0.1)); border-radius: 8px; padding: 6px 10px; color: var(--text-primary, #E6EEF8); font-size: 11px; box-shadow: 0 4px 12px rgba(0,0,0,0.3);">
                 <div style="font-weight: 700; color: #2DD4BF;">${escapeHtml(d.name)}</div>
@@ -367,24 +400,25 @@ export function initMaritimeGlobe(containerId, options = {}) {
         .labelLng('lng')
         .labelText('text')
         .labelSize('size')
-        .labelDotRadius(0.3)
+        .labelDotRadius(0.25)
         .labelColor(() => themeCfg.labelColor)
         .labelResolution(2)
         .ringLat('lat')
         .ringLng('lng')
         .ringColor('color')
-        .ringMaxRadius(2.2)
-        .ringPropagationSpeed(prefersReducedMotion() ? 0 : 1.2)
-        .ringRepeatPeriod(1800);
+        .ringAltitude(0.003)
+        .ringMaxRadius(1.6)
+        .ringPropagationSpeed(prefersReducedMotion() ? 0 : 1.0)
+        .ringRepeatPeriod(2000);
 
     renderGlobeData(currentDataset);
 
-    globeInstance.pointOfView({ lat: 18.0, lng: 110.0, altitude: 2.2 }, 1000);
+    globeInstance.pointOfView({ lat: 18.0, lng: 110.0, altitude: 2.2 }, prefersReducedMotion() ? 0 : 1000);
 
     const controls = globeInstance.controls();
     if (controls) {
         controls.autoRotate = !prefersReducedMotion();
-        controls.autoRotateSpeed = 0.45;
+        controls.autoRotateSpeed = 0.4;
         controls.enableZoom = true;
 
         controls.addEventListener('change', () => {
@@ -397,25 +431,22 @@ export function initMaritimeGlobe(containerId, options = {}) {
 
     globeInstance.onPointClick(point => {
         if (controls) controls.autoRotate = false;
-        globeInstance.pointOfView({ lat: point.lat, lng: point.lng, altitude: 1.5 }, 1200);
+        globeInstance.pointOfView({ lat: point.lat, lng: point.lng, altitude: 1.5 }, prefersReducedMotion() ? 0 : 1200);
         updateMapCoordinates(point.lat, point.lng);
         highlightActivityRow(null, point.unlocode);
     });
 
     attachSharedListeners();
+    attachContainerResizeObserver();
 
-    setTimeout(() => {
-        if (globeInstance && el.clientWidth) {
-            globeInstance.width(el.clientWidth);
-            globeInstance.height(el.clientHeight || 520);
-        }
-    }, 200);
+    requestAnimationFrame(syncMapContainerSize);
+    setTimeout(syncMapContainerSize, 200);
 
     return globeInstance;
 }
 
 /**
- * Render dataset onto the 2D Leaflet map: unwrapped great-circle/road routes + origin, current, destination markers.
+ * Render normalized dataset onto the 2D Leaflet map with continuous paths and aligned markers.
  */
 function renderLeaflet2DData(dataset) {
     if (!leafletMapInstance || !leafletRouteLayer) return;
@@ -423,129 +454,117 @@ function renderLeaflet2DData(dataset) {
     leafletRouteLayer.clearLayers();
     routeRegistry.clear();
 
-    const shipments = dataset.shipments || [];
+    const routes = dataset.routes || [];
     const isDark = getCurrentTheme() === 'dark';
     const markerRingColor = isDark ? '#0B1728' : '#FFFFFF';
 
-    shipments.forEach(s => {
-        runLayerSafely(`2D route ${s?.tracking_number || s?.id || 'unknown'}`, () => {
-            const orig = s.origin_location || s.originLocation || s.origin;
-            const dest = s.destination_location || s.destinationLocation || s.destination;
+    routes.forEach(route => {
+        runLayerSafely(`2D route ${route.tracking_number || route.id || 'unknown'}`, () => {
+            const geometry = computeRouteGeometry(route, { numPoints: 64 });
+            const strokeColor = getSeverityColor(route.delay_severity, route.has_exception);
+            const isAlert = route.is_delayed || route.has_exception;
 
-            const origLatRaw = orig?.latitude ?? orig?.lat;
-            const origLngRaw = orig?.longitude ?? orig?.lng;
-            const destLatRaw = dest?.latitude ?? dest?.lat;
-            const destLngRaw = dest?.longitude ?? dest?.lng;
+            const dashArray = route.mode === 'AIR' ? '7, 5' : null;
+            const weight = route.mode === 'ROAD' ? 2.6 : (route.mode === 'AIR' ? 2.0 : 2.2);
+            const opacity = isAlert ? 0.92 : 0.8;
 
-            if (!isFiniteCoord(origLatRaw) || !isFiniteCoord(origLngRaw) || !isFiniteCoord(destLatRaw) || !isFiniteCoord(destLngRaw)) {
-                return;
-            }
+            const origName = route.originMeta?.short_name || route.originMeta?.name || 'Origin';
+            const destName = route.destinationMeta?.short_name || route.destinationMeta?.name || 'Destination';
+            const routeLabel = `${origName} -> ${destName}`;
 
-            const origLat = Number(origLatRaw);
-            const origLng = Number(origLngRaw);
-            const destLat = Number(destLatRaw);
-            const destLng = unwrapLongitudeNear(Number(destLngRaw), origLng);
-
-            const modeInfo = getModeDisplay(s.mode || s.transport_mode || s.carrier_mode);
-            const hasException = Boolean(s.has_exception || (s.exceptions && s.exceptions.length > 0));
-            const strokeColor = getSeverityColor(s.delay_severity, hasException);
-
-            const points = getGreatCircleArc([origLat, origLng], [destLat, destLng], {
-                mode: modeInfo.code,
-                numPoints: 64,
-            });
-            const segments = splitAntimeridianSegments(points);
-
-            // Route line styling per mode:
-            // SEA: solid curved arc
-            // AIR: dashed higher arc
-            // ROAD: straight line
-            const dashArray = modeInfo.code === 'AIR' ? '8, 6' : null;
-            const weight = modeInfo.code === 'ROAD' ? 3.0 : (modeInfo.code === 'AIR' ? 2.4 : 2.6);
-
-            const polyline = runLayerSafely(`polyline ${s.tracking_number}`, () => {
-                const line = L.polyline(segments, {
-                    color: strokeColor,
-                    weight,
-                    dashArray,
-                    opacity: 0.9,
-                }).addTo(leafletRouteLayer);
-                const routeLabel = `${orig?.short_name || orig?.name || 'Origin'} -> ${dest?.short_name || dest?.name || 'Destination'}`;
-                line.bindPopup(buildShipmentPopupHtml(s, 'Route', routeLabel));
-                return line;
-            });
-
-            const originMarker = runLayerSafely(`origin marker ${s.tracking_number}`, () => {
-                const marker = L.circleMarker([origLat, normalizeLongitude(origLng)], {
-                    radius: 5,
-                    fillColor: '#2563EB',
-                    color: markerRingColor,
-                    weight: 2,
-                    opacity: 1,
-                    fillOpacity: 0.95,
-                }).addTo(leafletRouteLayer);
-                marker.bindPopup(buildShipmentPopupHtml(s, 'Origin', orig?.name || 'Origin', getLocCode(orig)));
-                return marker;
-            });
-
-            const destinationMarker = runLayerSafely(`destination marker ${s.tracking_number}`, () => {
-                const marker = L.circleMarker([destLat, normalizeLongitude(Number(destLngRaw))], {
-                    radius: 5,
-                    fillColor: '#0891B2',
-                    color: markerRingColor,
-                    weight: 2,
-                    opacity: 1,
-                    fillOpacity: 0.95,
-                }).addTo(leafletRouteLayer);
-                marker.bindPopup(buildShipmentPopupHtml(s, 'Destination', dest?.name || 'Destination', getLocCode(dest)));
-                return marker;
-            });
-
-            let currentMarker = null;
-            const trackingPoint = s.latest_tracking || s.current;
-            if (isFiniteCoord(trackingPoint?.lat) && isFiniteCoord(trackingPoint?.lng)) {
-                currentMarker = runLayerSafely(`current marker ${s.tracking_number}`, () => {
-                    const currLat = Number(trackingPoint.lat);
-                    const currLng = normalizeLongitude(Number(trackingPoint.lng));
-
-                    const marker = L.circleMarker([currLat, currLng], {
-                        radius: 7,
-                        fillColor: strokeColor,
-                        color: markerRingColor,
-                        weight: 2.5,
-                        opacity: 1,
-                        fillOpacity: 1,
+            const renderCopy = (coords) => {
+                const polyline = runLayerSafely(`polyline ${route.tracking_number}`, () => {
+                    const line = L.polyline(coords.points, {
+                        color: strokeColor,
+                        weight,
+                        dashArray,
+                        opacity,
                     }).addTo(leafletRouteLayer);
+                    line.bindPopup(buildShipmentPopupHtml(route, 'Route', routeLabel));
+                    return line;
+                });
 
-                    const currName = trackingPoint.location_name || trackingPoint.name || 'Latest checkpoint';
-                    const currCode = trackingPoint.code || trackingPoint.unlocode || '';
-                    marker.bindPopup(buildShipmentPopupHtml(s, 'Current location', currName, currCode));
+                const originMarker = runLayerSafely(`origin marker ${route.tracking_number}`, () => {
+                    const marker = L.circleMarker(coords.originLatLng, {
+                        radius: 4.8,
+                        fillColor: '#2563EB',
+                        color: markerRingColor,
+                        weight: 1.8,
+                        opacity: 1,
+                        fillOpacity: 0.95,
+                    }).addTo(leafletRouteLayer);
+                    marker.bindPopup(buildShipmentPopupHtml(
+                        route,
+                        'Origin',
+                        route.originMeta?.name || 'Origin',
+                        getLocCode(route.originMeta)
+                    ));
                     return marker;
                 });
+
+                const destinationMarker = runLayerSafely(`destination marker ${route.tracking_number}`, () => {
+                    const marker = L.circleMarker(coords.destinationLatLng, {
+                        radius: 4.8,
+                        fillColor: '#0891B2',
+                        color: markerRingColor,
+                        weight: 1.8,
+                        opacity: 1,
+                        fillOpacity: 0.95,
+                    }).addTo(leafletRouteLayer);
+                    marker.bindPopup(buildShipmentPopupHtml(
+                        route,
+                        'Destination',
+                        route.destinationMeta?.name || 'Destination',
+                        getLocCode(route.destinationMeta)
+                    ));
+                    return marker;
+                });
+
+                let currentMarker = null;
+                if (coords.currentLatLng && route.currentMeta) {
+                    currentMarker = runLayerSafely(`current marker ${route.tracking_number}`, () => {
+                        const marker = L.circleMarker(coords.currentLatLng, {
+                            radius: 6.5,
+                            fillColor: strokeColor,
+                            color: markerRingColor,
+                            weight: 2.2,
+                            opacity: 1,
+                            fillOpacity: 1,
+                        }).addTo(leafletRouteLayer);
+
+                        const currName = route.currentMeta.location_name || route.currentMeta.name || 'Latest checkpoint';
+                        const currCode = getLocCode(route.currentMeta);
+                        marker.bindPopup(buildShipmentPopupHtml(route, 'Current location', currName, currCode));
+                        return marker;
+                    });
+                }
+
+                return { polyline, originMarker, destinationMarker, currentMarker };
+            };
+
+            const primaryLayers = renderCopy(geometry);
+            if (geometry.mirrored) {
+                renderCopy(geometry.mirrored);
             }
 
-            const bounds = (polyline && polyline.getBounds && polyline.getBounds().isValid())
-                ? polyline.getBounds()
-                : L.latLngBounds([
-                    [origLat, normalizeLongitude(origLng)],
-                    [destLat, normalizeLongitude(Number(destLngRaw))],
-                ]);
-            if (currentMarker) {
-                bounds.extend(currentMarker.getLatLng());
+            const bounds = L.latLngBounds(geometry.points);
+            if (geometry.currentLatLng) {
+                bounds.extend(geometry.currentLatLng);
             }
 
-            routeRegistry.set(s.tracking_number, {
-                shipment: s,
-                polyline,
-                originMarker,
-                destinationMarker,
-                currentMarker,
+            routeRegistry.set(route.tracking_number, {
+                shipment: route.raw || route,
+                route,
+                polyline: primaryLayers.polyline,
+                originMarker: primaryLayers.originMarker,
+                destinationMarker: primaryLayers.destinationMarker,
+                currentMarker: primaryLayers.currentMarker,
                 bounds,
             });
         });
     });
 
-    updateEmptyState(shipments.length === 0);
+    updateEmptyState(routes.length === 0);
 }
 
 /**
@@ -589,8 +608,9 @@ export function initRoutes2DMap(containerId, options = {}) {
         || shellEl?.getAttribute('data-map-data-url')
         || mapDataUrl;
 
-    const dataset = options.initialData || options.shipments ? normalizeDataset(options) : currentDataset;
-    if (initialDataset.shipments.length === 0 && dataset.shipments.length > 0) {
+    const hasExplicitOptions = Boolean(options.initialData || options.shipments);
+    const dataset = hasExplicitOptions ? normalizeMapDataset(options) : currentDataset;
+    if (initialDataset.routes.length === 0 && dataset.routes.length > 0) {
         initialDataset = dataset;
     }
     currentDataset = dataset;
@@ -600,10 +620,10 @@ export function initRoutes2DMap(containerId, options = {}) {
         zoom: 2,
         minZoom: 2,
         maxZoom: 18,
-        maxBounds: [[-75, -180], [80, 180]],
+        maxBounds: [[-82, -540], [82, 540]],
         maxBoundsViscosity: 0.7,
         zoomControl: false,
-        worldCopyJump: false,
+        worldCopyJump: true,
         tileOverrides: {
             tileUrl: dataset.meta?.tile_url,
             attribution: dataset.meta?.tile_attribution,
@@ -632,6 +652,7 @@ export function initRoutes2DMap(containerId, options = {}) {
 
     renderLeaflet2DData(currentDataset);
     attachSharedListeners();
+    attachContainerResizeObserver();
 
     return map;
 }
@@ -639,10 +660,7 @@ export function initRoutes2DMap(containerId, options = {}) {
 function handleViewportResize() {
     clearTimeout(resizeTimer);
     resizeTimer = setTimeout(() => {
-        if (globeInstance && globeContainerEl && globeContainerEl.clientWidth) {
-            globeInstance.width(globeContainerEl.clientWidth);
-            globeInstance.height(globeContainerEl.clientHeight || 520);
-        }
+        syncMapContainerSize();
         if (currentMode === '2D' && leafletMapInstance && leafletContainerEl && leafletContainerEl.offsetWidth > 0) {
             leafletMapInstance.invalidateSize({ animate: false });
             fitLeafletBounds();
@@ -656,6 +674,8 @@ function attachSharedListeners() {
 
     window.addEventListener('resize', handleViewportResize);
     window.addEventListener('cargotrace:sidebar-collapse', () => {
+        requestAnimationFrame(syncMapContainerSize);
+        setTimeout(syncMapContainerSize, 160);
         setTimeout(handleViewportResize, 320);
     });
 }
@@ -702,11 +722,13 @@ function flyAndOpenLeafletEntry(entry) {
 export async function focusMaritimeEntity(lat, lng, trackingNumber = null) {
     highlightActivityRow(trackingNumber);
 
-    if (isFiniteCoord(lat) && isFiniteCoord(lng)) {
+    const hasValidTarget = isValidCoordinatePair(lat, lng);
+
+    if (hasValidTarget) {
         updateMapCoordinates(lat, lng);
     }
 
-    if (globeInstance && isFiniteCoord(lat) && isFiniteCoord(lng)) {
+    if (globeInstance && hasValidTarget) {
         const controls = globeInstance.controls();
         if (controls) controls.autoRotate = false;
         globeInstance.pointOfView({ lat: Number(lat), lng: Number(lng), altitude: 1.6 }, prefersReducedMotion() ? 0 : 1000);
@@ -715,7 +737,7 @@ export async function focusMaritimeEntity(lat, lng, trackingNumber = null) {
     if (!leafletMapInstance) return;
 
     if (trackingNumber && !routeRegistry.has(trackingNumber)) {
-        const existsInInitial = initialDataset.shipments.some(s => s.tracking_number === trackingNumber);
+        const existsInInitial = initialDataset.routes.some(r => r.tracking_number === trackingNumber);
         if (existsInInitial && activeFilter !== 'ALL') {
             await setMapFilter('ALL');
         }
@@ -731,7 +753,7 @@ export async function focusMaritimeEntity(lat, lng, trackingNumber = null) {
         return;
     }
 
-    if (currentMode === '2D' && isFiniteCoord(lat) && isFiniteCoord(lng)) {
+    if (currentMode === '2D' && hasValidTarget) {
         leafletMapInstance.invalidateSize({ animate: false });
         leafletMapInstance.flyTo([Number(lat), Number(lng)], 5, { animate: !prefersReducedMotion() });
     }
@@ -765,17 +787,16 @@ function updateFilterTabButtons(activeKey) {
 }
 
 function filterDatasetClientSide(dataset, key) {
-    const shipments = (dataset.shipments || []).filter(s => {
-        const mode = String(s.mode || s.transport_mode || 'SEA').toUpperCase();
-        const hasException = Boolean(s.has_exception || (s.exceptions && s.exceptions.length > 0));
-        if (key === 'SEA' || key === 'AIR' || key === 'ROAD') return mode === key;
-        if (key === 'DELAYED') return Boolean(s.is_delayed);
-        if (key === 'EXCEPTIONS') return hasException;
+    const routes = (dataset.routes || []).filter(route => {
+        if (key === 'SEA' || key === 'AIR' || key === 'ROAD') return route.mode === key;
+        if (key === 'DELAYED') return route.is_delayed;
+        if (key === 'EXCEPTIONS') return route.has_exception;
         return true;
     });
 
     return {
-        shipments,
+        routes,
+        shipments: routes.map(r => r.raw),
         locations: dataset.locations || [],
         meta: dataset.meta || {},
     };
@@ -834,7 +855,7 @@ export async function setMapFilter(filterKey) {
 
         const json = await res.json();
         const payload = json && json.data ? json.data : json;
-        currentDataset = normalizeDataset({ initialData: payload });
+        currentDataset = normalizeMapDataset({ initialData: payload });
 
         renderGlobeData(currentDataset);
         renderLeaflet2DData(currentDataset);
@@ -890,6 +911,7 @@ export function setMapMode(mode) {
             if (controls) controls.autoRotate = !prefersReducedMotion();
             const pov = globeInstance.pointOfView();
             updateMapCoordinates(pov.lat, pov.lng);
+            requestAnimationFrame(syncMapContainerSize);
         }
     } else {
         if (globe3dEl) globe3dEl.classList.add('hidden');
