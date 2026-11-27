@@ -41,6 +41,22 @@
         padding: 0.1rem 0.3rem !important;
         font-size: 9px !important;
     }
+
+    html.sidebar-is-collapsed .sidebar-header {
+        justify-content: center !important;
+    }
+
+    html.sidebar-is-collapsed .sidebar-brand-link {
+        justify-content: center !important;
+        gap: 0 !important;
+    }
+
+    html.sidebar-is-collapsed .sidebar-footer-card {
+        flex-direction: column !important;
+        justify-content: center !important;
+        gap: 0.5rem !important;
+        padding: 0.5rem 0.25rem !important;
+    }
 }
 
 @theme {

@@ -51,31 +51,21 @@
         <div id="main-content" class="lg:pl-64 pb-20 lg:pb-0 flex-1 flex flex-col min-h-screen theme-page transition-all duration-300">
             <!-- 3. TOP MINIMALIST HEADER BAR -->
             <header class="h-16 px-3 sm:px-8 flex items-center justify-between gap-2 border-b theme-border theme-header backdrop-blur-md sticky top-0 z-40 transition-colors duration-200">
-                <!-- Top-Left: Mobile Hamburger + Desktop Rail Toggle + Pill Theme Switch + Locale Switcher -->
+                <!-- Top-Left: Unified Sidebar Toggle + Pill Theme Switch + Locale Switcher -->
                 <div class="flex items-center space-x-1.5 sm:space-x-3 min-w-0">
-                    <!-- Mobile Hamburger Button -->
+                    <!-- Unified Sidebar Toggle Button (Desktop Rail Collapse / Mobile Drawer) -->
                     <button
                         type="button"
+                        id="sidebar-toggle-btn"
                         onclick="window.CargoTrace && window.CargoTrace.toggleSidebar ? window.CargoTrace.toggleSidebar() : null"
-                        class="lg:hidden p-2 rounded-xl theme-card-elevated border theme-border theme-text-secondary hover:text-blue-600 dark:hover:text-cyan-400 transition cursor-pointer"
-                        aria-label="{{ __('Open navigation menu') }}"
-                        title="{{ __('Open menu') }}"
+                        class="inline-flex items-center justify-center w-11 h-11 rounded-xl theme-card-elevated border theme-border theme-text-secondary hover:text-blue-600 dark:hover:text-cyan-400 active:scale-95 transition cursor-pointer shrink-0"
+                        aria-controls="main-sidebar"
+                        aria-expanded="true"
+                        aria-label="{{ __('Toggle navigation sidebar') }}"
+                        title="{{ __('Toggle navigation sidebar') }}"
                     >
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
-                        </svg>
-                    </button>
-
-                    <!-- Desktop Sidebar Rail Toggle Button -->
-                    <button
-                        type="button"
-                        onclick="window.CargoTrace && window.CargoTrace.toggleSidebarCollapse ? window.CargoTrace.toggleSidebarCollapse() : null"
-                        class="hidden lg:flex p-2 rounded-xl theme-card-elevated border theme-border theme-text-secondary hover:text-blue-600 dark:hover:text-cyan-400 transition cursor-pointer"
-                        aria-label="{{ __('Toggle sidebar width') }}"
-                        title="{{ __('Toggle sidebar rail') }}"
-                    >
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h7"/>
                         </svg>
                     </button>
 

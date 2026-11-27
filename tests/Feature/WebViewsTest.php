@@ -230,3 +230,25 @@ test('global sidebar displays improved text labels and links for freight intelli
     $response->assertSee('Currency FX');
     $response->assertSee('Freight News');
 });
+
+test('topbar exposes a single unified sidebar hamburger toggle and removes redundant sidebar collapse buttons', function () {
+    $user = User::where('role', 'admin')->first();
+
+    $response = $this->actingAs($user)->get('/dashboard');
+    $response->assertStatus(200);
+
+    $response->assertSee('id="sidebar-toggle-btn"', false);
+    $response->assertSee('aria-controls="main-sidebar"', false);
+    $response->assertSee('Toggle navigation sidebar');
+    $response->assertSee('window.CargoTrace.toggleSidebar', false);
+    $response->assertSee('sidebar-header', false);
+    $response->assertSee('Close navigation');
+
+    $response->assertDontSee('Collapse sidebar');
+    $response->assertDontSee('Collapse sidebar to icon rail');
+    $response->assertDontSee('Expand sidebar');
+    $response->assertDontSee('Toggle sidebar width');
+    $response->assertDontSee('Toggle sidebar rail');
+    $response->assertDontSee('M11 19l-7-7 7-7m8 14l-7-7 7-7', false);
+    $response->assertDontSee('M13 5l7 7-7 7M5 5l7 7-7 7', false);
+});

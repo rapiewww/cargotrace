@@ -21,10 +21,10 @@
     class="fixed inset-y-0 left-0 z-50 w-64 theme-sidebar border-r theme-border flex flex-col justify-between py-5 px-4 transform -translate-x-full lg:translate-x-0 transition-all duration-300 ease-in-out shadow-2xl lg:shadow-none"
     aria-label="{{ __('Main Navigation') }}"
 >
-    <!-- 1. Brand Logo & Collapse Toggle -->
+    <!-- 1. Brand Logo & Mobile Close -->
     <div class="space-y-5">
-        <div class="flex items-center justify-between pb-3 border-b theme-border">
-            <a href="{{ route('dashboard') }}" class="flex items-center gap-3 group min-w-0" title="{{ __('CargoTrace Freight Operations') }}">
+        <div class="sidebar-header flex items-center justify-between lg:justify-start pb-3 border-b theme-border">
+            <a href="{{ route('dashboard') }}" class="sidebar-brand-link flex items-center gap-3 group min-w-0" title="{{ __('CargoTrace Freight Operations') }}">
                 <div class="flex items-center justify-center w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 via-blue-600 to-cyan-500 text-white shadow-md shadow-blue-500/25 group-hover:scale-105 transition-transform duration-200 flex-shrink-0">
                     <svg class="w-5 h-5 text-white" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
                         <path d="M12 22L2 5h20L12 22zm0-4.5l6.5-11h-13l6.5 11z"/>
@@ -40,37 +40,11 @@
                 </div>
             </a>
 
-            <!-- Desktop Collapse/Expand Rail Button -->
-            <button
-                type="button"
-                onclick="window.CargoTrace && window.CargoTrace.toggleSidebarCollapse ? window.CargoTrace.toggleSidebarCollapse() : null"
-                class="hidden lg:flex p-1.5 rounded-lg theme-text-secondary hover:text-blue-600 dark:hover:text-cyan-400 hover:bg-slate-500/10 transition sidebar-full-only cursor-pointer"
-                title="{{ __('Collapse sidebar to icon rail') }}"
-                aria-label="{{ __('Collapse sidebar') }}"
-            >
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 19l-7-7 7-7m8 14l-7-7 7-7"/>
-                </svg>
-            </button>
-
-            <!-- Collapsed state expand button -->
-            <button
-                type="button"
-                onclick="window.CargoTrace && window.CargoTrace.toggleSidebarCollapse ? window.CargoTrace.toggleSidebarCollapse() : null"
-                class="hidden sidebar-collapsed-only p-1.5 rounded-lg theme-text-secondary hover:text-blue-600 dark:hover:text-cyan-400 hover:bg-slate-500/10 transition cursor-pointer"
-                title="{{ __('Expand sidebar') }}"
-                aria-label="{{ __('Expand sidebar') }}"
-            >
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 5l7 7-7 7M5 5l7 7-7 7"/>
-                </svg>
-            </button>
-
             <!-- Mobile Drawer Close Button -->
             <button
                 type="button"
                 onclick="window.CargoTrace && window.CargoTrace.closeSidebar ? window.CargoTrace.closeSidebar() : null"
-                class="lg:hidden p-1.5 rounded-lg theme-text-secondary hover:theme-heading hover:bg-slate-200 dark:hover:bg-slate-800 transition cursor-pointer"
+                class="lg:hidden w-11 h-11 inline-flex items-center justify-center flex-shrink-0 rounded-lg theme-text-secondary hover:theme-heading hover:bg-slate-200 dark:hover:bg-slate-800 transition cursor-pointer"
                 aria-label="{{ __('Close navigation') }}"
             >
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
@@ -279,7 +253,7 @@
 
     <!-- 3. Footer: User Status & Sign Out -->
     <div class="pt-3 border-t theme-border space-y-2">
-        <div class="p-2 rounded-xl theme-card-elevated border theme-border flex items-center justify-between">
+        <div class="sidebar-footer-card p-2 rounded-xl theme-card-elevated border theme-border flex items-center justify-between">
             <div class="flex items-center gap-2.5 min-w-0">
                 <div class="relative w-8 h-8 rounded-lg bg-gradient-to-tr from-cyan-500 to-blue-600 flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
                     {{ strtoupper(substr($user->name ?? 'User', 0, 2)) }}

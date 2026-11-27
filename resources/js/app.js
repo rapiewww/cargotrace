@@ -68,10 +68,90 @@ export function toggleTheme() {
     applyTheme(newTheme);
 }
 
+const DESKTOP_SIDEBAR_MEDIA = '(min-width: 1024px)';
+let sidebarResizeTimer = null;
+let sidebarTransitionCleanup = null;
+
+function isDesktopSidebarViewport() {
+    return window.matchMedia(DESKTOP_SIDEBAR_MEDIA).matches;
+}
+
 /**
- * Toggle responsive mobile sidebar drawer
+ * Keep the single topbar hamburger button's aria-expanded in sync with desktop/mobile state
+ */
+function syncSidebarToggleAria() {
+    const toggleBtn = document.getElementById('sidebar-toggle-btn');
+    if (!toggleBtn) return;
+
+    if (isDesktopSidebarViewport()) {
+        const isCollapsed = document.documentElement.classList.contains('sidebar-is-collapsed');
+        toggleBtn.setAttribute('aria-expanded', isCollapsed ? 'false' : 'true');
+        return;
+    }
+
+    const sidebar = document.getElementById('main-sidebar');
+    const isClosed = !sidebar || sidebar.classList.contains('-translate-x-full');
+    toggleBtn.setAttribute('aria-expanded', isClosed ? 'false' : 'true');
+}
+
+/**
+ * Dispatch window resize once after the sidebar width/padding transition finishes
+ * so Leaflet maps, 3D globe, and Chart.js canvases re-measure cleanly.
+ */
+function schedulePostTransitionResize() {
+    if (sidebarResizeTimer) {
+        clearTimeout(sidebarResizeTimer);
+        sidebarResizeTimer = null;
+    }
+    if (sidebarTransitionCleanup) {
+        sidebarTransitionCleanup();
+        sidebarTransitionCleanup = null;
+    }
+
+    const mainContent = document.getElementById('main-content');
+    const sidebar = document.getElementById('main-sidebar');
+    const targetEl = mainContent || sidebar;
+    let fired = false;
+
+    const fireResize = () => {
+        if (fired) return;
+        fired = true;
+        if (sidebarResizeTimer) {
+            clearTimeout(sidebarResizeTimer);
+            sidebarResizeTimer = null;
+        }
+        if (sidebarTransitionCleanup) {
+            sidebarTransitionCleanup();
+            sidebarTransitionCleanup = null;
+        }
+        window.dispatchEvent(new Event('resize'));
+    };
+
+    if (targetEl) {
+        const onTransitionEnd = (event) => {
+            if (event.target !== targetEl) return;
+            if (event.propertyName === 'padding-left' || event.propertyName === 'width') {
+                fireResize();
+            }
+        };
+        targetEl.addEventListener('transitionend', onTransitionEnd);
+        sidebarTransitionCleanup = () => {
+            targetEl.removeEventListener('transitionend', onTransitionEnd);
+        };
+    }
+
+    sidebarResizeTimer = setTimeout(fireResize, 320);
+}
+
+/**
+ * Toggle sidebar: collapse/expand desktop icon rail (>= 1024px) or slide-over drawer (< 1024px)
  */
 export function toggleSidebar() {
+    if (isDesktopSidebarViewport()) {
+        toggleSidebarCollapse();
+        return;
+    }
+
     const sidebar = document.getElementById('main-sidebar');
     const backdrop = document.getElementById('sidebar-backdrop');
     if (!sidebar) return;
@@ -85,6 +165,7 @@ export function toggleSidebar() {
         backdrop?.classList.add('hidden');
         document.body.classList.remove('overflow-hidden', 'lg:overflow-auto');
     }
+    syncSidebarToggleAria();
 }
 
 /**
@@ -96,6 +177,7 @@ export function closeSidebar() {
     if (sidebar) sidebar.classList.add('-translate-x-full');
     if (backdrop) backdrop.classList.add('hidden');
     document.body.classList.remove('overflow-hidden', 'lg:overflow-auto');
+    syncSidebarToggleAria();
 }
 
 /**
@@ -104,7 +186,9 @@ export function closeSidebar() {
 export function toggleSidebarCollapse() {
     const isCollapsed = document.documentElement.classList.toggle('sidebar-is-collapsed');
     localStorage.setItem('cargotrace_sidebar_collapsed', isCollapsed ? 'true' : 'false');
+    syncSidebarToggleAria();
     window.dispatchEvent(new CustomEvent('cargotrace:sidebar-collapse', { detail: { isCollapsed } }));
+    schedulePostTransitionResize();
 }
 
 // Export CargoTrace global namespace
@@ -135,6 +219,27 @@ window.CargoTrace = {
 
 // Automatic initialization on DOMContentLoaded
 document.addEventListener('DOMContentLoaded', () => {
+    syncSidebarToggleAria();
+
+    // Close mobile drawer with Escape (R-32)
+    document.addEventListener('keydown', (event) => {
+        if (event.key !== 'Escape' || isDesktopSidebarViewport()) return;
+        const sidebar = document.getElementById('main-sidebar');
+        if (sidebar && !sidebar.classList.contains('-translate-x-full')) {
+            closeSidebar();
+            document.getElementById('sidebar-toggle-btn')?.focus();
+        }
+    });
+
+    // Clear mobile drawer backdrop/scroll lock when resizing to desktop and resync aria-expanded
+    window.matchMedia(DESKTOP_SIDEBAR_MEDIA).addEventListener('change', (event) => {
+        if (event.matches) {
+            closeSidebar();
+        } else {
+            syncSidebarToggleAria();
+        }
+    });
+
     // Theme setup from localStorage or prefers-color-scheme on first visit
     let initialTheme = localStorage.getItem('cargotrace_theme');
     if (!initialTheme) {
