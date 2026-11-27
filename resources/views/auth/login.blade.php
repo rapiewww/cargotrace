@@ -1,213 +1,116 @@
 @extends('layouts.guest')
 @section('has-locale-switcher', '1')
+@section('auth-shell', '1')
+@section('auth-theme-toggle-id', 'login-theme-toggle')
 
 @section('content')
-@php
-    $heroLightImage = config('cargotrace.hero_images.light') ?? (file_exists(public_path('images/backgrounds/bg-light.webp')) ? 'images/backgrounds/bg-light.webp' : null);
-@endphp
-
-<div class="min-h-screen relative flex flex-col justify-between p-4 sm:p-6 lg:p-8 overflow-hidden select-none">
-    <!-- Background Imagery: Full-bleed hero photo (Two <img> siblings toggled by [data-theme] in CSS) -->
-    <div class="absolute inset-0 z-0 overflow-hidden pointer-events-none">
-        {{-- Dark Theme Image --}}
-        <img
-            src="{{ asset('images/backgrounds/bg-dark.webp') }}"
-            alt="Container ship and gantry cranes at night"
-            width="2560"
-            height="1440"
-            fetchpriority="high"
-            loading="eager"
-            decoding="sync"
-            class="hero-img-dark w-full h-full object-cover [object-position:center] filter brightness-100 contrast-100"
-        >
-
-        {{-- Light Theme Image (or pale gradient + SVG motif fallback) --}}
-        @if($heroLightImage)
-            <img
-                src="{{ asset($heroLightImage) }}"
-                alt="Daytime maritime container port operations"
-                width="2560"
-                height="1440"
-                fetchpriority="low"
-                loading="lazy"
-                decoding="async"
-                class="hero-img-light w-full h-full object-cover [object-position:center] filter brightness-100 contrast-100"
-            >
-        @else
-            <div class="hero-fallback-light w-full h-full bg-gradient-to-br from-[#F4F7FB] via-sky-50 to-slate-200 relative">
-                <x-svg-network-motif class="text-slate-500 opacity-10" />
-            </div>
-        @endif
-
-        {{-- Light top scrim only if needed for brand text; does NOT veil the whole photo --}}
-        <div class="absolute top-0 left-0 right-0 h-32 hidden dark:block bg-gradient-to-b from-[#050B14]/60 to-transparent"></div>
-        <div class="absolute top-0 left-0 right-0 h-32 block dark:hidden bg-gradient-to-b from-[#F4F7FB]/70 to-transparent"></div>
+<div class="w-full max-w-[27.5rem] mx-auto lg:mx-0 p-6 sm:p-8 rounded-2xl bg-white/95 dark:bg-[#0B1728]/90 backdrop-blur-md border border-[#D5DEEA] dark:border-white/15 shadow-xl shadow-slate-900/10 dark:shadow-2xl dark:shadow-black/50 space-y-6 transition-colors duration-200">
+    <div class="space-y-1.5 text-left">
+        <h1 class="text-2xl sm:text-[1.75rem] font-extrabold tracking-tight text-[#0B1728] dark:text-white leading-tight">{{ __('Operations Sign In') }}</h1>
+        <p class="text-sm text-[#52647A] dark:text-slate-300">{{ __('Global spice freight by sea, air and road.') }}</p>
     </div>
 
-    <!-- Top Navigation Bar: Brand at top left, Back to Portal at top right, theme & locale switchers beside it -->
-    <header class="relative z-20 w-full max-w-7xl mx-auto flex items-center justify-between gap-2 py-2">
-        <!-- Brand at Top Left -->
-        <a href="{{ route('welcome') }}" class="inline-flex items-center space-x-2.5 sm:space-x-3 group min-w-0">
-            <div class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-br from-blue-500 via-blue-600 to-cyan-500 text-white flex items-center justify-center shadow-lg shadow-blue-500/25 group-hover:scale-105 transition-transform duration-200 shrink-0">
-                <svg class="w-5 h-5 text-white" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                    <path d="M12 22L2 5h20L12 22zm0-4.5l6.5-11h-13l6.5 11z"/>
-                </svg>
-            </div>
-            <div class="min-w-0">
-                <span class="text-lg sm:text-xl font-extrabold tracking-tight theme-heading font-sans block leading-none drop-shadow-sm truncate">{{ config('app.name', 'Nusa Freight') }}</span>
-                <span class="hidden sm:block text-[9px] uppercase tracking-widest text-blue-600 dark:text-cyan-400 font-mono font-bold">{{ __('Multimodal Freight Tracking') }}</span>
-            </div>
-        </a>
+    @if($errors->any())
+        <div role="alert" class="p-3.5 rounded-xl bg-rose-50 dark:bg-rose-950/60 border border-rose-300 dark:border-rose-500/40 text-rose-800 dark:text-rose-200 text-xs font-medium flex items-start gap-2.5">
+            <svg class="w-4 h-4 shrink-0 mt-0.5 text-rose-600 dark:text-rose-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M10.29 3.86l-8.48 14.7A1.5 1.5 0 003.11 21h17.78a1.5 1.5 0 001.3-2.44l-8.48-14.7a1.5 1.5 0 00-2.6 0z"/>
+            </svg>
+            <span>{{ $errors->first() }}</span>
+        </div>
+    @endif
 
-        <!-- Top Right Actions: Back to Portal, Theme Switcher & Language Switcher -->
-        <div class="flex items-center space-x-1.5 sm:space-x-3 shrink-0">
-            <a href="{{ route('welcome') }}" aria-label="{{ __('Back to Portal') }}" class="inline-flex items-center gap-1.5 text-xs font-semibold theme-text-secondary hover:theme-heading transition px-2.5 sm:px-3.5 py-2 rounded-xl bg-white/80 dark:bg-[#0B1728]/80 backdrop-blur-md border border-slate-200/90 dark:border-white/10 shadow-sm">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
-                <span class="hidden sm:inline">{{ __('Back to Portal') }}</span>
-            </a>
+    <!-- Login Form -->
+    <form id="login-form" action="{{ route('login') }}" method="POST" class="space-y-4">
+        @csrf
 
-            <!-- Theme Toggle Switcher -->
+        <div class="space-y-1.5">
+            <label for="email" class="block text-xs font-semibold text-[#0B1728] dark:text-[#E6EEF8]">{{ __('Email Address') }}</label>
+            <input
+                type="email"
+                id="email"
+                name="email"
+                autocomplete="email"
+                value="{{ old('email') }}"
+                required
+                autofocus
+                placeholder="name@cargotrace.test"
+                class="w-full min-h-[44px] px-3.5 py-2.5 rounded-xl theme-input border text-sm focus:outline-none focus:ring-2 focus:ring-[#2563EB] dark:focus:ring-cyan-400 transition-colors"
+            >
+        </div>
+
+        <div class="space-y-1.5">
+            <label for="password" class="block text-xs font-semibold text-[#0B1728] dark:text-[#E6EEF8]">{{ __('Password') }}</label>
+            <input
+                type="password"
+                id="password"
+                name="password"
+                autocomplete="current-password"
+                required
+                placeholder="••••••••"
+                class="w-full min-h-[44px] px-3.5 py-2.5 rounded-xl theme-input border text-sm focus:outline-none focus:ring-2 focus:ring-[#2563EB] dark:focus:ring-cyan-400 transition-colors"
+            >
+        </div>
+
+        <div class="flex items-center justify-between">
+            <label class="inline-flex items-center gap-2.5 min-h-[44px] text-xs font-medium text-[#52647A] dark:text-slate-300 cursor-pointer">
+                <input type="checkbox" name="remember" class="w-4 h-4 rounded border-[#CBD5E1] dark:border-white/20 text-[#2563EB] focus:ring-2 focus:ring-[#2563EB] dark:focus:ring-cyan-400">
+                <span>{{ __('Keep signed in') }}</span>
+            </label>
+        </div>
+
+        <button
+            type="submit"
+            class="w-full min-h-[44px] py-3 px-4 rounded-xl bg-[#2563EB] hover:bg-[#1D4ED8] active:bg-blue-800 text-white font-semibold text-sm transition-colors duration-200 shadow-sm flex items-center justify-center cursor-pointer"
+        >
+            {{ __('Sign In to Platform') }}
+        </button>
+    </form>
+
+    <!-- 1-Click Quick Demo Access (Admin, Logistics Operator, Customer) -->
+    <div class="pt-4 border-t border-[#D5DEEA] dark:border-white/10 space-y-2.5">
+        <p class="text-xs font-semibold text-[#52647A] dark:text-slate-300 text-center">{{ __('Quick Demo Access (1-Click Login)') }}</p>
+        <div class="grid grid-cols-3 gap-2 text-xs">
             <button
                 type="button"
-                id="login-theme-toggle"
-                role="switch"
-                aria-checked="true"
-                aria-pressed="true"
-                tabindex="0"
-                onclick="window.CargoTrace && window.CargoTrace.toggleTheme ? window.CargoTrace.toggleTheme() : null"
-                onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();window.CargoTrace&&window.CargoTrace.toggleTheme?window.CargoTrace.toggleTheme():null}"
-                class="relative flex items-center p-1 rounded-full bg-slate-200/90 dark:bg-slate-900/90 border border-slate-300 dark:border-slate-800 w-12 sm:w-14 h-7 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer backdrop-blur-md shrink-0"
-                aria-label="{{ __('Toggle dark and light theme') }}"
-                title="{{ __('Switch theme') }}"
+                data-demo-login="admin@cargotrace.test"
+                onclick="autoLogin('admin@cargotrace.test')"
+                class="min-h-[48px] px-2.5 py-2.5 rounded-xl bg-slate-50 hover:bg-blue-50 active:bg-blue-100 dark:bg-[#11233B] dark:hover:bg-[#162D4A] dark:active:bg-[#1B3759] border border-blue-200 hover:border-blue-500 dark:border-blue-400/30 dark:hover:border-blue-400 text-blue-700 dark:text-blue-300 font-semibold transition-colors text-center shadow-xs cursor-pointer"
             >
-                <span class="w-5 h-5 flex items-center justify-center text-slate-400 dark:text-cyan-400 transition-colors">
-                    <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true"><path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"/></svg>
-                </span>
-                <span class="w-5 h-5 flex items-center justify-center text-amber-500 dark:text-slate-500 transition-colors">
-                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
-                </span>
+                <span class="block text-[11px] font-medium text-[#475569] dark:text-slate-300">{{ __('Admin') }}</span>
+                <span>{{ __('Director') }}</span>
             </button>
-
-            <!-- Language Switcher (EN | ID) -->
-            <x-locale-switcher size="sm" />
+            <button
+                type="button"
+                data-demo-login="operator@cargotrace.test"
+                onclick="autoLogin('operator@cargotrace.test')"
+                class="min-h-[48px] px-2.5 py-2.5 rounded-xl bg-slate-50 hover:bg-cyan-50 active:bg-cyan-100 dark:bg-[#11233B] dark:hover:bg-[#162D4A] dark:active:bg-[#1B3759] border border-cyan-200 hover:border-cyan-600 dark:border-cyan-400/30 dark:hover:border-cyan-400 text-cyan-800 dark:text-cyan-300 font-semibold transition-colors text-center shadow-xs cursor-pointer"
+            >
+                <span class="block text-[11px] font-medium text-[#475569] dark:text-slate-300">{{ __('Operator') }}</span>
+                <span>{{ __('Operations') }}</span>
+            </button>
+            <button
+                type="button"
+                data-demo-login="customer@cargotrace.test"
+                onclick="autoLogin('customer@cargotrace.test')"
+                class="min-h-[48px] px-2.5 py-2.5 rounded-xl bg-slate-50 hover:bg-emerald-50 active:bg-emerald-100 dark:bg-[#11233B] dark:hover:bg-[#162D4A] dark:active:bg-[#1B3759] border border-emerald-200 hover:border-emerald-600 dark:border-emerald-400/30 dark:hover:border-emerald-400 text-emerald-700 dark:text-emerald-300 font-semibold transition-colors text-center shadow-xs cursor-pointer"
+            >
+                <span class="block text-[11px] font-medium text-[#475569] dark:text-slate-300">{{ __('Customer') }}</span>
+                <span>{{ __('Shipper') }}</span>
+            </button>
         </div>
-    </header>
+    </div>
 
-    <!-- Center: Single Centered Card (max-width 28rem, frosted background: dark navy 72%, light white 88%, 1px border, 16px radius) -->
-    <main class="relative z-20 my-auto py-8 w-full">
-        <div class="w-full max-w-[28rem] mx-auto p-6 sm:p-8 rounded-[16px] bg-white/88 dark:bg-[#0B1728]/72 backdrop-blur-xl border border-slate-200/90 dark:border-white/10 shadow-2xl space-y-6 transition-colors duration-200">
-            <div class="space-y-1.5 text-center">
-                <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight theme-heading">{{ __('Operations Sign In') }}</h1>
-                <p class="text-xs sm:text-sm theme-text-secondary">{{ __('Global spice freight by sea, air and road.') }}</p>
-            </div>
-
-            @if($errors->any())
-                <div class="p-3.5 rounded-xl bg-rose-500/15 border border-rose-500/30 text-rose-600 dark:text-rose-300 text-xs flex items-center gap-2">
-                    <span class="w-2 h-2 rounded-full bg-rose-500 animate-pulse"></span>
-                    <span>{{ $errors->first() }}</span>
-                </div>
-            @endif
-
-            <!-- Login Form -->
-            <form action="{{ route('login') }}" method="POST" class="space-y-4">
-                @csrf
-
-                <div class="space-y-1.5">
-                    <label for="email" class="uppercase text-xs tracking-wider theme-text-muted font-semibold block text-left">{{ __('Email Address') }}</label>
-                    <input
-                        type="email"
-                        id="email"
-                        name="email"
-                        value="{{ old('email') }}"
-                        required
-                        autofocus
-                        placeholder="name@cargotrace.test"
-                        class="w-full px-4 py-2.5 rounded-xl theme-input border text-xs sm:text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none transition"
-                    >
-                </div>
-
-                <div class="space-y-1.5">
-                    <div class="flex items-center justify-between">
-                        <label for="password" class="uppercase text-xs tracking-wider theme-text-muted font-semibold">{{ __('Password') }}</label>
-                    </div>
-                    <input
-                        type="password"
-                        id="password"
-                        name="password"
-                        required
-                        placeholder="••••••••"
-                        class="w-full px-4 py-2.5 rounded-xl theme-input border text-xs sm:text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none transition font-mono"
-                    >
-                </div>
-
-                <div class="flex items-center justify-between text-xs">
-                    <label class="flex items-center space-x-2 theme-text-secondary cursor-pointer">
-                        <input type="checkbox" name="remember" class="rounded theme-input text-blue-600 focus:ring-0">
-                        <span>{{ __('Keep signed in') }}</span>
-                    </label>
-                </div>
-
-                <button
-                    type="submit"
-                    class="w-full py-3 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-semibold text-xs uppercase tracking-wider transition-all duration-200 hover:scale-[1.01] active:scale-[0.99] shadow-lg shadow-blue-500/25 flex items-center justify-center gap-2 cursor-pointer"
-                >
-                    <span>{{ __('Sign In to Platform') }}</span>
-                    <span>&rarr;</span>
-                </button>
-            </form>
-
-            <!-- 1-Click Quick Demo Access (Admin, Logistics Operator, Customer) -->
-            <div class="pt-4 border-t theme-border space-y-2.5">
-                <span class="text-[10px] font-bold uppercase tracking-wider theme-text-muted text-center block">{{ __('Quick Demo Access (1-Click Login)') }}</span>
-                <div class="grid grid-cols-3 gap-2 text-xs">
-                    <button
-                        type="button"
-                        data-demo-login="admin@cargotrace.test"
-                        onclick="autoLogin('admin@cargotrace.test')"
-                        class="px-2.5 py-2.5 rounded-xl theme-card-elevated border border-blue-500/30 hover:border-blue-500 text-blue-600 dark:text-blue-400 font-semibold transition text-center shadow-sm cursor-pointer"
-                    >
-                        <span class="block text-[9px] theme-text-muted uppercase font-mono">{{ __('Admin') }}</span>
-                        {{ __('Director') }}
-                    </button>
-                    <button
-                        type="button"
-                        data-demo-login="operator@cargotrace.test"
-                        onclick="autoLogin('operator@cargotrace.test')"
-                        class="px-2.5 py-2.5 rounded-xl theme-card-elevated border border-cyan-500/30 hover:border-cyan-500 text-cyan-700 dark:text-cyan-400 font-semibold transition text-center shadow-sm cursor-pointer"
-                    >
-                        <span class="block text-[9px] theme-text-muted uppercase font-mono">{{ __('Operator') }}</span>
-                        {{ __('Operations') }}
-                    </button>
-                    <button
-                        type="button"
-                        data-demo-login="customer@cargotrace.test"
-                        onclick="autoLogin('customer@cargotrace.test')"
-                        class="px-2.5 py-2.5 rounded-xl theme-card-elevated border border-emerald-500/30 hover:border-emerald-500 text-emerald-600 dark:text-emerald-400 font-semibold transition text-center shadow-sm cursor-pointer"
-                    >
-                        <span class="block text-[9px] theme-text-muted uppercase font-mono">{{ __('Customer') }}</span>
-                        {{ __('Shipper') }}
-                    </button>
-                </div>
-            </div>
-
-            <div class="text-center text-xs theme-text-secondary pt-2 border-t theme-border">
-                {{ __("Don't have an enterprise account?") }}
-                <a href="{{ route('register') }}" class="text-blue-600 dark:text-blue-400 hover:underline font-semibold ml-1">{{ __('Register here') }}</a>
-            </div>
-        </div>
-    </main>
-
-    <!-- Bottom Attribution -->
-    <footer class="relative z-20 w-full max-w-7xl mx-auto py-2 text-center text-[11px] theme-text-muted">
-        <span>&copy; {{ date('Y') }} {{ config('app.name', 'Nusa Freight') }} &bull; {{ __('Global spice freight by sea, air and road') }}</span>
-    </footer>
+    <div class="text-center text-xs text-[#52647A] dark:text-slate-300 pt-3 border-t border-[#D5DEEA] dark:border-white/10">
+        {{ __("Don't have an enterprise account?") }}
+        <a href="{{ route('register') }}" class="text-[#1D4ED8] dark:text-cyan-400 hover:underline font-semibold ml-1">{{ __('Register here') }}</a>
+    </div>
 </div>
 
 <script>
     function autoLogin(email) {
         document.getElementById('email').value = email;
         document.getElementById('password').value = 'password';
-        document.querySelector('form').submit();
+        document.getElementById('login-form').submit();
     }
 </script>
 @endsection

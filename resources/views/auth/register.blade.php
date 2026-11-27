@@ -1,122 +1,125 @@
 @extends('layouts.guest')
 @section('has-locale-switcher', '1')
+@section('auth-shell', '1')
+@section('auth-theme-toggle-id', 'register-theme-toggle')
 
 @section('content')
-<div class="relative min-h-screen flex items-center justify-center p-4 sm:p-6 theme-page overflow-hidden">
-    {{-- Faint SVG Network Motif Background (No raster photography per DESIGN.md) --}}
-    <div class="fixed inset-0 pointer-events-none z-0 overflow-hidden" aria-hidden="true">
-        <x-svg-network-motif class="text-slate-500 dark:text-slate-300" />
+<div class="w-full max-w-[31rem] mx-auto lg:mx-0 p-6 sm:p-8 rounded-2xl bg-white/95 dark:bg-[#0B1728]/90 backdrop-blur-md border border-[#D5DEEA] dark:border-white/15 shadow-xl shadow-slate-900/10 dark:shadow-2xl dark:shadow-black/50 space-y-5 transition-colors duration-200">
+    <div class="space-y-1.5 text-left">
+        <h1 class="text-2xl sm:text-[1.75rem] font-extrabold tracking-tight text-[#0B1728] dark:text-white leading-tight">{{ __('Create Shipper Account') }}</h1>
+        <p class="text-sm text-[#52647A] dark:text-slate-300">{{ __('Track sea, air, and road spice consignments with multi-currency visibility.') }}</p>
     </div>
 
-    <!-- Top Floating Controls (Theme Switcher, Language Switcher & Back Link) -->
-    <div class="absolute top-6 inset-x-0 max-w-6xl mx-auto px-4 sm:px-6 flex items-center justify-between gap-2 z-20">
-        <a href="{{ route('welcome') }}" class="inline-flex items-center gap-2 text-xs font-semibold theme-text-secondary hover:theme-heading transition px-3 sm:px-3.5 py-2 rounded-xl theme-card-elevated border theme-border">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
-            <span>{{ __('Back to Portal') }}</span>
-        </a>
-
-        <div class="flex items-center gap-2 sm:gap-3">
-            <!-- Theme Toggle Switcher -->
-            <button
-                type="button"
-                id="register-theme-toggle"
-                role="switch"
-                aria-checked="true"
-                aria-pressed="true"
-                tabindex="0"
-                onclick="window.CargoTrace && window.CargoTrace.toggleTheme ? window.CargoTrace.toggleTheme() : null"
-                onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();window.CargoTrace&&window.CargoTrace.toggleTheme?window.CargoTrace.toggleTheme():null}"
-                class="relative flex items-center p-1 rounded-full bg-slate-200 dark:bg-slate-900 border border-slate-300 dark:border-slate-800 w-12 sm:w-14 h-7 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
-                aria-label="{{ __('Toggle dark and light theme') }}"
-                title="{{ __('Switch theme') }}"
-            >
-                <span class="w-5 h-5 flex items-center justify-center text-slate-400 dark:text-cyan-400 transition-colors">
-                    <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true"><path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"/></svg>
-                </span>
-                <span class="w-5 h-5 flex items-center justify-center text-amber-500 dark:text-slate-500 transition-colors">
-                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
-                </span>
-            </button>
-
-            <!-- Language Switcher (EN | ID) -->
-            <x-locale-switcher size="sm" />
+    @if($errors->any())
+        <div role="alert" class="p-3.5 rounded-xl bg-rose-50 dark:bg-rose-950/60 border border-rose-300 dark:border-rose-500/40 text-rose-800 dark:text-rose-200 text-xs font-medium flex items-start gap-2.5">
+            <svg class="w-4 h-4 shrink-0 mt-0.5 text-rose-600 dark:text-rose-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M10.29 3.86l-8.48 14.7A1.5 1.5 0 003.11 21h17.78a1.5 1.5 0 001.3-2.44l-8.48-14.7a1.5 1.5 0 00-2.6 0z"/>
+            </svg>
+            <span>{{ $errors->first() }}</span>
         </div>
-    </div>
+    @endif
 
-    <!-- Center Card with Unified Maritime Design System -->
-    <div class="relative z-10 w-full max-w-lg p-6 sm:p-8 rounded-2xl theme-card border theme-border shadow-2xl space-y-6 my-16">
-        <!-- Unified Brand Header -->
-        <div class="text-center space-y-2.5">
-            <a href="{{ route('welcome') }}" class="inline-flex items-center space-x-3 group transition-transform duration-200 hover:scale-[1.02]">
-                <div class="w-11 h-11 rounded-2xl bg-gradient-to-br from-blue-500 via-blue-600 to-cyan-500 text-white flex items-center justify-center shadow-lg shadow-blue-500/25 group-hover:scale-105 transition">
-                    <svg class="w-6 h-6 text-white" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                        <path d="M12 22L2 5h20L12 22zm0-4.5l6.5-11h-13l6.5 11z"/>
-                    </svg>
-                </div>
-                <div class="text-left">
-                    <span class="text-2xl font-extrabold tracking-tight theme-heading font-sans block leading-none">{{ config('app.name', 'Nusa Freight') }}</span>
-                    <span class="text-[9px] uppercase tracking-widest text-cyan-500 dark:text-cyan-400 font-mono font-bold">{{ __('Global spice freight by sea, air and road') }}</span>
-                </div>
-            </a>
-            <h1 class="text-xl font-bold theme-heading tracking-tight pt-1">{{ __('Create Shipper Account') }}</h1>
-            <p class="text-xs theme-text-secondary">{{ __('Track sea, air, and road spice consignments with multi-currency visibility.') }}</p>
+    <form action="{{ route('register') }}" method="POST" class="space-y-4">
+        @csrf
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+            <div class="space-y-1.5">
+                <label for="name" class="block text-xs font-semibold text-[#0B1728] dark:text-[#E6EEF8]">{{ __('Full Name') }}</label>
+                <input
+                    type="text"
+                    id="name"
+                    name="name"
+                    autocomplete="name"
+                    value="{{ old('name') }}"
+                    required
+                    autofocus
+                    placeholder="John Doe"
+                    class="w-full min-h-[44px] px-3.5 py-2.5 rounded-xl theme-input border text-sm focus:outline-none focus:ring-2 focus:ring-[#2563EB] dark:focus:ring-cyan-400 transition-colors"
+                >
+            </div>
+
+            <div class="space-y-1.5">
+                <label for="email" class="block text-xs font-semibold text-[#0B1728] dark:text-[#E6EEF8]">{{ __('Work Email') }}</label>
+                <input
+                    type="email"
+                    id="email"
+                    name="email"
+                    autocomplete="email"
+                    value="{{ old('email') }}"
+                    required
+                    placeholder="john@enterprise.com"
+                    class="w-full min-h-[44px] px-3.5 py-2.5 rounded-xl theme-input border text-sm focus:outline-none focus:ring-2 focus:ring-[#2563EB] dark:focus:ring-cyan-400 transition-colors"
+                >
+            </div>
         </div>
 
-        @if($errors->any())
-            <div class="p-3.5 rounded-xl bg-rose-500/15 border border-rose-500/30 text-rose-600 dark:text-rose-300 text-xs flex items-center gap-2">
-                <span class="w-2 h-2 rounded-full bg-rose-400 animate-pulse"></span>
-                <span>{{ $errors->first() }}</span>
-            </div>
-        @endif
-
-        <form action="{{ route('register') }}" method="POST" class="space-y-4">
-            @csrf
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div class="space-y-1.5">
-                    <label for="name" class="uppercase text-xs tracking-wider theme-text-muted font-semibold block">{{ __('Full Name') }}</label>
-                    <input type="text" id="name" name="name" value="{{ old('name') }}" required placeholder="John Doe" class="w-full px-3.5 py-2.5 rounded-xl theme-input border text-xs sm:text-sm focus:ring-1 focus:ring-blue-500 focus:border-blue-500 focus:outline-none transition">
-                </div>
-
-                <div class="space-y-1.5">
-                    <label for="email" class="uppercase text-xs tracking-wider theme-text-muted font-semibold block">{{ __('Work Email') }}</label>
-                    <input type="email" id="email" name="email" value="{{ old('email') }}" required placeholder="john@enterprise.com" class="w-full px-3.5 py-2.5 rounded-xl theme-input border text-xs sm:text-sm focus:ring-1 focus:ring-blue-500 focus:border-blue-500 focus:outline-none transition">
-                </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+            <div class="space-y-1.5">
+                <label for="company_name" class="block text-xs font-semibold text-[#0B1728] dark:text-[#E6EEF8]">{{ __('Company Name') }}</label>
+                <input
+                    type="text"
+                    id="company_name"
+                    name="company_name"
+                    autocomplete="organization"
+                    value="{{ old('company_name') }}"
+                    placeholder="Pacific Trade Ltd"
+                    class="w-full min-h-[44px] px-3.5 py-2.5 rounded-xl theme-input border text-sm focus:outline-none focus:ring-2 focus:ring-[#2563EB] dark:focus:ring-cyan-400 transition-colors"
+                >
             </div>
 
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div class="space-y-1.5">
-                    <label for="company_name" class="uppercase text-xs tracking-wider theme-text-muted font-semibold block">{{ __('Company Name') }}</label>
-                    <input type="text" id="company_name" name="company_name" value="{{ old('company_name') }}" placeholder="Pacific Trade Ltd" class="w-full px-3.5 py-2.5 rounded-xl theme-input border text-xs sm:text-sm focus:ring-1 focus:ring-blue-500 focus:border-blue-500 focus:outline-none transition">
-                </div>
-
-                <div class="space-y-1.5">
-                    <label for="phone" class="uppercase text-xs tracking-wider theme-text-muted font-semibold block">{{ __('Phone Number') }}</label>
-                    <input type="text" id="phone" name="phone" value="{{ old('phone') }}" placeholder="+1-555-0199" class="w-full px-3.5 py-2.5 rounded-xl theme-input border text-xs sm:text-sm focus:ring-1 focus:ring-blue-500 focus:border-blue-500 focus:outline-none transition">
-                </div>
+            <div class="space-y-1.5">
+                <label for="phone" class="block text-xs font-semibold text-[#0B1728] dark:text-[#E6EEF8]">{{ __('Phone Number') }}</label>
+                <input
+                    type="text"
+                    id="phone"
+                    name="phone"
+                    autocomplete="tel"
+                    value="{{ old('phone') }}"
+                    placeholder="+1-555-0199"
+                    class="w-full min-h-[44px] px-3.5 py-2.5 rounded-xl theme-input border text-sm focus:outline-none focus:ring-2 focus:ring-[#2563EB] dark:focus:ring-cyan-400 transition-colors"
+                >
             </div>
-
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div class="space-y-1.5">
-                    <label for="password" class="uppercase text-xs tracking-wider theme-text-muted font-semibold block">{{ __('Password') }}</label>
-                    <input type="password" id="password" name="password" required placeholder="{{ __('Min 8 characters') }}" class="w-full px-3.5 py-2.5 rounded-xl theme-input border text-xs sm:text-sm focus:ring-1 focus:ring-blue-500 focus:border-blue-500 focus:outline-none transition font-mono">
-                </div>
-
-                <div class="space-y-1.5">
-                    <label for="password_confirmation" class="uppercase text-xs tracking-wider theme-text-muted font-semibold block">{{ __('Confirm Password') }}</label>
-                    <input type="password" id="password_confirmation" name="password_confirmation" required placeholder="{{ __('Repeat password') }}" class="w-full px-3.5 py-2.5 rounded-xl theme-input border text-xs sm:text-sm focus:ring-1 focus:ring-blue-500 focus:border-blue-500 focus:outline-none transition font-mono">
-                </div>
-            </div>
-
-            <button type="submit" class="w-full py-3 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-semibold text-xs uppercase tracking-wider transition-all duration-200 hover:scale-[1.01] active:scale-[0.99] shadow-lg shadow-blue-500/25 flex items-center justify-center gap-2 cursor-pointer">
-                <span>{{ __('Complete Registration') }}</span>
-                <span>&rarr;</span>
-            </button>
-        </form>
-
-        <div class="text-center text-xs theme-text-secondary pt-2 border-t theme-border">
-            {{ __('Already have an active account?') }}
-            <a href="{{ route('login') }}" class="text-blue-600 dark:text-blue-400 hover:underline font-semibold ml-1">{{ __('Sign In') }}</a>
         </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+            <div class="space-y-1.5">
+                <label for="password" class="block text-xs font-semibold text-[#0B1728] dark:text-[#E6EEF8]">{{ __('Password') }}</label>
+                <input
+                    type="password"
+                    id="password"
+                    name="password"
+                    autocomplete="new-password"
+                    required
+                    placeholder="{{ __('Min 8 characters') }}"
+                    class="w-full min-h-[44px] px-3.5 py-2.5 rounded-xl theme-input border text-sm focus:outline-none focus:ring-2 focus:ring-[#2563EB] dark:focus:ring-cyan-400 transition-colors"
+                >
+            </div>
+
+            <div class="space-y-1.5">
+                <label for="password_confirmation" class="block text-xs font-semibold text-[#0B1728] dark:text-[#E6EEF8]">{{ __('Confirm Password') }}</label>
+                <input
+                    type="password"
+                    id="password_confirmation"
+                    name="password_confirmation"
+                    autocomplete="new-password"
+                    required
+                    placeholder="{{ __('Repeat password') }}"
+                    class="w-full min-h-[44px] px-3.5 py-2.5 rounded-xl theme-input border text-sm focus:outline-none focus:ring-2 focus:ring-[#2563EB] dark:focus:ring-cyan-400 transition-colors"
+                >
+            </div>
+        </div>
+
+        <button
+            type="submit"
+            class="w-full min-h-[44px] py-3 px-4 rounded-xl bg-[#2563EB] hover:bg-[#1D4ED8] active:bg-blue-800 text-white font-semibold text-sm transition-colors duration-200 shadow-sm flex items-center justify-center cursor-pointer"
+        >
+            {{ __('Complete Registration') }}
+        </button>
+    </form>
+
+    <div class="text-center text-xs text-[#52647A] dark:text-slate-300 pt-3 border-t border-[#D5DEEA] dark:border-white/10">
+        {{ __('Already have an active account?') }}
+        <a href="{{ route('login') }}" class="text-[#1D4ED8] dark:text-cyan-400 hover:underline font-semibold ml-1">{{ __('Sign In') }}</a>
     </div>
 </div>
 @endsection
