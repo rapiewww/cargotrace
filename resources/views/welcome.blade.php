@@ -18,7 +18,7 @@
                         </div>
                         <div class="min-w-0">
                             <div class="flex items-center gap-2">
-                                <span class="text-base sm:text-xl font-extrabold tracking-tight theme-heading block truncate">CargoTrace</span>
+                                <span class="text-sm sm:text-xl font-extrabold tracking-tight theme-heading block whitespace-nowrap">{{ config('app.name', 'Nusa Freight') }}</span>
                                 <span class="hidden sm:inline-block text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-600 dark:text-cyan-400 border border-blue-500/20 font-mono">{{ __('Global') }}</span>
                             </div>
                             <span class="hidden sm:block text-[10px] uppercase tracking-widest theme-text-muted font-semibold leading-tight">{{ __('Global spice freight by sea, air and road') }}</span>
@@ -63,12 +63,12 @@
                     <x-locale-switcher size="sm" />
 
                     @auth
-                        <a href="{{ route('dashboard') }}" aria-label="{{ __('Sign In / Portal') }}" class="px-2.5 sm:px-5 py-2 sm:py-2.5 rounded-xl text-[11px] sm:text-xs font-semibold text-white bg-blue-600 hover:bg-blue-500 shadow-md shadow-blue-500/20 transition-all duration-200 flex items-center gap-1.5 whitespace-nowrap">
+                        <a href="{{ route('dashboard') }}" aria-label="{{ __('Sign In / Portal') }}" class="px-2 sm:px-5 py-2 sm:py-2.5 rounded-xl text-[11px] sm:text-xs font-semibold text-white bg-blue-600 hover:bg-blue-500 shadow-md shadow-blue-500/20 transition-all duration-200 flex items-center gap-1.5 whitespace-nowrap">
                             <span>{{ __('Open the portal') }}</span>
                             <svg class="hidden sm:block w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
                         </a>
                     @else
-                        <a href="{{ route('login') }}" aria-label="{{ __('Sign In / Portal') }}" class="px-2.5 sm:px-5 py-2 sm:py-2.5 rounded-xl text-[11px] sm:text-xs font-semibold text-white bg-blue-600 hover:bg-blue-500 shadow-md shadow-blue-500/20 transition-all duration-200 flex items-center gap-1.5 whitespace-nowrap">
+                        <a href="{{ route('login') }}" aria-label="{{ __('Sign In / Portal') }}" class="px-2 sm:px-5 py-2 sm:py-2.5 rounded-xl text-[11px] sm:text-xs font-semibold text-white bg-blue-600 hover:bg-blue-500 shadow-md shadow-blue-500/20 transition-all duration-200 flex items-center gap-1.5 whitespace-nowrap">
                             <span>{{ __('Open the portal') }}</span>
                             <svg class="hidden sm:block w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
                         </a>
@@ -466,7 +466,7 @@
                     {{ __('Three steps from origin to destination') }}
                 </h2>
                 <p class="text-sm sm:text-base theme-text-secondary leading-relaxed">
-                    {{ __('CargoTrace records consignment progress at every handover point across sea, air, and road corridors.') }}
+                    {{ __('Nusa Freight records consignment progress at every handover point across sea, air, and road corridors.') }}
                 </p>
             </div>
 
@@ -665,7 +665,7 @@
                         </svg>
                     </div>
                     <div>
-                        <span class="theme-heading font-semibold block">&copy; {{ date('Y') }} CargoTrace &bull; {{ __('Global spice freight by sea, air and road') }}</span>
+                        <span class="theme-heading font-semibold block">&copy; {{ date('Y') }} {{ config('app.name', 'Nusa Freight') }} &bull; {{ __('Global spice freight by sea, air and road') }}</span>
                         <span class="text-[11px] text-blue-600 dark:text-cyan-400 font-sans">{{ __('Individual University Web Programming Capstone Project • Laravel, Blade & Tailwind CSS') }}</span>
                     </div>
                 </div>

@@ -182,7 +182,7 @@ class ExternalIntegrationService
             'converted_amount' => $converted,
             'rate_to_usd' => round($rateToUsd, 6),
             'rates_snapshot' => $this->benchmarkRatesAgainstUsd,
-            'source' => 'CargoTrace Benchmark Exchange Matrix (Fallback)',
+            'source' => 'Nusa Freight Benchmark Exchange Matrix (Fallback)',
             'data_source' => 'simulated',
         ];
 
@@ -359,7 +359,7 @@ class ExternalIntegrationService
             'wind_direction' => 'NE',
             'pressure_mb' => 1014,
             'recorded_at' => Carbon::now()->toIso8601String(),
-            'source' => 'CargoTrace Weather Simulation / Cache',
+            'source' => 'Nusa Freight Weather Simulation / Cache',
             'data_source' => 'simulated',
         ];
     }
@@ -429,7 +429,7 @@ class ExternalIntegrationService
 
         foreach ($lookup as $key => $data) {
             if (str_contains($normalized, $key)) {
-                return array_merge($data, ['source' => 'CargoTrace GeoCache']);
+                return array_merge($data, ['source' => 'Nusa Freight GeoCache']);
             }
         }
 

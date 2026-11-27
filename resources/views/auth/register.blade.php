@@ -54,7 +54,7 @@
                     </svg>
                 </div>
                 <div class="text-left">
-                    <span class="text-2xl font-extrabold tracking-tight theme-heading font-sans block leading-none">CargoTrace</span>
+                    <span class="text-2xl font-extrabold tracking-tight theme-heading font-sans block leading-none">{{ config('app.name', 'Nusa Freight') }}</span>
                     <span class="text-[9px] uppercase tracking-widest text-cyan-500 dark:text-cyan-400 font-mono font-bold">{{ __('Global spice freight by sea, air and road') }}</span>
                 </div>
             </a>

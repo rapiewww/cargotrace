@@ -8,7 +8,7 @@ services:
     ports:
       - "8000:8000"
     environment:
-      APP_NAME: "CargoTrace"
+      APP_NAME: "Nusa Freight"
       APP_ENV: "${APP_ENV:-local}"
       APP_KEY: "${APP_KEY:-base64:cGFzc3dvcmRmb3Jkb2NrZXJsb2NhbHRlc3RpbmdrZXkxMjM=}"
       APP_DEBUG: "${APP_DEBUG:-true}"
@@ -43,7 +43,7 @@ services:
     restart: unless-stopped
     command: ["php", "artisan", "schedule:work"]
     environment:
-      APP_NAME: "CargoTrace"
+      APP_NAME: "Nusa Freight"
       APP_ENV: "${APP_ENV:-local}"
       APP_KEY: "${APP_KEY:-base64:cGFzc3dvcmRmb3Jkb2NrZXJsb2NhbHRlc3RpbmdrZXkxMjM=}"
       APP_DEBUG: "${APP_DEBUG:-false}"

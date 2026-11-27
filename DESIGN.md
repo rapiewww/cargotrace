@@ -1,4 +1,4 @@
-Identity: CargoTrace, multimodal (sea, air, road) shipment tracking for a freight forwarder moving Indonesian spices and essential oils to buyers worldwide (university final project, Laravel).
+Identity: Nusa Freight, multimodal (sea, air, road) shipment tracking for a freight forwarder moving Indonesian spices and essential oils to buyers worldwide (university final project, Laravel).
 Personality: calm, precise, operational. Cinematic maritime photography is atmosphere behind the interface, never decoration on top of data.
 Palette dark: background #050B14, surface #0B1728, elevated #11233B, border white at 10%, text #E6EEF8, muted #8FA3BC.
 Palette light: background #F4F7FB, surface #FFFFFF, border #D5DEEA, text #0B1728, muted #52647A.

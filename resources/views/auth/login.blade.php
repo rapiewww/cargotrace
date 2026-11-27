@@ -54,7 +54,7 @@
                 </svg>
             </div>
             <div class="min-w-0">
-                <span class="text-lg sm:text-xl font-extrabold tracking-tight theme-heading font-sans block leading-none drop-shadow-sm truncate">CargoTrace</span>
+                <span class="text-lg sm:text-xl font-extrabold tracking-tight theme-heading font-sans block leading-none drop-shadow-sm truncate">{{ config('app.name', 'Nusa Freight') }}</span>
                 <span class="hidden sm:block text-[9px] uppercase tracking-widest text-blue-600 dark:text-cyan-400 font-mono font-bold">{{ __('Multimodal Freight Tracking') }}</span>
             </div>
         </a>
@@ -199,7 +199,7 @@
 
     <!-- Bottom Attribution -->
     <footer class="relative z-20 w-full max-w-7xl mx-auto py-2 text-center text-[11px] theme-text-muted">
-        <span>&copy; {{ date('Y') }} CargoTrace &bull; {{ __('Global spice freight by sea, air and road') }}</span>
+        <span>&copy; {{ date('Y') }} {{ config('app.name', 'Nusa Freight') }} &bull; {{ __('Global spice freight by sea, air and road') }}</span>
     </footer>
 </div>
 

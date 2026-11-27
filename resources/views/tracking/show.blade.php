@@ -14,7 +14,7 @@
                     </div>
                     <div class="min-w-0">
                         <div class="flex items-center gap-2">
-                            <span class="text-lg sm:text-xl font-extrabold tracking-tight theme-heading block truncate">CargoTrace</span>
+                            <span class="text-sm sm:text-xl font-extrabold tracking-tight theme-heading block whitespace-nowrap">{{ config('app.name', 'Nusa Freight') }}</span>
                             <span class="hidden sm:inline-block text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-600 dark:text-cyan-400 border border-blue-500/20 font-mono">{{ __('Public Track') }}</span>
                         </div>
                         <span class="hidden sm:block text-[10px] uppercase tracking-widest theme-text-muted font-semibold leading-tight">{{ __('Global spice freight by sea, air and road') }}</span>
@@ -53,11 +53,11 @@
                     <x-locale-switcher size="sm" />
 
                     @auth
-                        <a href="{{ route('dashboard') }}" class="px-2.5 sm:px-4 py-2 rounded-xl text-[11px] sm:text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 transition whitespace-nowrap">
+                        <a href="{{ route('dashboard') }}" class="px-2 sm:px-4 py-2 rounded-xl text-[11px] sm:text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 transition whitespace-nowrap">
                             {{ __('Back to Dashboard') }}
                         </a>
                     @else
-                        <a href="{{ route('login') }}" class="px-2.5 sm:px-4 py-2 rounded-xl text-[11px] sm:text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 transition whitespace-nowrap">
+                        <a href="{{ route('login') }}" class="px-2 sm:px-4 py-2 rounded-xl text-[11px] sm:text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 transition whitespace-nowrap">
                             {{ __('Sign In / Portal') }} &rarr;
                         </a>
                     @endauth
@@ -206,7 +206,7 @@
     <!-- Footer -->
     <footer class="theme-card border-t theme-border py-8 text-xs theme-text-muted text-center">
         <div class="max-w-5xl mx-auto px-4 space-y-2">
-            <div>&copy; {{ date('Y') }} CargoTrace &bull; {{ __('Public Shipment Visibility') }}</div>
+            <div>&copy; {{ date('Y') }} {{ config('app.name', 'Nusa Freight') }} &bull; {{ __('Public Shipment Visibility') }}</div>
             <p class="text-[11px] theme-text-muted opacity-80">
                 {{ __('Non-sensitive checkpoint view. Shipper identity, cargo value, and commercial invoices are restricted to authenticated consignees.') }}
             </p>

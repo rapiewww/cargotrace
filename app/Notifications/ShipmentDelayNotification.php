@@ -41,12 +41,12 @@ class ShipmentDelayNotification extends Notification
     public function toMail(object $notifiable): MailMessage
     {
         return (new MailMessage)
-            ->subject("CargoTrace: Shipment {$this->shipment->tracking_number} Delay Alert ({$this->severity})")
+            ->subject(config('app.name', 'Nusa Freight').": Shipment {$this->shipment->tracking_number} Delay Alert ({$this->severity})")
             ->greeting("Hello {$notifiable->name},")
             ->line("An operational delay has been recorded for ocean container consignment {$this->shipment->tracking_number}.")
             ->line("Current delay severity: {$this->severity} (+{$this->delayHours} hours).")
             ->line("Updated estimated arrival: {$this->shipment->estimated_arrival_at?->format('Y-m-d H:i')} UTC.")
             ->action('View shipment details', url("/shipments/{$this->shipment->id}"))
-            ->line('This is an automated operational advisory from CargoTrace.');
+            ->line('This is an automated operational advisory from '.config('app.name', 'Nusa Freight').'.');
     }
 }

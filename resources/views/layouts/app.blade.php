@@ -7,7 +7,7 @@
     <meta name="map-tile-url" content="{{ config('cargotrace.map.tile_url') }}">
     <meta name="map-tile-attribution" content="{{ config('cargotrace.map.attribution') }}">
 
-    <title>{{ $title ?? __('CargoTrace: Multimodal Freight & Spice Tracking') }}</title>
+    <title>{{ $title ?? __('Nusa Freight: Multimodal Freight & Spice Tracking') }}</title>
 
     <!-- Instant Theme & Sidebar Rail Loader (Zero-Flicker, prefers-color-scheme fallback) -->
     <script>
@@ -192,7 +192,7 @@
             <footer class="border-t theme-border py-6 text-xs theme-text-muted mt-auto theme-sidebar transition-colors duration-200">
                 <div class="max-w-[1600px] mx-auto px-6 sm:px-8 flex flex-col sm:flex-row items-center justify-between gap-4">
                     <div class="flex items-center space-x-2">
-                        <span class="font-bold theme-text-primary">{{ __('CargoTrace • Multimodal Freight Visibility Platform') }}</span>
+                        <span class="font-bold theme-text-primary">{{ __('Nusa Freight • Multimodal Freight Visibility Platform') }}</span>
                         <span class="theme-text-muted">&bull;</span>
                         <span class="text-[11px] text-cyan-700 dark:text-cyan-400 font-mono">{{ __('Sea, Air & Road Tracking') }}</span>
                     </div>

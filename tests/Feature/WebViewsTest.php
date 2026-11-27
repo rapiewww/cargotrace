@@ -18,10 +18,12 @@ test('public landing page loads successfully with hero and metrics', function ()
     $response = $this->get('/');
 
     $response->assertStatus(200);
-    $response->assertSee('CargoTrace');
+    $response->assertSee('Nusa Freight');
     $response->assertSee('Global spice freight by sea, air and road');
     $response->assertSee('Track Shipment');
     $response->assertSee('Sign In / Portal');
+    $response->assertDontSee('>CargoTrace<', false);
+    $response->assertDontSee('CargoTrace &bull;', false);
 });
 
 test('public landing page can search for an existing shipment', function () {
@@ -251,4 +253,56 @@ test('topbar exposes a single unified sidebar hamburger toggle and removes redun
     $response->assertDontSee('Toggle sidebar rail');
     $response->assertDontSee('M11 19l-7-7 7-7m8 14l-7-7 7-7', false);
     $response->assertDontSee('M13 5l7 7-7 7M5 5l7 7-7 7', false);
+});
+
+test('nusa freight branding is rendered consistently across public, auth, and portal views in both locales', function () {
+    expect(config('app.name'))->toBe('Nusa Freight');
+
+    $shipment = Shipment::firstOrFail();
+    $admin = User::where('role', 'admin')->firstOrFail();
+
+    $landing = $this->get('/');
+    $landing->assertStatus(200)
+        ->assertSee('<title>Nusa Freight: Global spice freight by sea, air and road</title>', false)
+        ->assertSee('Nusa Freight records consignment progress at every handover point across sea, air, and road corridors.')
+        ->assertSee('Nusa Freight &bull; Global spice freight by sea, air and road', false)
+        ->assertDontSee('>CargoTrace<', false)
+        ->assertDontSee('CargoTrace records consignment progress');
+
+    $login = $this->get('/login');
+    $login->assertStatus(200)
+        ->assertSee('<title>Nusa Freight: Global spice freight by sea, air and road</title>', false)
+        ->assertSee('Nusa Freight')
+        ->assertSee('Nusa Freight &bull; Global spice freight by sea, air and road', false)
+        ->assertDontSee('>CargoTrace<', false);
+
+    $register = $this->get('/register');
+    $register->assertStatus(200)
+        ->assertSee('Nusa Freight')
+        ->assertDontSee('>CargoTrace<', false);
+
+    $tracking = $this->get(route('public.track', $shipment->tracking_number));
+    $tracking->assertStatus(200)
+        ->assertSee('Nusa Freight')
+        ->assertSee('Nusa Freight &bull; Public Shipment Visibility', false)
+        ->assertDontSee('>CargoTrace<', false);
+
+    $dashboard = $this->actingAs($admin)->get('/dashboard');
+    $dashboard->assertStatus(200)
+        ->assertSee('<title>Nusa Freight: Multimodal Freight &amp; Spice Tracking</title>', false)
+        ->assertSee('Nusa Freight Operations')
+        ->assertSee('Nusa Freight • Multimodal Freight Visibility Platform')
+        ->assertDontSee('>CargoTrace<', false);
+
+    // Indonesian locale rebrand verification
+    $this->from('/')->get(route('locale.switch', 'id'))->assertRedirect('/');
+    $this->get('/')
+        ->assertStatus(200)
+        ->assertSee('<title>Nusa Freight: Kargo rempah global melalui laut, udara, dan darat</title>', false)
+        ->assertSee('Nusa Freight mencatat progres konsinyasi di setiap titik serah terima pada koridor laut, udara, dan darat.');
+
+    $this->actingAs($admin)->get('/dashboard')
+        ->assertStatus(200)
+        ->assertSee('<title>Nusa Freight: Pelacakan Kargo Multimoda &amp; Rempah</title>', false)
+        ->assertSee('Nusa Freight • Platform Visibilitas Kargo Multimoda');
 });
