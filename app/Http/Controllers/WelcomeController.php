@@ -4,15 +4,18 @@ namespace App\Http\Controllers;
 
 use App\Models\Carrier;
 use App\Models\Location;
+use App\Models\Setting;
 use App\Models\Shipment;
 use App\Models\ShipmentException;
+use App\Services\EtaService;
 use App\Services\ExternalIntegrationService;
 use Illuminate\View\View;
 
 class WelcomeController extends Controller
 {
     public function __construct(
-        protected ExternalIntegrationService $externalService
+        protected ExternalIntegrationService $externalService,
+        protected EtaService $etaService
     ) {}
 
     /**
@@ -50,6 +53,14 @@ class WelcomeController extends Controller
             'AIR' => Shipment::where('transport_mode', 'AIR')->count(),
             'ROAD' => Shipment::where('transport_mode', 'ROAD')->count(),
         ];
+
+        $modeThresholds = [
+            'SEA' => $this->etaService->getThresholdsForMode('SEA'),
+            'AIR' => $this->etaService->getThresholdsForMode('AIR'),
+            'ROAD' => $this->etaService->getThresholdsForMode('ROAD'),
+        ];
+
+        $freeTimeDays = (int) (Setting::get('free_days_after_arrival') ?? config('cargotrace.free_time.days', 5));
 
         $activeShipments = Shipment::whereIn('status', ['IN_TRANSIT', 'PICKED_UP', 'BOOKED'])
             ->with(['originLocation', 'destinationLocation', 'currentLocation', 'latestTrackingEvent.location', 'carrier', 'exceptions'])
@@ -204,6 +215,8 @@ class WelcomeController extends Controller
             'locations',
             'carriers',
             'modeTotals',
+            'modeThresholds',
+            'freeTimeDays',
             'activeShipments',
             'featuredShipment',
             'news',

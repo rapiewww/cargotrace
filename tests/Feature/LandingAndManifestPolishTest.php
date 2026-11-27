@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\Carrier;
 use App\Models\Location;
+use App\Models\Setting;
 use App\Models\Shipment;
 use App\Models\User;
 use Database\Seeders\DatabaseSeeder;
@@ -45,6 +46,83 @@ test('landing page renders multimodal hero assets, 3-column capability highlight
     $response->assertSee(number_format($seaTotal).' consignments')
         ->assertSee(number_format($airTotal).' consignments')
         ->assertSee(number_format($roadTotal).' consignments');
+});
+
+test('landing page renders platform overview, 4-step workflow, role cards, and cargo footer in EN and ID', function () {
+    $response = $this->get('/');
+
+    $response->assertStatus(200)
+        // Platform overview & commodities
+        ->assertSee('What is Nusa Freight?')
+        ->assertSee('Nutmeg')
+        ->assertSee('Cloves')
+        ->assertSee('Patchouli oil')
+        ->assertSee('Cassia')
+        ->assertSee('Vanilla')
+        ->assertSee('Automated ETA and delay rules')
+        ->assertSee('Port, airport and depot weather')
+        ->assertSee('Multi-currency FX valuation')
+        ->assertSee('Freight disruption bulletins')
+        // 4-step workflow
+        ->assertSee('Four steps from booking to buyer tracking')
+        ->assertSee('Register or import consignment')
+        ->assertSee('Record verified checkpoints')
+        ->assertSee('Monitor ETA, delays and disruptions')
+        ->assertSee('Share live public tracking')
+        // Role cards
+        ->assertSee('Who is it for?')
+        ->assertSee('Administrator')
+        ->assertSee('Logistics Operator')
+        ->assertSee('Cargo Customer')
+        // Cargo footer & supported standards
+        ->assertSee('Supported logistics standards')
+        ->assertSee('ISO 6346')
+        ->assertSee('IATA AWB')
+        ->assertSee('UN/LOCODE')
+        ->assertSee('CMR')
+        ->assertSee('Quick navigation')
+        // Interactive controls & accessibility
+        ->assertSee('id="welcome-mobile-menu-toggle"', false)
+        ->assertSee('id="welcome-mobile-nav"', false)
+        ->assertSee('id="public-track-error"', false)
+        // Design discipline: no endless pulse animations, no em dashes, no purple role badge
+        ->assertDontSee('animate-pulse', false)
+        ->assertDontSee('bg-purple-500', false)
+        ->assertDontSee('—');
+
+    // Switch to Indonesian and verify localized copy
+    $this->from('/')->get(route('locale.switch', 'id'))->assertRedirect('/');
+
+    $idResponse = $this->get('/');
+    $idResponse->assertStatus(200)
+        ->assertSee('Apa itu Nusa Freight?')
+        ->assertSee('Pala')
+        ->assertSee('Cengkeh')
+        ->assertSee('Minyak nilam')
+        ->assertSee('Empat langkah dari pemesanan hingga pelacakan pembeli')
+        ->assertSee('Daftarkan atau impor konsinyasi')
+        ->assertSee('Catat titik pantau terverifikasi')
+        ->assertSee('Pantau ETA, keterlambatan, dan gangguan')
+        ->assertSee('Bagikan pelacakan publik langsung')
+        ->assertSee('Untuk siapa platform ini?')
+        ->assertSee('Standar logistik yang didukung')
+        ->assertDontSee('—');
+});
+
+test('landing page displays configured per-mode delay thresholds from EtaService', function () {
+    Setting::set('delay.sea.low_hours', 15);
+    Setting::set('delay.sea.medium_hours', 54);
+    Setting::set('delay.air.low_hours', 4);
+    Setting::set('delay.air.medium_hours', 14);
+    Setting::set('delay.road.low_hours', 8);
+    Setting::set('delay.road.medium_hours', 30);
+
+    $response = $this->get('/');
+
+    $response->assertStatus(200)
+        ->assertSee('Low 15 h • Medium 54 h • High > 54 h')
+        ->assertSee('Low 4 h • Medium 14 h • High > 14 h')
+        ->assertSee('Low 8 h • Medium 30 h • High > 30 h');
 });
 
 test('landing page respects configured hero image overrides', function () {

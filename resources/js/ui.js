@@ -67,5 +67,47 @@ export function initUiModule() {
             drawer.classList.toggle('hidden');
         }
     };
+
+    // Landing page responsive navigation drawer (R-03, R-26, R-32)
+    const bindWelcomeMobileMenu = () => {
+        const toggleBtn = document.getElementById('welcome-mobile-menu-toggle');
+        const navDrawer = document.getElementById('welcome-mobile-nav');
+        if (!toggleBtn || !navDrawer || toggleBtn.dataset.bound === '1') return;
+
+        toggleBtn.dataset.bound = '1';
+        const openIcon = toggleBtn.querySelector('[data-menu-icon="open"]');
+        const closeIcon = toggleBtn.querySelector('[data-menu-icon="close"]');
+
+        const setOpenState = (open) => {
+            navDrawer.classList.toggle('hidden', !open);
+            toggleBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
+            if (openIcon) openIcon.classList.toggle('hidden', open);
+            if (closeIcon) closeIcon.classList.toggle('hidden', !open);
+        };
+
+        toggleBtn.addEventListener('click', () => {
+            const isCurrentlyOpen = !navDrawer.classList.contains('hidden');
+            setOpenState(!isCurrentlyOpen);
+        });
+
+        navDrawer.querySelectorAll('a[href]').forEach((link) => {
+            link.addEventListener('click', () => {
+                setOpenState(false);
+            });
+        });
+
+        document.addEventListener('keydown', (event) => {
+            if (event.key === 'Escape' && !navDrawer.classList.contains('hidden')) {
+                setOpenState(false);
+                toggleBtn.focus();
+            }
+        });
+    };
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', bindWelcomeMobileMenu);
+    } else {
+        bindWelcomeMobileMenu();
+    }
 }
 
